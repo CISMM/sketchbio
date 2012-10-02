@@ -12,17 +12,17 @@ public:
     /*
      * Scales the room relative to the world
      */
-    void scaleRoom(double amount);
+    void scaleWorldRelativeToRoom(double amount);
     /*
      * Rotates the room relative to the world
      *
      * Uses vrpn/quatlib quaternions for the rotation
      */
-    void rotateRoom(double quat[4]);
+    void rotateRoom(q_type quat);
     /*
      * Translates the room relative to the world
      */
-    void translateRoom(double vect[3]);
+    void translateRoom(q_vec_type vect);
     /*
      * Translates the room relative to the world
      */
@@ -32,13 +32,13 @@ public:
      *
      * Uses vrpn/quatlib quaternions for the orientation
      */
-    void setLeftHandTransform(double pos[3],double quat[4]);
+    void setLeftHandTransform(q_vec_type pos,q_type quat);
     /*
      * Sets the position and orientation of the right hand tracker
      *
      * Uses vrpn/quatlib quaternions for the orientation
      */
-    void setRightHandTransform(double pos[3],double quat[4]);
+    void setRightHandTransform(q_vec_type pos,q_type quat);
 
     /*
      * Gets the matrix describing the transformation from the camera coordinates
@@ -50,13 +50,23 @@ public:
      * Gets the position of the left tracker transformed to the eye coordinate system
      * along with the orientation of the vector in that same coordinate system
      */
-    void getLeftTrackerInEyeCoords(q_xyz_quat_type dest_xyz_quat);
+    void getLeftTrackerInEyeCoords(q_xyz_quat_type *dest_xyz_quat);
 
     /*
      * Gets the position of the right tracker transformed to the eye coordinate system
      * along with the orientation of the vector in that same coordinate system
      */
-    void getRightTrackerInEyeCoords(q_xyz_quat_type dest_xyz_quat);
+    void getRightTrackerInEyeCoords(q_xyz_quat_type *dest_xyz_quat);
+
+    /*
+     * Gets the vector (in room coordinates) of the left hand to the right hand
+     */
+    void getLeftToRightHandVector(q_vec_type destVec);
+
+    /*
+     * Gets the distance (in room coordinates) of the left hand from the right hand
+     */
+    double getDistanceBetweenHands();
 
 private:
 
