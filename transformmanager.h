@@ -18,7 +18,15 @@ public:
      *
      * Uses vrpn/quatlib quaternions for the rotation
      */
-    void rotateRoom(q_type quat);
+    void rotateWorldRelativeToRoom(q_type quat);
+    /*
+     * Rotates the world around the left tracker
+     */
+    void rotateWorldRelativeToRoomAboutLeftTracker(q_type quat);
+    /*
+     * Rotates the world around the right tracker
+     */
+    void rotateWorldRelativeToRoomAboutRightTracker(q_type quat);
     /*
      * Translates the room relative to the world
      */
@@ -70,7 +78,8 @@ public:
 
 private:
 
-    qogl_matrix_type worldRoomTransform; // world to room... maybe store inverses?
+    qogl_matrix_type worldRoomTransform; // world to room...
+    q_matrix_type roomToWorldTransform; // room to world... no matrix inverse function
     q_vec_type roomToEyes;
 
     // Having these two separately is simpler than having them in a matrix

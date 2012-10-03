@@ -8,9 +8,11 @@ TransformManager::TransformManager()
                                   0.0,0.0,0.0,1.0};
     q_vec_type nullVect = Q_NULL_VECTOR;
     q_type quat_ident = Q_ID_QUAT;
+    q_matrix_type identityMatrix = Q_ID_MATRIX;
     qogl_matrix_copy(worldRoomTransform,identity);
-    q_vec_set(roomToTrackerBaseOffset, 0,0,5);
-    roomToTrackerBaseScale = 0.25;
+    q_matrix_copy(roomToWorldTransform,identityMatrix);
+    q_vec_set(roomToTrackerBaseOffset, 0,0,10);
+    roomToTrackerBaseScale = 0.125;
     q_vec_set(roomToEyes,0,0,0); // TODO figure out a good value for this
     q_vec_copy(trackerBaseToLeftHand.xyz, nullVect);
     q_vec_copy(trackerBaseToRightHand.xyz,nullVect);
@@ -22,11 +24,17 @@ TransformManager::TransformManager()
  * Scales the room relative to the world
  */
 void TransformManager::scaleWorldRelativeToRoom(double amount) {
+    double iamount = 1/amount;
     qogl_matrix_type scale = {amount,0.0,   0.0,   0.0,
                               0.0,   amount,0.0,   0.0,
                               0.0,   0.0,   amount,0.0,
                               0.0,   0.0,   0.0,   1.0};
+    q_matrix_type invScale = {{iamount,0.0,0.0,0.0},
+                              {0.0,iamount,0.0,0.0},
+                              {0.0,0.0,iamount,0.0},
+                              {0.0,0.0,0.0,1.0}};
     qogl_matrix_mult(worldRoomTransform,scale,worldRoomTransform);
+    q_matrix_mult(roomToWorldTransform,roomToWorldTransform,invScale);
 }
 
 /*
@@ -34,10 +42,52 @@ void TransformManager::scaleWorldRelativeToRoom(double amount) {
  *
  * Uses vrpn/quatlib quaternions for the rotation
  */
-void TransformManager::rotateRoom(q_type quat) {
+void TransformManager::rotateWorldRelativeToRoom(q_type quat) {
     qogl_matrix_type rotation;
     q_to_ogl_matrix(rotation,quat);
+
+
+    // find the inverse quaternion
+    q_matrix_type invRotation;
+    q_type inverse;
+    double x, y, z, angle;
+    q_to_axis_angle(&x, &y, &z, &angle,quat);
+    q_from_axis_angle(inverse,x,y,z,-angle);
+    q_to_row_matrix(invRotation,inverse);
+
+
     qogl_matrix_mult(worldRoomTransform,rotation,worldRoomTransform);
+    q_matrix_mult(roomToWorldTransform,roomToWorldTransform,invRotation);
+}
+
+void TransformManager::rotateWorldRelativeToRoomAboutLeftTracker(q_type quat) {
+    qogl_matrix_type rotation;
+    q_to_ogl_matrix(rotation,quat);
+
+    // find the inverse quaternion
+    q_matrix_type invRotation;
+    q_type inverse;
+    double x, y, z, angle;
+    q_to_axis_angle(&x, &y, &z, &angle,quat);
+    q_from_axis_angle(inverse,x,y,z,-angle);
+    q_normalize(inverse,inverse);
+    q_to_row_matrix(invRotation,inverse);
+
+    translateRoom(roomToTrackerBaseOffset);
+    scaleWorldRelativeToRoom(roomToTrackerBaseScale);
+    translateRoom(trackerBaseToLeftHand.xyz);
+    qogl_matrix_mult(worldRoomTransform,rotation,worldRoomTransform);
+    q_matrix_mult(roomToWorldTransform,roomToWorldTransform,invRotation);
+    q_vec_type invVect;
+    q_vec_invert(invVect,trackerBaseToLeftHand.xyz);
+    translateRoom(invVect);
+    scaleWorldRelativeToRoom(1/roomToTrackerBaseScale);
+    q_vec_invert(invVect,roomToTrackerBaseOffset);
+    translateRoom(invVect);
+}
+
+void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(q_type quat) {
+
 }
 
 /*
@@ -45,25 +95,25 @@ void TransformManager::rotateRoom(q_type quat) {
  */
 void TransformManager::translateRoom(q_vec_type vect) {
     qogl_matrix_type translation;
+    q_matrix_type invTranslation;
     q_xyz_quat_type xyzQuat;
     q_type identity_quat = Q_ID_QUAT;
     q_vec_copy(xyzQuat.xyz,vect);
     q_copy(xyzQuat.quat,identity_quat);
     q_xyz_quat_to_ogl_matrix(translation,&xyzQuat);
+    q_vec_invert(xyzQuat.xyz,xyzQuat.xyz);
+//    q_xyz_quat_to_row_matrix(invTranslation,xyzQuat);
     qogl_matrix_mult(worldRoomTransform,translation,worldRoomTransform);
+//    q_matrix_mult(roomToWorldTransform,roomToWorldTransform,invTranslation);
 }
 
 /*
  * Translates the room relative to the world
  */
 void TransformManager::translateRoom(double x, double y, double z) {
-    qogl_matrix_type translation;
-    q_xyz_quat_type xyzQuat;
-    q_type identity_quat = Q_ID_QUAT;
-    q_vec_set(xyzQuat.xyz,x,y,z);
-    q_copy(xyzQuat.quat,identity_quat);
-    q_xyz_quat_to_ogl_matrix(translation,&xyzQuat);
-    qogl_matrix_mult(worldRoomTransform,translation,worldRoomTransform);
+    q_vec_type vec;
+    q_vec_set(vec,x,y,z);
+    translateRoom(vec);
 }
 /*
  * Sets the position and orientation of the left hand tracker

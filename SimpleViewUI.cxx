@@ -135,12 +135,14 @@ void SimpleView::slot_frameLoop() {
     if (buttonDown[ROTATE_BUTTON]) {
         q_type rotation;
         q_from_two_vecs(rotation,afterVect,beforeVect);
-        transforms.rotateRoom(rotation);
+        transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
 
     }
 
     if (buttonDown[0]) {
         transforms.translateRoom(0,0,-.0005);
+    } else if (buttonDown[8]) {
+        transforms.translateRoom(0,0,.0005);
     }
 
     // set tracker locations
