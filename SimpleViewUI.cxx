@@ -147,16 +147,13 @@ void SimpleView::slot_frameLoop() {
     q_xyz_quat_type trackerPos;
     qogl_matrix_type matrix;
     transforms.getLeftTrackerInEyeCoords(&trackerPos);
-    q_xyz_quat_to_ogl_matrix(matrix,&trackerPos);
-    qDebug() << trackerPos.xyz[0] << trackerPos.xyz[1] << trackerPos.xyz[2];
-    for (int i = 0; i < 16; i++) {
-        qDebug() << matrix[i];
-    }
-    qDebug() << "Done";
+    q_to_ogl_matrix(matrix,trackerPos.quat);
     left->SetMatrix(matrix);
+    left->Translate(trackerPos.xyz);
     transforms.getRightTrackerInEyeCoords(&trackerPos);
-    q_xyz_quat_to_ogl_matrix(matrix,&trackerPos);
+    q_to_ogl_matrix(matrix,trackerPos.quat);
     right->SetMatrix(matrix);
+    right->Translate(trackerPos.xyz);
 
     // reset transformation matrices
     transforms.getWorldToEyeMatrix(worldEye);
@@ -209,7 +206,7 @@ void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB
     SimpleView *view = (SimpleView *) userdata;
     q_xyz_quat_type data;
     // changes coordinates to OpenGL coords, switching y & z and negating y
-    data.xyz[0] = t.pos[0];
+    data.xyz[0] = -t.pos[0];
     data.xyz[1] = -t.pos[2];
     data.xyz[2] = t.pos[1];
     q_copy(data.quat,t.quat);
