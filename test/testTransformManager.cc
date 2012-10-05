@@ -56,7 +56,7 @@ int testTranslate(TransformManager *mgr) {
     int failures = 0;
     qogl_matrix_type before, after;
     mgr->getWorldToRoomMatrix(before);
-    mgr->translateWorld(3,12,-7);
+    mgr->translateWorldRelativeToRoom(3,12,-7);
     mgr->getWorldToRoomMatrix(after);
     for (int i = 0; i < 12; i++) {
         if (before[i] != after[i]) {
@@ -65,7 +65,7 @@ int testTranslate(TransformManager *mgr) {
         }
     }
     double shouldBe[4] = {3,12,-7,0};
-    qogl_matrix_vec_mult(shouldBe,before,shouldBe,true);
+    qogl_matrix_vec_mult(shouldBe,before,shouldBe,false);
     for (int i = 0; i < 4; i++) {
         if (Q_ABS(after[12+i] - before[12+i] - shouldBe[i]) > Q_EPSILON) {
             failures++;
@@ -81,7 +81,7 @@ int testTranslate(TransformManager *mgr) {
     // test inverse
     failures += testInverses(mgr,after);
 
-    mgr->translateWorld(-3,-12,7);
+    mgr->translateWorldRelativeToRoom(-3,-12,7);
     if (!testIsUndone(mgr,before)) {
         std::cout << "Translation not undone!" << std::endl;
         failures++;
@@ -166,14 +166,14 @@ int testLeftTrackerPosition() {
         q_vec_print(vec);
     }
     // this should put the tracker at the origin
-    mgr.translateWorld(0,0,10);
+    mgr.translateWorldRelativeToRoom(0,0,10);
     mgr.getLeftTrackerPosInWorldCoords(vec);
     if (vec[0] != vec[1] || vec[1] != 0 || vec[2] != 0) {
         failures++;
         std::cout << "Tracker position after translation wrong" << std::endl;
         q_vec_print(vec);
     }
-    mgr.translateWorld(5,2,0);
+    mgr.translateWorldRelativeToRoom(5,2,0);
     mgr.getLeftTrackerPosInWorldCoords(vec);
     if (vec[0] != -5 || vec[1] != -2 || vec[2] != 0) {
         failures++;
@@ -192,7 +192,7 @@ int testLeftTrackerPosition() {
         std::cout << "Tracker position after rotation wrong";
         q_vec_print(vec);
     }
-    mgr.translateWorld(vec);
+    mgr.translateWorldRelativeToRoom(vec);
     mgr.rotateWorldRelativeToRoom(qInv);
     mgr.getLeftTrackerPosInWorldCoords(vec);
     if (Q_ABS(vec[0]) > Q_EPSILON || Q_ABS(vec[1]) > Q_EPSILON
@@ -239,14 +239,14 @@ int testRightTrackerPosition() {
         q_vec_print(vec);
     }
     // this should put the tracker at the origin
-    mgr.translateWorld(0,0,10);
+    mgr.translateWorldRelativeToRoom(0,0,10);
     mgr.getRightTrackerPosInWorldCoords(vec);
     if (vec[0] != vec[1] || vec[1] != 0 || vec[2] != 0) {
         failures++;
         std::cout << "Tracker position after translation wrong" << std::endl;
         q_vec_print(vec);
     }
-    mgr.translateWorld(5,2,0);
+    mgr.translateWorldRelativeToRoom(5,2,0);
     mgr.getRightTrackerPosInWorldCoords(vec);
     if (vec[0] != -5 || vec[1] != -2 || vec[2] != 0) {
         failures++;
@@ -265,7 +265,7 @@ int testRightTrackerPosition() {
         std::cout << "Tracker position after rotation wrong";
         q_vec_print(vec);
     }
-    mgr.translateWorld(vec);
+    mgr.translateWorldRelativeToRoom(vec);
     mgr.rotateWorldRelativeToRoom(qInv);
     mgr.getRightTrackerPosInWorldCoords(vec);
     if (Q_ABS(vec[0]) > Q_EPSILON || Q_ABS(vec[1]) > Q_EPSILON
@@ -317,7 +317,7 @@ int testRotateAboutLeftTracker() {
     // difference between the trackers should initially be the a vector
     // final difference should be the b vector
 
-    mgr.translateWorld(0,0,10); // world origin = tracker origin
+    mgr.translateWorldRelativeToRoom(0,0,10); // world origin = tracker origin
     mgr.scaleWorldRelativeToRoom(8); // world units = tracker units
     // set tracker positions
     mgr.setLeftHandTransform(pos,ident);
@@ -411,7 +411,7 @@ int testRotateAboutRightTracker() {
     // difference between the trackers should initially be the a vector
     // final difference should be the b vector
 
-    mgr.translateWorld(0,0,10); // world origin = tracker origin
+    mgr.translateWorldRelativeToRoom(0,0,10); // world origin = tracker origin
     mgr.scaleWorldRelativeToRoom(8); // world units = tracker units
     // set tracker positions
     mgr.setRightHandTransform(pos,ident);
@@ -532,10 +532,10 @@ int main(int argc, char *argv[]) {
     default:
         q_type q;
         q_from_euler(q,45,45,45);
-//        mgr.translateWorld(4,-7,12);
+        mgr.translateWorldRelativeToRoom(4,-7,12);
         mgr.rotateWorldRelativeToRoom(q);
-//        mgr.translateWorld(3,2,-8);
-//        mgr.scaleWorldRelativeToRoom(.3);
+        mgr.translateWorldRelativeToRoom(3,2,-8);
+        mgr.scaleWorldRelativeToRoom(.3);
         std::cout << "Testing compositions of operations..." << std::endl;
         std::cout << "... translation ..." << std::endl;
         status += testTranslate(&mgr);

@@ -91,26 +91,26 @@ void TransformManager::rotateWorldRelativeToRoomAboutLeftTracker(const q_type qu
     // translate to the left tracker, rotate, translate back
     q_vec_type lpos;
     getLeftTrackerPosInWorldCoords(lpos);
-    translateWorld(lpos);
+    translateWorldRelativeToRoom(lpos);
     rotateWorldRelativeToRoom(quat);
     q_vec_invert(lpos,lpos);
-    translateWorld(lpos);
+    translateWorldRelativeToRoom(lpos);
 }
 
 void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(const q_type quat) {
     // translate to right tracker, rotate, translate back
     q_vec_type rpos;
     getRightTrackerPosInWorldCoords(rpos);
-    translateWorld(rpos);
+    translateWorldRelativeToRoom(rpos);
     rotateWorldRelativeToRoom(quat);
     q_vec_invert(rpos,rpos);
-    translateWorld(rpos);
+    translateWorldRelativeToRoom(rpos);
 }
 
 /*
  * Translates the room relative to the world
  */
-void TransformManager::translateWorld(const q_vec_type vect) {
+void TransformManager::translateWorldRelativeToRoom(const q_vec_type vect) {
     qogl_matrix_type translation;
     qogl_matrix_type invTranslation;
     q_xyz_quat_type xyzQuat;
@@ -127,10 +127,10 @@ void TransformManager::translateWorld(const q_vec_type vect) {
 /*
  * Translates the room relative to the world
  */
-void TransformManager::translateWorld(double x, double y, double z) {
+void TransformManager::translateWorldRelativeToRoom(double x, double y, double z) {
     q_vec_type vec;
     q_vec_set(vec,x,y,z);
-    translateWorld(vec);
+    translateWorldRelativeToRoom(vec);
 }
 /*
  * Sets the position and orientation of the left hand tracker

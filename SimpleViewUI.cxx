@@ -56,8 +56,8 @@ SimpleView::SimpleView() :
 
   vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
-  camera->SetPosition(0, 0, 10);
-  camera->SetFocalPoint(0, 0, 0);
+  camera->SetPosition(0, 0, 50);
+  camera->SetFocalPoint(0, 0, 30);
 
 
 //  vtkSmartPointer<vtkTransform> transform1a =
@@ -135,22 +135,37 @@ void SimpleView::slot_frameLoop() {
     // possibly rotate the world
     if (buttonDown[ROTATE_BUTTON]) {
         q_type rotation;
-        q_from_two_vecs(rotation,afterVect,beforeVect);
+        q_normalize(afterVect,afterVect);
+        q_normalize(beforeVect,beforeVect);
+        q_from_two_vecs(rotation,afterVect,beforeVect);/*
         q_vec_print(beforeVect);
-        q_vec_print(afterVect);
+        q_vec_print(afterVect);*/
         q_vec_type vec;
-        q_to_euler(vec,rotation);
-        qDebug() << "Euler angles:";
-        q_vec_print(vec);
-        q_print(rotation);
+        double d;
+        q_to_axis_angle(&vec[0],&vec[1],&vec[2],&d,rotation);
+        qDebug() << "Angle: " << d << endl;
+//        q_vec_scale(vec,.03125,vec);
+//        q_vec_print(vec);
+        q_from_euler(rotation,vec[0],vec[1],vec[2]);
+//        q_print(rotation);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
 
     }
 
     if (buttonDown[0]) {
-        transforms.translateWorld(0,0,-.0005);
+//        transforms.translateWorld(0,0,-.0005);
+        q_type q;
+        q_from_axis_angle(q,0,0,1,.01);
+        transforms.translateWorldRelativeToRoom(0,.05,0);
+        transforms.rotateWorldRelativeToRoom(q);
+//        transforms.translateWorld(0,-10,0);
     } else if (buttonDown[8]) {
-        transforms.translateWorld(0,0,.0005);
+//        transforms.translateWorld(0,0,.0005);
+        q_type q;
+        q_from_axis_angle(q,0,0,1,-.01);
+        transforms.translateWorldRelativeToRoom(0,.05,0);
+        transforms.rotateWorldRelativeToRoom(q);
+//        transforms.translateWorld(0,-10,0);
     }
 
     // set tracker locations

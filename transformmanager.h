@@ -23,7 +23,7 @@ public:
      */
     void scaleWorldRelativeToRoom(double amount);
     /*
-     * Rotates the room relative to the world
+     * Rotates the world relative to the room
      *
      * Uses vrpn/quatlib quaternions for the rotation
      */
@@ -37,13 +37,13 @@ public:
      */
     void rotateWorldRelativeToRoomAboutRightTracker(const q_type quat);
     /*
-     * Translates the room relative to the world
+     * Translates world by vect (where vect is in room coordinates)
      */
-    void translateWorld(const q_vec_type vect);
+    void translateWorldRelativeToRoom(const q_vec_type vect);
     /*
      * Translates the room relative to the world
      */
-    void translateWorld(double x, double y, double z);
+    void translateWorldRelativeToRoom(double x, double y, double z);
     /*
      * Sets the position and orientation of the left hand tracker
      *
