@@ -36,3 +36,6 @@ SOURCE_GROUP("Generated" FILES
  
 ADD_EXECUTABLE( RenderWindowUI ${SimpleViewSrcs} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( RenderWindowUI QVTK vrpn quat )
+
+ENABLE_TESTING()
+ADD_SUBDIRECTORY(test)

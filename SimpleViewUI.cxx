@@ -33,6 +33,7 @@ SimpleView::SimpleView() :
  
   // model
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+    sphereSource->SetRadius(.25);
     sphereSource->Update();
   vtkSmartPointer<vtkOBJReader> objReader =
           vtkSmartPointer<vtkOBJReader>::New();
@@ -55,7 +56,7 @@ SimpleView::SimpleView() :
 
   vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
-  camera->SetPosition(0, 0, 20);
+  camera->SetPosition(0, 0, 10);
   camera->SetFocalPoint(0, 0, 0);
 
 
@@ -135,14 +136,21 @@ void SimpleView::slot_frameLoop() {
     if (buttonDown[ROTATE_BUTTON]) {
         q_type rotation;
         q_from_two_vecs(rotation,afterVect,beforeVect);
+        q_vec_print(beforeVect);
+        q_vec_print(afterVect);
+        q_vec_type vec;
+        q_to_euler(vec,rotation);
+        qDebug() << "Euler angles:";
+        q_vec_print(vec);
+        q_print(rotation);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
 
     }
 
     if (buttonDown[0]) {
-        transforms.translateRoom(0,0,-.0005);
+        transforms.translateWorld(0,0,-.0005);
     } else if (buttonDown[8]) {
-        transforms.translateRoom(0,0,.0005);
+        transforms.translateWorld(0,0,.0005);
     }
 
     // set tracker locations
