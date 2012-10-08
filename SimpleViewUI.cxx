@@ -11,8 +11,9 @@
  
 #include "vtkSmartPointer.h"
 
-#define SCALE_DOWN_FACTOR .03125
+#define SCALE_DOWN_FACTOR (.03125/4)
 #define HYDRA_SCALE_FACTOR 4.0f
+#define NUM_EXTRA_FIBERS 5
 
 // Constructor
 SimpleView::SimpleView() :
@@ -26,6 +27,7 @@ SimpleView::SimpleView() :
  
   // model
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+    sphereSource->SetRadius(.5);
     sphereSource->Update();
   vtkSmartPointer<vtkOBJReader> objReader =
           vtkSmartPointer<vtkOBJReader>::New();
@@ -56,14 +58,14 @@ SimpleView::SimpleView() :
     vtkSmartPointer<vtkTransform>::New();
   transform1a->PostMultiply();
   transform1a->Scale(SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR);
- fiber1Actor->SetUserTransform(transform1a);
+// fiber1Actor->SetUserTransform(transform1a);
 
  vtkSmartPointer<vtkTransform> transform1b =
    vtkSmartPointer<vtkTransform>::New();
  transform1b->PostMultiply();
  transform1b->Scale(SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR);
  transform1b->Translate(0,0,5);
- fiber2Actor->SetUserTransform(transform1b);
+// fiber2Actor->SetUserTransform(transform1b);
 
  left = vtkSmartPointer<vtkTransform>::New();
  left->PostMultiply();
@@ -71,17 +73,40 @@ SimpleView::SimpleView() :
  right = vtkSmartPointer<vtkTransform>::New();
  right->PostMultiply();
  right->Translate(1,2,0);
- leftHand->SetUserTransform(left);
- rightHand->SetUserTransform(right);
+// leftHand->SetUserTransform(left);
+// rightHand->SetUserTransform(right);
+ fiber1Actor->SetUserTransform(left);
+ fiber2Actor->SetUserTransform(right);
  
   // VTK Renderer
   vtkSmartPointer<vtkRenderer> renderer = 
       vtkSmartPointer<vtkRenderer>::New();
   renderer->AddActor(fiber1Actor);
   renderer->AddActor(fiber2Actor);
-  renderer->AddActor(leftHand);
-  renderer->AddActor(rightHand);
+//  renderer->AddActor(leftHand);
+//  renderer->AddActor(rightHand);
   renderer->SetActiveCamera(camera);
+
+  vtkSmartPointer<vtkTransform> prev = right.GetPointer();
+  lInv = vtkSmartPointer<vtkTransform>::New();
+  lInv->Identity();
+  master = vtkSmartPointer<vtkTransform>::New();
+  master->Identity();
+  master->Concatenate(lInv);
+  master->Concatenate(right);
+  for (int i = 0; i < NUM_EXTRA_FIBERS; i++) {
+      vtkSmartPointer<vtkTransform> next = vtkSmartPointer<vtkTransform>::New();
+      next->Identity();
+      next->Concatenate(prev);
+      next->Concatenate(master);
+
+      vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+      actor->SetUserTransform(next);
+      actor->SetMapper(objMapper);
+      renderer->AddActor(actor);
+
+      prev = next.GetPointer();
+  }
  
   // VTK/Qt wedded
   this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
@@ -108,16 +133,24 @@ void SimpleView::slot_vrpnLoop() {
     this->ui->qvtkWidget->GetRenderWindow()->Render();
 }
 
-void SimpleView::setLeftPos(double x, double y, double z) {
+void SimpleView::setLeftPos(q_xyz_quat_type *xyzQuat) {
     left->Identity();
     left->PostMultiply();
-    left->Translate(x,y,z);
+    left->Scale(SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR);
+    left->RotateWXYZ(xyzQuat->quat[Q_W]*180/Q_PI,&(xyzQuat->quat[Q_X]));
+    left->Translate(xyzQuat->xyz);
+    lInv->Identity();
+    vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
+    left->GetInverse(mat);
+    lInv->Concatenate(mat);
 }
 
-void SimpleView::setRightPos(double x, double y, double z) {
+void SimpleView::setRightPos(q_xyz_quat_type *xyzQuat) {
     right->Identity();
-    left->PostMultiply();
-    right->Translate(x,y,z);
+    right->PostMultiply();
+    right->Scale(SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR);
+    right->RotateWXYZ(xyzQuat->quat[Q_W]*180/Q_PI,&(xyzQuat->quat[Q_X]));
+    right->Translate(xyzQuat->xyz);
 }
 
 //####################################################################################
@@ -129,9 +162,12 @@ void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB
 {
     SimpleView *view = (SimpleView *) userdata;
     // changes coordinates to OpenGL coords, switching y & z and negating y
+    q_xyz_quat_type type;
+    q_copy(type.quat,t.quat);
+    q_vec_scale(type.xyz,HYDRA_SCALE_FACTOR,t.pos);
     if (t.sensor == 0) {
-        view->setLeftPos(HYDRA_SCALE_FACTOR *t.pos[0],-HYDRA_SCALE_FACTOR *t.pos[2],HYDRA_SCALE_FACTOR *t.pos[1]);
+        view->setLeftPos(&type);
     } else {
-        view->setRightPos(HYDRA_SCALE_FACTOR *t.pos[0],-HYDRA_SCALE_FACTOR *t.pos[2],HYDRA_SCALE_FACTOR *t.pos[1]);
+        view->setRightPos(&type);
     }
 }

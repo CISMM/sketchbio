@@ -6,6 +6,8 @@
 #include "vrpn_Tracker.h"
 #include <QMainWindow>
 #include <QTimer>
+
+#include <quat.h>
  
 // Forward Qt class declarations
 class Ui_SimpleView;
@@ -19,8 +21,8 @@ public:
   // Constructor/Destructor
   SimpleView(); 
   ~SimpleView();
-  void setLeftPos(double x, double y, double z);
-  void setRightPos(double x, double y, double z);
+  void setLeftPos(q_xyz_quat_type *xyzQuat);
+  void setRightPos(q_xyz_quat_type *xyzQuat);
  
 public slots:
  
@@ -38,7 +40,9 @@ private:
   vrpn_Tracker_Remote tracker;
   QTimer *timer;
   vtkSmartPointer<vtkTransform> left;
+  vtkSmartPointer<vtkTransform> lInv;
   vtkSmartPointer<vtkTransform> right;
+  vtkSmartPointer<vtkTransform> master;
 };
  
 #endif // SimpleViewUI_H
