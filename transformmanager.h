@@ -110,14 +110,13 @@ public:
 
     /*
      * Rotates the world around the left tracker
-     * /
+     */
     void rotateWorldRelativeToRoomAboutLeftTracker(const q_type quat);
+
     /*
      * Rotates the world around the right tracker
-     * /
+     */
     void rotateWorldRelativeToRoomAboutRightTracker(const q_type quat);
-
-    */
 
 private:
 

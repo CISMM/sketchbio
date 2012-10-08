@@ -4,6 +4,7 @@
 TransformManager::TransformManager() {
     worldToRoom = vtkSmartPointer<vtkTransform>::New();
     roomToEyes = vtkSmartPointer<vtkTransform>::New();
+    roomToEyes->Identity();
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
     roomToTrackerBase->Translate(0,0,0); // TBD
     roomToTrackerBase->Scale(8,8,8);
@@ -109,11 +110,9 @@ void TransformManager::scaleWorldRelativeToRoom(double amount) {
 }
 
 void TransformManager::rotateWorldRelativeToRoom(const q_type quat) {
-    double x,y,z,angle;
-    q_to_axis_angle(&x,&y,&z,&angle,quat);
-    worldToRoom->PreMultiply();
-    worldToRoom->RotateWXYZ(angle *180/Q_PI,x,y,z);
-    worldToRoom->PostMultiply();
+    double xyz[3],angle;
+    q_to_axis_angle(&xyz[0],&xyz[1],&xyz[2],&angle,quat);
+    worldToRoom->RotateWXYZ(angle *180/Q_PI,xyz);
 }
 
 void TransformManager::translateWorldRelativeToRoom(const q_vec_type vect) {
@@ -122,4 +121,27 @@ void TransformManager::translateWorldRelativeToRoom(const q_vec_type vect) {
 
 void TransformManager::translateWorldRelativeToRoom(double x, double y, double z) {
     worldToRoom->Translate(x,y,z);
+}
+
+void TransformManager::rotateWorldRelativeToRoomAboutLeftTracker(const q_type quat) {
+    q_vec_type left;
+    // get left tracker position in room coordinates
+    roomToTrackerBase->Inverse();
+    roomToTrackerBase->TransformPoint(trackerBaseToLeftHand.xyz,left);
+    roomToTrackerBase->Inverse();
+    translateWorldRelativeToRoom(left);
+    rotateWorldRelativeToRoom(quat);
+    q_vec_invert(left,left);
+    translateWorldRelativeToRoom(left);
+}
+void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(const q_type quat) {
+    q_vec_type right;
+    // get right tracker position in room coordinates
+    roomToTrackerBase->Inverse();
+    roomToTrackerBase->TransformPoint(trackerBaseToRightHand.xyz,right);
+    roomToTrackerBase->Inverse();
+    translateWorldRelativeToRoom(right);
+    rotateWorldRelativeToRoom(quat);
+    q_vec_invert(right,right);
+    translateWorldRelativeToRoom(right);
 }

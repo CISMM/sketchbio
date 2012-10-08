@@ -27,15 +27,15 @@ SimpleView::SimpleView() :
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
     currentNumActors = 0;
-    //    transforms.scaleWorldRelativeToRoom(0.125);
+    transforms.scaleWorldRelativeToRoom(.03125);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;
         q_type ident = Q_ID_QUAT;
-        q_vec_set(pos.xyz,1,0,1);
+        q_vec_set(pos.xyz,.5,0,.5);
         q_vec_scale(pos.xyz,.5,pos.xyz);
         q_copy(pos.quat,ident);
         transforms.setLeftHandTransform(&pos);
-        q_vec_set(pos.xyz,1,1,1);
+        q_vec_set(pos.xyz,0,0,1);
         q_vec_scale(pos.xyz,.5,pos.xyz);
         transforms.setRightHandTransform(&pos);
     }
@@ -71,24 +71,11 @@ SimpleView::SimpleView() :
     camera->SetPosition(0, 0, 50);
     camera->SetFocalPoint(0, 0, 30);
 
-
-    //  vtkSmartPointer<vtkTransform> transform1a =
-    //    vtkSmartPointer<vtkTransform>::New();
-    //  transform1a->PostMultiply();
-    //  transform1a->Scale(SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR);
-    // fiber1Actor->SetUserTransform(transform1a);
-
-    // vtkSmartPointer<vtkTransform> transform1b =
-    //   vtkSmartPointer<vtkTransform>::New();
-    // transform1b->PostMultiply();
-    // transform1b->Scale(SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR,SCALE_DOWN_FACTOR);
-    // transform1b->Translate(0,0,5);
-    // fiber2Actor->SetUserTransform(transform1b);
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
     addActor(fiber1Actor,pos,orient);
     q_vec_set(pos,0,1,0);
-    q_from_axis_angle(orient,1,0,0,1);
+    q_from_axis_angle(orient,1,0,0,Q_PI/2);
     addActor(fiber2Actor,pos,orient);
 
     left = vtkSmartPointer<vtkTransform>::New();
@@ -144,7 +131,7 @@ void SimpleView::slot_frameLoop() {
     } else {
         q_xyz_quat_type pos;
         q_type q;
-        q_from_axis_angle(q,1,0,0,.01);
+        q_from_axis_angle(q,0,1,0,.01);
         transforms.getRightHand(&pos);
         q_xform(pos.xyz,q,pos.xyz);
 //        pos.xyz[1] += 0.01;
@@ -162,31 +149,18 @@ void SimpleView::slot_frameLoop() {
         q_normalize(afterVect,afterVect);
         q_normalize(beforeVect,beforeVect);
         q_from_two_vecs(rotation,afterVect,beforeVect);
-//        q_vec_type vec;
-//        double d;
-//        q_to_axis_angle(&vec[0],&vec[1],&vec[2],&d,rotation);
-//        qDebug() << "Angle: " << d << endl;
-        //        q_vec_scale(vec,.03125,vec);
-//        q_from_euler(rotation,vec[0],vec[1],vec[2]);
-        //        q_print(rotation);
-        transforms.rotateWorldRelativeToRoom(rotation);
+        transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
 
     }
 
     if (buttonDown[0]) {
-        //        transforms.translateWorld(0,0,-.0005);
         q_type q;
         q_from_axis_angle(q,0,0,1,.01);
-                transforms.translateWorldRelativeToRoom(0,0,-0.5);
-        //        transforms.rotateWorldRelativeToRoom(q);
-        //        transforms.translateWorld(0,-10,0);
+        transforms.translateWorldRelativeToRoom(0,0,-0.5);
     } else if (buttonDown[8]) {
-        //        transforms.translateWorld(0,0,.0005);
         q_type q;
         q_from_axis_angle(q,0,0,1,-.01);
-//                transforms.translateWorldRelativeToRoom(0,.05,0);
-        //        transforms.rotateWorldRelativeToRoom(q);
-        //        transforms.translateWorld(0,-10,0);
+        transforms.translateWorldRelativeToRoom(0,0,0.5);
     }
 
     // set tracker locations
@@ -197,11 +171,13 @@ void SimpleView::slot_frameLoop() {
     vtkSmartPointer<vtkTransform> worldEye = vtkSmartPointer<vtkTransform>::New();
     transforms.getWorldToEyeTransform(worldEye);
     for (int i = 0; i < currentNumActors; i++) {
-        qogl_matrix_type objTransform;
-        q_xyz_quat_to_ogl_matrix(objTransform,&positions[i]);
         vtkSmartPointer<vtkTransform> trans = (vtkTransform *) actors[i]->GetUserTransform();
+        trans->Identity();
         trans->PostMultiply();
-        trans->SetMatrix(objTransform);
+        double xyz[3],angle;
+        q_to_axis_angle(&xyz[0],&xyz[1],&xyz[2],&angle,positions[i].quat);
+        trans->RotateWXYZ(angle*180/Q_PI,xyz);
+        trans->Translate(positions[i].xyz);
         trans->Concatenate(worldEye);
     }
     this->ui->qvtkWidget->GetRenderWindow()->Render();
