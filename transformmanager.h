@@ -2,6 +2,8 @@
 #define TRANSFORMMANAGER_H
 
 #include <quat.h>
+#include <vtkSmartPointer.h>
+#include <vtkTransform.h>
 
 // my little addition to quatlib
 /*
@@ -18,66 +20,23 @@ public:
 
     TransformManager();
 
-    /*
-     * Scales the room relative to the world
-     */
-    void scaleWorldRelativeToRoom(double amount);
-    /*
-     * Rotates the world relative to the room
-     *
-     * Uses vrpn/quatlib quaternions for the rotation
-     */
-    void rotateWorldRelativeToRoom(const q_type quat);
-    /*
-     * Rotates the world around the left tracker
-     */
-    void rotateWorldRelativeToRoomAboutLeftTracker(const q_type quat);
-    /*
-     * Rotates the world around the right tracker
-     */
-    void rotateWorldRelativeToRoomAboutRightTracker(const q_type quat);
-    /*
-     * Translates world by vect (where vect is in room coordinates)
-     */
-    void translateWorldRelativeToRoom(const q_vec_type vect);
-    /*
-     * Translates the room relative to the world
-     */
-    void translateWorldRelativeToRoom(double x, double y, double z);
-    /*
-     * Sets the position and orientation of the left hand tracker
-     *
-     * Uses vrpn/quatlib quaternions for the orientation
-     */
-    void setLeftHandTransform(const q_vec_type pos,const q_type quat);
-    /*
-     * Sets the position and orientation of the right hand tracker
-     *
-     * Uses vrpn/quatlib quaternions for the orientation
-     */
-    void setRightHandTransform(const q_vec_type pos,const q_type quat);
 
     /*
      * Gets the matrix describing the transformation from the camera coordinates
      * to the world coordinates
      */
-    void getWorldToEyeMatrix(qogl_matrix_type destMatrix);
+    void getWorldToEyeTransform(vtkTransform *trans);
 
     /*
-     * Gets the matrix describing the transformation from world to room
+     * Gets the transform describing the transformation from world to room
      */
-    void getWorldToRoomMatrix(qogl_matrix_type destMatrix);
+    vtkTransform *getWorldToRoomTransform();
 
     /*
-     * Gets the matrix describing the transformation from room to world
+     * Sets the given transform to the transform needed to put the origin at
+     * the right tracker's eye coordinates and the orientation equal to the trackers
      */
-    void getRoomToWorldMatrix(qogl_matrix_type destMatrix);
-
-    /*
-     * Gets the position of the left tracker transformed to the eye coordinate system
-     * along with the orientation of the vector in that same coordinate system
-     */
-    void getLeftTrackerInEyeCoords(q_xyz_quat_type *dest_xyz_quat);
+    void getLeftTrackerTransformInEyeCoords(vtkTransform *trans);
 
     /*
      * Gets the position of the right tracker in world coordinates
@@ -85,10 +44,10 @@ public:
     void getLeftTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
-     * Gets the position of the right tracker transformed to the eye coordinate system
-     * along with the orientation of the vector in that same coordinate system
+     * Sets the given transform to the transform needed to put the origin at
+     * the right tracker's eye coordinates and the orientation equal to the trackers
      */
-    void getRightTrackerInEyeCoords(q_xyz_quat_type *dest_xyz_quat);
+    void getRightTrackerTransformInEyeCoords(vtkTransform *trans);
 
     /*
      * Gets the position of the left tracker in world coordinates
@@ -96,26 +55,75 @@ public:
     void getRightTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
-     * Gets the vector (in room coordinates) of the left hand to the right hand
+     * Gets the vector (in world coordinates) of the left hand to the right hand
      */
-    void getLeftToRightHandVector(q_vec_type destVec);
+    void getLeftToRightHandWorldVector(q_vec_type destVec);
 
     /*
      * Gets the distance (in room coordinates) of the left hand from the right hand
      */
-    double getDistanceBetweenHands();
+    double getWorldDistanceBetweenHands();
+
+    /*
+     * Sets the position and orientation of the left hand tracker
+     *
+     */
+    void setLeftHandTransform(const q_xyz_quat_type *xyzQuat);
+
+    /*
+     * Gets the position/orientation of the left tracker in relation to the base
+     */
+    void getLeftHand(q_xyz_quat_type *xyzQuat);
+
+    /*
+     * Gets the position/orientation of the right tracker in relation to the base
+     */
+    void getRightHand(q_xyz_quat_type *xyzQuat);
+
+    /*
+     * Sets the position and orientation of the right hand tracker
+     *
+     */
+    void setRightHandTransform(const q_xyz_quat_type *xyzQuat);
+
+    /*
+     * Scales the room relative to the world
+     */
+    void scaleWorldRelativeToRoom(double amount);
+
+    /*
+     * Rotates the world relative to the room
+     *
+     */
+    void rotateWorldRelativeToRoom(const q_type quat);
+
+    /*
+     * Translates world by vect (where vect is in room coordinates)
+     */
+    void translateWorldRelativeToRoom(const q_vec_type vect);
+
+
+    /*
+     * Translates the room relative to the world
+     */
+    void translateWorldRelativeToRoom(double x, double y, double z);
+
+    /*
+     * Rotates the world around the left tracker
+     * /
+    void rotateWorldRelativeToRoomAboutLeftTracker(const q_type quat);
+    /*
+     * Rotates the world around the right tracker
+     * /
+    void rotateWorldRelativeToRoomAboutRightTracker(const q_type quat);
+
+    */
 
 private:
 
-    qogl_matrix_type worldRoomTransform; // world to room...
-    qogl_matrix_type roomToWorldTransform; // room to world... no matrix inverse function
-    q_vec_type roomToEyes;
-
-    // Having these two separately is simpler than having them in a matrix
-    // I define them to be applied in the order add the offset THEN multiply by the scale
-    // Noone outside the internals of this class should care about this though
-    double roomToTrackerBaseScale;
-    q_vec_type roomToTrackerBaseOffset;
+    vtkSmartPointer<vtkTransform> worldToRoom;
+    vtkSmartPointer<vtkTransform> roomToEyes;
+    vtkSmartPointer<vtkTransform> roomToTrackerBase;
 
     q_xyz_quat_struct trackerBaseToLeftHand;
     q_xyz_quat_struct trackerBaseToRightHand;

@@ -1,6 +1,6 @@
 SET(TestSrcs testTransformManager.cc "${CMAKE_SOURCE_DIR}/transformmanager.cpp")
 ADD_EXECUTABLE( TransformTest ${TestSrcs})
-TARGET_LINK_LIBRARIES( TransformTest quat )
+TARGET_LINK_LIBRARIES( TransformTest QVTK quat )
 ADD_TEST(TranslateTransformTest             TransformTest "1")
 ADD_TEST(RotateTransformTest                TransformTest "2")
 ADD_TEST(ScaleTransformTest                 TransformTest "3")
