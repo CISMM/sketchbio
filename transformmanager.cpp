@@ -73,6 +73,29 @@ void TransformManager::getRightTrackerPosInWorldCoords(q_vec_type dest_vec) {
     worldToRoom->Inverse();
 }
 
+void TransformManager::getLeftTrackerOrientInWorldCoords(q_type dest) {
+    q_type vect; // xyz w=0 gives a 3 space vector to apply transformations to
+    double angle;
+    q_to_axis_angle(&vect[0], &vect[1], &vect[2],&angle,trackerBaseToLeftHand.quat);
+    vect[Q_W] = 0;
+    worldToRoom->Inverse();
+    worldToRoom->TransformVector(vect,vect);
+    worldToRoom->Inverse();
+    q_from_axis_angle(dest,vect[0],vect[1],vect[2],angle);
+}
+
+void TransformManager::getRightTrackerOrientInWorldCoords(q_type dest) {
+    q_type vect; // xyz w=0 gives a 3 space vector to apply transformations to
+    double angle;
+    q_to_axis_angle(&vect[0], &vect[1], &vect[2],&angle,trackerBaseToRightHand.quat);
+    vect[Q_W] = 0;
+    worldToRoom->Inverse();
+    worldToRoom->TransformVector(vect,vect);
+    worldToRoom->Inverse();
+    q_from_axis_angle(dest,vect[0],vect[1],vect[2],angle);
+}
+
+
 void TransformManager::getLeftToRightHandWorldVector(q_vec_type destVec) {
     q_vec_type left, right;
     getLeftTrackerPosInWorldCoords(left);

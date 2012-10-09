@@ -15,19 +15,23 @@
 #define SCALE_BUTTON 5
 #define ROTATE_BUTTON 13
 #define HYDRA_SCALE_FACTOR 4.0f
+#define HYDRA_LEFT_TRIGGER 2
+#define HYDRA_RIGHT_TRIGGER 5
 #define VRPN_ON false
+#define SCALE_DOWN_FACTOR (.03125)
+#define NUM_EXTRA_FIBERS 5
 
 // Constructor
 SimpleView::SimpleView() :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
-    transforms(),
-    timer(new QTimer())
+    timer(new QTimer()),
+    transforms()
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
     currentNumActors = 0;
-    transforms.scaleWorldRelativeToRoom(.03125);
+    transforms.scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;
         q_type ident = Q_ID_QUAT;
@@ -43,6 +47,13 @@ SimpleView::SimpleView() :
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
     buttons.register_change_handler((void *) this, handle_button);
 
+    for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
+        buttonDown[i] = false;
+    }
+    for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
+        analog[i] = 0.0;
+    }
+
     // model
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereSource->SetRadius(.25/8);
@@ -52,10 +63,10 @@ SimpleView::SimpleView() :
     objReader->SetFileName("/Users/shawn/Documents/panda/biodoodle/models/1m1j.obj");
     objReader->Update();
     vtkSmartPointer<vtkPolyDataMapper> objMapper =
-            vtkSmartPointer<vtkPolyDataMapper>::New();
+        vtkSmartPointer<vtkPolyDataMapper>::New();
     objMapper->SetInputConnection(objReader->GetOutputPort());
     vtkSmartPointer<vtkPolyDataMapper> sphereMapper =
-            vtkSmartPointer<vtkPolyDataMapper>::New();
+        vtkSmartPointer<vtkPolyDataMapper>::New();
     sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
     vtkSmartPointer<vtkActor> fiber1Actor = vtkSmartPointer<vtkActor>::New();
     fiber1Actor->SetMapper(objMapper);
@@ -65,7 +76,6 @@ SimpleView::SimpleView() :
     leftHand->SetMapper(sphereMapper);
     vtkSmartPointer<vtkActor> rightHand = vtkSmartPointer<vtkActor>::New();
     rightHand->SetMapper(sphereMapper);
-
     vtkSmartPointer<vtkCamera> camera =
             vtkSmartPointer<vtkCamera>::New();
     camera->SetPosition(0, 0, 50);
@@ -74,8 +84,8 @@ SimpleView::SimpleView() :
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
     addActor(fiber1Actor,pos,orient);
-    q_vec_set(pos,0,1,0);
-    q_from_axis_angle(orient,1,0,0,Q_PI/2);
+    q_vec_set(pos,0,2,0);
+    q_from_axis_angle(orient,0,1,0,Q_PI/22);
     addActor(fiber2Actor,pos,orient);
 
     left = vtkSmartPointer<vtkTransform>::New();
@@ -87,6 +97,7 @@ SimpleView::SimpleView() :
     leftHand->SetUserTransform(left);
     rightHand->SetUserTransform(right);
 
+
     // VTK Renderer
     vtkSmartPointer<vtkRenderer> renderer =
             vtkSmartPointer<vtkRenderer>::New();
@@ -96,6 +107,9 @@ SimpleView::SimpleView() :
     renderer->AddActor(rightHand);
     renderer->SetActiveCamera(camera);
 
+    copies = new StructureReplicator(fiber1Actor, fiber2Actor,renderer,objMapper, &transforms);
+    copies->setNumShown(NUM_EXTRA_FIBERS);
+
     // VTK/Qt wedded
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
 
@@ -104,7 +118,6 @@ SimpleView::SimpleView() :
 
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
     timer->start(16);
-
     if (VRPN_ON) {
         tracker.mainloop();
         buttons.mainloop();
@@ -114,6 +127,7 @@ SimpleView::SimpleView() :
 
 SimpleView::~SimpleView() {
     delete timer;
+    delete copies;
 }
 
 void SimpleView::slotExit() 
@@ -122,9 +136,14 @@ void SimpleView::slotExit()
 }
 
 void SimpleView::slot_frameLoop() {
-    q_vec_type beforeVect, afterVect;
+    q_vec_type beforeDVect, afterDVect, beforeLPos, beforeRPos, afterLPos, afterRPos;
+    q_type beforeLOr, afterLOr, beforeROr, afterROr;
     double dist = transforms.getWorldDistanceBetweenHands();
-    transforms.getLeftToRightHandWorldVector(beforeVect);
+    transforms.getLeftTrackerPosInWorldCoords(beforeLPos);
+    transforms.getRightTrackerPosInWorldCoords(beforeRPos);
+    transforms.getLeftTrackerOrientInWorldCoords(beforeLOr);
+    transforms.getRightTrackerOrientInWorldCoords(beforeROr);
+    transforms.getLeftToRightHandWorldVector(beforeDVect);
     if (VRPN_ON) {
         tracker.mainloop();
         buttons.mainloop();
@@ -134,21 +153,26 @@ void SimpleView::slot_frameLoop() {
         q_from_axis_angle(q,0,1,0,.01);
         transforms.getRightHand(&pos);
         q_xform(pos.xyz,q,pos.xyz);
+        q_mult(pos.quat,q,pos.quat);
 //        pos.xyz[1] += 0.01;
         transforms.setRightHandTransform(&pos);
     }
     double delta = transforms.getWorldDistanceBetweenHands() / dist;
-    transforms.getLeftToRightHandWorldVector(afterVect);
+    transforms.getLeftToRightHandWorldVector(afterDVect);
+    transforms.getLeftTrackerPosInWorldCoords(afterLPos);
+    transforms.getRightTrackerPosInWorldCoords(afterRPos);
+    transforms.getLeftTrackerOrientInWorldCoords(afterLOr);
+    transforms.getRightTrackerOrientInWorldCoords(afterROr);
     // possibly scale the world
     if (buttonDown[SCALE_BUTTON]) {
         transforms.scaleWorldRelativeToRoom(delta);
     }
     // possibly rotate the world
-    if (buttonDown[ROTATE_BUTTON]||1) {
+    if (buttonDown[ROTATE_BUTTON]) {
         q_type rotation;
-        q_normalize(afterVect,afterVect);
-        q_normalize(beforeVect,beforeVect);
-        q_from_two_vecs(rotation,afterVect,beforeVect);
+        q_normalize(afterDVect,afterDVect);
+        q_normalize(beforeDVect,beforeDVect);
+        q_from_two_vecs(rotation,afterDVect,beforeDVect);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
 
     }
@@ -163,9 +187,31 @@ void SimpleView::slot_frameLoop() {
         transforms.translateWorldRelativeToRoom(0,0,0.5);
     }
 
+    // move fibers
+    // HARD CODED----FIX AFTER DEMO
+    if (analog[HYDRA_LEFT_TRIGGER] > .5) {
+        q_vec_type diff;
+        q_vec_subtract(diff,afterLPos, beforeLPos);
+        q_vec_add(positions[0].xyz,positions[0].xyz,diff);
+        q_type changeInOrientation;
+        q_invert(beforeLOr,beforeLOr);
+        q_mult(changeInOrientation,beforeLOr,afterLOr);
+        q_mult(positions[0].quat,changeInOrientation,positions[0].quat);
+    }
+    if (analog[HYDRA_RIGHT_TRIGGER] > .5||1) {
+        q_vec_type diff;
+        q_vec_subtract(diff,afterRPos, beforeRPos);
+        q_vec_add(positions[1].xyz,positions[1].xyz,diff);
+        q_type changeInOrientation;
+        q_invert(beforeROr,beforeROr);
+        q_mult(changeInOrientation,beforeROr,afterROr);
+        q_mult(positions[1].quat,changeInOrientation,positions[1].quat);
+    }
+
     // set tracker locations
     transforms.getLeftTrackerTransformInEyeCoords(left);
     transforms.getRightTrackerTransformInEyeCoords(right);
+
 
     // reset transformation matrices
     vtkSmartPointer<vtkTransform> worldEye = vtkSmartPointer<vtkTransform>::New();
@@ -177,9 +223,15 @@ void SimpleView::slot_frameLoop() {
         double xyz[3],angle;
         q_to_axis_angle(&xyz[0],&xyz[1],&xyz[2],&angle,positions[i].quat);
         trans->RotateWXYZ(angle*180/Q_PI,xyz);
-        trans->Translate(positions[i].xyz);
+        trans->Translate(positions[i].xyz[0]*1/SCALE_DOWN_FACTOR,
+                         positions[i].xyz[1]*1/SCALE_DOWN_FACTOR,
+                         positions[i].xyz[2]*1/SCALE_DOWN_FACTOR);
         trans->Concatenate(worldEye);
     }
+
+    // update copies
+    copies->updateBaseline();
+
     this->ui->qvtkWidget->GetRenderWindow()->Render();
 }
 

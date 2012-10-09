@@ -18,9 +18,9 @@ FIND_LIBRARY(${L_VRPN} vrpn STATIC)
 FIND_LIBRARY(${L_QUAT} quat STATIC)
 
 # Set your files and resources here
-SET(SimpleViewSrcs RenderWindowUI.cxx SimpleViewUI.cxx transformmanager.cpp)
+SET(SimpleViewSrcs RenderWindowUI.cxx SimpleViewUI.cxx transformmanager.cpp structurereplicator.cpp)
 SET(SimpleViewUI SimpleViewUI.ui)
-SET(SimpleViewHeaders SimpleViewUI.h transformmanager.h)
+SET(SimpleViewHeaders SimpleViewUI.h transformmanager.h structurereplicator.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )

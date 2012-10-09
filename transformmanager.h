@@ -55,6 +55,16 @@ public:
     void getRightTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
+     * Gets left tracker orientation in world coordinates
+     */
+    void getLeftTrackerOrientInWorldCoords(q_type dest_vec);
+
+    /*
+     * Gets right tracker orientation in world coordinates
+     */
+    void getRightTrackerOrientInWorldCoords(q_type dest_vec);
+
+    /*
      * Gets the vector (in world coordinates) of the left hand to the right hand
      */
     void getLeftToRightHandWorldVector(q_vec_type destVec);

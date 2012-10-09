@@ -10,13 +10,17 @@
 #include <vrpn_Button.h>
 #include <vrpn_Analog.h>
 #include "transformmanager.h"
+#include "structurereplicator.h"
 #include <quat.h>
 #include <QMainWindow>
 #include <QTimer>
+
+#include <quat.h>
  
 // Forward Qt class declarations
 class Ui_SimpleView;
 
+#define NUM_HYDRA_BUTTONS 16
 #define NUM_HYDRA_ANALOGS 6
 
 // VRPN callback functions
@@ -56,16 +60,19 @@ private:
   Ui_SimpleView *ui;
   vrpn_Tracker_Remote tracker;
   vrpn_Button_Remote buttons;
-  bool buttonDown[16]; // number of buttons, each w/ 2 states pressed & not
+  bool buttonDown[NUM_HYDRA_BUTTONS]; // number of buttons, each w/ 2 states pressed & not
                        // 1 = pressed, 0 = not pressed.
   double analog[NUM_HYDRA_ANALOGS]; // number of analogs for hyrda
   QTimer *timer;
   TransformManager transforms;
   vtkSmartPointer<vtkActor> actors[SIMPLEVIEW_NUM_ACTORS];
   q_xyz_quat_type positions[SIMPLEVIEW_NUM_ACTORS];
+  StructureReplicator *copies;
   int currentNumActors;
   vtkSmartPointer<vtkTransform> left;
+  vtkSmartPointer<vtkTransform> lInv;
   vtkSmartPointer<vtkTransform> right;
+  vtkSmartPointer<vtkTransform> master;
 };
 
  
