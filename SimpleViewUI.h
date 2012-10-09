@@ -60,6 +60,7 @@ private:
   Ui_SimpleView *ui;
   vrpn_Tracker_Remote tracker;
   vrpn_Button_Remote buttons;
+  vrpn_Analog_Remote analogRemote;
   bool buttonDown[NUM_HYDRA_BUTTONS]; // number of buttons, each w/ 2 states pressed & not
                        // 1 = pressed, 0 = not pressed.
   double analog[NUM_HYDRA_ANALOGS]; // number of analogs for hyrda

@@ -17,7 +17,7 @@
 #define HYDRA_SCALE_FACTOR 4.0f
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
-#define VRPN_ON false
+#define VRPN_ON true
 #define SCALE_DOWN_FACTOR (.03125)
 #define NUM_EXTRA_FIBERS 5
 
@@ -25,6 +25,7 @@
 SimpleView::SimpleView() :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
+    analogRemote("Tracker0@localhost"),
     timer(new QTimer()),
     transforms()
 {
@@ -46,6 +47,7 @@ SimpleView::SimpleView() :
 
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
     buttons.register_change_handler((void *) this, handle_button);
+    analogRemote.register_change_handler((void *) this, handle_analogs);
 
     for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
         buttonDown[i] = false;
@@ -121,6 +123,7 @@ SimpleView::SimpleView() :
     if (VRPN_ON) {
         tracker.mainloop();
         buttons.mainloop();
+        analogRemote.mainloop();
     }
 
 }
@@ -147,6 +150,7 @@ void SimpleView::slot_frameLoop() {
     if (VRPN_ON) {
         tracker.mainloop();
         buttons.mainloop();
+        analogRemote.mainloop();
     } else {
         q_xyz_quat_type pos;
         q_type q;
@@ -192,15 +196,17 @@ void SimpleView::slot_frameLoop() {
     if (analog[HYDRA_LEFT_TRIGGER] > .5) {
         q_vec_type diff;
         q_vec_subtract(diff,afterLPos, beforeLPos);
+        q_vec_scale(diff,HYDRA_SCALE_FACTOR,diff);
         q_vec_add(positions[0].xyz,positions[0].xyz,diff);
         q_type changeInOrientation;
         q_invert(beforeLOr,beforeLOr);
         q_mult(changeInOrientation,beforeLOr,afterLOr);
         q_mult(positions[0].quat,changeInOrientation,positions[0].quat);
     }
-    if (analog[HYDRA_RIGHT_TRIGGER] > .5||1) {
+    if (analog[HYDRA_RIGHT_TRIGGER] > .5) {
         q_vec_type diff;
         q_vec_subtract(diff,afterRPos, beforeRPos);
+        q_vec_scale(diff,HYDRA_SCALE_FACTOR,diff);
         q_vec_add(positions[1].xyz,positions[1].xyz,diff);
         q_type changeInOrientation;
         q_invert(beforeROr,beforeROr);
