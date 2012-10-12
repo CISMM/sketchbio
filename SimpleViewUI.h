@@ -68,6 +68,7 @@ private:
   TransformManager transforms;
   vtkSmartPointer<vtkActor> actors[SIMPLEVIEW_NUM_ACTORS];
   q_xyz_quat_type positions[SIMPLEVIEW_NUM_ACTORS];
+  double actorCenterOffset[SIMPLEVIEW_NUM_ACTORS][3];
   StructureReplicator *copies;
   int currentNumActors;
   vtkSmartPointer<vtkTransform> left;

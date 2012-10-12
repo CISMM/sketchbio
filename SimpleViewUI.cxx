@@ -62,16 +62,22 @@ SimpleView::SimpleView() :
     sphereSource->Update();
     vtkSmartPointer<vtkOBJReader> objReader =
             vtkSmartPointer<vtkOBJReader>::New();
-    objReader->SetFileName("/Users/shawn/Documents/panda/biodoodle/models/1m1j.obj");
+    objReader->SetFileName("/Users/shawn/Documents/QtProjects/RenderWindowUI/models/1m1j.obj");
     objReader->Update();
     vtkSmartPointer<vtkPolyDataMapper> objMapper =
         vtkSmartPointer<vtkPolyDataMapper>::New();
     objMapper->SetInputConnection(objReader->GetOutputPort());
+
     vtkSmartPointer<vtkPolyDataMapper> sphereMapper =
         vtkSmartPointer<vtkPolyDataMapper>::New();
     sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
+
+
     vtkSmartPointer<vtkActor> fiber1Actor = vtkSmartPointer<vtkActor>::New();
     fiber1Actor->SetMapper(objMapper);
+    double bb[6];
+    fiber1Actor->GetBounds(bb);
+    qDebug() << bb[0] << bb[1] << bb[2] << bb[3] << bb[4] << bb[5];
     vtkSmartPointer<vtkActor> fiber2Actor = vtkSmartPointer<vtkActor>::New();
     fiber2Actor->SetMapper(objMapper);
     vtkSmartPointer<vtkActor> leftHand = vtkSmartPointer<vtkActor>::New();
@@ -226,6 +232,7 @@ void SimpleView::slot_frameLoop() {
         vtkSmartPointer<vtkTransform> trans = (vtkTransform *) actors[i]->GetUserTransform();
         trans->Identity();
         trans->PostMultiply();
+        trans->Translate(actorCenterOffset[i]);
         double xyz[3],angle;
         q_to_axis_angle(&xyz[0],&xyz[1],&xyz[2],&angle,positions[i].quat);
         trans->RotateWXYZ(angle*180/Q_PI,xyz);
@@ -261,9 +268,15 @@ void SimpleView::setAnalogStates(const double state[]) {
 
 void SimpleView::addActor(vtkActor *actor, q_vec_type position, q_type orientation) {
     actors[currentNumActors] = actor;
+    double bounds[6]; // bounding box
     vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Identity();
     transform->PostMultiply();
     actors[currentNumActors]->SetUserTransform(transform);
+    actors[currentNumActors]->GetBounds(bounds);
+    actorCenterOffset[currentNumActors][0] = -(bounds[0] + bounds[1])/2;
+    actorCenterOffset[currentNumActors][1] = -(bounds[2] + bounds[3])/2;
+    actorCenterOffset[currentNumActors][2] = -(bounds[4] + bounds[5])/2;
     q_vec_copy(positions[currentNumActors].xyz,position);
     q_copy(positions[currentNumActors].quat,orientation);
     currentNumActors++;
@@ -279,7 +292,7 @@ void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB
     SimpleView *view = (SimpleView *) userdata;
     q_xyz_quat_type data;
     // changes coordinates to OpenGL coords, switching y & z and negating y
-    data.xyz[0] = -t.pos[0];
+    data.xyz[0] = t.pos[0];
     data.xyz[1] = -t.pos[2];
     data.xyz[2] = t.pos[1];
     q_copy(data.quat,t.quat);
