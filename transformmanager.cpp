@@ -7,7 +7,9 @@ TransformManager::TransformManager() {
     roomToEyes->Identity();
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
     roomToTrackerBase->Translate(0,0,0); // TBD
-    roomToTrackerBase->Scale(8,8,8);
+    roomToTrackerBase->Scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
+                             TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
+                             TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE);
     q_type id_q = Q_ID_QUAT;
     q_vec_type null_vec = Q_NULL_VECTOR;
     q_copy(trackerBaseToLeftHand.quat ,id_q);
@@ -148,10 +150,8 @@ void TransformManager::translateWorldRelativeToRoom(double x, double y, double z
 
 void TransformManager::rotateWorldRelativeToRoomAboutLeftTracker(const q_type quat) {
     q_vec_type left;
-    // get left tracker position in room coordinates
-    roomToTrackerBase->Inverse();
-    roomToTrackerBase->TransformPoint(trackerBaseToLeftHand.xyz,left);
-    roomToTrackerBase->Inverse();
+    // get left tracker position in world space
+    getLeftTrackerPosInWorldCoords(left);
     translateWorldRelativeToRoom(left);
     rotateWorldRelativeToRoom(quat);
     q_vec_invert(left,left);
@@ -159,10 +159,8 @@ void TransformManager::rotateWorldRelativeToRoomAboutLeftTracker(const q_type qu
 }
 void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(const q_type quat) {
     q_vec_type right;
-    // get right tracker position in room coordinates
-    roomToTrackerBase->Inverse();
-    roomToTrackerBase->TransformPoint(trackerBaseToRightHand.xyz,right);
-    roomToTrackerBase->Inverse();
+    // get right tracker position in world space
+    getRightTrackerPosInWorldCoords(right);
     translateWorldRelativeToRoom(right);
     rotateWorldRelativeToRoom(quat);
     q_vec_invert(right,right);

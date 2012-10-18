@@ -17,7 +17,7 @@
 #define HYDRA_SCALE_FACTOR 4.0f
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
-#define VRPN_ON true
+#define VRPN_ON false
 #define SCALE_DOWN_FACTOR (.03125)
 #define NUM_EXTRA_FIBERS 5
 
@@ -182,7 +182,7 @@ void SimpleView::slot_frameLoop() {
         q_type rotation;
         q_normalize(afterDVect,afterDVect);
         q_normalize(beforeDVect,beforeDVect);
-        q_from_two_vecs(rotation,afterDVect,beforeDVect);
+        q_from_two_vecs(rotation,beforeDVect,afterDVect);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
 
     }

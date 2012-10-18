@@ -5,6 +5,8 @@
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
 
+#define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE 8
+
 // my little addition to quatlib
 /*
  * Performs the matrix * column vector multiplication between matrix and vector.  If the boolean flag is set,
