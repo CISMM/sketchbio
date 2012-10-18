@@ -1,5 +1,5 @@
-#include "ui_SimpleViewUI.h"
-#include "SimpleViewUI.h"
+#include "ui_SimpleView.h"
+#include "SimpleView.h"
 #include <QDebug>
 
 #include <vtkPolyDataMapper.h>

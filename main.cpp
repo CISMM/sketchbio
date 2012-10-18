@@ -1,5 +1,5 @@
 #include <QApplication>
-#include "SimpleViewUI.h"
+#include "SimpleView.h"
  
 int main( int argc, char** argv )
 {
