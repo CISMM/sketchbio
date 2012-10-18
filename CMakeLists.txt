@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
  
-PROJECT(RenderWindowUI)
+PROJECT(SketchBio)
  
 FIND_PACKAGE(VTK)
 INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
@@ -34,8 +34,8 @@ SOURCE_GROUP("Generated" FILES
   ${MOCSrcs}
 )
  
-ADD_EXECUTABLE( RenderWindowUI ${SimpleViewSrcs} ${UISrcs} ${MOCSrcs})
-TARGET_LINK_LIBRARIES( RenderWindowUI QVTK vrpn quat )
+ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${UISrcs} ${MOCSrcs})
+TARGET_LINK_LIBRARIES( SketchBio QVTK vrpn quat )
 
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test)
