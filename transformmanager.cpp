@@ -4,6 +4,11 @@
 TransformManager::TransformManager() {
     worldToRoom = vtkSmartPointer<vtkTransform>::New();
     roomToEyes = vtkSmartPointer<vtkTransform>::New();
+    worldEyeTransform = vtkSmartPointer<vtkTransform>::New();
+    worldEyeTransform->Identity();
+    worldEyeTransform->PostMultiply();
+    worldEyeTransform->Concatenate(worldToRoom);
+    worldEyeTransform->Concatenate(roomToEyes);
     roomToEyes->Identity();
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
     roomToTrackerBase->Translate(0,0,0); // TBD
@@ -18,11 +23,8 @@ TransformManager::TransformManager() {
     q_vec_copy(trackerBaseToRightHand.xyz,null_vec);
 }
 
-void TransformManager::getWorldToEyeTransform(vtkTransform *trans) {
-    trans->Identity();
-    trans->PostMultiply();
-    trans->Concatenate(worldToRoom);
-    trans->Concatenate(roomToEyes);
+vtkTransform * TransformManager::getWorldToEyeTransform() {
+    return worldEyeTransform;
 }
 
 vtkTransform * TransformManager::getWorldToRoomTransform() {

@@ -1,13 +1,12 @@
 #ifndef STRUCTUREREPLICATOR_H
 #define STRUCTUREREPLICATOR_H
 
+#include "worldmanager.h"
+#include "transformmanager.h"
+#include <list>
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
-#include <vtkActor.h>
-#include <vtkRenderer.h>
-#include <vtkMapper.h>
 
-#include "transformmanager.h"
 
 #define STRUCTURE_REPLICATOR_MAX_COPIES 100
 
@@ -23,7 +22,7 @@ public:
      * mapper containing the model to use on the newly created actors, and the given renderer
      * as the renderer to register the copies with.
      */
-    StructureReplicator(vtkActor *ref1, vtkActor *ref2, vtkRenderer *rend, vtkMapper *map, TransformManager *transforms);
+    StructureReplicator(int object1Id, int object2Id, WorldManager *w, TransformManager *trans);
 
     /*
      * Changes the number of copies shown to the given amount
@@ -33,20 +32,17 @@ public:
     void setNumShown(int num);
 
     /*
-     * Updates the transformation between copies, should be called after changing the positions of
-     * the original actors
+     * Gets the number of copies that are being shown
      */
-    void updateBaseline();
+    int getNumShown();
 
 private:
     int numShown;
-    vtkSmartPointer<vtkTransform> master;
-    vtkSmartPointer<vtkActor> actor1;
-    vtkSmartPointer<vtkActor> actor2;
-    vtkSmartPointer<vtkRenderer> renderer;
-    vtkSmartPointer<vtkMapper> mapper;
-    vtkSmartPointer<vtkActor> copies[STRUCTURE_REPLICATOR_MAX_COPIES];
-    TransformManager *transformMgr;
+    int id1, id2;
+    WorldManager *world;
+    std::list<int> newIds;
+    vtkSmartPointer<vtkTransform> transform;
+    TransformManager *transforms;
 };
 
 #endif // STRUCTUREREPLICATOR_H

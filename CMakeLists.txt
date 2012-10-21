@@ -18,9 +18,11 @@ FIND_LIBRARY(${L_VRPN} vrpn STATIC)
 FIND_LIBRARY(${L_QUAT} quat STATIC)
 
 # Set your files and resources here
-SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp)
+SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
+sketchobject.cpp sketchmodel.cpp worldmanager.cpp)
 SET(SimpleViewUI SimpleView.ui)
-SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h)
+SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h modelmanager.h
+sketchobject.h sketchmodel.h worldmanager.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )
@@ -33,9 +35,11 @@ SOURCE_GROUP("Generated" FILES
   ${UISrcs}
   ${MOCSrcs}
 )
+
+SET(CMAKE_CXX_FLAGS_DEBUG -Wall -g -ggdb)
  
 ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${UISrcs} ${MOCSrcs})
-TARGET_LINK_LIBRARIES( SketchBio QVTK vrpn quat )
+TARGET_LINK_LIBRARIES( SketchBio QVTK vrpn quat PQP )
 
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test)

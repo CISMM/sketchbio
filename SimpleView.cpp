@@ -5,16 +5,12 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkOBJReader.h>
 #include <vtkSphereSource.h>
-#include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkCamera.h>
-#include <vtkTransform.h>
-
-#include "vtkSmartPointer.h"
 
 #define SCALE_BUTTON 5
 #define ROTATE_BUTTON 13
-#define HYDRA_SCALE_FACTOR 4.0f
+#define HYDRA_SCALE_FACTOR 8.0f
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
 #define VRPN_ON false
@@ -26,12 +22,14 @@ SimpleView::SimpleView() :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
+    renderer(vtkSmartPointer<vtkRenderer>::New()),
+    models(ModelManager()),
     timer(new QTimer()),
+    world(&models,renderer.GetPointer()),
     transforms()
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
-    currentNumActors = 0;
     transforms.scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;
@@ -64,22 +62,27 @@ SimpleView::SimpleView() :
             vtkSmartPointer<vtkOBJReader>::New();
     objReader->SetFileName("/Users/shawn/Documents/QtProjects/RenderWindowUI/models/1m1j.obj");
     objReader->Update();
-    vtkSmartPointer<vtkPolyDataMapper> objMapper =
-        vtkSmartPointer<vtkPolyDataMapper>::New();
-    objMapper->SetInputConnection(objReader->GetOutputPort());
+    int fiberSourceType = models.addObjectSource(objReader.GetPointer());
 
     vtkSmartPointer<vtkPolyDataMapper> sphereMapper =
         vtkSmartPointer<vtkPolyDataMapper>::New();
     sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
 
 
-    vtkSmartPointer<vtkActor> fiber1Actor = vtkSmartPointer<vtkActor>::New();
-    fiber1Actor->SetMapper(objMapper);
-    double bb[6];
-    fiber1Actor->GetBounds(bb);
-    qDebug() << bb[0] << bb[1] << bb[2] << bb[3] << bb[4] << bb[5];
-    vtkSmartPointer<vtkActor> fiber2Actor = vtkSmartPointer<vtkActor>::New();
-    fiber2Actor->SetMapper(objMapper);
+    int fiberModelType = models.addObjectType(fiberSourceType,1);
+
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    int object1Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+
+    q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
+    q_from_axis_angle(orient,0,1,0,Q_PI/22);
+    int object2Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+
+    copies = new StructureReplicator(object1Id,object2Id,&world,&transforms);
+    copies->setNumShown(5);
+
+
     vtkSmartPointer<vtkActor> leftHand = vtkSmartPointer<vtkActor>::New();
     leftHand->SetMapper(sphereMapper);
     vtkSmartPointer<vtkActor> rightHand = vtkSmartPointer<vtkActor>::New();
@@ -89,34 +92,21 @@ SimpleView::SimpleView() :
     camera->SetPosition(0, 0, 50);
     camera->SetFocalPoint(0, 0, 30);
 
-    q_vec_type pos = Q_NULL_VECTOR;
-    q_type orient = Q_ID_QUAT;
-    addActor(fiber1Actor,pos,orient);
-    q_vec_set(pos,0,2,0);
-    q_from_axis_angle(orient,0,1,0,Q_PI/22);
-    addActor(fiber2Actor,pos,orient);
 
     left = vtkSmartPointer<vtkTransform>::New();
     left->PostMultiply();
-    left->Translate(-1,2,0);
+    transforms.getLeftTrackerTransformInEyeCoords(left);
     right = vtkSmartPointer<vtkTransform>::New();
     right->PostMultiply();
-    right->Translate(1,2,0);
+    transforms.getRightTrackerTransformInEyeCoords(right);
     leftHand->SetUserTransform(left);
     rightHand->SetUserTransform(right);
 
 
     // VTK Renderer
-    vtkSmartPointer<vtkRenderer> renderer =
-            vtkSmartPointer<vtkRenderer>::New();
-    renderer->AddActor(fiber1Actor);
-    renderer->AddActor(fiber2Actor);
     renderer->AddActor(leftHand);
     renderer->AddActor(rightHand);
     renderer->SetActiveCamera(camera);
-
-    copies = new StructureReplicator(fiber1Actor, fiber2Actor,renderer,objMapper, &transforms);
-    copies->setNumShown(NUM_EXTRA_FIBERS);
 
     // VTK/Qt wedded
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
@@ -201,49 +191,46 @@ void SimpleView::slot_frameLoop() {
     // HARD CODED----FIX AFTER DEMO
     if (analog[HYDRA_LEFT_TRIGGER] > .5) {
         q_vec_type diff;
+        q_xyz_quat_type position;
+        SketchObject *obj = world.getObject(0);
+        obj->getPosition(position.xyz);
+        obj->getOrientation(position.quat);
         q_vec_subtract(diff,afterLPos, beforeLPos);
-        q_vec_scale(diff,HYDRA_SCALE_FACTOR,diff);
-        q_vec_add(positions[0].xyz,positions[0].xyz,diff);
+        q_vec_scale(diff,HYDRA_SCALE_FACTOR/SCALE_DOWN_FACTOR,diff);
+        q_vec_add(position.xyz,position.xyz,diff);
         q_type changeInOrientation;
         q_invert(beforeLOr,beforeLOr);
         q_mult(changeInOrientation,beforeLOr,afterLOr);
-        q_mult(positions[0].quat,changeInOrientation,positions[0].quat);
+        q_mult(position.quat,changeInOrientation,position.quat);
+        obj->setPosition(position.xyz);
+        obj->setOrientation(position.quat);
+        obj->recalculateLocalTransform();
     }
     if (analog[HYDRA_RIGHT_TRIGGER] > .5) {
         q_vec_type diff;
+        q_xyz_quat_type position;
+        SketchObject *obj = world.getObject(1);
+        obj->getPosition(position.xyz);
+        obj->getOrientation(position.quat);
         q_vec_subtract(diff,afterRPos, beforeRPos);
-        q_vec_scale(diff,HYDRA_SCALE_FACTOR,diff);
-        q_vec_add(positions[1].xyz,positions[1].xyz,diff);
+        q_vec_scale(diff,HYDRA_SCALE_FACTOR/SCALE_DOWN_FACTOR,diff);
+        q_vec_add(position.xyz,position.xyz,diff);
         q_type changeInOrientation;
         q_invert(beforeROr,beforeROr);
         q_mult(changeInOrientation,beforeROr,afterROr);
-        q_mult(positions[1].quat,changeInOrientation,positions[1].quat);
+        q_mult(position.quat,changeInOrientation,position.quat);
+        obj->setPosition(position.xyz);
+        obj->setOrientation(position.quat);
+        obj->recalculateLocalTransform();
     }
 
     // set tracker locations
     transforms.getLeftTrackerTransformInEyeCoords(left);
     transforms.getRightTrackerTransformInEyeCoords(right);
 
-
-    // reset transformation matrices
-    vtkSmartPointer<vtkTransform> worldEye = vtkSmartPointer<vtkTransform>::New();
-    transforms.getWorldToEyeTransform(worldEye);
-    for (int i = 0; i < currentNumActors; i++) {
-        vtkSmartPointer<vtkTransform> trans = (vtkTransform *) actors[i]->GetUserTransform();
-        trans->Identity();
-        trans->PostMultiply();
-        trans->Translate(actorCenterOffset[i]);
-        double xyz[3],angle;
-        q_to_axis_angle(&xyz[0],&xyz[1],&xyz[2],&angle,positions[i].quat);
-        trans->RotateWXYZ(angle*180/Q_PI,xyz);
-        trans->Translate(positions[i].xyz[0]*1/SCALE_DOWN_FACTOR,
-                         positions[i].xyz[1]*1/SCALE_DOWN_FACTOR,
-                         positions[i].xyz[2]*1/SCALE_DOWN_FACTOR);
-        trans->Concatenate(worldEye);
-    }
-
     // update copies
-    copies->updateBaseline();
+    world.stepPhysics(16/1000.0);
+//    copies->updateBaseline();
 
     this->ui->qvtkWidget->GetRenderWindow()->Render();
 }
@@ -266,21 +253,7 @@ void SimpleView::setAnalogStates(const double state[]) {
     }
 }
 
-void SimpleView::addActor(vtkActor *actor, q_vec_type position, q_type orientation) {
-    actors[currentNumActors] = actor;
-    double bounds[6]; // bounding box
-    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-    transform->Identity();
-    transform->PostMultiply();
-    actors[currentNumActors]->SetUserTransform(transform);
-    actors[currentNumActors]->GetBounds(bounds);
-    actorCenterOffset[currentNumActors][0] = -(bounds[0] + bounds[1])/2;
-    actorCenterOffset[currentNumActors][1] = -(bounds[2] + bounds[3])/2;
-    actorCenterOffset[currentNumActors][2] = -(bounds[4] + bounds[5])/2;
-    q_vec_copy(positions[currentNumActors].xyz,position);
-    q_copy(positions[currentNumActors].quat,orientation);
-    currentNumActors++;
-}
+
 
 //####################################################################################
 // VRPN callback functions

@@ -1,70 +1,59 @@
 #include "structurereplicator.h"
+#include "sketchobject.h"
+#include <QDebug>
 
-StructureReplicator::StructureReplicator(vtkActor *ref1, vtkActor *ref2, vtkRenderer *rend, vtkMapper *map, TransformManager *transforms) {
-    actor1 = ref1;
-    actor2 = ref2;
-    renderer = rend;
-    mapper = map;
+StructureReplicator::StructureReplicator(int object1Id, int object2Id, WorldManager *w, TransformManager *trans) {
+    id1 = object1Id;
+    id2 = object2Id;
+    world = w;
     numShown = 0;
-    master = vtkSmartPointer<vtkTransform>::New();
-    master->Identity();
-    transformMgr = transforms;
-    for (int i = 0; i < STRUCTURE_REPLICATOR_MAX_COPIES; i++) {
-        copies[i] = NULL;
-    }
+    newIds = std::list<int>();
+    transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Identity();
+    transform->PostMultiply();
+    SketchObject *object1 = world->getObject(id1);
+    SketchObject *object2 = world->getObject(id2);
+    vtkSmartPointer<vtkTransform> other = object1->getLocalTransform();
+    other->Inverse();
+    transform->Concatenate(other);
+    other->Inverse();
+    transform->Concatenate(object2->getLocalTransform());
+    transforms = trans;
 }
 
 
 void StructureReplicator::setNumShown(int num) {
-    if (num > STRUCTURE_REPLICATOR_MAX_COPIES) {
-        num = STRUCTURE_REPLICATOR_MAX_COPIES;
-    } else if (num < 0) {
+    if (num < 0) {
         num = 0;
     }
     if (num > numShown) {
+        SketchObject *previous;
+        if (numShown == 0) {
+            previous = world->getObject(id2);
+        } else {
+            previous = world->getObject(newIds.back());
+        }
+        q_vec_type pos = Q_NULL_VECTOR;
+        q_type orient = Q_ID_QUAT;
         for (; numShown < num; numShown++) {
-            copies[numShown] = vtkSmartPointer<vtkActor>::New();
-            copies[numShown]->SetMapper(mapper);
-            vtkSmartPointer<vtkTransform> trans = vtkSmartPointer<vtkTransform>::New();
-            trans->Identity();
-            trans->PostMultiply();
-            if (numShown == 0) {
-                // special code for first one
-                trans->Concatenate(vtkTransform::SafeDownCast(actor2->GetUserTransform()));
-            } else {
-                trans->Concatenate(vtkTransform::SafeDownCast(copies[numShown-1]->GetUserTransform()));
-            }
-            trans->Concatenate(master);
-            copies[numShown]->SetUserTransform(trans);
-            renderer->AddActor(copies[numShown]);
+            int nextId = world->addObject(previous->getModelId(),pos,orient,transforms->getWorldToEyeTransform());
+            newIds.push_back(nextId);
+            SketchObject *next = world->getObject(nextId);
+            vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
+            tform->Identity();
+            tform->Concatenate(previous->getLocalTransform());
+            tform->Concatenate(transform);
+            next->allowLocalTransformUpdates(false);
+            previous = next;
         }
     } else {
-        while (numShown > num) {
-            renderer->RemoveActor(copies[numShown-1]);
-            copies[numShown-1] = NULL;
-            numShown--;
+        for (; numShown > num; numShown--) {
+            world->removeObject(newIds.back());
+            newIds.pop_back();
         }
     }
 }
 
-
-void StructureReplicator::updateBaseline() {
-    master->Identity();
-    master->PostMultiply();
-    vtkSmartPointer<vtkTransform> eyeWorld = vtkSmartPointer<vtkTransform>::New();
-    transformMgr->getWorldToEyeTransform(eyeWorld);
-    eyeWorld->Inverse();
-    vtkSmartPointer<vtkMatrix4x4> mat = vtkSmartPointer<vtkMatrix4x4>::New();
-    vtkSmartPointer<vtkTransform> trans1 = vtkTransform::SafeDownCast(actor1->GetUserTransform());
-    vtkSmartPointer<vtkTransform> trans2 = vtkTransform::SafeDownCast(actor2->GetUserTransform());
-    vtkSmartPointer<vtkTransform> trans1Inv = vtkSmartPointer<vtkTransform>::New();
-    trans1Inv->Identity();
-    trans1Inv->PostMultiply();
-    trans1Inv->Concatenate(trans1);
-    trans1Inv->Concatenate(eyeWorld);
-    trans1Inv->Inverse();
-    master->Concatenate(eyeWorld);
-    master->Concatenate(trans1Inv);
-    master->Concatenate(trans2);
-    master->Concatenate(mat);
+int StructureReplicator::getNumShown() {
+    return numShown;
 }

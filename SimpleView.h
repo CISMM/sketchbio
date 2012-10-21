@@ -3,19 +3,21 @@
 
 #define SIMPLEVIEW_NUM_ACTORS 4
  
-#include "vtkSmartPointer.h"
-#include "vtkTransform.h"
-#include "vtkActor.h"
+#include <vtkSmartPointer.h>
 #include <vrpn_Tracker.h>
 #include <vrpn_Button.h>
 #include <vrpn_Analog.h>
 #include "transformmanager.h"
-#include "structurereplicator.h"
 #include <quat.h>
 #include <QMainWindow>
+#include <vtkActor.h>
+#include <vtkTransform.h>
+#include <vtkRenderer.h>
 #include <QTimer>
+#include "modelmanager.h"
+#include "worldmanager.h"
+#include "structurereplicator.h"
 
-#include <quat.h>
  
 // Forward Qt class declarations
 class Ui_SimpleView;
@@ -65,16 +67,13 @@ private:
                        // 1 = pressed, 0 = not pressed.
   double analog[NUM_HYDRA_ANALOGS]; // number of analogs for hyrda
   QTimer *timer;
+  vtkSmartPointer<vtkRenderer> renderer;
+  ModelManager models;
+  WorldManager world;
   TransformManager transforms;
-  vtkSmartPointer<vtkActor> actors[SIMPLEVIEW_NUM_ACTORS];
-  q_xyz_quat_type positions[SIMPLEVIEW_NUM_ACTORS];
-  double actorCenterOffset[SIMPLEVIEW_NUM_ACTORS][3];
   StructureReplicator *copies;
-  int currentNumActors;
   vtkSmartPointer<vtkTransform> left;
-  vtkSmartPointer<vtkTransform> lInv;
   vtkSmartPointer<vtkTransform> right;
-  vtkSmartPointer<vtkTransform> master;
 };
 
  

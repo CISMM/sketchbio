@@ -7,27 +7,17 @@
 
 #define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE 8
 
-// my little addition to quatlib
-/*
- * Performs the matrix * column vector multiplication between matrix and vector.  If the boolean flag is set,
- * it assumes the vector is a point and appends a 1, otherwise it appends a 0.
- *
- * It is safe to call this method with dest = vec
- */
-void qogl_matrix_vec_mult(q_vec_type dest, const qogl_matrix_type matrix, const q_vec_type vec, bool point);
-
 class TransformManager
 {
 public:
 
     TransformManager();
 
-
     /*
-     * Gets the matrix describing the transformation from the camera coordinates
-     * to the world coordinates
+     * Gets the matrix describing the transformation from the world coordinates
+     * to the camera coordinates
      */
-    void getWorldToEyeTransform(vtkTransform *trans);
+    vtkTransform *getWorldToEyeTransform();
 
     /*
      * Gets the transform describing the transformation from world to room
@@ -134,6 +124,7 @@ private:
 
     vtkSmartPointer<vtkTransform> worldToRoom;
     vtkSmartPointer<vtkTransform> roomToEyes;
+    vtkSmartPointer<vtkTransform> worldEyeTransform;
     vtkSmartPointer<vtkTransform> roomToTrackerBase;
 
     q_xyz_quat_struct trackerBaseToLeftHand;
