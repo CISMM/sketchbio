@@ -69,8 +69,8 @@ private:
   QTimer *timer;
   vtkSmartPointer<vtkRenderer> renderer;
   ModelManager models;
-  WorldManager world;
   TransformManager transforms;
+  WorldManager world;
   StructureReplicator *copies;
   vtkSmartPointer<vtkTransform> left;
   vtkSmartPointer<vtkTransform> right;

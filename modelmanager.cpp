@@ -92,7 +92,8 @@ int ModelManager::addObjectType(int srcIndex, double scale) {
         models.reserve(2*idNum);
     }
 
-    SketchModel * sModel = new SketchModel(transformPD,1,1); // TODO these shouldn't be 1
+    // remember the mass and moment of inertia are inverses!!!!!!!!
+    SketchModel * sModel = new SketchModel(transformPD,1.0,1/10000.0); // TODO these shouldn't be magic constants
 
     models.push_back(sModel);
     return idNum;

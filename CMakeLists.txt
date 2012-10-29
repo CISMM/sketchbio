@@ -19,10 +19,10 @@ FIND_LIBRARY(${L_QUAT} quat STATIC)
 
 # Set your files and resources here
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
-sketchobject.cpp sketchmodel.cpp worldmanager.cpp)
+sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp)
 SET(SimpleViewUI SimpleView.ui)
 SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h modelmanager.h
-sketchobject.h sketchmodel.h worldmanager.h)
+sketchobject.h sketchmodel.h worldmanager.h springconnection.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )

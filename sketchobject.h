@@ -92,6 +92,41 @@ public:
       *
      *********************************************************************/
     void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const;
+    /*********************************************************************
+      *
+      * Clears the cached force and torque on the object
+      *
+     *********************************************************************/
+    inline void clearForces() {q_vec_set(forceAccum,0,0,0); q_vec_copy(torqueAccum,forceAccum);}
+    /*********************************************************************
+      *
+      * Adds the given force at the point to the cached force on the object
+      * also adds the associated torque produced by that force
+      *
+      * Note: the force is given relative to the world coordinate space
+      *         while the point is given relative to the model coordinate space
+      *
+      * point - the point relative to the model on which the force is being applied
+      * force - the force relative to the world coordinate axes
+      *
+     *********************************************************************/
+    void addForce(q_vec_type point, q_vec_type force);
+    /*********************************************************************
+      *
+      * Gets the sum of forces on the object (relative to world coordinates)
+      *
+      * out - the vector where the output will be stored
+      *
+     *********************************************************************/
+    inline void getForce(q_vec_type out) const { q_vec_copy(out,forceAccum);}
+    /*********************************************************************
+      *
+      * Gets the sum of torques on the object (relative to world coordinates)
+      *
+      * out - the vector where the output will be stored
+      *
+     *********************************************************************/
+    inline void getTorque(q_vec_type out) const { q_vec_copy(out,torqueAccum);}
 private:
     int modelId;
     vtkSmartPointer<vtkActor> actor;
@@ -99,6 +134,8 @@ private:
     q_vec_type position;
     q_type orientation;
     bool updateLocalTransform;
+    q_vec_type forceAccum;
+    q_vec_type torqueAccum;
 };
 
 #endif // SKETCHOBJECT_H

@@ -5,6 +5,8 @@ SketchObject::SketchObject(vtkActor *a, int model, vtkTransform *worldEyeTransfo
     actor = a;
     modelId = model;
     q_vec_set(position,0,0,0);
+    q_vec_copy(forceAccum,position);
+    q_vec_copy(torqueAccum,forceAccum);
     q_make(orientation,1,0,0,0);
     updateLocalTransform = true;
     vtkSmartPointer<vtkTransform> trans = (vtkTransform *) a->GetUserTransform();
@@ -29,9 +31,23 @@ void SketchObject::recalculateLocalTransform() {
         localTransform->RotateWXYZ(angle *180/Q_PI,x,y,z);
         localTransform->Translate(position);
         localTransform->Update();
+    } else {
+        localTransform->Update();
     }
 }
 
 void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const {
     localTransform->TransformPoint(modelPoint,worldCoordsOut);
+}
+
+
+void SketchObject::addForce(q_vec_type point, q_vec_type force) {
+    q_vec_type modelOrigin, worldPoint, worldOrigin, worldDifference, torque;
+    getModelSpacePointInWorldCoordinates(point,worldPoint);
+    q_vec_set(modelOrigin,0,0,0);
+    getModelSpacePointInWorldCoordinates(modelOrigin,worldOrigin);
+    q_vec_subtract(worldDifference,worldPoint,worldOrigin);
+    q_vec_add(forceAccum,forceAccum,force);
+    q_vec_cross_product(torque,worldDifference,force);
+    q_vec_add(torqueAccum,torque,torqueAccum);
 }

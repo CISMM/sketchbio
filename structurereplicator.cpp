@@ -2,21 +2,19 @@
 #include "sketchobject.h"
 #include <QDebug>
 
-StructureReplicator::StructureReplicator(int object1Id, int object2Id, WorldManager *w, TransformManager *trans) {
+StructureReplicator::StructureReplicator(ObjectId object1Id, ObjectId object2Id, WorldManager *w, TransformManager *trans) {
     id1 = object1Id;
     id2 = object2Id;
     world = w;
     numShown = 0;
-    newIds = std::list<int>();
+    newIds = std::list<ObjectId>();
     transform = vtkSmartPointer<vtkTransform>::New();
     transform->Identity();
     transform->PostMultiply();
-    SketchObject *object1 = world->getObject(id1);
-    SketchObject *object2 = world->getObject(id2);
+    SketchObject *object1 = (*id1);
+    SketchObject *object2 = (*id2);
     vtkSmartPointer<vtkTransform> other = object1->getLocalTransform();
-    other->Inverse();
-    transform->Concatenate(other);
-    other->Inverse();
+    transform->Concatenate(other->GetLinearInverse());
     transform->Concatenate(object2->getLocalTransform());
     transforms = trans;
 }
@@ -29,16 +27,16 @@ void StructureReplicator::setNumShown(int num) {
     if (num > numShown) {
         SketchObject *previous;
         if (numShown == 0) {
-            previous = world->getObject(id2);
+            previous = (*id2);
         } else {
-            previous = world->getObject(newIds.back());
+            previous = (*newIds.back());
         }
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;
         for (; numShown < num; numShown++) {
-            int nextId = world->addObject(previous->getModelId(),pos,orient,transforms->getWorldToEyeTransform());
+            ObjectId nextId = world->addObject(previous->getModelId(),pos,orient,transforms->getWorldToEyeTransform());
             newIds.push_back(nextId);
-            SketchObject *next = world->getObject(nextId);
+            SketchObject *next = (*nextId);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
             tform->Concatenate(previous->getLocalTransform());
@@ -56,4 +54,8 @@ void StructureReplicator::setNumShown(int num) {
 
 int StructureReplicator::getNumShown() {
     return numShown;
+}
+
+void StructureReplicator::updateTransform() {
+    transform->Update();
 }

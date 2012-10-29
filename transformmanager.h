@@ -4,6 +4,7 @@
 #include <quat.h>
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
+#include <vtkLinearTransform.h>
 
 #define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE 8
 
@@ -123,9 +124,11 @@ public:
 private:
 
     vtkSmartPointer<vtkTransform> worldToRoom;
+    vtkSmartPointer<vtkLinearTransform> roomToWorld;
     vtkSmartPointer<vtkTransform> roomToEyes;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     vtkSmartPointer<vtkTransform> roomToTrackerBase;
+    vtkSmartPointer<vtkLinearTransform> trackerBaseToRoom;
 
     q_xyz_quat_struct trackerBaseToLeftHand;
     q_xyz_quat_struct trackerBaseToRightHand;

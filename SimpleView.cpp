@@ -7,6 +7,7 @@
 #include <vtkSphereSource.h>
 #include <vtkRenderWindow.h>
 #include <vtkCamera.h>
+#include <vtkProperty.h>
 
 #define SCALE_BUTTON 5
 #define ROTATE_BUTTON 13
@@ -22,11 +23,11 @@ SimpleView::SimpleView() :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
+    timer(new QTimer()),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
     models(ModelManager()),
-    timer(new QTimer()),
-    world(&models,renderer.GetPointer()),
-    transforms()
+    transforms(),
+    world(&models,renderer.GetPointer(),transforms.getWorldToEyeTransform())
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
@@ -73,11 +74,21 @@ SimpleView::SimpleView() :
 
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
-    int object1Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+    ObjectId object1Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+    (*object1Id)->getActor()->GetProperty()->SetColor(1,0,0);
 
     q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
     q_from_axis_angle(orient,0,1,0,Q_PI/22);
-    int object2Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+    ObjectId object2Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+    (*object2Id)->getActor()->GetProperty()->SetColor(0,0,1);
+
+    q_vec_type p1 = {-100,0,0}, p2 = {-100,0,0};
+    SpringConnection *spring;// = new SpringConnection((*object1Id),(*object2Id),350,1,p1,p2);
+    SpringId springId;// = world.addSpring(spring);
+    q_vec_set(p1,100,0,0);
+    q_vec_set(p2,100,0,0);
+    spring = new SpringConnection((*object1Id),(*object2Id),350,1,p1,p2);
+    springId = world.addSpring(spring);
 
     copies = new StructureReplicator(object1Id,object2Id,&world,&transforms);
     copies->setNumShown(5);
@@ -115,13 +126,12 @@ SimpleView::SimpleView() :
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
 
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
-    timer->start(16);
+    timer->start(160);
     if (VRPN_ON) {
         tracker.mainloop();
         buttons.mainloop();
         analogRemote.mainloop();
     }
-
 }
 
 SimpleView::~SimpleView() {
@@ -188,41 +198,6 @@ void SimpleView::slot_frameLoop() {
     }
 
     // move fibers
-    // HARD CODED----FIX AFTER DEMO
-    if (analog[HYDRA_LEFT_TRIGGER] > .5) {
-        q_vec_type diff;
-        q_xyz_quat_type position;
-        SketchObject *obj = world.getObject(0);
-        obj->getPosition(position.xyz);
-        obj->getOrientation(position.quat);
-        q_vec_subtract(diff,afterLPos, beforeLPos);
-        q_vec_scale(diff,HYDRA_SCALE_FACTOR/SCALE_DOWN_FACTOR,diff);
-        q_vec_add(position.xyz,position.xyz,diff);
-        q_type changeInOrientation;
-        q_invert(beforeLOr,beforeLOr);
-        q_mult(changeInOrientation,beforeLOr,afterLOr);
-        q_mult(position.quat,changeInOrientation,position.quat);
-        obj->setPosition(position.xyz);
-        obj->setOrientation(position.quat);
-        obj->recalculateLocalTransform();
-    }
-    if (analog[HYDRA_RIGHT_TRIGGER] > .5) {
-        q_vec_type diff;
-        q_xyz_quat_type position;
-        SketchObject *obj = world.getObject(1);
-        obj->getPosition(position.xyz);
-        obj->getOrientation(position.quat);
-        q_vec_subtract(diff,afterRPos, beforeRPos);
-        q_vec_scale(diff,HYDRA_SCALE_FACTOR/SCALE_DOWN_FACTOR,diff);
-        q_vec_add(position.xyz,position.xyz,diff);
-        q_type changeInOrientation;
-        q_invert(beforeROr,beforeROr);
-        q_mult(changeInOrientation,beforeROr,afterROr);
-        q_mult(position.quat,changeInOrientation,position.quat);
-        obj->setPosition(position.xyz);
-        obj->setOrientation(position.quat);
-        obj->recalculateLocalTransform();
-    }
 
     // set tracker locations
     transforms.getLeftTrackerTransformInEyeCoords(left);
@@ -230,7 +205,7 @@ void SimpleView::slot_frameLoop() {
 
     // update copies
     world.stepPhysics(16/1000.0);
-//    copies->updateBaseline();
+    copies->updateTransform();
 
     this->ui->qvtkWidget->GetRenderWindow()->Render();
 }

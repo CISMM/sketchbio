@@ -3,6 +3,7 @@
 
 TransformManager::TransformManager() {
     worldToRoom = vtkSmartPointer<vtkTransform>::New();
+    roomToWorld = worldToRoom->GetLinearInverse();
     roomToEyes = vtkSmartPointer<vtkTransform>::New();
     worldEyeTransform = vtkSmartPointer<vtkTransform>::New();
     worldEyeTransform->Identity();
@@ -11,6 +12,7 @@ TransformManager::TransformManager() {
     worldEyeTransform->Concatenate(roomToEyes);
     roomToEyes->Identity();
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
+    trackerBaseToRoom = roomToTrackerBase->GetLinearInverse();
     roomToTrackerBase->Translate(0,0,0); // TBD
     roomToTrackerBase->Scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
@@ -38,20 +40,14 @@ void TransformManager::getLeftTrackerTransformInEyeCoords(vtkTransform *trans) {
     q_to_axis_angle(&x,&y,&z,&angle,trackerBaseToLeftHand.quat);
     trans->RotateWXYZ(angle * 180 / Q_PI,x,y,z);
     trans->Translate(trackerBaseToLeftHand.xyz);
-    roomToTrackerBase->Inverse();
-    trans->Concatenate(roomToTrackerBase);
-    roomToTrackerBase->Inverse();
+    trans->Concatenate(trackerBaseToRoom);
     trans->Concatenate(roomToEyes);
 }
 
 void TransformManager::getLeftTrackerPosInWorldCoords(q_vec_type dest_vec) {
     q_vec_type temp;
-    roomToTrackerBase->Inverse();
-    worldToRoom->Inverse();
-    roomToTrackerBase->TransformPoint(trackerBaseToLeftHand.xyz,temp);
-    worldToRoom->TransformPoint(temp,dest_vec);
-    roomToTrackerBase->Inverse();
-    worldToRoom->Inverse();
+    trackerBaseToRoom->TransformPoint(trackerBaseToLeftHand.xyz,temp);
+    roomToWorld->TransformPoint(temp,dest_vec);
 }
 
 void TransformManager::getRightTrackerTransformInEyeCoords(vtkTransform *trans) {
@@ -61,20 +57,14 @@ void TransformManager::getRightTrackerTransformInEyeCoords(vtkTransform *trans) 
     q_to_axis_angle(&x,&y,&z,&angle,trackerBaseToRightHand.quat);
     trans->RotateWXYZ(angle * 180 / Q_PI,x,y,z);
     trans->Translate(trackerBaseToRightHand.xyz);
-    roomToTrackerBase->Inverse();
-    trans->Concatenate(roomToTrackerBase);
-    roomToTrackerBase->Inverse();
+    trans->Concatenate(trackerBaseToRoom);
     trans->Concatenate(roomToEyes);
 }
 
 void TransformManager::getRightTrackerPosInWorldCoords(q_vec_type dest_vec) {
     q_vec_type temp;
-    roomToTrackerBase->Inverse();
-    worldToRoom->Inverse();
-    roomToTrackerBase->TransformPoint(trackerBaseToRightHand.xyz,temp);
-    worldToRoom->TransformPoint(temp,dest_vec);
-    roomToTrackerBase->Inverse();
-    worldToRoom->Inverse();
+    trackerBaseToRoom->TransformPoint(trackerBaseToRightHand.xyz,temp);
+    roomToWorld->TransformPoint(temp,dest_vec);
 }
 
 void TransformManager::getLeftTrackerOrientInWorldCoords(q_type dest) {
@@ -82,9 +72,7 @@ void TransformManager::getLeftTrackerOrientInWorldCoords(q_type dest) {
     double angle;
     q_to_axis_angle(&vect[0], &vect[1], &vect[2],&angle,trackerBaseToLeftHand.quat);
     vect[Q_W] = 0;
-    worldToRoom->Inverse();
-    worldToRoom->TransformVector(vect,vect);
-    worldToRoom->Inverse();
+    roomToWorld->TransformVector(vect,vect);
     q_from_axis_angle(dest,vect[0],vect[1],vect[2],angle);
 }
 
@@ -93,9 +81,7 @@ void TransformManager::getRightTrackerOrientInWorldCoords(q_type dest) {
     double angle;
     q_to_axis_angle(&vect[0], &vect[1], &vect[2],&angle,trackerBaseToRightHand.quat);
     vect[Q_W] = 0;
-    worldToRoom->Inverse();
-    worldToRoom->TransformVector(vect,vect);
-    worldToRoom->Inverse();
+    roomToWorld->TransformVector(vect,vect);
     q_from_axis_angle(dest,vect[0],vect[1],vect[2],angle);
 }
 
