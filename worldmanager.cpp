@@ -126,7 +126,6 @@ void WorldManager::removeSpring(SpringId id) {
     connections.erase(id);
 
     springEndConnections->DeleteCell(conn->getCellId());
-//    springEndConnections->RemoveDeletedCells();
     // can't delete points...
 
     delete conn;

@@ -182,7 +182,6 @@ void SimpleView::handleInput() {
         q_normalize(beforeDVect,beforeDVect);
         q_from_two_vecs(rotation,beforeDVect,afterDVect);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-
     }
 
     if (buttonDown[0]) {
@@ -219,8 +218,6 @@ inline int getMinIdx(const q_vec_type vec) {
 }
 
 void SimpleView::updateTrackerObjectConnections() {
-    // TODO
-    // sloppy, inserts at front of vector -- rethink spring indices since cells are renumbered on delete
     for (int i = 0; i < 2; i++) {
         int analogIdx, objIdx;
         ObjectId tracker;
@@ -238,7 +235,7 @@ void SimpleView::updateTrackerObjectConnections() {
         }
         if (analog[analogIdx] > .1) {
             // either add springs or update their endpoints
-            if (springs->size() == 0) {
+            if (springs->size() == 0) { // add springs
                 SketchObject *obj = (*objects[objIdx]);
                 SketchObject *trackerObj = *tracker;
                 q_vec_type oPos, tPos, vec;
@@ -260,24 +257,26 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_add(wPos2,tPos,per1);
                 q_vec_add(wPos1,oPos,per1);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
-                springs->insert(springs->begin(),id);
+                springs->push_back(id);
                 q_vec_invert(per1,per1);
                 q_vec_add(wPos2,tPos,per1);
                 q_vec_add(wPos1,oPos,per1);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
-                springs->insert(springs->begin(),id);
+                springs->push_back(id);
                 q_vec_add(wPos2,tPos,per2);
                 q_vec_add(wPos1,oPos,per2);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
-                springs->insert(springs->begin(),id);
+                springs->push_back(id);
                 q_vec_invert(per2,per2);
                 q_vec_add(wPos2,tPos,per2);
                 q_vec_add(wPos1,oPos,per2);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
-                springs->insert(springs->begin(),id);
+                springs->push_back(id);
 #undef VEC_LEN
-            } else {
-                // TODO
+            } else { // update springs
+                for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
+                    (*(*it))->setStiffness(analog[analogIdx]);
+                }
             }
         } else {
             if (!springs->empty()) {
