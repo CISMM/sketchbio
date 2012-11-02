@@ -126,11 +126,8 @@ void WorldManager::removeSpring(SpringId id) {
     connections.erase(id);
 
     springEndConnections->DeleteCell(conn->getCellId());
-    springEndConnections->RemoveDeletedCells();
+//    springEndConnections->RemoveDeletedCells();
     // can't delete points...
-    springEndConnections->Modified();
-    springEndConnections->Update();
-    tubeFilter->Update();
 
     delete conn;
 }
@@ -199,5 +196,23 @@ void WorldManager::stepPhysics(double dt) {
         springEnds->SetPoint((*id)->getEnd2Id(),pos2);
     }
     springEnds->Modified();
+    int num = springEndConnections->GetNumberOfLines(), num2;
+    springEndConnections->RemoveDeletedCells();
+    if (num != (num2 = springEndConnections->GetNumberOfLines())) {
+        for (vtkIdType i = 0; i < num2; i++) {
+            springEndConnections->DeleteCell(i);
+        }
+        springEndConnections->RemoveDeletedCells();
+        for (SpringId id = connections.begin(); id != connections.end(); id++) {
+            vtkIdType pts[2];
+            pts[0] = (*id)->getEnd1Id();
+            pts[1] = (*id)->getEnd2Id();
+            vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
+            (*id)->setCellId(cellId);
+        }
+        springEndConnections->Modified();
+        springEndConnections->Update();
+        tubeFilter->Update();
+    }
     springEndConnections->Update();
 }
