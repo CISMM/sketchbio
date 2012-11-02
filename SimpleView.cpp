@@ -17,6 +17,8 @@
 #define VRPN_ON true
 #define SCALE_DOWN_FACTOR (.03125)
 #define NUM_EXTRA_FIBERS 5
+#define COLOR1 1,0,0
+#define COLOR2 0,1,1
 
 // Constructor
 SimpleView::SimpleView() :
@@ -74,13 +76,13 @@ SimpleView::SimpleView() :
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
     ObjectId object1Id = world.addObject(fiberModelType,pos,orient);
-    (*object1Id)->getActor()->GetProperty()->SetColor(1,0,0);
+    (*object1Id)->getActor()->GetProperty()->SetColor(COLOR1);
     objects.push_back(object1Id);
 
     q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
     q_from_axis_angle(orient,0,1,0,Q_PI/22);
     ObjectId object2Id = world.addObject(fiberModelType,pos,orient);
-    (*object2Id)->getActor()->GetProperty()->SetColor(0,0,1);
+    (*object2Id)->getActor()->GetProperty()->SetColor(COLOR2);
     objects.push_back((object2Id));
 
     // creating springs
