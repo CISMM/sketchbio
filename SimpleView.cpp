@@ -19,6 +19,7 @@
 #define NUM_EXTRA_FIBERS 5
 #define COLOR1 1,0,0
 #define COLOR2 0,1,1
+#define BOND_SPRING_CONSTANT .5
 
 // Constructor
 SimpleView::SimpleView() :
@@ -87,11 +88,11 @@ SimpleView::SimpleView() :
 
     // creating springs
     q_vec_type p1 = {200,30,0}, p2 = {0,-30,0};
-    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),20,1,p1,p2);
+    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),20,BOND_SPRING_CONSTANT,p1,p2);
     SpringId springId = world.addSpring(spring);
     q_vec_set(p1,0,30,0);
     q_vec_set(p2,-200,-30,0);
-    spring = new SpringConnection((*object1Id),(*object2Id),20,.5,p1,p2);
+    spring = new SpringConnection((*object1Id),(*object2Id),20,BOND_SPRING_CONSTANT,p1,p2);
     springId = world.addSpring(spring);
 
     // copying objects
@@ -251,30 +252,41 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_cross_product(per1,axis,vec);
                 q_vec_normalize(per1,per1);
                 q_vec_cross_product(per2,per1,vec); // should already be length 1
-#define VEC_LEN 5
-                q_vec_scale(per1,VEC_LEN,per1);
-                q_vec_scale(per2,VEC_LEN,per2);
+#define OBJECT_SIDE_LEN 100
+#define TRACKER_SIDE_LEN 5
+                q_vec_type oPer1, oPer2, tPer1, tPer2;
+                q_vec_scale(oPer1,OBJECT_SIDE_LEN,per1);
+                q_vec_scale(oPer2,OBJECT_SIDE_LEN,per2);
+                q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
+                q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
                 q_vec_type wPos1, wPos2;
                 SpringId id;
-                q_vec_add(wPos2,tPos,per1);
-                q_vec_add(wPos1,oPos,per1);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                q_vec_add(wPos2,tPos,tPer1);
+                q_vec_add(wPos1,oPos,oPer1);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
                 springs->push_back(id);
-                q_vec_invert(per1,per1);
-                q_vec_add(wPos2,tPos,per1);
-                q_vec_add(wPos1,oPos,per1);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                q_vec_invert(oPer1,oPer1);
+                q_vec_invert(tPer1,tPer1);
+                q_vec_add(wPos2,tPos,tPer1);
+                q_vec_add(wPos1,oPos,oPer1);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
                 springs->push_back(id);
-                q_vec_add(wPos2,tPos,per2);
-                q_vec_add(wPos1,oPos,per2);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                q_vec_add(wPos2,tPos,tPer2);
+                q_vec_add(wPos1,oPos,oPer2);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
                 springs->push_back(id);
-                q_vec_invert(per2,per2);
-                q_vec_add(wPos2,tPos,per2);
-                q_vec_add(wPos1,oPos,per2);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                q_vec_invert(oPer2,oPer2);
+                q_vec_invert(tPer2,tPer2);
+                q_vec_add(wPos2,tPos,tPer2);
+                q_vec_add(wPos1,oPos,oPer2);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
                 springs->push_back(id);
-#undef VEC_LEN
+#undef OBJECT_SIDE_LEN
+#undef TRACKER_SIDE_LEN
             } else { // update springs
                 for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
                     (*(*it))->setStiffness(analog[analogIdx]);
