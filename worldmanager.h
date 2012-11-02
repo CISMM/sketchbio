@@ -8,6 +8,7 @@
 #include "springconnection.h"
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
+#include <vtkTubeFilter.h>
 
 // These will be returned from the add calls and used to get the
 // object/spring that was added and later to remove it
@@ -37,7 +38,7 @@ public:
      *                  new object's actor
      *
      *******************************************************************/
-    ObjectId addObject(int modelId,q_vec_type pos, q_type orient, vtkTransform *worldEyeTransform);
+    ObjectId addObject(int modelId,q_vec_type pos, q_type orient);
 
     /*******************************************************************
      *
@@ -72,6 +73,22 @@ public:
 
     /*******************************************************************
      *
+     * Adds the a spring between the two models and returns its id.  Returns an iterator
+     * to the position of that spring in the list
+     *
+     * id1 - the id of the first object to connect
+     * id2 - the id of the second object to connect
+     * worldPos1 - the position in world coordinates where the spring connects to the first model
+     * worldPos2 - the position in world coordinates where the spring connects to the second model
+     * k - the stiffness of the spring
+     * l - the length of the spring
+     *
+     *******************************************************************/
+    SpringId addSpring(ObjectId id1, ObjectId id2, const q_vec_type worldPos1,
+                       const q_vec_type worldPos2, double k, double l);
+
+    /*******************************************************************
+     *
      * Removes the spring identified by the given iterator from the list
      *
      *******************************************************************/
@@ -102,6 +119,8 @@ private:
     int lastCapacityUpdate;
     vtkSmartPointer<vtkPoints> springEnds;
     vtkSmartPointer<vtkPolyData> springEndConnections;
+    vtkSmartPointer<vtkTubeFilter> tubeFilter;
+    vtkSmartPointer<vtkTransform> worldEyeTransform;
 };
 
 #endif // WORLDMANAGER_H

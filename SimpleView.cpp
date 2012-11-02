@@ -14,7 +14,7 @@
 #define HYDRA_SCALE_FACTOR 8.0f
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
-#define VRPN_ON false
+#define VRPN_ON true
 #define SCALE_DOWN_FACTOR (.03125)
 #define NUM_EXTRA_FIBERS 5
 
@@ -55,68 +55,70 @@ SimpleView::SimpleView() :
         analog[i] = 0.0;
     }
 
-    // model
+    // models
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-    sphereSource->SetRadius(.25/8);
+    sphereSource->SetRadius(4);
     sphereSource->Update();
     vtkSmartPointer<vtkOBJReader> objReader =
             vtkSmartPointer<vtkOBJReader>::New();
     objReader->SetFileName("/Users/shawn/Documents/QtProjects/RenderWindowUI/models/1m1j.obj");
     objReader->Update();
     int fiberSourceType = models.addObjectSource(objReader.GetPointer());
-
-    vtkSmartPointer<vtkPolyDataMapper> sphereMapper =
-        vtkSmartPointer<vtkPolyDataMapper>::New();
-    sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
+    int sphereSourceType = models.addObjectSource(sphereSource.GetPointer());
 
 
     int fiberModelType = models.addObjectType(fiberSourceType,1);
+    int sphereModelType = models.addObjectType(sphereSourceType,TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
 
+    // creating objects
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
-    ObjectId object1Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+    ObjectId object1Id = world.addObject(fiberModelType,pos,orient);
     (*object1Id)->getActor()->GetProperty()->SetColor(1,0,0);
+    objects.push_back(object1Id);
 
     q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
     q_from_axis_angle(orient,0,1,0,Q_PI/22);
-    ObjectId object2Id = world.addObject(fiberModelType,pos,orient,transforms.getWorldToEyeTransform());
+    ObjectId object2Id = world.addObject(fiberModelType,pos,orient);
     (*object2Id)->getActor()->GetProperty()->SetColor(0,0,1);
+    objects.push_back((object2Id));
 
-    q_vec_type p1 = {-100,0,0}, p2 = {-100,0,0};
-    SpringConnection *spring;// = new SpringConnection((*object1Id),(*object2Id),350,1,p1,p2);
-    SpringId springId;// = world.addSpring(spring);
-    q_vec_set(p1,100,0,0);
-    q_vec_set(p2,100,0,0);
-    spring = new SpringConnection((*object1Id),(*object2Id),350,1,p1,p2);
+    // creating springs
+    q_vec_type p1 = {200,30,0}, p2 = {0,-30,0};
+    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),20,1,p1,p2);
+    SpringId springId = world.addSpring(spring);
+    q_vec_set(p1,0,30,0);
+    q_vec_set(p2,-200,-30,0);
+    spring = new SpringConnection((*object1Id),(*object2Id),20,.5,p1,p2);
     springId = world.addSpring(spring);
 
-    copies = new StructureReplicator(object1Id,object2Id,&world,&transforms);
-    copies->setNumShown(5);
+    // copying objects
+    copies = new StructureReplicator(object1Id,object2Id,&world);
+//    copies->setNumShown(5);
 
+    // add objects for trackers
+    q_vec_set(pos,0,0,0);
+    q_from_axis_angle(orient,1,0,0,0);
 
-    vtkSmartPointer<vtkActor> leftHand = vtkSmartPointer<vtkActor>::New();
-    leftHand->SetMapper(sphereMapper);
-    vtkSmartPointer<vtkActor> rightHand = vtkSmartPointer<vtkActor>::New();
-    rightHand->SetMapper(sphereMapper);
+    leftHand = world.addObject(sphereModelType,pos,orient);
+    (*leftHand)->setDoPhysics(false);
+//    (*leftHand)->allowLocalTransformUpdates(false);
+    rightHand = world.addObject(sphereModelType,pos,orient);
+    (*rightHand)->setDoPhysics(false);
+//    (*rightHand)->allowLocalTransformUpdates(false);
+
+    // camera setup
     vtkSmartPointer<vtkCamera> camera =
             vtkSmartPointer<vtkCamera>::New();
     camera->SetPosition(0, 0, 50);
     camera->SetFocalPoint(0, 0, 30);
 
 
-    left = vtkSmartPointer<vtkTransform>::New();
-    left->PostMultiply();
-    transforms.getLeftTrackerTransformInEyeCoords(left);
-    right = vtkSmartPointer<vtkTransform>::New();
-    right->PostMultiply();
-    transforms.getRightTrackerTransformInEyeCoords(right);
-    leftHand->SetUserTransform(left);
-    rightHand->SetUserTransform(right);
+    // set up tracker objects
+    handleInput();
 
 
     // VTK Renderer
-    renderer->AddActor(leftHand);
-    renderer->AddActor(rightHand);
     renderer->SetActiveCamera(camera);
 
     // VTK/Qt wedded
@@ -125,13 +127,9 @@ SimpleView::SimpleView() :
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
 
+    // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
-    timer->start(160);
-    if (VRPN_ON) {
-        tracker.mainloop();
-        buttons.mainloop();
-        analogRemote.mainloop();
-    }
+    timer->start(16);
 }
 
 SimpleView::~SimpleView() {
@@ -144,7 +142,7 @@ void SimpleView::slotExit()
     qApp->exit();
 }
 
-void SimpleView::slot_frameLoop() {
+void SimpleView::handleInput() {
     q_vec_type beforeDVect, afterDVect, beforeLPos, beforeRPos, afterLPos, afterRPos;
     q_type beforeLOr, afterLOr, beforeROr, afterROr;
     double dist = transforms.getWorldDistanceBetweenHands();
@@ -198,15 +196,125 @@ void SimpleView::slot_frameLoop() {
     }
 
     // move fibers
+    updateTrackerObjectConnections();
 
     // set tracker locations
-    transforms.getLeftTrackerTransformInEyeCoords(left);
-    transforms.getRightTrackerTransformInEyeCoords(right);
+    updateTrackerPositions();
+}
 
-    // update copies
+inline int getMinIdx(const q_vec_type vec) {
+    if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Y])) {
+        if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Z])) {
+            return Q_X;
+        } else {
+            return Q_Z;
+        }
+    } else {
+        if (Q_ABS(vec[Q_Y]) < Q_ABS(vec[Q_Z])) {
+            return Q_Y;
+        } else {
+            return Q_Z;
+        }
+    }
+}
+
+void SimpleView::updateTrackerObjectConnections() {
+    // TODO
+    // sloppy, inserts at front of vector -- rethink spring indices since cells are renumbered on delete
+    for (int i = 0; i < 2; i++) {
+        int analogIdx, objIdx;
+        ObjectId tracker;
+        std::vector<SpringId> *springs;
+        if (i == 0) {
+            analogIdx = HYDRA_LEFT_TRIGGER;
+            objIdx = 0;
+            tracker = leftHand;
+            springs = &lhand;
+        } else if (i == 1) {
+            analogIdx = HYDRA_RIGHT_TRIGGER;
+            objIdx = 1;
+            tracker = rightHand;
+            springs = &rhand;
+        }
+        if (analog[analogIdx] > .1) {
+            // either add springs or update their endpoints
+            if (springs->size() == 0) {
+                SketchObject *obj = (*objects[objIdx]);
+                SketchObject *trackerObj = *tracker;
+                q_vec_type oPos, tPos, vec;
+                obj->getPosition(oPos);
+                trackerObj->getPosition(tPos);
+                q_vec_subtract(vec,tPos,oPos);
+                q_vec_normalize(vec,vec);
+                q_vec_type axis = Q_NULL_VECTOR;
+                axis[getMinIdx(vec)] = 1;
+                q_vec_type per1, per2;
+                q_vec_cross_product(per1,axis,vec);
+                q_vec_normalize(per1,per1);
+                q_vec_cross_product(per2,per1,vec); // should already be length 1
+#define VEC_LEN 5
+                q_vec_scale(per1,VEC_LEN,per1);
+                q_vec_scale(per2,VEC_LEN,per2);
+                q_vec_type wPos1, wPos2;
+                SpringId id;
+                q_vec_add(wPos2,tPos,per1);
+                q_vec_add(wPos1,oPos,per1);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                springs->insert(springs->begin(),id);
+                q_vec_invert(per1,per1);
+                q_vec_add(wPos2,tPos,per1);
+                q_vec_add(wPos1,oPos,per1);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                springs->insert(springs->begin(),id);
+                q_vec_add(wPos2,tPos,per2);
+                q_vec_add(wPos1,oPos,per2);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                springs->insert(springs->begin(),id);
+                q_vec_invert(per2,per2);
+                q_vec_add(wPos2,tPos,per2);
+                q_vec_add(wPos1,oPos,per2);
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,analog[analogIdx],VEC_LEN);
+                springs->insert(springs->begin(),id);
+#undef VEC_LEN
+            } else {
+                // TODO
+            }
+        } else {
+            if (!springs->empty()) {
+                // remove springs between model & tracker
+                for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
+                    world.removeSpring(*it);
+                }
+                springs->clear();
+            }
+        }
+    }
+}
+
+void SimpleView::updateTrackerPositions() {
+    q_vec_type pos;
+    q_type orient;
+    transforms.getLeftTrackerPosInWorldCoords(pos);
+    transforms.getLeftTrackerOrientInWorldCoords(orient);
+    (*leftHand)->setPosition(pos);
+    (*leftHand)->setOrientation(orient);
+    transforms.getLeftTrackerTransformInEyeCoords((vtkTransform*)(*leftHand)->getActor()->GetUserTransform());
+    transforms.getRightTrackerPosInWorldCoords(pos);
+    transforms.getRightTrackerOrientInWorldCoords(orient);
+    (*rightHand)->setPosition(pos);
+    (*rightHand)->setOrientation(orient);
+    transforms.getRightTrackerTransformInEyeCoords((vtkTransform*)(*rightHand)->getActor()->GetUserTransform());
+}
+
+void SimpleView::slot_frameLoop() {
+    // input
+    handleInput();
+
+    // physics
     world.stepPhysics(16/1000.0);
     copies->updateTransform();
 
+    // render
     this->ui->qvtkWidget->GetRenderWindow()->Render();
 }
 

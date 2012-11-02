@@ -5,8 +5,6 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkPolyDataMapper.h>
 
-class PQP_Model;
-
 class SketchModel
 {
 public:

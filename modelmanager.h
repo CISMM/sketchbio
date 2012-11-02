@@ -21,6 +21,7 @@
 #include "sketchmodel.h"
 #include <vector>
 
+
 class ModelManager
 {
 public:

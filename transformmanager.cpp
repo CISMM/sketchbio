@@ -3,6 +3,7 @@
 
 TransformManager::TransformManager() {
     worldToRoom = vtkSmartPointer<vtkTransform>::New();
+    worldToRoom->Identity();
     roomToWorld = worldToRoom->GetLinearInverse();
     roomToEyes = vtkSmartPointer<vtkTransform>::New();
     worldEyeTransform = vtkSmartPointer<vtkTransform>::New();
@@ -12,11 +13,11 @@ TransformManager::TransformManager() {
     worldEyeTransform->Concatenate(roomToEyes);
     roomToEyes->Identity();
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
-    trackerBaseToRoom = roomToTrackerBase->GetLinearInverse();
     roomToTrackerBase->Translate(0,0,0); // TBD
     roomToTrackerBase->Scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE);
+    trackerBaseToRoom = roomToTrackerBase->GetLinearInverse();
     q_type id_q = Q_ID_QUAT;
     q_vec_type null_vec = Q_NULL_VECTOR;
     q_copy(trackerBaseToLeftHand.quat ,id_q);

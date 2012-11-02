@@ -8,7 +8,7 @@ SketchObject::SketchObject(vtkActor *a, int model, vtkTransform *worldEyeTransfo
     q_vec_copy(forceAccum,position);
     q_vec_copy(torqueAccum,forceAccum);
     q_make(orientation,1,0,0,0);
-    updateLocalTransform = true;
+    allowTransformUpdate = true;
     vtkSmartPointer<vtkTransform> trans = (vtkTransform *) a->GetUserTransform();
     if (trans == NULL) {
         trans = vtkSmartPointer<vtkTransform>::New();
@@ -24,7 +24,7 @@ SketchObject::SketchObject(vtkActor *a, int model, vtkTransform *worldEyeTransfo
 }
 
 void SketchObject::recalculateLocalTransform() {
-    if (updateLocalTransform) {
+    if (allowTransformUpdate) {
         localTransform->Identity();
         double x,y,z,angle;
         q_to_axis_angle(&x,&y,&z,&angle,orientation);

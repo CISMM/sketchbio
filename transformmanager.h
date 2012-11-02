@@ -6,7 +6,7 @@
 #include <vtkTransform.h>
 #include <vtkLinearTransform.h>
 
-#define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE 8
+#define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE .0625
 
 class TransformManager
 {

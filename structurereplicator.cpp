@@ -2,7 +2,7 @@
 #include "sketchobject.h"
 #include <QDebug>
 
-StructureReplicator::StructureReplicator(ObjectId object1Id, ObjectId object2Id, WorldManager *w, TransformManager *trans) {
+StructureReplicator::StructureReplicator(ObjectId object1Id, ObjectId object2Id, WorldManager *w) {
     id1 = object1Id;
     id2 = object2Id;
     world = w;
@@ -16,7 +16,6 @@ StructureReplicator::StructureReplicator(ObjectId object1Id, ObjectId object2Id,
     vtkSmartPointer<vtkTransform> other = object1->getLocalTransform();
     transform->Concatenate(other->GetLinearInverse());
     transform->Concatenate(object2->getLocalTransform());
-    transforms = trans;
 }
 
 
@@ -34,7 +33,7 @@ void StructureReplicator::setNumShown(int num) {
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;
         for (; numShown < num; numShown++) {
-            ObjectId nextId = world->addObject(previous->getModelId(),pos,orient,transforms->getWorldToEyeTransform());
+            ObjectId nextId = world->addObject(previous->getModelId(),pos,orient);
             newIds.push_back(nextId);
             SketchObject *next = (*nextId);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
@@ -42,6 +41,7 @@ void StructureReplicator::setNumShown(int num) {
             tform->Concatenate(previous->getLocalTransform());
             tform->Concatenate(transform);
             next->allowLocalTransformUpdates(false);
+            next->setDoPhysics(false);
             previous = next;
         }
     } else {

@@ -81,7 +81,7 @@ public:
       *     been redefined to update based on something else
       *
      *********************************************************************/
-    inline void allowLocalTransformUpdates(bool allow) { updateLocalTransform = allow; }
+    inline void allowLocalTransformUpdates(bool allow) { allowTransformUpdate = allow; }
     /*********************************************************************
       *
       * Gets the corresponding world coordinates for the given point in the
@@ -127,13 +127,28 @@ public:
       *
      *********************************************************************/
     inline void getTorque(q_vec_type out) const { q_vec_copy(out,torqueAccum);}
+
+    /*********************************************************************
+      *
+      * Returns true if this object should be affected by physics
+      *
+     *********************************************************************/
+    inline bool doPhysics() const { return !dontDoPhysics; }
+    /*********************************************************************
+      *
+      * Sets whether to do physics on this object
+      *
+      * doPhysics - true if this object should have physics
+      *
+     *********************************************************************/
+    inline void setDoPhysics(bool doPhysics) { dontDoPhysics = !doPhysics; }
 private:
     int modelId;
     vtkSmartPointer<vtkActor> actor;
     vtkSmartPointer<vtkTransform> localTransform;
     q_vec_type position;
     q_type orientation;
-    bool updateLocalTransform;
+    bool allowTransformUpdate, dontDoPhysics;
     q_vec_type forceAccum;
     q_vec_type torqueAccum;
 };

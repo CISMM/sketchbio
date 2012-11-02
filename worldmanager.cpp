@@ -14,9 +14,10 @@ WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *w
     springEndConnections = vtkSmartPointer<vtkPolyData>::New();
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
-    vtkSmartPointer<vtkTubeFilter> tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
+    tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
     tubeFilter->SetInput(springEndConnections);
     tubeFilter->SetRadius(5);
+    tubeFilter->Update();
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputConnection(tubeFilter->GetOutputPort());
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
@@ -27,6 +28,7 @@ WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *w
     trans->Concatenate(worldEyeTransform);
     actor->SetUserTransform(trans);
     renderer->AddActor(actor);
+    this->worldEyeTransform = worldEyeTransform;
 }
 
 WorldManager::~WorldManager() {
@@ -44,7 +46,7 @@ WorldManager::~WorldManager() {
     connections.clear();
 }
 
-ObjectId WorldManager::addObject(int modelId,q_vec_type pos, q_type orient, vtkTransform *worldEyeTransform) {
+ObjectId WorldManager::addObject(int modelId,q_vec_type pos, q_type orient) {
     SketchModel *model = modelManager->getModelFor(modelId);
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(model->getMapper());
@@ -99,13 +101,36 @@ SpringId WorldManager::addSpring(SpringConnection *spring) {
     return it;
 }
 
+SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type worldPos1,
+                             const q_vec_type worldPos2, double k, double l)
+{
+    SketchObject *obj1 = *id1, *obj2 = *id2;
+    q_type pos1, pos2, newPos1, newPos2;
+    q_type orient1, orient2;
+    obj1->getPosition(pos1);
+    obj1->getOrientation(orient1);
+    obj2->getPosition(pos2);
+    obj2->getOrientation(orient2);
+    q_invert(orient1,orient1);
+    q_invert(orient2,orient2);
+    q_vec_subtract(newPos1,worldPos1,pos1);
+    q_xform(newPos1,orient1,newPos1);
+    q_vec_subtract(newPos2,worldPos2,pos2);
+    q_xform(newPos2,orient2,newPos2);
+    SpringConnection *spring = new SpringConnection(obj1,obj2,l,k,newPos1,newPos2);
+    return addSpring(spring);
+}
+
 void WorldManager::removeSpring(SpringId id) {
     SpringConnection *conn = (*id);
     connections.erase(id);
 
     springEndConnections->DeleteCell(conn->getCellId());
+    springEndConnections->RemoveDeletedCells();
     // can't delete points...
+    springEndConnections->Modified();
     springEndConnections->Update();
+    tubeFilter->Update();
 
     delete conn;
 }
@@ -134,32 +159,34 @@ void WorldManager::stepPhysics(double dt) {
         q_vec_type pos, angularVel,deltaPos,force,torque;
         q_type spin, orient;
         SketchObject * obj = (*it);
-        SketchModel *model = modelManager->getModelFor(obj->getModelId());
-        // get force & torque
-        obj->getForce(force);
-        obj->getTorque(torque);
-        // new position
-        obj->getPosition(pos);
-        q_vec_scale(deltaPos,dt*model->getInverseMass(),force);
-        q_vec_add(pos,pos,deltaPos);
-        // new orientation
-        obj->getOrientation(orient);
-        q_vec_scale(angularVel,model->getInverseMomentOfInertia(),torque);
-        // I'll summarize this next section like this:
-        // quaternion integration is wierd
-        spin[Q_W] = 0;
-        spin[Q_X] = angularVel[Q_X];
-        spin[Q_Y] = angularVel[Q_Y];
-        spin[Q_Z] = angularVel[Q_Z];
-        q_mult(spin,orient,spin);
-        orient[Q_W] += spin[Q_W]*.5*dt;
-        orient[Q_X] += spin[Q_X]*.5*dt;
-        orient[Q_Y] += spin[Q_Y]*.5*dt;
-        orient[Q_Z] += spin[Q_Z]*.5*dt;
-        q_normalize(orient,orient);
-        // end quaternion integration
-        obj->setPosition(pos);
-        obj->setOrientation(orient);
+        if (obj->doPhysics()) {
+            SketchModel *model = modelManager->getModelFor(obj->getModelId());
+            // get force & torque
+            obj->getForce(force);
+            obj->getTorque(torque);
+            // new position
+            obj->getPosition(pos);
+            q_vec_scale(deltaPos,dt*model->getInverseMass(),force);
+            q_vec_add(pos,pos,deltaPos);
+            // new orientation
+            obj->getOrientation(orient);
+            q_vec_scale(angularVel,model->getInverseMomentOfInertia(),torque);
+            // I'll summarize this next section like this:
+            // quaternion integration is wierd
+            spin[Q_W] = 0;
+            spin[Q_X] = angularVel[Q_X];
+            spin[Q_Y] = angularVel[Q_Y];
+            spin[Q_Z] = angularVel[Q_Z];
+            q_mult(spin,orient,spin);
+            orient[Q_W] += spin[Q_W]*.5*dt;
+            orient[Q_X] += spin[Q_X]*.5*dt;
+            orient[Q_Y] += spin[Q_Y]*.5*dt;
+            orient[Q_Z] += spin[Q_Z]*.5*dt;
+            q_normalize(orient,orient);
+            // end quaternion integration
+            obj->setPosition(pos);
+            obj->setOrientation(orient);
+        }
         obj->recalculateLocalTransform();
     }
 

@@ -57,6 +57,9 @@ private:
 
   // Methods
   void addActor(vtkActor *actor, q_vec_type position, q_type orientation);
+  void handleInput();
+  void updateTrackerPositions();
+  void updateTrackerObjectConnections();
 
   // Fields
   Ui_SimpleView *ui;
@@ -72,8 +75,9 @@ private:
   TransformManager transforms;
   WorldManager world;
   StructureReplicator *copies;
-  vtkSmartPointer<vtkTransform> left;
-  vtkSmartPointer<vtkTransform> right;
+  ObjectId leftHand, rightHand;
+  std::vector<ObjectId> objects;
+  std::vector<SpringId> lhand, rhand;
 };
 
  
