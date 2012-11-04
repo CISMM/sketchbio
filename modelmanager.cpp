@@ -86,7 +86,7 @@ int ModelManager::addObjectType(int srcIndex, double scale) {
     transformPD->Update();
 
 
-    int idNum = models.size();
+    size_t idNum = models.size();
     // fix potential out of space problems as they come up
     if (idNum >= models.capacity()) {
         models.reserve(2*idNum);
