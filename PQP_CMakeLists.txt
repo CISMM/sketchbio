@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 2.6)
+project(PQP)
+
+#-----------------------------------------------------------------------------
+# Local CMake Modules
+list(APPEND CMAKE_MODULE_PATH ${PQP_SOURCE_DIR} ${PQP_SOURCE_DIR}/cmake)
+
+###
+# On Windows 7, it does not work to install in the default location,
+# which is the Program Files directory, because you have to not only have
+# file permission to write there but also "run as administrator."  This
+# means that "make install" from a Visual Studio project fails.  To get
+# around that, we need to set CMAKE_INSTALL_PREFIX to something other
+# than the default.  However, it is a cache variable that has already been
+# set.  If we make a local variable, it uses this rather than the cache
+# variable and never tells the poor user what happened (the GUI location
+# looks standard but the files end up somewhere else).  If we make it a
+# non-forced cache variable, it already has a value so does not change.
+# If we make it a forced cache variable, it gets overwritten everytime
+# and the user cannot change it on the GUI.  So we have a workaround here.
+# We make a cache variable that records whether we have ever forced the
+# install prefix.  If not, we force it.  If so, we don't force it again.
+# This has the effect of setting it the first time cmake is run, showing
+# the change in the GUI, and also letting the user change the value in
+# the GUI if they don't like what we did.  If I knew how to do this only
+# happen on Windows 7, I'd make the if(WIN32) more specific.
+if (WIN32)
+        if (NOT ONCE_SET_CMAKE_INSTALL_PREFIX)
+                set(ONCE_SET_CMAKE_INSTALL_PREFIX true CACHE BOOL
+                        "Have we set the install prefix yet?" FORCE)
+                set(CMAKE_INSTALL_PREFIX C:/usr/local CACHE PATH
+                    "Install path prefix, prepended onto install directories"
+                    FORCE)
+        endif (NOT ONCE_SET_CMAKE_INSTALL_PREFIX)
+endif (WIN32)
+
+# Include directory needed by all of the files
+include_directories(${PQP_SOURCE_DIR}/src)
+
+set(PQPLIB_SOURCES src/BV.cpp src/PQP.cpp src/Build.cpp src/TriDist.cpp)
+set(PQPLIB_HEADER src/PQP.h src/PQP_Compile.h src/PQP_Internal.h src/BV.h src/Tri.h)
+
+# Build the library itself and declare what bits need to be installed
+add_library(PQP ${PQPLIB_SOURCES} ${PQPLIB_HEADER})
+set_property(TARGET PQP PROPERTY PUBLIC_HEADER ${PQPLIB_HEADER})
+install(TARGETS
+	PQP
+	ARCHIVE
+	DESTINATION
+	lib
+	PUBLIC_HEADER
+	DESTINATION
+	include)
+

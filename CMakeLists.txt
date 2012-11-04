@@ -23,6 +23,8 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# For PQP.
+LINK_DIRECTORIES(C:/usr/local/lib)
 
 # Set your files and resources here
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
