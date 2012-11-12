@@ -149,85 +149,159 @@ SketchModel *ModelManager::getModelFor(int modelIndex) {
 //}
 
 
-///*****************************************************************************
-//  *
-//  * This function initializes the PQP_Model from the vtkPolyData object passed
-//  * to it.
-//  *
-//  * m1 a reference parameter to an empty PQP_Model to initialize
-//  * polyData a reference parameter to a vtkPolyData to pull the model data from
-//  *
-//  ****************************************************************************/
-//void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData) {
-//
-//    int numPoints = polyData.GetNumberOfPoints();
-//
-//    // get points
-//    double *points = new double[3*numPoints];
-//    for (int i = 0; i < numPoints; i++) {
-//        polyData.GetPoint(i,&points[3*i]);
-//    }
-//
-//    int numStrips = polyData.GetNumberOfStrips();
-//    int numPolygons = polyData.GetNumberOfPolys();
-//    if (numStrips > 0) {  // if we have triangle strips, great, use them!
-//        vtkCellArray *strips = polyData.GetStrips();
-//
-//        m1.BeginModel();
-//        vtkIdType nvertices, *pvertices, loc = 0;
-//        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
-//        int triId = 0;
-//        for (int i = 0; i < numStrips; i++) {
-//            strips->GetCell( loc, nvertices, pvertices );
-//            // todo, refactor to getNextCell for better performance
-//
-//            p1[0] = points[3*pvertices[0]];
-//            p1[1] = points[3*pvertices[0]+1];
-//            p1[2] = points[3*pvertices[0]+2];
-//            p2[0] = points[3*pvertices[1]];
-//            p2[1] = points[3*pvertices[1]+1];
-//            p2[2] = points[3*pvertices[1]+2];
-//            for (int j = 2; j < nvertices; j++) {
-//                p3[0] = points[3*pvertices[j]];
-//                p3[1] = points[3*pvertices[j]+1];
-//                p3[2] = points[3*pvertices[j]+2];
-//                m1.AddTri(p1,p2,p3,triId++);
-//                PQP_REAL *tmp = p1;
-//                p1 = p2;
-//                p2 = p3;
-//                p3 = tmp;
-//            }
-//            loc += nvertices+1;
-//        }
-//        m1.EndModel();
-//    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
-//        vtkCellArray *polys = polyData.GetPolys();
-//
-//        m1.BeginModel();
-//        vtkIdType nvertices, *pvertices, loc = 0;
-//        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
-//        int triId = 0;
-//        for (int i = 0; i < numPolygons; i++) {
-//            polys->GetCell(loc,nvertices,pvertices);
-//            p1[0] = points[3*pvertices[0]];
-//            p1[1] = points[3*pvertices[0]+1];
-//            p1[2] = points[3*pvertices[0]+2];
-//            p2[0] = points[3*pvertices[1]];
-//            p2[1] = points[3*pvertices[1]+1];
-//            p2[2] = points[3*pvertices[1]+2];
-//            for (int j = 1; j < nvertices; j++) {
-//                p3[0] = points[3*pvertices[j]];
-//                p3[1] = points[3*pvertices[j]+1];
-//                p3[2] = points[3*pvertices[j]+2];
-//                m1.AddTri(p1,p2,p3,triId++);
-//                PQP_REAL *tmp = p2;
-//                p2= p3;
-//                p3 = tmp;
-//            }
-//            loc += nvertices +1;
-//        }
-//        m1.EndModel();
-//    }
-//
-//    delete[] points;
-//}
+/*****************************************************************************
+  *
+  * This function initializes the PQP_Model from the vtkPolyData object passed
+  * to it.
+  *
+  * m1 a reference parameter to an empty PQP_Model to initialize
+  * polyData a reference parameter to a vtkPolyData to pull the model data from
+  *
+  ****************************************************************************/
+void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData) {
+
+    int numPoints = polyData.GetNumberOfPoints();
+
+    // get points
+    double *points = new double[3*numPoints];
+    for (int i = 0; i < numPoints; i++) {
+        polyData.GetPoint(i,&points[3*i]);
+    }
+
+    int numStrips = polyData.GetNumberOfStrips();
+    int numPolygons = polyData.GetNumberOfPolys();
+    if (numStrips > 0) {  // if we have triangle strips, great, use them!
+        vtkCellArray *strips = polyData.GetStrips();
+
+        m1.BeginModel();
+        vtkIdType nvertices, *pvertices, loc = 0;
+        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
+        int triId = 0;
+        for (int i = 0; i < numStrips; i++) {
+            strips->GetCell( loc, nvertices, pvertices );
+            // todo, refactor to getNextCell for better performance
+
+            p1[0] = points[3*pvertices[0]];
+            p1[1] = points[3*pvertices[0]+1];
+            p1[2] = points[3*pvertices[0]+2];
+            p2[0] = points[3*pvertices[1]];
+            p2[1] = points[3*pvertices[1]+1];
+            p2[2] = points[3*pvertices[1]+2];
+            for (int j = 2; j < nvertices; j++) {
+                p3[0] = points[3*pvertices[j]];
+                p3[1] = points[3*pvertices[j]+1];
+                p3[2] = points[3*pvertices[j]+2];
+                m1.AddTri(p1,p2,p3,triId++);
+                PQP_REAL *tmp = p1;
+                p1 = p2;
+                p2 = p3;
+                p3 = tmp;
+            }
+            loc += nvertices+1;
+        }
+        m1.EndModel();
+    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
+        vtkCellArray *polys = polyData.GetPolys();
+
+        m1.BeginModel();
+        vtkIdType nvertices, *pvertices, loc = 0;
+        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
+        int triId = 0;
+        for (int i = 0; i < numPolygons; i++) {
+            polys->GetCell(loc,nvertices,pvertices);
+            p1[0] = points[3*pvertices[0]];
+            p1[1] = points[3*pvertices[0]+1];
+            p1[2] = points[3*pvertices[0]+2];
+            p2[0] = points[3*pvertices[1]];
+            p2[1] = points[3*pvertices[1]+1];
+            p2[2] = points[3*pvertices[1]+2];
+            for (int j = 2; j < nvertices; j++) {
+                p3[0] = points[3*pvertices[j]];
+                p3[1] = points[3*pvertices[j]+1];
+                p3[2] = points[3*pvertices[j]+2];
+                m1.AddTri(p1,p2,p3,triId++);
+                PQP_REAL *tmp = p2;
+                p2= p3;
+                p3 = tmp;
+            }
+            loc += nvertices +1;
+        }
+        m1.EndModel();
+    }
+
+    delete[] points;
+}
+
+
+#ifdef PQP_UPDATE_EPSILON
+void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
+
+    int numPoints = polyData.GetNumberOfPoints();
+
+    // get points
+    double *points = new double[3*numPoints];
+    for (int i = 0; i < numPoints; i++) {
+        polyData.GetPoint(i,&points[3*i]);
+    }
+
+    int numStrips = polyData.GetNumberOfStrips();
+    int numPolygons = polyData.GetNumberOfPolys();
+    if (numStrips > 0) {  // if we have triangle strips, great, use them!
+        vtkCellArray *strips = polyData.GetStrips();
+
+        vtkIdType nvertices, *pvertices, loc = 0;
+        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
+        int triId = 0;
+        for (int i = 0; i < numStrips; i++) {
+            strips->GetCell( loc, nvertices, pvertices );
+            // todo, refactor to getNextCell for better performance
+
+            p1[0] = points[3*pvertices[0]];
+            p1[1] = points[3*pvertices[0]+1];
+            p1[2] = points[3*pvertices[0]+2];
+            p2[0] = points[3*pvertices[1]];
+            p2[1] = points[3*pvertices[1]+1];
+            p2[2] = points[3*pvertices[1]+2];
+            for (int j = 2; j < nvertices; j++) {
+                p3[0] = points[3*pvertices[j]];
+                p3[1] = points[3*pvertices[j]+1];
+                p3[2] = points[3*pvertices[j]+2];
+                model.UpdateTri(p1,p2,p3,triId++);
+                PQP_REAL *tmp = p1;
+                p1 = p2;
+                p2 = p3;
+                p3 = tmp;
+            }
+            loc += nvertices+1;
+        }
+    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
+        vtkCellArray *polys = polyData.GetPolys();
+
+        vtkIdType nvertices, *pvertices, loc = 0;
+        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
+        int triId = 0;
+        for (int i = 0; i < numPolygons; i++) {
+            polys->GetCell(loc,nvertices,pvertices);
+            p1[0] = points[3*pvertices[0]];
+            p1[1] = points[3*pvertices[0]+1];
+            p1[2] = points[3*pvertices[0]+2];
+            p2[0] = points[3*pvertices[1]];
+            p2[1] = points[3*pvertices[1]+1];
+            p2[2] = points[3*pvertices[1]+2];
+            for (int j = 2; j < nvertices; j++) {
+                p3[0] = points[3*pvertices[j]];
+                p3[1] = points[3*pvertices[j]+1];
+                p3[2] = points[3*pvertices[j]+2];
+                model.UpdateTri(p1,p2,p3,triId++);
+                PQP_REAL *tmp = p2;
+                p2= p3;
+                p3 = tmp;
+            }
+            loc += nvertices +1;
+        }
+    }
+    model.UpdateModel();
+
+    delete[] points;
+}
+#endif

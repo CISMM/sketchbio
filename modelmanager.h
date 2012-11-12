@@ -20,6 +20,7 @@
 #include <vtkAlgorithmOutput.h>
 #include "sketchmodel.h"
 #include <vector>
+#include <PQP.h>
 
 
 class ModelManager
@@ -87,5 +88,10 @@ private:
 
     std::vector<SketchModel *> models;
 };
+void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData);
+
+#ifdef PQP_UPDATE_EPSILON
+void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);
+#endif
 
 #endif // MODELMANAGER_H

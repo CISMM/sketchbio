@@ -71,7 +71,8 @@ SimpleView::SimpleView() :
 
 
     int fiberModelType = models.addObjectType(fiberSourceType,1);
-    int sphereModelType = models.addObjectType(sphereSourceType,TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+    int sphereModelType = models.addObjectType(sphereSourceType,
+                                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
 
     // creating objects
     q_vec_type pos = Q_NULL_VECTOR;
@@ -87,12 +88,12 @@ SimpleView::SimpleView() :
     objects.push_back((object2Id));
 
     // creating springs
-    q_vec_type p1 = {200,30,0}, p2 = {0,-30,0};
-    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),20,BOND_SPRING_CONSTANT,p1,p2);
+    q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
+    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),10,BOND_SPRING_CONSTANT,p1,p2);
     SpringId springId = world.addSpring(spring);
-    q_vec_set(p1,0,30,0);
-    q_vec_set(p2,-200,-30,0);
-    spring = new SpringConnection((*object1Id),(*object2Id),20,BOND_SPRING_CONSTANT,p1,p2);
+    q_vec_set(p1,0,-30,0);
+    q_vec_set(p2,200,-30,0);
+    spring = new SpringConnection((*object1Id),(*object2Id),10,BOND_SPRING_CONSTANT,p1,p2);
     springId = world.addSpring(spring);
 
     // copying objects
@@ -196,7 +197,6 @@ void SimpleView::handleInput() {
         q_from_axis_angle(q,0,0,1,-.01);
         transforms.translateWorldRelativeToRoom(0,0,0.5);
     }
-
     // move fibers
     updateTrackerObjectConnections();
 
@@ -204,6 +204,10 @@ void SimpleView::handleInput() {
     updateTrackerPositions();
 }
 
+/*
+ * This function takes a q_vec_type and returns the index of
+ * the component with the minimum magnitude.
+ */
 inline int getMinIdx(const q_vec_type vec) {
     if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Y])) {
         if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Z])) {
@@ -220,11 +224,17 @@ inline int getMinIdx(const q_vec_type vec) {
     }
 }
 
+/*
+ * This method updates the springs connecting the trackers and the objects in the world...
+ * we may need to apply a torque on the objects at each timestep to match the change in tracker
+ * orientation... torques from the springs are VERY unintiuative
+ */
 void SimpleView::updateTrackerObjectConnections() {
     for (int i = 0; i < 2; i++) {
         int analogIdx, objIdx;
         ObjectId tracker;
         std::vector<SpringId> *springs;
+        // select left or right
         if (i == 0) {
             analogIdx = HYDRA_LEFT_TRIGGER;
             objIdx = 0;
@@ -236,8 +246,9 @@ void SimpleView::updateTrackerObjectConnections() {
             tracker = rightHand;
             springs = &rhand;
         }
+        // if they are gripping the trigger
         if (analog[analogIdx] > .1) {
-            // either add springs or update their endpoints
+            // if we do not have springs yet add them
             if (springs->size() == 0) { // add springs
                 SketchObject *obj = (*objects[objIdx]);
                 SketchObject *trackerObj = *tracker;
@@ -247,19 +258,22 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_subtract(vec,tPos,oPos);
                 q_vec_normalize(vec,vec);
                 q_vec_type axis = Q_NULL_VECTOR;
-                axis[getMinIdx(vec)] = 1;
-                q_vec_type per1, per2;
+                axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
+                                    // parallel to vec
+                q_vec_type per1, per2; // create two perpendicular unit vectors
                 q_vec_cross_product(per1,axis,vec);
                 q_vec_normalize(per1,per1);
                 q_vec_cross_product(per2,per1,vec); // should already be length 1
 #define OBJECT_SIDE_LEN 100
 #define TRACKER_SIDE_LEN 5
+                // create scaled perpendicular vectors
                 q_vec_type oPer1, oPer2, tPer1, tPer2;
                 q_vec_scale(oPer1,OBJECT_SIDE_LEN,per1);
                 q_vec_scale(oPer2,OBJECT_SIDE_LEN,per2);
                 q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
                 q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
                 q_vec_type wPos1, wPos2;
+                // create springs and add them
                 SpringId id;
                 q_vec_add(wPos2,tPos,tPer1);
                 q_vec_add(wPos1,oPos,oPer1);
@@ -287,13 +301,14 @@ void SimpleView::updateTrackerObjectConnections() {
                 springs->push_back(id);
 #undef OBJECT_SIDE_LEN
 #undef TRACKER_SIDE_LEN
-            } else { // update springs
+            } else { // update springs stiffness if they are already there
+                // may need to update endpoints too... not sure
                 for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
                     (*(*it))->setStiffness(analog[analogIdx]);
                 }
             }
         } else {
-            if (!springs->empty()) {
+            if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
                 // remove springs between model & tracker
                 for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
                     world.removeSpring(*it);
@@ -304,6 +319,9 @@ void SimpleView::updateTrackerObjectConnections() {
     }
 }
 
+/*
+ * Updates the positions and transformations of the tracker objects.
+ */
 void SimpleView::updateTrackerPositions() {
     q_vec_type pos;
     q_type orient;
@@ -319,6 +337,9 @@ void SimpleView::updateTrackerPositions() {
     transforms.getRightTrackerTransformInEyeCoords((vtkTransform*)(*rightHand)->getActor()->GetUserTransform());
 }
 
+/*
+ * The method called once per frame to update things and redraw
+ */
 void SimpleView::slot_frameLoop() {
     // input
     handleInput();

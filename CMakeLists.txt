@@ -24,7 +24,9 @@ INCLUDE_DIRECTORIES(
 )
 
 # For PQP.
-LINK_DIRECTORIES(C:/usr/local/lib)
+if (WIN32)
+    LINK_DIRECTORIES(C:/usr/local/lib)
+endif (WIN32)
 
 # Set your files and resources here
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
