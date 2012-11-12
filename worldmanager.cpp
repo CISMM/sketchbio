@@ -293,13 +293,13 @@ void WorldManager::collide(ObjectId o1, ObjectId o2) {
     // collide them
     PQP_Collide(&cr,r1,t1,pqp_model1,r2,t2,pqp_model2,PQP_ALL_CONTACTS);
 
-    qDebug() << "Collisions:" << cr.NumPairs();
-    if (cr.NumPairs()!= 0) {
-        q_vec_print(t1);
-        q_vec_print(t2);
-        q_print(quat1);
-        q_print(quat2);
-    }
+//    qDebug() << "Collisions:" << cr.NumPairs();
+//    if (cr.NumPairs()!= 0) {
+//        q_vec_print(t1);
+//        q_vec_print(t2);
+//        q_print(quat1);
+//        q_print(quat2);
+//    }
 
     // for each pair in collision
     for (int i = 0; i < cr.NumPairs(); i++) {
