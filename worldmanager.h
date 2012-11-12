@@ -111,6 +111,16 @@ public:
      *******************************************************************/
     void stepPhysics(double dt);
 private:
+    /*******************************************************************
+     *
+     * Computes collisions between the given objects and applies the
+     * resultant forces to them -- subroutine of stepPhysics
+     *
+     *******************************************************************/
+    void collide(ObjectId o1, ObjectId o2);
+
+    void updateSprings();
+
     std::list<SketchObject *> objects;
     std::list<SpringConnection *> connections;
     int nextIdx;

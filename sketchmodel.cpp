@@ -3,6 +3,7 @@
 SketchModel::SketchModel(vtkTransformPolyDataFilter *data, double iMass, double iMoment)
 {
     modelData = data;
+    collisionModel = new PQP_Model();
     mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputConnection(data->GetOutputPort());
     invMass = iMass;
@@ -11,5 +12,5 @@ SketchModel::SketchModel(vtkTransformPolyDataFilter *data, double iMass, double 
 
 SketchModel::~SketchModel()
 {
-    // nothing yet, but once collision model is added, who knows
+    delete collisionModel;
 }

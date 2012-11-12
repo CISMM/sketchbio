@@ -142,6 +142,14 @@ public:
       *
      *********************************************************************/
     inline void setDoPhysics(bool doPhysics) { dontDoPhysics = !doPhysics; }
+    /*********************************************************************
+      *
+      * Returns true if physics is allowed on this object and its
+      * transformation is allowed to be updated... i.e. if it is a "normal"
+      * object
+      *
+     *********************************************************************/
+    inline bool isNormalObject() const { return !dontDoPhysics && allowTransformUpdate; }
 private:
     int modelId;
     vtkSmartPointer<vtkActor> actor;

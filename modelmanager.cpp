@@ -95,6 +95,8 @@ int ModelManager::addObjectType(int srcIndex, double scale) {
     // remember the mass and moment of inertia are inverses!!!!!!!!
     SketchModel * sModel = new SketchModel(transformPD,1.0,1/10000.0); // TODO these shouldn't be magic constants
 
+    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
+
     models.push_back(sModel);
     return idNum;
 }
@@ -191,7 +193,11 @@ void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData) {
                 p3[0] = points[3*pvertices[j]];
                 p3[1] = points[3*pvertices[j]+1];
                 p3[2] = points[3*pvertices[j]+2];
-                m1.AddTri(p1,p2,p3,triId++);
+                // ensure counterclockwise points
+                if (j % 2 == 0)
+                    m1.AddTri(p1,p2,p3,triId++);
+                else
+                    m1.AddTri(p1,p3,p2,triId++);
                 PQP_REAL *tmp = p1;
                 p1 = p2;
                 p2 = p3;
@@ -234,6 +240,8 @@ void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData) {
 
 
 #ifdef PQP_UPDATE_EPSILON
+/****************************************************************************
+  ***************************************************************************/
 void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
 
     int numPoints = polyData.GetNumberOfPoints();
@@ -266,7 +274,11 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
                 p3[0] = points[3*pvertices[j]];
                 p3[1] = points[3*pvertices[j]+1];
                 p3[2] = points[3*pvertices[j]+2];
-                model.UpdateTri(p1,p2,p3,triId++);
+                // ensure counterclockwise points
+                if (j % 2 == 0)
+                    model.UpdateTri(p1,p2,p3,triId++);
+                else
+                    model.UpdateTri(p1,p3,p2,triId++);
                 PQP_REAL *tmp = p1;
                 p1 = p2;
                 p2 = p3;
