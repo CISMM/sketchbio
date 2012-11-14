@@ -42,12 +42,12 @@ void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPo
 
 
 void SketchObject::addForce(q_vec_type point, q_vec_type force) {
-    q_vec_type modelOrigin, worldPoint, worldOrigin, worldDifference, torque;
-    getModelSpacePointInWorldCoordinates(point,worldPoint);
+    q_vec_type modelOrigin, modelForce, torque;
     q_vec_set(modelOrigin,0,0,0);
-    getModelSpacePointInWorldCoordinates(modelOrigin,worldOrigin);
-    q_vec_subtract(worldDifference,worldPoint,worldOrigin);
     q_vec_add(forceAccum,forceAccum,force);
-    q_vec_cross_product(torque,worldDifference,force);
+    localTransform->Inverse();
+    localTransform->TransformVector(force,modelForce);
+    localTransform->Inverse();
+    q_vec_cross_product(torque,point,modelForce);
     q_vec_add(torqueAccum,torque,torqueAccum);
 }
