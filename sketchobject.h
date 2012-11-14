@@ -97,7 +97,7 @@ public:
       * Clears the cached force and torque on the object
       *
      *********************************************************************/
-    inline void clearForces() {q_vec_set(forceAccum,0,0,0); q_vec_copy(torqueAccum,forceAccum);}
+    inline void clearForces() {q_vec_set(forceAccum,0,0,0); q_vec_set(torqueAccum,0,0,0);}
     /*********************************************************************
       *
       * Adds the given force at the point to the cached force on the object

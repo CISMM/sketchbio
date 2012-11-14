@@ -2,7 +2,7 @@
 #include <vtkTubeFilter.h>
 #include <QDebug>
 
-#define COLLISION_FORCE 10
+#define COLLISION_FORCE 5
 
 WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *worldEyeTransform) :
     objects(),
@@ -266,7 +266,7 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
     q_vec_copy(c,tri->p1);
     q_vec_add(c,tri->p2,c);
     q_vec_add(c,tri->p3,c);
-    q_vec_scale(c,1/3,c);
+    q_vec_scale(c,1/3.0,c);
 }
 
 
@@ -323,5 +323,9 @@ void WorldManager::collide(ObjectId o1, ObjectId o2) {
         // apply the forces
         (*o1)->addForce(p1,f1);
         (*o2)->addForce(p2,f2);
+//        qDebug() << "points" << endl;
+//        q_vec_print(p1);
+//        q_vec_print(p2);
+//        qDebug() << "torques" << endl;
     }
 }

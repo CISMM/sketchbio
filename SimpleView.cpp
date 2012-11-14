@@ -20,6 +20,7 @@
 #define COLOR1 1,0,0
 #define COLOR2 0,1,1
 #define BOND_SPRING_CONSTANT .5
+#define TIMESTEP (16/1000.0)
 
 // Constructor
 SimpleView::SimpleView() :
@@ -82,18 +83,19 @@ SimpleView::SimpleView() :
     objects.push_back(object1Id);
 
     q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
-    q_from_axis_angle(orient,0,1,0,Q_PI/22);
+//    q_from_axis_angle(orient,0,1,0,Q_PI/22);
     ObjectId object2Id = world.addObject(fiberModelType,pos,orient);
     (*object2Id)->getActor()->GetProperty()->SetColor(COLOR2);
     objects.push_back((object2Id));
 
     // creating springs
     q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),10,BOND_SPRING_CONSTANT,p1,p2);
+    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),0,BOND_SPRING_CONSTANT,p1,p2);
     SpringId springId = world.addSpring(spring);
+
     q_vec_set(p1,0,-30,0);
     q_vec_set(p2,200,-30,0);
-    spring = new SpringConnection((*object1Id),(*object2Id),10,BOND_SPRING_CONSTANT,p1,p2);
+    spring = new SpringConnection((*object1Id),(*object2Id),0,BOND_SPRING_CONSTANT,p1,p2);
     springId = world.addSpring(spring);
 
     // copying objects
@@ -264,7 +266,7 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_cross_product(per1,axis,vec);
                 q_vec_normalize(per1,per1);
                 q_vec_cross_product(per2,per1,vec); // should already be length 1
-#define OBJECT_SIDE_LEN 100
+#define OBJECT_SIDE_LEN 5
 #define TRACKER_SIDE_LEN 5
                 // create scaled perpendicular vectors
                 q_vec_type oPer1, oPer2, tPer1, tPer2;
@@ -345,7 +347,7 @@ void SimpleView::slot_frameLoop() {
     handleInput();
 
     // physics
-    world.stepPhysics(16/1000.0);
+    world.stepPhysics(TIMESTEP);
     copies->updateTransform();
 
     // render

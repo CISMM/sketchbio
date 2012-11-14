@@ -13,6 +13,9 @@
 
 #include <QDebug>
 
+#define INVERSEMASS 1.0
+#define INVERSEMOMENT (1.0/25000)
+
 ModelManager::ModelManager()
 {
     sources = vtkSmartPointer<vtkCollection>::New();
@@ -93,7 +96,8 @@ int ModelManager::addObjectType(int srcIndex, double scale) {
     }
 
     // remember the mass and moment of inertia are inverses!!!!!!!!
-    SketchModel * sModel = new SketchModel(transformPD,1.0,1/10000.0); // TODO these shouldn't be magic constants
+    SketchModel * sModel = new SketchModel(transformPD,INVERSEMASS,INVERSEMOMENT);
+    // TODO these shouldn't be magic constants
 
     makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
 
