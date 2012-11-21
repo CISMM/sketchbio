@@ -253,7 +253,17 @@ inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
 // relative to the outside of the surface looking down
 inline void unit_normal(q_vec_type n, PQP_Model *m, int t) {
     q_vec_type diff1, diff2;
+#ifdef PQP_UPDATE_EPSILON
     Tri *tri = &(m->tris[m->idsToIndices[t]]);
+#else
+    Tri *tri = NULL;
+    for (int i = 0; i < m->num_tris; i++) {
+        if (m->tris[i].id == t) {
+            tri = &(m->tris[i]);
+            break;
+        }
+    }
+#endif
     q_vec_subtract(diff1,tri->p3,tri->p1);
     q_vec_subtract(diff2,tri->p2,tri->p1);
     q_vec_cross_product(n,diff2,diff1);
@@ -262,7 +272,17 @@ inline void unit_normal(q_vec_type n, PQP_Model *m, int t) {
 
 // helper function -- compute the centriod of the triangle
 inline void centriod(q_vec_type c, PQP_Model *m, int t) {
+#ifdef PQP_UPDATE_EPSILON
     Tri *tri = &(m->tris[m->idsToIndices[t]]);
+#else
+    Tri *tri = NULL;
+    for (int i = 0; i < m->num_tris; i++) {
+        if (m->tris[i].id == t) {
+            tri = &(m->tris[i]);
+            break;
+        }
+    }
+#endif
     q_vec_copy(c,tri->p1);
     q_vec_add(c,tri->p2,c);
     q_vec_add(c,tri->p3,c);
