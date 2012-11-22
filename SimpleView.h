@@ -25,11 +25,6 @@ class Ui_SimpleView;
 #define NUM_HYDRA_BUTTONS 16
 #define NUM_HYDRA_ANALOGS 6
 
-// VRPN callback functions
-void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB t);
-void VRPN_CALLBACK handle_button(void *userdata, const vrpn_BUTTONCB b);
-void VRPN_CALLBACK handle_analogs(void *userdata, const vrpn_ANALOGCB a);
- 
 // SimpleView class
 class SimpleView : public QMainWindow
 {
@@ -54,6 +49,11 @@ protected:
 protected slots:
  
 private:
+
+  // VRPN callback functions
+  static void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB t);
+  static void VRPN_CALLBACK handle_button(void *userdata, const vrpn_BUTTONCB b);
+  static void VRPN_CALLBACK handle_analogs(void *userdata, const vrpn_ANALOGCB a);
 
   // Methods
   void addActor(vtkActor *actor, q_vec_type position, q_type orientation);

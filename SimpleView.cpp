@@ -379,7 +379,7 @@ void SimpleView::setAnalogStates(const double state[]) {
 //####################################################################################
 
 
-void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB t)
+void VRPN_CALLBACK SimpleView::handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB t)
 {
     SimpleView *view = (SimpleView *) userdata;
     q_xyz_quat_type data;
@@ -396,12 +396,12 @@ void VRPN_CALLBACK handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB
     }
 }
 
-void VRPN_CALLBACK handle_button(void *userdata, const vrpn_BUTTONCB b) {
+void VRPN_CALLBACK SimpleView::handle_button(void *userdata, const vrpn_BUTTONCB b) {
     SimpleView *view = (SimpleView *) userdata;
     view->setButtonState(b.button,b.state);
 }
 
-void VRPN_CALLBACK handle_analogs(void *userdata, const vrpn_ANALOGCB a) {
+void VRPN_CALLBACK SimpleView::handle_analogs(void *userdata, const vrpn_ANALOGCB a) {
     SimpleView *view = (SimpleView *) userdata;
     if (a.num_channel != NUM_HYDRA_ANALOGS) {
         qDebug() << "We have problems!";
