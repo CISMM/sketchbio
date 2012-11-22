@@ -78,23 +78,8 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
   if (load_fibrin) {
-    vtkSmartPointer<vtkOBJReader> objReader =
-            vtkSmartPointer<vtkOBJReader>::New();
-    objReader->SetFileName("./models/1m1j.obj");
-    objReader->Update();
-    int fiberSourceType = models.addObjectSource(objReader.GetPointer());
-    int fiberModelType = models.addObjectType(fiberSourceType,1);
-
-    // creating objects
-    ObjectId object1Id = world.addObject(fiberModelType,pos,orient);
-    (*object1Id)->getActor()->GetProperty()->SetColor(COLORS[0]);
-    objects.push_back(object1Id);
-
-    q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
-//    q_from_axis_angle(orient,0,1,0,Q_PI/22);
-    ObjectId object2Id = world.addObject(fiberModelType,pos,orient);
-    (*object2Id)->getActor()->GetProperty()->SetColor(COLORS[1]);
-    objects.push_back((object2Id));
+    ObjectId object1Id = addObject("./models/1m1j.obj");
+    ObjectId object2Id = addObject("./models/1m1j.obj");
 
    if (fibrin_springs) {
     // creating springs
@@ -388,7 +373,7 @@ void SimpleView::setAnalogStates(const double state[]) {
     }
 }
 
-bool SimpleView::addObject(QString name)
+ObjectId SimpleView::addObject(QString name)
 {
     vtkSmartPointer<vtkOBJReader> objReader =
             vtkSmartPointer<vtkOBJReader>::New();
@@ -405,16 +390,15 @@ bool SimpleView::addObject(QString name)
     (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
     objects.push_back(objectId);
 
-    return true;
+    return objectId;
 }
 
 bool SimpleView::addObjects(QVector<QString> names)
 {
   int i;
   for (i = 0; i < names.size(); i++) {
-    if (!addObject(names[i])) {
-	return false;
-    }
+    // XXX Check for error here and return false if one found.
+    addObject(names[i]);
   }
 
   return true;

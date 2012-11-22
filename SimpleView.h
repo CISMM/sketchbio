@@ -42,7 +42,7 @@ public:
   void setAnalogStates(const double state[]);
 
   // Add an object (or objects) to be displayed.
-  bool addObject(QString name);
+  ObjectId addObject(QString name);
   bool addObjects(QVector<QString> names);
  
 public slots:
