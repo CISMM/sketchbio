@@ -17,10 +17,17 @@
 #define VRPN_ON true
 #define SCALE_DOWN_FACTOR (.03125)
 #define NUM_EXTRA_FIBERS 5
-#define COLOR1 1,0,0
-#define COLOR2 0,1,1
 #define BOND_SPRING_CONSTANT .5
 #define TIMESTEP (16/1000.0)
+
+#define NUM_COLORS (6)
+static double COLORS[][3] =
+  {  { 1.0, 0.7, 0.7 },
+     { 0.7, 1.0, 0.8 },
+     { 0.7, 0.7, 1.0 },
+     { 1.0, 1.0, 0.7 },
+     { 1.0, 0.7, 1.0 },
+     { 0.7, 1.0, 1.0 } };
 
 // Constructor
 SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate) :
@@ -68,6 +75,9 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     int sphereModelType = models.addObjectType(sphereSourceType,
                                                TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
 
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+  if (load_fibrin) {
     vtkSmartPointer<vtkOBJReader> objReader =
             vtkSmartPointer<vtkOBJReader>::New();
     objReader->SetFileName("./models/1m1j.obj");
@@ -75,18 +85,15 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     int fiberSourceType = models.addObjectSource(objReader.GetPointer());
     int fiberModelType = models.addObjectType(fiberSourceType,1);
 
-    q_vec_type pos = Q_NULL_VECTOR;
-    q_type orient = Q_ID_QUAT;
-  if (load_fibrin) {
     // creating objects
     ObjectId object1Id = world.addObject(fiberModelType,pos,orient);
-    (*object1Id)->getActor()->GetProperty()->SetColor(COLOR1);
+    (*object1Id)->getActor()->GetProperty()->SetColor(COLORS[0]);
     objects.push_back(object1Id);
 
     q_vec_set(pos,0,2/SCALE_DOWN_FACTOR,0);
 //    q_from_axis_angle(orient,0,1,0,Q_PI/22);
     ObjectId object2Id = world.addObject(fiberModelType,pos,orient);
-    (*object2Id)->getActor()->GetProperty()->SetColor(COLOR2);
+    (*object2Id)->getActor()->GetProperty()->SetColor(COLORS[1]);
     objects.push_back((object2Id));
 
    if (fibrin_springs) {
@@ -381,7 +388,37 @@ void SimpleView::setAnalogStates(const double state[]) {
     }
 }
 
+bool SimpleView::addObject(QString name)
+{
+    vtkSmartPointer<vtkOBJReader> objReader =
+            vtkSmartPointer<vtkOBJReader>::New();
+    objReader->SetFileName(name.toStdString().c_str());
+    objReader->Update();
+    int fiberSourceType = models.addObjectSource(objReader.GetPointer());
+    int fiberModelType = models.addObjectType(fiberSourceType,1);
 
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    int myIdx = objects.size();
+    q_vec_set(pos,0,2*myIdx/SCALE_DOWN_FACTOR,0);
+    ObjectId objectId = world.addObject(fiberModelType,pos,orient);
+    (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+    objects.push_back(objectId);
+
+    return true;
+}
+
+bool SimpleView::addObjects(QVector<QString> names)
+{
+  int i;
+  for (i = 0; i < names.size(); i++) {
+    if (!addObject(names[i])) {
+	return false;
+    }
+  }
+
+  return true;
+}
 
 //####################################################################################
 // VRPN callback functions

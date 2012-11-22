@@ -17,6 +17,8 @@
 #include "modelmanager.h"
 #include "worldmanager.h"
 #include "structurereplicator.h"
+#include <QString>
+#include <QVector>
  
 // Forward Qt class declarations
 class Ui_SimpleView;
@@ -38,6 +40,10 @@ public:
   void setRightPos(q_xyz_quat_type *newPos);
   void setButtonState(int buttonNum, bool buttonPressed);
   void setAnalogStates(const double state[]);
+
+  // Add an object (or objects) to be displayed.
+  bool addObject(QString name);
+  bool addObjects(QVector<QString> names);
  
 public slots:
  
