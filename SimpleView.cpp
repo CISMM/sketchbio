@@ -65,7 +65,7 @@ SimpleView::SimpleView() :
     sphereSource->Update();
     vtkSmartPointer<vtkOBJReader> objReader =
             vtkSmartPointer<vtkOBJReader>::New();
-    objReader->SetFileName("/Users/shawn/Documents/QtProjects/RenderWindowUI/models/1m1j.obj");
+    objReader->SetFileName("./models/1m1j.obj");
     objReader->Update();
     int fiberSourceType = models.addObjectSource(objReader.GetPointer());
     int sphereSourceType = models.addObjectSource(sphereSource.GetPointer());
