@@ -104,7 +104,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     // Replicate objects
    if (do_replicate) {
     copies = new StructureReplicator(object1Id,object2Id,&world);
-//    copies->setNumShown(5);
+    copies->setNumShown(5);
    }
   }
 
