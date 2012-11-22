@@ -17,7 +17,6 @@
 #include "modelmanager.h"
 #include "worldmanager.h"
 #include "structurereplicator.h"
-
  
 // Forward Qt class declarations
 class Ui_SimpleView;
@@ -32,7 +31,7 @@ class SimpleView : public QMainWindow
 public:
  
   // Constructor/Destructor
-  SimpleView(); 
+  SimpleView(bool load_fibrin = true, bool fibrin_springs = true); 
   ~SimpleView();
   void setLeftPos(q_xyz_quat_type *newPos);
   void setRightPos(q_xyz_quat_type *newPos);

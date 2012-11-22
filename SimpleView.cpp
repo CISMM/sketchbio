@@ -23,7 +23,7 @@
 #define TIMESTEP (16/1000.0)
 
 // Constructor
-SimpleView::SimpleView() :
+SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
@@ -63,17 +63,16 @@ SimpleView::SimpleView() :
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereSource->SetRadius(4);
     sphereSource->Update();
+    int sphereSourceType = models.addObjectSource(sphereSource.GetPointer());
+    int sphereModelType = models.addObjectType(sphereSourceType,
+                                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+
     vtkSmartPointer<vtkOBJReader> objReader =
             vtkSmartPointer<vtkOBJReader>::New();
     objReader->SetFileName("./models/1m1j.obj");
     objReader->Update();
     int fiberSourceType = models.addObjectSource(objReader.GetPointer());
-    int sphereSourceType = models.addObjectSource(sphereSource.GetPointer());
-
-
     int fiberModelType = models.addObjectType(fiberSourceType,1);
-    int sphereModelType = models.addObjectType(sphereSourceType,
-                                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
 
     // creating objects
     q_vec_type pos = Q_NULL_VECTOR;
