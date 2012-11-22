@@ -31,7 +31,8 @@ class SimpleView : public QMainWindow
 public:
  
   // Constructor/Destructor
-  SimpleView(bool load_fibrin = true, bool fibrin_springs = true); 
+  SimpleView(bool load_fibrin = true, bool fibrin_springs = true,
+	     bool do_replicate = true); 
   ~SimpleView();
   void setLeftPos(q_xyz_quat_type *newPos);
   void setRightPos(q_xyz_quat_type *newPos);

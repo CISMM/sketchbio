@@ -23,7 +23,7 @@
 #define TIMESTEP (16/1000.0)
 
 // Constructor
-SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
+SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate) :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
@@ -31,7 +31,8 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
     renderer(vtkSmartPointer<vtkRenderer>::New()),
     models(ModelManager()),
     transforms(),
-    world(&models,renderer.GetPointer(),transforms.getWorldToEyeTransform())
+    world(&models,renderer.GetPointer(),transforms.getWorldToEyeTransform()),
+    copies(NULL)
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
@@ -74,9 +75,10 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
     int fiberSourceType = models.addObjectSource(objReader.GetPointer());
     int fiberModelType = models.addObjectType(fiberSourceType,1);
 
-    // creating objects
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
+  if (load_fibrin) {
+    // creating objects
     ObjectId object1Id = world.addObject(fiberModelType,pos,orient);
     (*object1Id)->getActor()->GetProperty()->SetColor(COLOR1);
     objects.push_back(object1Id);
@@ -87,6 +89,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
     (*object2Id)->getActor()->GetProperty()->SetColor(COLOR2);
     objects.push_back((object2Id));
 
+   if (fibrin_springs) {
     // creating springs
     q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
     SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),0,BOND_SPRING_CONSTANT,p1,p2);
@@ -96,10 +99,14 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
     q_vec_set(p2,200,-30,0);
     spring = new SpringConnection((*object1Id),(*object2Id),0,BOND_SPRING_CONSTANT,p1,p2);
     springId = world.addSpring(spring);
+   }
 
-    // copying objects
+    // Replicate objects
+   if (do_replicate) {
     copies = new StructureReplicator(object1Id,object2Id,&world);
 //    copies->setNumShown(5);
+   }
+  }
 
     // add objects for trackers
     q_vec_set(pos,0,0,0);
@@ -111,6 +118,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs) :
     rightHand = world.addObject(sphereModelType,pos,orient);
     (*rightHand)->setDoPhysics(false);
 //    (*rightHand)->allowLocalTransformUpdates(false);
+
 
     // camera setup
     vtkSmartPointer<vtkCamera> camera =
@@ -347,7 +355,9 @@ void SimpleView::slot_frameLoop() {
 
     // physics
     world.stepPhysics(TIMESTEP);
-    copies->updateTransform();
+    if (copies != NULL) {
+	copies->updateTransform();
+    }
 
     // render
     this->ui->qvtkWidget->GetRenderWindow()->Render();
