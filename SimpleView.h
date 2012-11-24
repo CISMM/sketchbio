@@ -47,7 +47,13 @@ public:
  
 public slots:
 
+  // Throw a dialog box to browse for an OBJ file to load
   void openOBJFile();
+
+  // Throw a dialog box to type in the name of a PDB ID to import
+  // Run an external pymol script to download and surface the model
+  // Put the resulting model in the models/ directory.
+  void importPDBId();
  
   virtual void slotExit();
   void slot_frameLoop();

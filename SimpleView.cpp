@@ -1,6 +1,7 @@
 #include "ui_SimpleView.h"
 #include "SimpleView.h"
 #include <QDebug>
+#include <QInputDialog>
 #include <QFileDialog>
 
 #include <vtkPolyDataMapper.h>
@@ -415,7 +416,26 @@ void SimpleView::openOBJFile()
 
     // Open the file for reading.
     if (fn.length() > 0) {
+	printf("Loading %s\n", fn.toStdString().c_str());
 	addObject(fn);
+    }
+}
+
+void SimpleView::importPDBId()
+{
+    // Ask the user for the ID of the PDB file to open.
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("Specify molecule"),
+                                         tr("PDB ID:"), QLineEdit::Normal,
+                                         "1M1J", &ok);
+    if (ok && !text.isEmpty()) {
+	// Ask the user where to put the output file.
+	QString fn = QFileDialog::getExistingDirectory ( this,
+					"Choose a directory to save to");
+
+	if (fn.length() > 0) {
+	  printf("XXX Importing %s from PDB\n", text.toStdString().c_str());
+	}
     }
 }
 
