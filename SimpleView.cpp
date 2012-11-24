@@ -1,6 +1,7 @@
 #include "ui_SimpleView.h"
 #include "SimpleView.h"
 #include <QDebug>
+#include <QFileDialog>
 
 #include <vtkPolyDataMapper.h>
 #include <vtkOBJReader.h>
@@ -402,6 +403,20 @@ bool SimpleView::addObjects(QVector<QString> names)
   }
 
   return true;
+}
+
+void SimpleView::openOBJFile()
+{
+    // Ask the user for the name of the file to open.
+    QString fn = QFileDialog::getOpenFileName(this,
+                                              tr("Open OBJ file"),
+                                              "./",
+                                              tr("OBJ Files (*.obj)"));
+
+    // Open the file for reading.
+    if (fn.length() > 0) {
+	addObject(fn);
+    }
 }
 
 //####################################################################################

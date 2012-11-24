@@ -46,6 +46,8 @@ public:
   bool addObjects(QVector<QString> names);
  
 public slots:
+
+  void openOBJFile();
  
   virtual void slotExit();
   void slot_frameLoop();
