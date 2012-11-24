@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QProcess>
+#include <QMessageBox>
 
 #include <vtkPolyDataMapper.h>
 #include <vtkOBJReader.h>
@@ -434,7 +436,42 @@ void SimpleView::importPDBId()
 					"Choose a directory to save to");
 
 	if (fn.length() > 0) {
-	  printf("XXX Importing %s from PDB\n", text.toStdString().c_str());
+	  printf("Importing %s from PDB\n", text.toStdString().c_str());
+
+	  // Start the pymol process and then write the commands to it
+	  // that will cause it to load the PDB file, generate a surface
+	  // for it, and then save the file.
+	  QProcess pymol;
+	  pymol.start("pymol", QStringList() << "-c" << "-p");
+	  if (!pymol.waitForStarted()) {
+		QMessageBox::warning(NULL, "Could not run pymol to import molecule ", text);;
+	  } else {
+	    QString cmd;
+	    cmd = "load http://www.pdb.org/pdb/download/downloadFile.do?fileFormat=pdb&compression=NO&structureId=" + text + "\n";
+	    printf("... %s", cmd.toStdString().c_str());
+	    pymol.write(cmd.toStdString().c_str());
+	    cmd = "hide all\n";
+	    printf("... %s", cmd.toStdString().c_str());
+	    pymol.write(cmd.toStdString().c_str());
+	    cmd = "show surface\n";
+	    printf("... %s", cmd.toStdString().c_str());
+	    pymol.write(cmd.toStdString().c_str());
+	    cmd = "save " + fn + "/" + text + ".obj\n";
+	    printf("... %s", cmd.toStdString().c_str());
+	    pymol.write(cmd.toStdString().c_str());
+	    cmd = "quit\n";
+	    printf("... %s", cmd.toStdString().c_str());
+	    pymol.write(cmd.toStdString().c_str());
+	    if (!pymol.waitForFinished()) {
+		QMessageBox::warning(NULL, "Could not complete pymol import", text);;
+	    }
+
+	    // Make sure everything went okay
+	    QByteArray result = pymol.readAll();
+	    // XXX Rather than printing, parse this to see if things worked.
+	    printf("%s\n", result.data());
+	  }
+
 	}
     }
 }
