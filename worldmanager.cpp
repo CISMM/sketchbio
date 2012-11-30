@@ -4,6 +4,8 @@
 
 #define COLLISION_FORCE 5
 
+//##################################################################################################
+//##################################################################################################
 WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *worldEyeTransform) :
     objects(),
     connections()
@@ -34,6 +36,8 @@ WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *w
     this->worldEyeTransform = worldEyeTransform;
 }
 
+//##################################################################################################
+//##################################################################################################
 WorldManager::~WorldManager() {
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
         SketchObject *obj = (*it);
@@ -49,6 +53,8 @@ WorldManager::~WorldManager() {
     connections.clear();
 }
 
+//##################################################################################################
+//##################################################################################################
 ObjectId WorldManager::addObject(int modelId,q_vec_type pos, q_type orient) {
     SketchModel *model = modelManager->getModelFor(modelId);
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
@@ -64,6 +70,8 @@ ObjectId WorldManager::addObject(int modelId,q_vec_type pos, q_type orient) {
     return id;
 }
 
+//##################################################################################################
+//##################################################################################################
 void WorldManager::removeObject(ObjectId objectId) {
     // if we are deleting an object, it should not have any springs...
     // TODO - fix this assumption later
@@ -72,10 +80,14 @@ void WorldManager::removeObject(ObjectId objectId) {
     delete obj;
 }
 
+//##################################################################################################
+//##################################################################################################
 int WorldManager::getNumberOfObjects() {
     return objects.size();
 }
 
+//##################################################################################################
+//##################################################################################################
 SpringId WorldManager::addSpring(SpringConnection *spring) {
     connections.push_back(spring);
     SpringId it = connections.end();
@@ -104,6 +116,8 @@ SpringId WorldManager::addSpring(SpringConnection *spring) {
     return it;
 }
 
+//##################################################################################################
+//##################################################################################################
 SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type worldPos1,
                              const q_vec_type worldPos2, double k, double l)
 {
@@ -124,6 +138,8 @@ SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type wor
     return addSpring(spring);
 }
 
+//##################################################################################################
+//##################################################################################################
 void WorldManager::removeSpring(SpringId id) {
     SpringConnection *conn = (*id);
     connections.erase(id);
@@ -134,10 +150,14 @@ void WorldManager::removeSpring(SpringId id) {
     delete conn;
 }
 
+//##################################################################################################
+//##################################################################################################
 int WorldManager::getNumberOfSprings() {
     return connections.size();
 }
 
+//##################################################################################################
+//##################################################################################################
 // helper method for stepPhysics -- does Euler's method once force
 // and torque on an object have been calculated
 inline void euler(ObjectId o, ModelManager *modelManager, double dt) {
@@ -175,6 +195,8 @@ inline void euler(ObjectId o, ModelManager *modelManager, double dt) {
     obj->recalculateLocalTransform();
 }
 
+//##################################################################################################
+//##################################################################################################
 void WorldManager::stepPhysics(double dt) {
 
     // clear the accumulated force in the objects
@@ -206,6 +228,9 @@ void WorldManager::stepPhysics(double dt) {
     updateSprings();
 }
 
+
+//##################################################################################################
+//##################################################################################################
 void WorldManager::updateSprings() {
     // set spring ends to new positions
     for (SpringId id = connections.begin(); id != connections.end(); id++) {
@@ -237,6 +262,8 @@ void WorldManager::updateSprings() {
     springEndConnections->Update();
 }
 
+//##################################################################################################
+//##################################################################################################
 // helper function-- converts quaternion to a PQP matrix
 inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
     q_matrix_type rowMat;
@@ -248,6 +275,8 @@ inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
     }
 }
 
+//##################################################################################################
+//##################################################################################################
 // helper function-- compute the normal n of triangle tri in the model
 // assumes points in each triangle in the model are added in counterclockwise order
 // relative to the outside of the surface looking down
@@ -270,6 +299,8 @@ inline void unit_normal(q_vec_type n, PQP_Model *m, int t) {
     q_vec_normalize(n,n);
 }
 
+//##################################################################################################
+//##################################################################################################
 // helper function -- compute the centriod of the triangle
 inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 #ifdef PQP_UPDATE_EPSILON
@@ -290,6 +321,8 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 }
 
 
+//##################################################################################################
+//##################################################################################################
 void WorldManager::collide(ObjectId o1, ObjectId o2) {
     // get the collision models:
     int m1 = (*o1)->getModelId();
@@ -313,14 +346,6 @@ void WorldManager::collide(ObjectId o1, ObjectId o2) {
     // collide them
     PQP_Collide(&cr,r1,t1,pqp_model1,r2,t2,pqp_model2,PQP_ALL_CONTACTS);
 
-//    qDebug() << "Collisions:" << cr.NumPairs();
-//    if (cr.NumPairs()!= 0) {
-//        q_vec_print(t1);
-//        q_vec_print(t2);
-//        q_print(quat1);
-//        q_print(quat2);
-//    }
-
     // for each pair in collision
     for (int i = 0; i < cr.NumPairs(); i++) {
         int m1Tri = cr.Id1(i);
@@ -343,9 +368,5 @@ void WorldManager::collide(ObjectId o1, ObjectId o2) {
         // apply the forces
         (*o1)->addForce(p1,f1);
         (*o2)->addForce(p2,f2);
-//        qDebug() << "points" << endl;
-//        q_vec_print(p1);
-//        q_vec_print(p2);
-//        qDebug() << "torques" << endl;
     }
 }

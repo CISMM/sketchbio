@@ -282,31 +282,44 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
                 q_vec_type wPos1, wPos2;
                 // create springs and add them
+                // first spring --defined along the "x" axis (per1)
                 SpringId id;
                 q_vec_add(wPos2,tPos,tPer1);
                 q_vec_add(wPos1,oPos,oPer1);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
-                q_vec_invert(oPer1,oPer1);
-                q_vec_invert(tPer1,tPer1);
-                q_vec_add(wPos2,tPos,tPer1);
-                q_vec_add(wPos1,oPos,oPer1);
+                // second spring --defined as rotated 120 degrees about "z" axis.
+                // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
+                q_vec_scale(oPer1,-.5,oPer1);
+                q_vec_scale(tPer1,-.5,tPer1);
+                q_vec_scale(oPer2,sqrt(3.0)/2,oPer2);
+                q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
+                q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
+                q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
+                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
+                q_vec_add(wPos1,wPos1,oPer2); // + sqrt(3)/2 y
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
-                q_vec_add(wPos2,tPos,tPer2);
-                q_vec_add(wPos1,oPos,oPer2);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
-                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                springs->push_back(id);
+                // third spring --defined as rotated 240 degrees about "z" axis.
+                // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
                 q_vec_invert(oPer2,oPer2);
                 q_vec_invert(tPer2,tPer2);
-                q_vec_add(wPos2,tPos,tPer2);
-                q_vec_add(wPos1,oPos,oPer2);
+                q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
+                q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
+                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
+                q_vec_add(wPos1,wPos1,oPer2); // - sqrt(3)/2 y
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
+//                q_vec_invert(oPer2,oPer2);
+//                q_vec_invert(tPer2,tPer2);
+//                q_vec_add(wPos2,tPos,tPer2);
+//                q_vec_add(wPos1,oPos,oPer2);
+//                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+//                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+//                springs->push_back(id);
 #undef OBJECT_SIDE_LEN
 #undef TRACKER_SIDE_LEN
             } else { // update springs stiffness if they are already there
