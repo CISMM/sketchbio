@@ -270,8 +270,8 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_cross_product(per1,axis,vec);
                 q_vec_normalize(per1,per1);
                 q_vec_cross_product(per2,per1,vec); // should already be length 1
-#define OBJECT_SIDE_LEN 5
-#define TRACKER_SIDE_LEN 5
+#define OBJECT_SIDE_LEN 200
+#define TRACKER_SIDE_LEN 200
                 // create scaled perpendicular vectors
                 q_vec_type oPer1, oPer2, tPer1, tPer2;
                 q_vec_scale(oPer1,OBJECT_SIDE_LEN,per1);
@@ -284,26 +284,26 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_add(wPos2,tPos,tPer1);
                 q_vec_add(wPos1,oPos,oPer1);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
-                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
+                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 q_vec_invert(oPer1,oPer1);
                 q_vec_invert(tPer1,tPer1);
                 q_vec_add(wPos2,tPos,tPer1);
                 q_vec_add(wPos1,oPos,oPer1);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
-                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
+                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 q_vec_add(wPos2,tPos,tPer2);
                 q_vec_add(wPos1,oPos,oPer2);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
-                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
+                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 q_vec_invert(oPer2,oPer2);
                 q_vec_invert(tPer2,tPer2);
                 q_vec_add(wPos2,tPos,tPer2);
                 q_vec_add(wPos1,oPos,oPer2);
                 id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
-                                     analog[analogIdx],OBJECT_SIDE_LEN+TRACKER_SIDE_LEN);
+                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
 #undef OBJECT_SIDE_LEN
 #undef TRACKER_SIDE_LEN
@@ -538,10 +538,13 @@ void VRPN_CALLBACK SimpleView::handle_tracker_pos_quat (void *userdata, const vr
     SimpleView *view = (SimpleView *) userdata;
     q_xyz_quat_type data;
     // changes coordinates to OpenGL coords, switching y & z and negating y
-    data.xyz[0] = t.pos[0];
-    data.xyz[1] = -t.pos[2];
-    data.xyz[2] = t.pos[1];
-    q_copy(data.quat,t.quat);
+    data.xyz[Q_X] = t.pos[Q_X];
+    data.xyz[Q_Y] = -t.pos[Q_Z];
+    data.xyz[Q_Z] = t.pos[Q_Y];
+    data.quat[Q_X] = t.quat[Q_X];
+    data.quat[Q_Y] = -t.quat[Q_Z];
+    data.quat[Q_Z] = t.quat[Q_Y];
+    data.quat[Q_W] = t.quat[Q_W];
     // set the correct hand's position
     if (t.sensor == 0) {
         view->setLeftPos(&data);
