@@ -183,7 +183,8 @@ void SimpleView::handleInput() {
     transforms.getRightTrackerOrientInWorldCoords(afterROr);
     // possibly scale the world
     if (buttonDown[SCALE_BUTTON]) {
-        transforms.scaleWorldRelativeToRoom(delta);
+//        transforms.scaleWorldRelativeToRoom(delta);
+        transforms.scaleWithLeftTrackerFixed(delta);
     }
     // possibly rotate the world
     if (buttonDown[ROTATE_BUTTON]) {

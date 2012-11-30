@@ -95,6 +95,18 @@ public:
     void scaleWorldRelativeToRoom(double amount);
 
     /*
+     * Scales the room relative to the world while keeping the relative
+     * position of the left tracker fixed
+     */
+    void scaleWithLeftTrackerFixed(double amount);
+
+    /*
+     * Scales the room relative to the world while keeping the relative
+     * position of the left tracker fixed
+     */
+    void scaleWithRightTrackerFixed(double amount);
+
+    /*
      * Rotates the world relative to the room
      *
      */

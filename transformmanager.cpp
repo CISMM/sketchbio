@@ -123,6 +123,25 @@ void TransformManager::scaleWorldRelativeToRoom(double amount) {
     worldToRoom->Scale(amount,amount,amount);
 }
 
+void TransformManager::scaleWithLeftTrackerFixed(double amount) {
+    q_vec_type left;
+    getLeftTrackerPosInWorldCoords(left);
+    translateWorldRelativeToRoom(left);
+    scaleWorldRelativeToRoom(amount);
+    q_vec_invert(left,left);
+    translateWorldRelativeToRoom(left);
+}
+
+void TransformManager::scaleWithRightTrackerFixed(double amount) {
+    q_vec_type right;
+    getRightTrackerPosInWorldCoords(right);
+    translateWorldRelativeToRoom(right);
+    scaleWorldRelativeToRoom(amount);
+    q_vec_invert(right,right);
+    translateWorldRelativeToRoom(right);
+}
+
+
 void TransformManager::rotateWorldRelativeToRoom(const q_type quat) {
     double xyz[3],angle;
     q_to_axis_angle(&xyz[0],&xyz[1],&xyz[2],&angle,quat);
