@@ -6,6 +6,15 @@
 #include <vtkActor.h>
 #include <quat.h>
 
+/*
+ * This class contains the data that is unique to each instance of an object
+ * such as position, orientation, the vtkActor specific to the object, etc.
+ *
+ * It also contains the force and torque accumulators that are used in the
+ * main physics loop to count how much force and torque are applied to the
+ * object.
+ */
+
 class SketchObject
 {
 public:

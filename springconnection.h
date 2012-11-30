@@ -5,6 +5,15 @@
 #include "sketchobject.h"
 #include <vtkType.h>
 
+/*
+ * This class represents a Spring and has all the data needed to calculate the
+ * spring force on the two objects it is connected to, such as attachment position,
+ * stiffness, and rest length.
+ *
+ * It also contains some visualization parameters (end ids in a vtkPoints and cell id
+ * in a vtkPolyData)
+ */
+
 class SpringConnection
 {
 public:

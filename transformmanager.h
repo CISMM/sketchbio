@@ -8,6 +8,10 @@
 
 #define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE .0625
 
+/*
+ * This class handles transformations between world space, tracker space, and camera space.
+ */
+
 class TransformManager
 {
 public:

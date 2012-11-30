@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include <QThread>
 
+#include <stdexcept>
+
 #include <vtkPolyDataMapper.h>
 #include <vtkOBJReader.h>
 #include <vtkSphereSource.h>
@@ -183,7 +185,6 @@ void SimpleView::handleInput() {
     transforms.getRightTrackerOrientInWorldCoords(afterROr);
     // possibly scale the world
     if (buttonDown[SCALE_BUTTON]) {
-//        transforms.scaleWorldRelativeToRoom(delta);
         transforms.scaleWithLeftTrackerFixed(delta);
     }
     // possibly rotate the world
@@ -404,7 +405,10 @@ bool SimpleView::addObjects(QVector<QString> names)
   int i;
   for (i = 0; i < names.size(); i++) {
     // XXX Check for error here and return false if one found.
-    addObject(names[i]);
+      // notes: no good cross-platform way to check if file exists
+      // VTK prints out errors but does not throw anything, so we must
+      // do error checking before calling this
+      addObject(names[i]);
   }
 
   return true;

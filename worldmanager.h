@@ -15,6 +15,12 @@
 typedef std::list<SpringConnection *>::iterator SpringId;
 typedef std::list<SketchObject *>::iterator ObjectId;
 
+/*
+ * This class contains the data that is in the modeled "world", all the objects and
+ * springs.  It also contains code to step the "physics" of the simulation and run
+ * collision tests.
+ */
+
 class WorldManager
 {
 public:

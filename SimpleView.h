@@ -26,7 +26,10 @@ class Ui_SimpleView;
 #define NUM_HYDRA_BUTTONS 16
 #define NUM_HYDRA_ANALOGS 6
 
-// SimpleView class
+/*
+ * SimpleView is the main GUI class in the SketchBio project.  It also manages
+ * the vrpn input to the program.
+ */
 class SimpleView : public QMainWindow
 {
   Q_OBJECT
