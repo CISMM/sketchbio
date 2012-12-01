@@ -46,7 +46,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     renderer(vtkSmartPointer<vtkRenderer>::New()),
     models(ModelManager()),
     transforms(),
-    world(&models,renderer.GetPointer(),transforms.getWorldToEyeTransform()),
+    world(renderer.GetPointer(),transforms.getWorldToEyeTransform()),
     copies(NULL)
 {
     this->ui = new Ui_SimpleView;
@@ -80,7 +80,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     sphereSource->SetRadius(4);
     sphereSource->Update();
     int sphereSourceType = models.addObjectSource(sphereSource.GetPointer());
-    int sphereModelType = models.addObjectType(sphereSourceType,
+    SketchModelId sphereModelType = models.addObjectType(sphereSourceType,
                                                TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
 
     q_vec_type pos = Q_NULL_VECTOR;
@@ -395,7 +395,7 @@ ObjectId SimpleView::addObject(QString name)
     objReader->SetFileName(name.toStdString().c_str());
     objReader->Update();
     int fiberSourceType = models.addObjectSource(objReader.GetPointer());
-    int fiberModelType = models.addObjectType(fiberSourceType,1);
+    SketchModelId fiberModelType = models.addObjectType(fiberSourceType,1);
 
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;

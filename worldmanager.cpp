@@ -7,11 +7,10 @@
 
 //##################################################################################################
 //##################################################################################################
-WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *worldEyeTransform) :
+WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     objects(),
     connections()
 {
-    modelManager = models;
     renderer = r;
     pausePhysics = false;
     nextIdx = 0;
@@ -57,10 +56,10 @@ WorldManager::~WorldManager() {
 
 //##################################################################################################
 //##################################################################################################
-ObjectId WorldManager::addObject(int modelId,q_vec_type pos, q_type orient) {
-    SketchModel *model = modelManager->getModelFor(modelId);
+ObjectId WorldManager::addObject(SketchModelId modelId,q_vec_type pos, q_type orient) {
+    SketchModel *model = (*modelId);
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(model->getMapper());
+    actor->SetMapper(model->getSolidMapper());
     SketchObject *newObject = new SketchObject(actor,modelId,worldEyeTransform);
     newObject->setPosition(pos);
     newObject->setOrientation(orient);
@@ -167,12 +166,12 @@ int WorldManager::getNumberOfSprings() {
 //##################################################################################################
 // helper method for stepPhysics -- does Euler's method once force
 // and torque on an object have been calculated
-inline void euler(ObjectId o, ModelManager *modelManager, double dt) {
+inline void euler(ObjectId o, double dt) {
     q_vec_type pos, angularVel,deltaPos,force,torque;
     q_type spin, orient;
     SketchObject * obj = (*o);
     if (obj->doPhysics()) {
-        SketchModel *model = modelManager->getModelFor(obj->getModelId());
+        SketchModel *model = (*obj->getModelId());
         // get force & torque
         obj->getForce(force);
         obj->getTorque(torque);
@@ -230,7 +229,7 @@ void WorldManager::stepPhysics(double dt) {
     // apply forces - this is using Euler's Method for now
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
         if (!pausePhysics) {
-            euler(it,modelManager,dt);
+            euler(it,dt);
         }
         // even if physics is paused, some objects, such as the trackers may have moved, so we need
         // to update their transformations
@@ -298,8 +297,8 @@ inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
 ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
     ObjectId closest;
     double dist = std::numeric_limits<double>::max();
-    int m1 = (*subj)->getModelId();
-    SketchModel *model1 = modelManager->getModelFor(m1);
+    SketchModelId m1 = (*subj)->getModelId();
+    SketchModel *model1 = (*m1);
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_REAL r1[3][3], t1[3];
     q_type quat1;
@@ -309,8 +308,8 @@ ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
         if (((*it)->doPhysics()) && it != subj) {
             // get the collision models:
-            int m2 = (*it)->getModelId();
-            SketchModel *model2 = modelManager->getModelFor(m2);
+            SketchModelId m2 = (*it)->getModelId();
+            SketchModel *model2 = (*m2);
             PQP_Model *pqp_model2 = model2->getCollisionModel();
 
             // get the offsets and rotations in PQP's format
@@ -381,10 +380,10 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 //##################################################################################################
 void WorldManager::collide(ObjectId o1, ObjectId o2) {
     // get the collision models:
-    int m1 = (*o1)->getModelId();
-    int m2 = (*o2)->getModelId();
-    SketchModel *model1 = modelManager->getModelFor(m1);
-    SketchModel *model2 = modelManager->getModelFor(m2);
+    SketchModelId m1 = (*o1)->getModelId();
+    SketchModelId m2 = (*o2)->getModelId();
+    SketchModel *model1 = (*m1);
+    SketchModel *model2 = (*m2);
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_Model *pqp_model2 = model2->getCollisionModel();
 

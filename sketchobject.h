@@ -6,6 +6,7 @@
 #include <vtkActor.h>
 #include <quat.h>
 #include <list>
+#include <sketchmodel.h>
 
 /*
  * This class contains the data that is unique to each instance of an object
@@ -30,14 +31,14 @@ public:
       *                     used to set up the actor's transform
       *
       ********************************************************************/
-    SketchObject(vtkActor *actor, int model,vtkTransform *worldEyeTransform);
+    SketchObject(vtkActor *actor, SketchModelId model,vtkTransform *worldEyeTransform);
 
     /*********************************************************************
       *
       * Returns the model id used to create this object
       *
      *********************************************************************/
-    inline int getModelId() const { return modelId; }
+    inline SketchModelId getModelId() const { return modelId; }
     /*********************************************************************
       *
       * Returns the actor this object stores physics data for
@@ -160,8 +161,20 @@ public:
       *
      *********************************************************************/
     inline bool isNormalObject() const { return !dontDoPhysics && allowTransformUpdate; }
+    /*********************************************************************
+      *
+      * Sets this object to be displayed as wireframe
+      *
+     *********************************************************************/
+    inline void setWireFrame() { actor->SetMapper((*modelId)->getWireFrameMapper());}
+    /*********************************************************************
+      *
+      * Sets this object to be displayed as solid
+      *
+     *********************************************************************/
+    inline void setSolid() { actor->SetMapper((*modelId)->getSolidMapper());}
 private:
-    int modelId;
+    SketchModelId modelId;
     vtkSmartPointer<vtkActor> actor;
     vtkSmartPointer<vtkTransform> localTransform;
     q_vec_type position;

@@ -19,7 +19,7 @@
 class WorldManager
 {
 public:
-    WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *worldEyeTransform);
+    WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform);
     ~WorldManager();
 
     /*******************************************************************
@@ -39,7 +39,7 @@ public:
      *                  new object's actor
      *
      *******************************************************************/
-    ObjectId addObject(int modelId,q_vec_type pos, q_type orient);
+    ObjectId addObject(SketchModelId modelId,q_vec_type pos, q_type orient);
 
     /*******************************************************************
      *
@@ -146,7 +146,6 @@ private:
     std::list<SketchObject *> objects;
     std::list<SpringConnection *> connections;
     int nextIdx;
-    ModelManager *modelManager;
     vtkSmartPointer<vtkRenderer> renderer;
     int lastCapacityUpdate;
     vtkSmartPointer<vtkPoints> springEnds;

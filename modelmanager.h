@@ -50,35 +50,7 @@ public:
       * scale    - the scale factor to scale the object by
       *
       ****************************************************************************/
-    int addObjectType(int srcIndex, double scale);
-    /*****************************************************************************
-      *
-      * This method gets the vtkPolyData model which is scaled and recentered
-      * and identified by transformIdx
-      *
-      * modelIdx is assumed to be an index returned by addObjectType
-      *
-      ****************************************************************************/
-    vtkPolyData *getPolyDataOutput(int modelIdx);
-    /*****************************************************************************
-      *
-      * This method gets the output port of the scaled and recentered model
-      * which has the index transformIdx.
-      *
-      * modelIdx is assumed to be an index returned by addObjectType
-      *
-      ****************************************************************************/
-    vtkAlgorithmOutput *getOutputPort(int modelIdx);
-    /*****************************************************************************
-      *
-      * This method gets the entire stored data about the model at the given index
-      * this includes the vtkTransformPolyDataFilter, mass, moment of inertia
-      * and (eventually) collision detection information
-      *
-      * modelIdx is assumed to be an index returned by addObjectType
-      *
-      ****************************************************************************/
-    SketchModel *getModelFor(int modelIndex);
+    SketchModelId addObjectType(int srcIndex, double scale);
 
 private:
     // no source collection... so fun with casting

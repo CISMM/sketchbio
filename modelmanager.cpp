@@ -58,7 +58,7 @@ int ModelManager::addObjectSource(vtkPolyDataAlgorithm *dataSource) {
   * scale    - the scale factor to scale the object by
   *
   ****************************************************************************/
-int ModelManager::addObjectType(int srcIndex, double scale) {
+SketchModelId ModelManager::addObjectType(int srcIndex, double scale) {
     vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
             vtkSmartPointer<vtkTransformPolyDataFilter>::New();
     // set the correct input connection
@@ -102,58 +102,10 @@ int ModelManager::addObjectType(int srcIndex, double scale) {
     makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
 
     models.push_back(sModel);
-    return idNum;
+    SketchModelId id = models.end();
+    id--;
+    return id;
 }
-
-/*****************************************************************************
-  *
-  * This method gets the vtkPolyData model which is scaled and recentered
-  * and identified by transformIdx
-  *
-  * transformIdx is assumed to be an index returned by addObjectType
-  *
-  ****************************************************************************/
-vtkPolyData *ModelManager::getPolyDataOutput(int transformIdx) {
-    SketchModel *model = models.at(transformIdx);
-    return model->getModelData()->GetOutput();
-}
-
-/*****************************************************************************
-  *
-  * This method gets the output port of the scaled and recentered model
-  * which has the index transformIdx.
-  *
-  * transformIdx is assumed to be an index returned by addObjectType
-  *
-  ****************************************************************************/
-vtkAlgorithmOutput *ModelManager::getOutputPort(int transformIdx) {
-    SketchModel *model = models.at(transformIdx);
-    return model->getModelData()->GetOutputPort();
-}
-/*****************************************************************************
-  *
-  * This method gets the entire stored data about the model at the given index
-  * this includes the vtkTransformPolyDataFilter, mass, moment of inertia
-  * and (eventually) collision detection information
-  *
-  * modelIdx is assumed to be an index returned by addObjectType
-  *
-  ****************************************************************************/
-SketchModel *ModelManager::getModelFor(int modelIndex) {
-    return models.at(modelIndex);
-}
-///*****************************************************************************
-//  *
-//  * This method gets the collision model for objects created from the
-//  * transformed model identified by index
-//  *
-//  * transformIdx is assumed to be an index returned by addObjectType
-//  *
-//  ****************************************************************************/
-//PQP_Model *ModelManager::getCollisionModel(int transformIdx) {
-//    return collisionModels.at(transformIdx);
-//}
-
 
 /*****************************************************************************
   *

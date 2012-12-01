@@ -1,6 +1,6 @@
 #include "sketchobject.h"
 
-SketchObject::SketchObject(vtkActor *a, int model, vtkTransform *worldEyeTransform)
+SketchObject::SketchObject(vtkActor *a, SketchModelId model, vtkTransform *worldEyeTransform)
 {
     actor = a;
     modelId = model;
