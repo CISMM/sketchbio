@@ -302,23 +302,24 @@ ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
     quatToPQPMatrix(quat1,r1);
     (*subj)->getPosition(t1);
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-        if (((*it)->doPhysics()) && it != subj)
-        // get the collision models:
-        int m2 = (*it)->getModelId();
-        SketchModel *model2 = modelManager->getModelFor(m2);
-        PQP_Model *pqp_model2 = model2->getCollisionModel();
+        if (((*it)->doPhysics()) && it != subj) {
+            // get the collision models:
+            int m2 = (*it)->getModelId();
+            SketchModel *model2 = modelManager->getModelFor(m2);
+            PQP_Model *pqp_model2 = model2->getCollisionModel();
 
-        // get the offsets and rotations in PQP's format
-        PQP_DistanceResult dr;
-        PQP_REAL r2[3][3],t2[3];
-        q_type quat2;
-        (*it)->getOrientation(quat2);
-        quatToPQPMatrix(quat2,r2);
-        (*it)->getPosition(t2);
-        PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
-        if (dr.Distance() < dist) {
-            closest = it;
-            dist = dr.Distance();
+            // get the offsets and rotations in PQP's format
+            PQP_DistanceResult dr;
+            PQP_REAL r2[3][3],t2[3];
+            q_type quat2;
+            (*it)->getOrientation(quat2);
+            quatToPQPMatrix(quat2,r2);
+            (*it)->getPosition(t2);
+            PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
+            if (dr.Distance() < dist) {
+                closest = it;
+                dist = dr.Distance();
+            }
         }
     }
     *distOut = dist;
