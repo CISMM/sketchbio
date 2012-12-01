@@ -116,6 +116,13 @@ public:
      *
      *******************************************************************/
     void stepPhysics(double dt);
+    /*******************************************************************
+     *
+     * Turns on or off the physics, with physics off, this becomes a
+     * visualization tool.
+     *
+     *******************************************************************/
+    void togglePhysics();
 private:
     /*******************************************************************
      *
@@ -137,6 +144,7 @@ private:
     vtkSmartPointer<vtkPolyData> springEndConnections;
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
+    bool pausePhysics;
 };
 
 #endif // WORLDMANAGER_H

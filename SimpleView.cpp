@@ -18,6 +18,7 @@
 
 #define SCALE_BUTTON 5
 #define ROTATE_BUTTON 13
+#define PAUSE_PHYSICS_BUTTON 2
 #define HYDRA_SCALE_FACTOR 8.0f
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
@@ -384,6 +385,10 @@ void SimpleView::setRightPos(q_xyz_quat_type *newPos) {
 }
 
 void SimpleView::setButtonState(int buttonNum, bool buttonPressed) {
+    // added at request of Joe
+    if (buttonNum == PAUSE_PHYSICS_BUTTON && buttonPressed && !buttonDown[buttonNum]) {
+        world.togglePhysics();
+    }
     buttonDown[buttonNum] = buttonPressed;
 }
 

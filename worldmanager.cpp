@@ -12,6 +12,7 @@ WorldManager::WorldManager(ModelManager *models, vtkRenderer *r, vtkTransform *w
 {
     modelManager = models;
     renderer = r;
+    pausePhysics = false;
     nextIdx = 0;
     lastCapacityUpdate = 1000;
     springEnds = vtkSmartPointer<vtkPoints>::New();
@@ -192,7 +193,6 @@ inline void euler(ObjectId o, ModelManager *modelManager, double dt) {
         obj->setPosition(pos);
         obj->setOrientation(orient);
     }
-    obj->recalculateLocalTransform();
 }
 
 //##################################################################################################
@@ -204,8 +204,7 @@ void WorldManager::stepPhysics(double dt) {
         (*it)->clearForces();
     }
 
-    // TODO collision detection - collision causes a force
-    // TODO force from collisions
+    // collision detection - collision causes a force
     for (ObjectId i = objects.begin(); i != objects.end(); i++) {
         for (ObjectId j = i; j != objects.end(); j++) {
             if (i == j) // self collisions not handled now --TODO
@@ -222,10 +221,19 @@ void WorldManager::stepPhysics(double dt) {
 
     // apply forces - this is using Euler's Method for now
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-        euler(it,modelManager,dt);
+        if (!pausePhysics) {
+            euler(it,modelManager,dt);
+        }
+        (*it)->recalculateLocalTransform();
     }
 
     updateSprings();
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::togglePhysics() {
+    pausePhysics = ! pausePhysics;
 }
 
 
