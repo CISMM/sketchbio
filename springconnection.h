@@ -17,7 +17,7 @@
 class SpringConnection
 {
 public:
-    SpringConnection(SketchObject *o1, SketchObject *o2, double restLen,
+    SpringConnection(ObjectId o1, ObjectId o2, double restLen,
                      double k, q_vec_type obj1Pos, q_vec_type obj2Pos);
 
     inline double getStiffness() const { return stiffness; }
@@ -38,11 +38,17 @@ public:
     void addForce();
 
 private:
-    SketchObject *object1, *object2;
+    ObjectId object1, object2;
     double restLength;
     double stiffness;
     vtkIdType end1, end2, cellId;
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
 };
+
+/*
+ * The springs are stored in a list and referenced via these iterators in
+ * other parts of the program
+ */
+typedef std::list<SpringConnection *>::iterator SpringId;
 
 #endif // SPRINGCONNECTION_H

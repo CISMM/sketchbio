@@ -10,11 +10,6 @@
 #include <vtkRenderer.h>
 #include <vtkTubeFilter.h>
 
-// These will be returned from the add calls and used to get the
-// object/spring that was added and later to remove it
-typedef std::list<SpringConnection *>::iterator SpringId;
-typedef std::list<SketchObject *>::iterator ObjectId;
-
 /*
  * This class contains the data that is in the modeled "world", all the objects and
  * springs.  It also contains code to step the "physics" of the simulation and run
@@ -84,14 +79,16 @@ public:
      *
      * id1 - the id of the first object to connect
      * id2 - the id of the second object to connect
-     * worldPos1 - the position in world coordinates where the spring connects to the first model
-     * worldPos2 - the position in world coordinates where the spring connects to the second model
+     * pos1 - the position where the spring connects to the first model
+     * pos2 - the position where the spring connects to the second model
+     * worldRelativePos - true if the above positions are relative to the world coordinate space,
+     *                  - false if they are relative to the model coordiante space
      * k - the stiffness of the spring
      * l - the length of the spring
      *
      *******************************************************************/
-    SpringId addSpring(ObjectId id1, ObjectId id2, const q_vec_type worldPos1,
-                       const q_vec_type worldPos2, double k, double l);
+    SpringId addSpring(ObjectId id1, ObjectId id2, const q_vec_type pos1,
+                       const q_vec_type pos2, bool worldRelativePos, double k, double l);
 
     /*******************************************************************
      *

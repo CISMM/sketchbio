@@ -5,6 +5,7 @@
 #include <vtkTransform.h>
 #include <vtkActor.h>
 #include <quat.h>
+#include <list>
 
 /*
  * This class contains the data that is unique to each instance of an object
@@ -169,5 +170,11 @@ private:
     q_vec_type forceAccum;
     q_vec_type torqueAccum;
 };
+
+/*
+ * All objects are stored in a list, and this is how they are referred to when passed around
+ * to other parts of the program
+ */
+typedef std::list<SketchObject *>::iterator ObjectId;
 
 #endif // SKETCHOBJECT_H

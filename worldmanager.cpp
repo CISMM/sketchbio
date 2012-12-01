@@ -120,23 +120,28 @@ SpringId WorldManager::addSpring(SpringConnection *spring) {
 
 //##################################################################################################
 //##################################################################################################
-SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type worldPos1,
-                             const q_vec_type worldPos2, double k, double l)
+SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type pos1,
+                             const q_vec_type pos2, bool worldRelativePos, double k, double l)
 {
     SketchObject *obj1 = *id1, *obj2 = *id2;
-    q_type pos1, pos2, newPos1, newPos2;
+    q_type oPos1, oPos2, newPos1, newPos2;
     q_type orient1, orient2;
-    obj1->getPosition(pos1);
-    obj1->getOrientation(orient1);
-    obj2->getPosition(pos2);
-    obj2->getOrientation(orient2);
-    q_invert(orient1,orient1);
-    q_invert(orient2,orient2);
-    q_vec_subtract(newPos1,worldPos1,pos1);
-    q_xform(newPos1,orient1,newPos1);
-    q_vec_subtract(newPos2,worldPos2,pos2);
-    q_xform(newPos2,orient2,newPos2);
-    SpringConnection *spring = new SpringConnection(obj1,obj2,l,k,newPos1,newPos2);
+    if (worldRelativePos) {
+        obj1->getPosition(oPos1);
+        obj1->getOrientation(orient1);
+        obj2->getPosition(oPos2);
+        obj2->getOrientation(orient2);
+        q_invert(orient1,orient1);
+        q_invert(orient2,orient2);
+        q_vec_subtract(newPos1,pos1,oPos1);
+        q_xform(newPos1,orient1,newPos1);
+        q_vec_subtract(newPos2,pos2,oPos2);
+        q_xform(newPos2,orient2,newPos2);
+    } else {
+        q_vec_copy(newPos1,pos1);
+        q_vec_copy(newPos2,pos2);
+    }
+    SpringConnection *spring = new SpringConnection(id1,id2,l,k,newPos1,newPos2);
     return addSpring(spring);
 }
 

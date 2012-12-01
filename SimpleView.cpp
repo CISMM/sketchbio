@@ -92,12 +92,12 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
    if (fibrin_springs) {
     // creating springs
     q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-    SpringConnection *spring = new SpringConnection((*object1Id),(*object2Id),0,BOND_SPRING_CONSTANT,p1,p2);
+    SpringConnection *spring = new SpringConnection(object1Id,object2Id,0,BOND_SPRING_CONSTANT,p1,p2);
     SpringId springId = world.addSpring(spring);
 
     q_vec_set(p1,0,-30,0);
     q_vec_set(p2,200,-30,0);
-    spring = new SpringConnection((*object1Id),(*object2Id),0,BOND_SPRING_CONSTANT,p1,p2);
+    spring = new SpringConnection(object1Id,object2Id,0,BOND_SPRING_CONSTANT,p1,p2);
     springId = world.addSpring(spring);
    }
 
@@ -235,8 +235,6 @@ inline int getMinIdx(const q_vec_type vec) {
 
 /*
  * This method updates the springs connecting the trackers and the objects in the world...
- * we may need to apply a torque on the objects at each timestep to match the change in tracker
- * orientation... torques from the springs are VERY unintiuative
  */
 void SimpleView::updateTrackerObjectConnections() {
     for (int i = 0; i < 2; i++) {
@@ -287,7 +285,7 @@ void SimpleView::updateTrackerObjectConnections() {
                 SpringId id;
                 q_vec_add(wPos2,tPos,tPer1);
                 q_vec_add(wPos1,oPos,oPer1);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,true,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 // second spring --defined as rotated 120 degrees about "z" axis.
@@ -300,7 +298,7 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
                 q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
                 q_vec_add(wPos1,wPos1,oPer2); // + sqrt(3)/2 y
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,true,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 // third spring --defined as rotated 240 degrees about "z" axis.
@@ -311,20 +309,12 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
                 q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
                 q_vec_add(wPos1,wPos1,oPer2); // - sqrt(3)/2 y
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
+                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,true,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
-//                q_vec_invert(oPer2,oPer2);
-//                q_vec_invert(tPer2,tPer2);
-//                q_vec_add(wPos2,tPos,tPer2);
-//                q_vec_add(wPos1,oPos,oPer2);
-//                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,
-//                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-//                springs->push_back(id);
 #undef OBJECT_SIDE_LEN
 #undef TRACKER_SIDE_LEN
             } else { // update springs stiffness if they are already there
-                // may need to update endpoints too... not sure
                 for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
                     (*(*it))->setStiffness(analog[analogIdx]);
                 }
@@ -385,7 +375,7 @@ void SimpleView::setRightPos(q_xyz_quat_type *newPos) {
 }
 
 void SimpleView::setButtonState(int buttonNum, bool buttonPressed) {
-    // added at request of Joe
+    // added at a request from Joe
     if (buttonNum == PAUSE_PHYSICS_BUTTON && buttonPressed && !buttonDown[buttonNum]) {
         world.togglePhysics();
     }
