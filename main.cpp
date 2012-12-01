@@ -17,7 +17,7 @@ int main( int argc, char** argv )
   bool	do_fibrin_springs = true;
   bool	do_fibrin_replicate = true;
   QVector<QString> object_names;
-  unsigned i = 0, real_params = 0;
+  int i = 0, real_params = 0;
   for (i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-nofibrin")) {
 	do_fibrin = false;
@@ -28,6 +28,8 @@ int main( int argc, char** argv )
     } else if (argv[i][0] == '-') {
 	Usage(argv[0]);
     } else switch (++real_params) {
+      case 1:
+      case 2:
       default:
 	object_names.push_back(argv[i]);
     }
