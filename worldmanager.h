@@ -123,6 +123,18 @@ public:
      *
      *******************************************************************/
     void togglePhysics();
+    /*******************************************************************
+     *
+     * Returns the closest object to the given object, and the distance
+     * between the two objects.  Note: only "real" objects are tested, i.e.
+     * only objects with doPhysics() = true are checked.
+     *
+     * subj - the subject object (the one we are comparing to the others)
+     * distOut - a pointer to the location where the distance will be stored
+     *              when the function exits
+     *
+     *******************************************************************/
+    ObjectId getClosestObject(ObjectId subj,double *distOut);
 private:
     /*******************************************************************
      *

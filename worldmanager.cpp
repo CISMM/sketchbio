@@ -1,6 +1,7 @@
 #include "worldmanager.h"
 #include <vtkTubeFilter.h>
 #include <QDebug>
+#include <limits>
 
 #define COLLISION_FORCE 5
 
@@ -199,24 +200,26 @@ inline void euler(ObjectId o, ModelManager *modelManager, double dt) {
 //##################################################################################################
 void WorldManager::stepPhysics(double dt) {
 
-    // clear the accumulated force in the objects
-    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-        (*it)->clearForces();
-    }
-
-    // collision detection - collision causes a force
-    for (ObjectId i = objects.begin(); i != objects.end(); i++) {
-        for (ObjectId j = i; j != objects.end(); j++) {
-            if (i == j) // self collisions not handled now --TODO
-                continue;
-            if ((*i)->isNormalObject() && (*j)->isNormalObject())
-                collide(i,j);
+    if (!pausePhysics) {
+        // clear the accumulated force in the objects
+        for (ObjectId it = objects.begin(); it != objects.end(); it++) {
+            (*it)->clearForces();
         }
-    }
 
-    // spring forces between models / models & trackers
-    for (SpringId it = connections.begin(); it != connections.end(); it++) {
-        (*it)->addForce();
+        // collision detection - collision causes a force
+        for (ObjectId i = objects.begin(); i != objects.end(); i++) {
+            for (ObjectId j = i; j != objects.end(); j++) {
+                if (i == j) // self collisions not handled now --TODO
+                    continue;
+                if ((*i)->isNormalObject() && (*j)->isNormalObject())
+                    collide(i,j);
+            }
+        }
+
+        // spring forces between models / models & trackers
+        for (SpringId it = connections.begin(); it != connections.end(); it++) {
+            (*it)->addForce();
+        }
     }
 
     // apply forces - this is using Euler's Method for now
@@ -224,6 +227,8 @@ void WorldManager::stepPhysics(double dt) {
         if (!pausePhysics) {
             euler(it,modelManager,dt);
         }
+        // even if physics is paused, some objects, such as the trackers may have moved, so we need
+        // to update their transformations
         (*it)->recalculateLocalTransform();
     }
 
@@ -281,6 +286,43 @@ inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
         mat[i][1] = rowMat[i][1];
         mat[i][2] = rowMat[i][2];
     }
+}
+
+//##################################################################################################
+//##################################################################################################
+ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
+    ObjectId closest;
+    double dist = std::numeric_limits<double>::max();
+    int m1 = (*subj)->getModelId();
+    SketchModel *model1 = modelManager->getModelFor(m1);
+    PQP_Model *pqp_model1 = model1->getCollisionModel();
+    PQP_REAL r1[3][3], t1[3];
+    q_type quat1;
+    (*subj)->getOrientation(quat1);
+    quatToPQPMatrix(quat1,r1);
+    (*subj)->getPosition(t1);
+    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
+        if (((*it)->doPhysics()) && it != subj)
+        // get the collision models:
+        int m2 = (*it)->getModelId();
+        SketchModel *model2 = modelManager->getModelFor(m2);
+        PQP_Model *pqp_model2 = model2->getCollisionModel();
+
+        // get the offsets and rotations in PQP's format
+        PQP_DistanceResult dr;
+        PQP_REAL r2[3][3],t2[3];
+        q_type quat2;
+        (*it)->getOrientation(quat2);
+        quatToPQPMatrix(quat2,r2);
+        (*it)->getPosition(t2);
+        PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
+        if (dr.Distance() < dist) {
+            closest = it;
+            dist = dr.Distance();
+        }
+    }
+    *distOut = dist;
+    return closest;
 }
 
 //##################################################################################################
