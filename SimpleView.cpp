@@ -275,27 +275,35 @@ inline int getMinIdx(const q_vec_type vec) {
  * This method updates the springs connecting the trackers and the objects in the world...
  */
 void SimpleView::updateTrackerObjectConnections() {
+    if (objects.size() == 0)
+        return;
     for (int i = 0; i < 2; i++) {
-        int analogIdx, objIdx;
+        int analogIdx;
+        ObjectId objectToGrab;
         ObjectId tracker;
         std::vector<SpringId> *springs;
+        double dist;
         // select left or right
         if (i == 0) {
             analogIdx = HYDRA_LEFT_TRIGGER;
-            objIdx = 0;
             tracker = leftHand;
             springs = &lhand;
+            objectToGrab = lObj;
+            dist = lDist;
         } else if (i == 1) {
             analogIdx = HYDRA_RIGHT_TRIGGER;
-            objIdx = 1;
             tracker = rightHand;
             springs = &rhand;
+            objectToGrab = rObj;
+            dist = rDist;
         }
         // if they are gripping the trigger
         if (analog[analogIdx] > .1) {
             // if we do not have springs yet add them
             if (springs->size() == 0) { // add springs
-                SketchObject *obj = (*objects[objIdx]);
+                if (dist > DISTANCE_THRESHOLD)
+                    continue;
+                SketchObject *obj = (*objectToGrab);
                 SketchObject *trackerObj = *tracker;
                 q_vec_type oPos, tPos, vec;
                 obj->getPosition(oPos);
@@ -317,13 +325,13 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_scale(oPer2,OBJECT_SIDE_LEN,per2);
                 q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
                 q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
-                q_vec_type wPos1, wPos2;
+                q_vec_type /*wPos1,*/ wPos2;
                 // create springs and add them
                 // first spring --defined along the "x" axis (per1)
                 SpringId id;
                 q_vec_add(wPos2,tPos,tPer1);
-                q_vec_add(wPos1,oPos,oPer1);
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,true,
+//                q_vec_add(wPos1,oPos,oPer1);
+                id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 // second spring --defined as rotated 120 degrees about "z" axis.
@@ -334,9 +342,9 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
                 q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
                 q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
-                q_vec_add(wPos1,wPos1,oPer2); // + sqrt(3)/2 y
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,true,
+//                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
+//                q_vec_add(wPos1,wPos1,oPer2); // + sqrt(3)/2 y
+                id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
                 // third spring --defined as rotated 240 degrees about "z" axis.
@@ -345,9 +353,9 @@ void SimpleView::updateTrackerObjectConnections() {
                 q_vec_invert(tPer2,tPer2);
                 q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
                 q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
-                q_vec_add(wPos1,wPos1,oPer2); // - sqrt(3)/2 y
-                id = world.addSpring(objects[objIdx],tracker,wPos1,wPos2,true,
+//                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
+//                q_vec_add(wPos1,wPos1,oPer2); // - sqrt(3)/2 y
+                id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                      analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
                 springs->push_back(id);
 #undef OBJECT_SIDE_LEN
