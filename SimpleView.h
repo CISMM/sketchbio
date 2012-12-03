@@ -93,6 +93,8 @@ private:
   WorldManager world;
   StructureReplicator *copies;
   ObjectId leftHand, rightHand;
+  ObjectId lObj, rObj;
+  double lDist, rDist;
   std::vector<ObjectId> objects;
   std::vector<SpringId> lhand, rhand;
 };

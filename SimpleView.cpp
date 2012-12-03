@@ -15,6 +15,7 @@
 #include <vtkRenderWindow.h>
 #include <vtkCamera.h>
 #include <vtkProperty.h>
+#include <limits>
 
 #define SCALE_BUTTON 5
 #define ROTATE_BUTTON 13
@@ -27,6 +28,7 @@
 #define NUM_EXTRA_FIBERS 5
 #define BOND_SPRING_CONSTANT .5
 #define TIMESTEP (16/1000.0)
+#define DISTANCE_THRESHOLD 30
 
 #define NUM_COLORS (6)
 static double COLORS[][3] =
@@ -88,6 +90,10 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
   if (load_fibrin) {
     ObjectId object1Id = addObject("./models/1m1j.obj");
     ObjectId object2Id = addObject("./models/1m1j.obj");
+    lObj = object1Id;
+    rObj = object2Id;
+    lDist = std::numeric_limits<double>::max();
+    rDist = lDist;
 
    if (fibrin_springs) {
     // creating springs
@@ -201,15 +207,45 @@ void SimpleView::handleInput() {
         q_type q;
         q_from_axis_angle(q,0,0,1,.01);
         transforms.translateWorldRelativeToRoom(0,0,-0.5);
-        (*objects[0])->setWireFrame();
     } else if (buttonDown[8]) {
         q_type q;
         q_from_axis_angle(q,0,0,1,-.01);
         transforms.translateWorldRelativeToRoom(0,0,0.5);
-        (*objects[0])->setSolid();
     }
     // move fibers
     updateTrackerObjectConnections();
+
+    ObjectId closest = world.getClosestObject(leftHand,&lDist);
+
+    if (lObj == closest) {
+        if (lDist < DISTANCE_THRESHOLD) {
+            (*closest)->setWireFrame();
+        } else {
+            (*closest)->setSolid();
+        }
+    } else {
+        if (*lObj)
+            (*lObj)->setSolid();
+        lObj = closest;
+        if (lDist < DISTANCE_THRESHOLD)
+            (*lObj)->setWireFrame();
+    }
+
+    closest = world.getClosestObject(rightHand,&rDist);
+
+    if (rObj == closest) {
+        if (rDist < DISTANCE_THRESHOLD) {
+            (*closest)->setWireFrame();
+        } else {
+            (*closest)->setSolid();
+        }
+    } else {
+        if (*rObj)
+            (*rObj)->setSolid();
+        rObj = closest;
+        if (rDist < DISTANCE_THRESHOLD)
+            (*rObj)->setWireFrame();
+    }
 
     // set tracker locations
     updateTrackerPositions();
