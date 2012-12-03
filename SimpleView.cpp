@@ -90,8 +90,6 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
   if (load_fibrin) {
     ObjectId object1Id = addObject("./models/1m1j.obj");
     ObjectId object2Id = addObject("./models/1m1j.obj");
-    lObj = object1Id;
-    rObj = object2Id;
     lDist = std::numeric_limits<double>::max();
     rDist = lDist;
 
@@ -215,36 +213,38 @@ void SimpleView::handleInput() {
     // move fibers
     updateTrackerObjectConnections();
 
-    ObjectId closest = world.getClosestObject(leftHand,&lDist);
+    if (objects.size() > 0) {
+        ObjectId closest = world.getClosestObject(leftHand,&lDist);
 
-    if (lObj == closest) {
-        if (lDist < DISTANCE_THRESHOLD) {
-            (*closest)->setWireFrame();
+        if (lObj == closest) {
+            if (lDist < DISTANCE_THRESHOLD) {
+                (*closest)->setWireFrame();
+            } else {
+                (*closest)->setSolid();
+            }
         } else {
-            (*closest)->setSolid();
+            if (*lObj)
+                (*lObj)->setSolid();
+            lObj = closest;
+            if (lDist < DISTANCE_THRESHOLD)
+                (*lObj)->setWireFrame();
         }
-    } else {
-        if (*lObj)
-            (*lObj)->setSolid();
-        lObj = closest;
-        if (lDist < DISTANCE_THRESHOLD)
-            (*lObj)->setWireFrame();
-    }
 
-    closest = world.getClosestObject(rightHand,&rDist);
+        closest = world.getClosestObject(rightHand,&rDist);
 
-    if (rObj == closest) {
-        if (rDist < DISTANCE_THRESHOLD) {
-            (*closest)->setWireFrame();
+        if (rObj == closest) {
+            if (rDist < DISTANCE_THRESHOLD) {
+                (*closest)->setWireFrame();
+            } else {
+                (*closest)->setSolid();
+            }
         } else {
-            (*closest)->setSolid();
+            if (*rObj)
+                (*rObj)->setSolid();
+            rObj = closest;
+            if (rDist < DISTANCE_THRESHOLD)
+                (*rObj)->setWireFrame();
         }
-    } else {
-        if (*rObj)
-            (*rObj)->setSolid();
-        rObj = closest;
-        if (rDist < DISTANCE_THRESHOLD)
-            (*rObj)->setWireFrame();
     }
 
     // set tracker locations
@@ -442,6 +442,9 @@ ObjectId SimpleView::addObject(QString name)
     ObjectId objectId = world.addObject(fiberModelType,pos,orient);
     (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
     objects.push_back(objectId);
+    if (objects.size() == 1) {
+        lObj = rObj = objectId;
+    }
 
     return objectId;
 }
