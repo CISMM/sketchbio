@@ -19,7 +19,7 @@
 ModelManager::ModelManager()
 {
     sources = vtkSmartPointer<vtkCollection>::New();
-    models = std::vector<SketchModel *>();
+    models = std::list<SketchModel *>();
 }
 
 ModelManager::~ModelManager() {
@@ -87,13 +87,6 @@ SketchModelId ModelManager::addObjectType(int srcIndex, double scale) {
     transform->Scale(scale,scale,scale);
     transformPD->SetTransform(transform);
     transformPD->Update();
-
-
-    size_t idNum = models.size();
-    // fix potential out of space problems as they come up
-    if (idNum >= models.capacity()) {
-        models.reserve(2*idNum);
-    }
 
     // remember the mass and moment of inertia are inverses!!!!!!!!
     SketchModel * sModel = new SketchModel(transformPD,INVERSEMASS,INVERSEMOMENT);

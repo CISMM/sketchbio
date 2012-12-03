@@ -21,6 +21,8 @@ SketchObject::SketchObject(vtkActor *a, SketchModelId model, vtkTransform *world
     trans->Concatenate(localTransform);
     trans->Concatenate(worldEyeTransform);
     a->SetUserTransform(trans);
+    physicsEnabled = true;
+    allowTransformUpdate = true;
 }
 
 void SketchObject::recalculateLocalTransform() {

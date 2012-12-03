@@ -19,7 +19,7 @@
 #include <vtkPolyData.h>
 #include <vtkAlgorithmOutput.h>
 #include "sketchmodel.h"
-#include <vector>
+#include <list>
 #include <PQP.h>
 
 
@@ -58,7 +58,7 @@ private:
     // they should not be removed.
     vtkSmartPointer<vtkCollection> sources;
 
-    std::vector<SketchModel *> models;
+    std::list<SketchModel *> models;
 };
 void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData);
 

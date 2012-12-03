@@ -144,7 +144,7 @@ public:
       * Returns true if this object should be affected by physics
       *
      *********************************************************************/
-    inline bool doPhysics() const { return !dontDoPhysics; }
+    inline bool doPhysics() const { return physicsEnabled; }
     /*********************************************************************
       *
       * Sets whether to do physics on this object
@@ -152,7 +152,7 @@ public:
       * doPhysics - true if this object should have physics
       *
      *********************************************************************/
-    inline void setDoPhysics(bool doPhysics) { dontDoPhysics = !doPhysics; }
+    inline void setDoPhysics(bool doPhysics) { physicsEnabled = doPhysics; }
     /*********************************************************************
       *
       * Returns true if physics is allowed on this object and its
@@ -160,7 +160,7 @@ public:
       * object
       *
      *********************************************************************/
-    inline bool isNormalObject() const { return !dontDoPhysics && allowTransformUpdate; }
+    inline bool isNormalObject() const { return physicsEnabled && allowTransformUpdate; }
     /*********************************************************************
       *
       * Sets this object to be displayed as wireframe
@@ -179,7 +179,7 @@ private:
     vtkSmartPointer<vtkTransform> localTransform;
     q_vec_type position;
     q_type orientation;
-    bool allowTransformUpdate, dontDoPhysics;
+    bool allowTransformUpdate, physicsEnabled;
     q_vec_type forceAccum;
     q_vec_type torqueAccum;
 };

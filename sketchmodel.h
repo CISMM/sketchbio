@@ -5,7 +5,7 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkPolyDataMapper.h>
 #include <PQP.h>
-#include <vector>
+#include <list>
 
 /*
  * This class holds data about a general type of object such as a fibrin molecule.  The vtk
@@ -36,6 +36,6 @@ private:
     double invMomentOfInertia;
 };
 
-typedef std::vector<SketchModel *>::iterator SketchModelId;
+typedef std::list<SketchModel *>::iterator SketchModelId;
 
 #endif // SKETCHMODEL_H

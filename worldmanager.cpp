@@ -212,11 +212,13 @@ void WorldManager::stepPhysics(double dt) {
 
         // collision detection - collision causes a force
         for (ObjectId i = objects.begin(); i != objects.end(); i++) {
-            for (ObjectId j = i; j != objects.end(); j++) {
-                if (i == j) // self collisions not handled now --TODO
-                    continue;
-                if ((*i)->isNormalObject() && (*j)->isNormalObject())
-                    collide(i,j);
+            if ((*i)->isNormalObject()) {
+                for (ObjectId j = i; j != objects.end(); j++) {
+                    if (i == j) // self collisions not handled now --TODO
+                        continue;
+                    if ((*j)->isNormalObject())
+                        collide(i,j);
+                }
             }
         }
 

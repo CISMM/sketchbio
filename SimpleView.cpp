@@ -201,10 +201,12 @@ void SimpleView::handleInput() {
         q_type q;
         q_from_axis_angle(q,0,0,1,.01);
         transforms.translateWorldRelativeToRoom(0,0,-0.5);
+        (*objects[0])->setWireFrame();
     } else if (buttonDown[8]) {
         q_type q;
         q_from_axis_angle(q,0,0,1,-.01);
         transforms.translateWorldRelativeToRoom(0,0,0.5);
+        (*objects[0])->setSolid();
     }
     // move fibers
     updateTrackerObjectConnections();
