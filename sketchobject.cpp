@@ -43,7 +43,7 @@ void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPo
 }
 
 
-void SketchObject::addForce(q_vec_type point, q_vec_type force) {
+volatile void SketchObject::addForce(q_vec_type point, const q_vec_type force) {
     q_vec_type modelOrigin, modelForce, torque;
     q_vec_set(modelOrigin,0,0,0);
     q_vec_add(forceAccum,forceAccum,force);

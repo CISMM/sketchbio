@@ -73,10 +73,21 @@ ObjectId WorldManager::addObject(SketchModelId modelId,q_vec_type pos, q_type or
 
 //##################################################################################################
 //##################################################################################################
+ObjectId WorldManager::addObject(SketchObject *object) {
+    objects.push_back(object);
+    renderer->AddActor(object->getActor());
+    ObjectId id = objects.end();
+    id--;
+    return id;
+}
+
+//##################################################################################################
+//##################################################################################################
 void WorldManager::removeObject(ObjectId objectId) {
     // if we are deleting an object, it should not have any springs...
     // TODO - fix this assumption later
     SketchObject *obj = (*objectId);
+    renderer->RemoveActor(obj->getActor());
     objects.erase(objectId);
     delete obj;
 }
@@ -212,12 +223,12 @@ void WorldManager::stepPhysics(double dt) {
 
         // collision detection - collision causes a force
         for (ObjectId i = objects.begin(); i != objects.end(); i++) {
-            if ((*i)->isNormalObject()) {
+            if ((*i)->doPhysics()) {
                 for (ObjectId j = i; j != objects.end(); j++) {
                     if (i == j) // self collisions not handled now --TODO
                         continue;
-                    if ((*j)->isNormalObject())
-                        collide(i,j);
+                    if ((*j)->doPhysics())
+                        collide(*i,*j);
                 }
             }
         }
@@ -380,12 +391,10 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::collide(ObjectId o1, ObjectId o2) {
+void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
     // get the collision models:
-    SketchModelId m1 = (*o1)->getModelId();
-    SketchModelId m2 = (*o2)->getModelId();
-    SketchModel *model1 = (*m1);
-    SketchModel *model2 = (*m2);
+    SketchModel *model1 = (*((o1)->getModelId()));
+    SketchModel *model2 = (*((o2)->getModelId()));
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_Model *pqp_model2 = model2->getCollisionModel();
 
@@ -393,12 +402,12 @@ void WorldManager::collide(ObjectId o1, ObjectId o2) {
     PQP_CollideResult cr;
     PQP_REAL r1[3][3], t1[3], r2[3][3],t2[3];
     q_type quat1, quat2;
-    (*o1)->getOrientation(quat1);
+    (o1)->getOrientation(quat1);
     quatToPQPMatrix(quat1,r1);
-    (*o1)->getPosition(t1);
-    (*o2)->getOrientation(quat2);
+    (o1)->getPosition(t1);
+    (o2)->getOrientation(quat2);
     quatToPQPMatrix(quat2,r2);
-    (*o2)->getPosition(t2);
+    (o2)->getPosition(t2);
 
     // collide them
     PQP_Collide(&cr,r1,t1,pqp_model1,r2,t2,pqp_model2,PQP_ALL_CONTACTS);
@@ -423,7 +432,7 @@ void WorldManager::collide(ObjectId o1, ObjectId o2) {
         centriod(p1,pqp_model1,m1Tri);
         centriod(p2,pqp_model2,m2Tri);
         // apply the forces
-        (*o1)->addForce(p1,f1);
-        (*o2)->addForce(p2,f2);
+        (o1)->addForce(p1,f1);
+        (o2)->addForce(p2,f2);
     }
 }

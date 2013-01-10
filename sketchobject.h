@@ -50,13 +50,13 @@ public:
       * Copies the position of the object into the given vector
       *
      *********************************************************************/
-    inline void getPosition(q_vec_type dest) const { q_vec_copy(dest,position); }
+    volatile void getPosition(q_vec_type dest) const { q_vec_copy(dest,position); }
     /*********************************************************************
       *
       * Copies the orientation of the object into the given quaternion
       *
      *********************************************************************/
-    inline void getOrientation(q_type dest) const { q_copy(dest,orientation); }
+    volatile void getOrientation(q_type dest) const { q_copy(dest,orientation); }
     /*********************************************************************
       *
       * Sets the orientation of the object to the given new orientation
@@ -121,7 +121,7 @@ public:
       * force - the force relative to the world coordinate axes
       *
      *********************************************************************/
-    void addForce(q_vec_type point, q_vec_type force);
+    volatile void addForce(q_vec_type point, const q_vec_type force);
     /*********************************************************************
       *
       * Gets the sum of forces on the object (relative to world coordinates)
@@ -173,13 +173,14 @@ public:
       *
      *********************************************************************/
     inline void setSolid() { actor->SetMapper((*modelId)->getSolidMapper());}
+protected:
+    vtkSmartPointer<vtkTransform> localTransform;
+    bool allowTransformUpdate, physicsEnabled;
 private:
     SketchModelId modelId;
     vtkSmartPointer<vtkActor> actor;
-    vtkSmartPointer<vtkTransform> localTransform;
     q_vec_type position;
     q_type orientation;
-    bool allowTransformUpdate, physicsEnabled;
     q_vec_type forceAccum;
     q_vec_type torqueAccum;
 };

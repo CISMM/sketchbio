@@ -107,7 +107,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
 
     // Replicate objects
    if (do_replicate) {
-    copies = new StructureReplicator(object1Id,object2Id,&world);
+    copies = new StructureReplicator(object1Id,object2Id,&world,transforms.getWorldToEyeTransform());
     copies->setNumShown(5);
    }
   }

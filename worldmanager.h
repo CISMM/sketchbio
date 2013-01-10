@@ -40,6 +40,12 @@ public:
      *
      *******************************************************************/
     ObjectId addObject(SketchModelId modelId,q_vec_type pos, q_type orient);
+    /*******************************************************************
+     * Adds a the given object to the world and returns its index.
+     *
+     * object - the object to add
+     *******************************************************************/
+    ObjectId addObject(SketchObject *object);
 
     /*******************************************************************
      *
@@ -139,7 +145,7 @@ private:
      * resultant forces to them -- subroutine of stepPhysics
      *
      *******************************************************************/
-    void collide(ObjectId o1, ObjectId o2);
+    void collide(SketchObject *o1, SketchObject *o2);
 
     void updateSprings();
 
