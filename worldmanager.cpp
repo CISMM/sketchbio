@@ -151,7 +151,7 @@ SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type pos
         q_vec_copy(newPos1,pos1);
         q_vec_copy(newPos2,pos2);
     }
-    SpringConnection *spring = new SpringConnection(id1,id2,l,k,newPos1,newPos2);
+    SpringConnection *spring = new InterObjectSpring(id1,id2,l,l,k,newPos1,newPos2);
     return addSpring(spring);
 }
 

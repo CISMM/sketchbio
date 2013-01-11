@@ -96,12 +96,12 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
    if (fibrin_springs) {
     // creating springs
     q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-    SpringConnection *spring = new SpringConnection(object1Id,object2Id,0,BOND_SPRING_CONSTANT,p1,p2);
+    SpringConnection *spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
     SpringId springId = world.addSpring(spring);
 
     q_vec_set(p1,0,-30,0);
     q_vec_set(p2,200,-30,0);
-    spring = new SpringConnection(object1Id,object2Id,0,BOND_SPRING_CONSTANT,p1,p2);
+    spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
     springId = world.addSpring(spring);
    }
 
@@ -199,16 +199,6 @@ void SimpleView::handleInput() {
         q_normalize(beforeDVect,beforeDVect);
         q_from_two_vecs(rotation,beforeDVect,afterDVect);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    }
-
-    if (buttonDown[0]) {
-        q_type q;
-        q_from_axis_angle(q,0,0,1,.01);
-        transforms.translateWorldRelativeToRoom(0,0,-0.5);
-    } else if (buttonDown[8]) {
-        q_type q;
-        q_from_axis_angle(q,0,0,1,-.01);
-        transforms.translateWorldRelativeToRoom(0,0,0.5);
     }
     // move fibers
     updateTrackerObjectConnections();
