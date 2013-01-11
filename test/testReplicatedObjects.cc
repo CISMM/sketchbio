@@ -10,6 +10,10 @@
 #include <vtkSphereSource.h>
 #include <vtkOBJReader.h>
 
+#include <iostream>
+
+using namespace std;
+
 
 int main() {
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
@@ -29,6 +33,10 @@ int main() {
     ObjectId o2 = wmgr->addObject(modelId,pos,orient);
     StructureReplicator *rep = new StructureReplicator(o1,o2,wmgr,transform);
     rep->setNumShown(5);
+
+    if (wmgr->getNumberOfObjects() != 7) {
+        cout << "There are " << wmgr->getNumberOfObjects() << " objects!" << endl;
+    }
 
     for (int i = 0; i < 10; i++)
         wmgr->stepPhysics(0.016);

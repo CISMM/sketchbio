@@ -50,13 +50,13 @@ public:
       * Copies the position of the object into the given vector
       *
      *********************************************************************/
-    volatile void getPosition(q_vec_type dest) const { q_vec_copy(dest,position); }
+    virtual void getPosition(q_vec_type dest) const { q_vec_copy(dest,position); }
     /*********************************************************************
       *
       * Copies the orientation of the object into the given quaternion
       *
      *********************************************************************/
-    volatile void getOrientation(q_type dest) const { q_copy(dest,orientation); }
+    virtual void getOrientation(q_type dest) const { q_copy(dest,orientation); }
     /*********************************************************************
       *
       * Sets the orientation of the object to the given new orientation
@@ -121,7 +121,7 @@ public:
       * force - the force relative to the world coordinate axes
       *
      *********************************************************************/
-    volatile void addForce(q_vec_type point, const q_vec_type force);
+    virtual void addForce(q_vec_type point, const q_vec_type force);
     /*********************************************************************
       *
       * Gets the sum of forces on the object (relative to world coordinates)

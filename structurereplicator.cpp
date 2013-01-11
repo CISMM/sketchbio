@@ -18,9 +18,9 @@ class ReplicatedObject : public SketchObject {
 public:
     ReplicatedObject(vtkActor *actor, SketchModelId model, vtkTransform *worldEyeTransform,
                      ObjectId original0, ObjectId original1, int num);
-    volatile void addForce(q_vec_type point, const q_vec_type force);
-    volatile void getPosition(q_vec_type dest) const;
-    volatile void getOrientation(q_type dest) const;
+    virtual void addForce(q_vec_type point, const q_vec_type force);
+    virtual void getPosition(q_vec_type dest) const;
+    virtual void getOrientation(q_type dest) const;
 private:
     // need original(s) here
     ObjectId id0; // first original
@@ -46,7 +46,7 @@ ReplicatedObject::ReplicatedObject(vtkActor *actor, SketchModelId model, vtkTran
  * Gets the updated position from the local transform instead of
  * getting the outdated variable from the parent class
  */
-volatile void ReplicatedObject::getPosition(q_vec_type dest) const {
+void ReplicatedObject::getPosition(q_vec_type dest) const {
     q_vec_type origin = Q_NULL_VECTOR;
     localTransform->TransformPoint(origin,dest);
 }
@@ -55,7 +55,7 @@ volatile void ReplicatedObject::getPosition(q_vec_type dest) const {
  * Uses the updated local transform to get the orientation instead of
  * using the outdated variable in the parent class
  */
-volatile void ReplicatedObject::getOrientation(q_type dest) const {
+void ReplicatedObject::getOrientation(q_type dest) const {
     q_vec_type xaxis = {1, 0, 0};
     q_vec_type yaxis = {0, 1, 0};
     q_vec_type xout,yout;
@@ -73,7 +73,7 @@ volatile void ReplicatedObject::getOrientation(q_type dest) const {
  * Translates the force to the parent's orientation and applies a fraction of it,
  * based on how far down the chain this object is
  */
-volatile void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
+void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
     double divisor = (replicaNum > 0) ? replicaNum : (-replicaNum +1);
     SketchObject *original = (replicaNum > 0) ? *id1 : *id0;
     q_vec_type scaledForce;
@@ -95,6 +95,8 @@ StructureReplicator::StructureReplicator(ObjectId object1Id, ObjectId object2Id,
                                          vtkTransform *worldEyeTransform) {
     id1 = object1Id;
     id2 = object2Id;
+    (*id1)->recalculateLocalTransform();
+    (*id2)->recalculateLocalTransform();
     world = w;
     numShown = 0;
     newIds = std::list<ObjectId>();

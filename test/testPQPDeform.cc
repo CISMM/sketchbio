@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <vtkSmartPointer.h>
 #include <vtkPoints.h>
