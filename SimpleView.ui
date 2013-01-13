@@ -46,8 +46,15 @@
      </property>
      <addaction name="actionPDB_ID_2"/>
     </widget>
+    <widget class="QMenu" name="menuFilter">
+     <property name="title">
+      <string>Filter</string>
+     </property>
+     <addaction name="actionSimplify_2"/>
+    </widget>
     <addaction name="menuOpen"/>
     <addaction name="menuImport"/>
+    <addaction name="menuFilter"/>
    </widget>
    <addaction name="menuFIle"/>
   </widget>
@@ -105,6 +112,11 @@
     <string>PDB_ID</string>
    </property>
   </action>
+  <action name="actionSimplify_2">
+   <property name="text">
+    <string>Simplify</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -147,9 +159,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSimplify_2</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>simplifyOBJFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
   <slot>importPDBId()</slot>
+  <slot>simplifyOBJFile()</slot>
  </slots>
 </ui>

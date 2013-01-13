@@ -47,6 +47,9 @@ public:
   // Add an object (or objects) to be displayed.
   ObjectId addObject(QString name);
   bool addObjects(QVector<QString> names);
+
+  // Simplify an external object based on the root file name.
+  bool simplifyObjectByName(QString name);
  
 public slots:
 
@@ -57,6 +60,11 @@ public slots:
   // Run an external pymol script to download and surface the model
   // Put the resulting model in the models/ directory.
   void importPDBId();
+
+  // Throw a dialog box to browse for an OBJ file to
+  // simplify.  Produce multiple simplifications, with smaller
+  // fractional polygon counts.
+  void simplifyOBJFile();
  
   virtual void slotExit();
   void slot_frameLoop();
