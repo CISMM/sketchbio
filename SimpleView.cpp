@@ -513,6 +513,28 @@ void SimpleView::openOBJFile()
     }
 }
 
+bool SimpleView::simplifyObjectByName(const QString name)
+{
+    fprintf(stderr, "XXX Use importPDBId as a model to call Blender and have it simplify\n");
+    fprintf(stderr, "XXX   (Should do several levels of simplification, or parameterize)\n");
+    return false;
+}
+
+void SimpleView::simplifyOBJFile()
+{
+    // Ask the user for the name of the file to open.
+    QString fn = QFileDialog::getOpenFileName(this,
+                                              tr("Simplify OBJ file"),
+                                              "./",
+                                              tr("OBJ Files (*.obj)"));
+
+    // Open the file for reading.
+    if (fn.length() > 0) {
+        printf("Loading %s\n", fn.toStdString().c_str());
+        simplifyObjectByName(fn);
+    }
+}
+
 void SimpleView::importPDBId()
 {
     // Ask the user for the ID of the PDB file to open.
@@ -571,11 +593,11 @@ void SimpleView::importPDBId()
 	    qint64 linelength = 0;
 	    QByteArray full;
 	    do {
-		// If we don't wait for Ready, we get no bytes
-		if (pymol.waitForReadyRead(50)) {
-		  QByteArray next = pymol.readAll();
-		  full.append(next);
-		}
+            // If we don't wait for Ready, we get no bytes
+            if (pymol.waitForReadyRead(50)) {
+              QByteArray next = pymol.readAll();
+              full.append(next);
+            }
 	    } while ( (linelength >= 0) && !full.contains("readytoquit"));
 
 	    // Waiting for the print to appear doesn't always fix the
@@ -598,7 +620,7 @@ void SimpleView::importPDBId()
 	    // Time out after 2 minutes if the process does not exit
 	    // on its own by then.
 	    if (!pymol.waitForFinished(120000)) {
-		QMessageBox::warning(NULL, "Could not complete pymol import", text);
+            QMessageBox::warning(NULL, "Could not complete pymol import", text);
 	    }
 
 	    // Read all of the output from the program and then
@@ -609,12 +631,12 @@ void SimpleView::importPDBId()
 	    QByteArray result = pymol.readAll();
 	    if ( !result.contains("normal program termination.") ) {
 		QMessageBox::warning(NULL, "Error while importing", text);
-		printf("Python problem:\n%s\n", result.data());
-	    }
-	  }
+            printf("Python problem:\n%s\n", result.data());
+        }
+      }
 
-	}
     }
+  }
 }
 
 //####################################################################################
