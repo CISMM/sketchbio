@@ -1,12 +1,12 @@
 #include "springconnection.h"
 #include <QDebug>
 
-SpringConnection::SpringConnection(ObjectId o1, double restLen1, double restLen2,
+SpringConnection::SpringConnection(ObjectId o1, double minRestLen, double maxRestLen,
                                    double k, const q_vec_type obj1Pos)
 {
     object1 = o1;
-    minRestLength = restLen1;
-    maxRestLength = restLen2;
+    minRestLength = minRestLen;
+    maxRestLength = maxRestLen;
     stiffness = k;
     q_vec_copy(object1ConnectionPosition,obj1Pos);
     end1 = end2 = cellId = -1;
@@ -21,9 +21,9 @@ void SpringConnection::getEnd1WorldPosition(q_vec_type out) const {
 //######################################################################################
 //######################################################################################
 
-InterObjectSpring::InterObjectSpring(ObjectId o1, ObjectId o2, double restLen1, double restLen2,
+InterObjectSpring::InterObjectSpring(ObjectId o1, ObjectId o2, double minRestLen, double maxRestLen,
                                      double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos):
-    SpringConnection(o1,restLen1,restLen2,k,obj1Pos)
+    SpringConnection(o1,minRestLen,maxRestLen,k,obj1Pos)
 {
     object2 = o2;
     q_vec_copy(object2ConnectionPosition, obj2Pos);
@@ -64,9 +64,9 @@ void InterObjectSpring::getEnd2WorldPosition(q_vec_type out) const {
 //######################################################################################
 //######################################################################################
 
-ObjectPointSpring::ObjectPointSpring(ObjectId o1, double restLen1, double restLen2, double k,
+ObjectPointSpring::ObjectPointSpring(ObjectId o1, double minRestLen, double maxRestLen, double k,
                                         const q_vec_type obj1Pos, const q_vec_type worldPoint)
-    : SpringConnection(o1,restLen1,restLen2,k,obj1Pos)
+    : SpringConnection(o1,minRestLen,maxRestLen,k,obj1Pos)
 {
     q_vec_copy(point,worldPoint);
 }

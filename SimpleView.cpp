@@ -17,18 +17,35 @@
 #include <vtkProperty.h>
 #include <limits>
 
+// input constants
 #define SCALE_BUTTON 5
 #define ROTATE_BUTTON 13
 #define PAUSE_PHYSICS_BUTTON 2
 #define HYDRA_SCALE_FACTOR 8.0f
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
+
+// magic constants to take out later:
+// debuggin flag
 #define VRPN_ON true
+// scale between world and camera
 #define SCALE_DOWN_FACTOR (.03125)
+// default number extra fibers
 #define NUM_EXTRA_FIBERS 5
+// fibrin default spring constant
 #define BOND_SPRING_CONSTANT .5
+// timestep
 #define TIMESTEP (16/1000.0)
+
+// parameters that define how trackers and objects are connected
 #define DISTANCE_THRESHOLD 30
+#define OBJECT_SIDE_LEN 200
+#define TRACKER_SIDE_LEN 200
+
+// constants for grabbing the world code
+#define WORLD_NOT_GRABBED 0
+#define LEFT_GRABBED_WORLD 1
+#define RIGHT_GRABBED_WORLD 2
 
 #define NUM_COLORS (6)
 static double COLORS[][3] =
@@ -53,6 +70,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
+    grabbedWorld = WORLD_NOT_GRABBED;
     transforms.scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;
@@ -200,6 +218,28 @@ void SimpleView::handleInput() {
         q_from_two_vecs(rotation,beforeDVect,afterDVect);
         transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
     }
+    // if the world is grabbed, translate/rotate it
+    if (grabbedWorld == LEFT_GRABBED_WORLD) {
+        // translate
+        q_vec_type delta;
+        q_vec_subtract(delta,afterLPos,beforeLPos);
+        transforms.translateWorldRelativeToRoom(delta);
+        // rotate
+        q_type inv, rotation;
+        q_invert(inv,beforeLOr);
+        q_mult(rotation,afterLOr,inv);
+        transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
+    } else if (grabbedWorld == RIGHT_GRABBED_WORLD) {
+        // translate
+        q_vec_type delta;
+        q_vec_subtract(delta,afterRPos,beforeRPos);
+        transforms.translateWorldRelativeToRoom(delta);
+        // rotate
+        q_type inv, rotation;
+        q_invert(inv,beforeROr);
+        q_mult(rotation,afterROr,inv);
+        transforms.rotateWorldRelativeToRoomAboutRightTracker(rotation);
+    }
     // move fibers
     updateTrackerObjectConnections();
 
@@ -269,6 +309,7 @@ void SimpleView::updateTrackerObjectConnections() {
         return;
     for (int i = 0; i < 2; i++) {
         int analogIdx;
+        int worldGrabConstant;
         ObjectId objectToGrab;
         ObjectId tracker;
         std::vector<SpringId> *springs;
@@ -276,12 +317,14 @@ void SimpleView::updateTrackerObjectConnections() {
         // select left or right
         if (i == 0) {
             analogIdx = HYDRA_LEFT_TRIGGER;
+            worldGrabConstant = LEFT_GRABBED_WORLD;
             tracker = leftHand;
             springs = &lhand;
             objectToGrab = lObj;
             dist = lDist;
         } else if (i == 1) {
             analogIdx = HYDRA_RIGHT_TRIGGER;
+            worldGrabConstant = RIGHT_GRABBED_WORLD;
             tracker = rightHand;
             springs = &rhand;
             objectToGrab = rObj;
@@ -290,66 +333,57 @@ void SimpleView::updateTrackerObjectConnections() {
         // if they are gripping the trigger
         if (analog[analogIdx] > .1) {
             // if we do not have springs yet add them
-            if (springs->size() == 0) { // add springs
-                if (dist > DISTANCE_THRESHOLD)
-                    continue;
-                SketchObject *obj = (*objectToGrab);
-                SketchObject *trackerObj = *tracker;
-                q_vec_type oPos, tPos, vec;
-                obj->getPosition(oPos);
-                trackerObj->getPosition(tPos);
-                q_vec_subtract(vec,tPos,oPos);
-                q_vec_normalize(vec,vec);
-                q_vec_type axis = Q_NULL_VECTOR;
-                axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
-                                    // parallel to vec
-                q_vec_type per1, per2; // create two perpendicular unit vectors
-                q_vec_cross_product(per1,axis,vec);
-                q_vec_normalize(per1,per1);
-                q_vec_cross_product(per2,per1,vec); // should already be length 1
-#define OBJECT_SIDE_LEN 200
-#define TRACKER_SIDE_LEN 200
-                // create scaled perpendicular vectors
-                q_vec_type oPer1, oPer2, tPer1, tPer2;
-                q_vec_scale(oPer1,OBJECT_SIDE_LEN,per1);
-                q_vec_scale(oPer2,OBJECT_SIDE_LEN,per2);
-                q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
-                q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
-                q_vec_type /*wPos1,*/ wPos2;
-                // create springs and add them
-                // first spring --defined along the "x" axis (per1)
-                SpringId id;
-                q_vec_add(wPos2,tPos,tPer1);
-//                q_vec_add(wPos1,oPos,oPer1);
-                id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                springs->push_back(id);
-                // second spring --defined as rotated 120 degrees about "z" axis.
-                // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
-                q_vec_scale(oPer1,-.5,oPer1);
-                q_vec_scale(tPer1,-.5,tPer1);
-                q_vec_scale(oPer2,sqrt(3.0)/2,oPer2);
-                q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
-                q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-//                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
-//                q_vec_add(wPos1,wPos1,oPer2); // + sqrt(3)/2 y
-                id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                springs->push_back(id);
-                // third spring --defined as rotated 240 degrees about "z" axis.
-                // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
-                q_vec_invert(oPer2,oPer2);
-                q_vec_invert(tPer2,tPer2);
-                q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-//                q_vec_add(wPos1,oPos,oPer1); // origin - 1/2 x
-//                q_vec_add(wPos1,wPos1,oPer2); // - sqrt(3)/2 y
-                id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                     analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                springs->push_back(id);
-#undef OBJECT_SIDE_LEN
-#undef TRACKER_SIDE_LEN
+            if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
+                if (dist > DISTANCE_THRESHOLD) {
+                    if (grabbedWorld == WORLD_NOT_GRABBED)
+                        grabbedWorld = worldGrabConstant;
+                    // TODO maybe disallow grabbing world & moving something with other hand?
+                    // right now for simplicity it is allowed
+                } else {
+                    SketchObject *obj = (*objectToGrab);
+                    SketchObject *trackerObj = *tracker;
+                    q_vec_type oPos, tPos, vec;
+                    obj->getPosition(oPos);
+                    trackerObj->getPosition(tPos);
+                    q_vec_subtract(vec,tPos,oPos);
+                    q_vec_normalize(vec,vec);
+                    q_vec_type axis = Q_NULL_VECTOR;
+                    axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
+                                        // parallel to vec
+                    q_vec_type per1, per2; // create two perpendicular unit vectors
+                    q_vec_cross_product(per1,axis,vec);
+                    q_vec_normalize(per1,per1);
+                    q_vec_cross_product(per2,per1,vec); // should already be length 1
+                    // create scaled perpendicular vectors
+                    q_vec_type tPer1, tPer2;
+                    q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
+                    q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
+                    q_vec_type /*wPos1,*/ wPos2;
+                    // create springs and add them
+                    // first spring --defined along the "x" axis (per1)
+                    SpringId id;
+                    q_vec_add(wPos2,tPos,tPer1);
+                    id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                    springs->push_back(id);
+                    // second spring --defined as rotated 120 degrees about "z" axis.
+                    // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
+                    q_vec_scale(tPer1,-.5,tPer1);
+                    q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
+                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
+                    q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
+                    id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                    springs->push_back(id);
+                    // third spring --defined as rotated 240 degrees about "z" axis.
+                    // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
+                    q_vec_invert(tPer2,tPer2);
+                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
+                    q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
+                    id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                    springs->push_back(id);
+                }
             } else { // update springs stiffness if they are already there
                 for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
                     (*(*it))->setStiffness(analog[analogIdx]);
@@ -362,6 +396,9 @@ void SimpleView::updateTrackerObjectConnections() {
                     world.removeSpring(*it);
                 }
                 springs->clear();
+            }
+            if (grabbedWorld != WORLD_NOT_GRABBED) {
+                grabbedWorld = WORLD_NOT_GRABBED;
             }
         }
     }

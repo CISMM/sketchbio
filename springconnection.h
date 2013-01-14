@@ -19,7 +19,7 @@ class SpringConnection
 {
 public:
 
-    SpringConnection(ObjectId o1, double restLen1, double restLen2,
+    SpringConnection(ObjectId o1, double minRestLen, double maxRestLen,
                      double k, const q_vec_type obj1Pos);
 
     inline double getStiffness() const { return stiffness; }
@@ -52,7 +52,7 @@ private:
 class InterObjectSpring : public SpringConnection
 {
 public:
-    InterObjectSpring(ObjectId o1, ObjectId o2, double restLen1, double restLen2,
+    InterObjectSpring(ObjectId o1, ObjectId o2, double minRestLen, double maxRestLen,
                         double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos);
 
     inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
@@ -70,7 +70,7 @@ private:
  */
 class ObjectPointSpring : public SpringConnection
 {
-    ObjectPointSpring(ObjectId o1, double restLen1, double restLen2, double k,
+    ObjectPointSpring(ObjectId o1, double minRestLen, double maxRestLen, double k,
                         const q_vec_type obj1Pos, const q_vec_type worldPoint);
 
     inline void setWorldPoint(q_vec_type newPos) { q_vec_copy(point,newPos); }

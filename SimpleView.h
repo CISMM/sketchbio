@@ -95,6 +95,7 @@ private:
   ObjectId leftHand, rightHand;
   ObjectId lObj, rObj;
   double lDist, rDist;
+  int grabbedWorld;
   std::vector<ObjectId> objects;
   std::vector<SpringId> lhand, rhand;
 };
