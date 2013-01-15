@@ -335,10 +335,11 @@ void SimpleView::updateTrackerObjectConnections() {
             // if we do not have springs yet add them
             if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
                 if (dist > DISTANCE_THRESHOLD) {
-                    if (grabbedWorld == WORLD_NOT_GRABBED)
+                    if (grabbedWorld == WORLD_NOT_GRABBED) {
                         grabbedWorld = worldGrabConstant;
-                    // TODO maybe disallow grabbing world & moving something with other hand?
-                    // right now for simplicity it is allowed
+                    }
+                    // allow grabbing world & moving something with other hand...
+                    // discouraged, but allowed -> the results are not guaranteed.
                 } else {
                     SketchObject *obj = (*objectToGrab);
                     SketchObject *trackerObj = *tracker;
@@ -397,7 +398,7 @@ void SimpleView::updateTrackerObjectConnections() {
                 }
                 springs->clear();
             }
-            if (grabbedWorld != WORLD_NOT_GRABBED) {
+            if (grabbedWorld == worldGrabConstant) {
                 grabbedWorld = WORLD_NOT_GRABBED;
             }
         }
