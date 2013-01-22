@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>708</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -52,9 +52,16 @@
      </property>
      <addaction name="actionSimplify_2"/>
     </widget>
+    <widget class="QMenu" name="menuSave">
+     <property name="title">
+      <string>Save As...</string>
+     </property>
+     <addaction name="actionVRML_Scene_vrml"/>
+    </widget>
     <addaction name="menuOpen"/>
     <addaction name="menuImport"/>
     <addaction name="menuFilter"/>
+    <addaction name="menuSave"/>
    </widget>
    <addaction name="menuFIle"/>
   </widget>
@@ -117,6 +124,11 @@
     <string>Simplify</string>
    </property>
   </action>
+  <action name="actionVRML_Scene_vrml">
+   <property name="text">
+    <string>VRML Scene (.vrml)</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -175,10 +187,27 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionVRML_Scene_vrml</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>saveToVRMLFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
   <slot>importPDBId()</slot>
   <slot>simplifyOBJFile()</slot>
+  <slot>saveToVRMLFile()</slot>
  </slots>
 </ui>

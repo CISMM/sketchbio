@@ -15,6 +15,7 @@
 #include <vtkRenderWindow.h>
 #include <vtkCamera.h>
 #include <vtkProperty.h>
+#include <vtkVRMLExporter.h>
 #include <limits>
 
 // input constants
@@ -511,6 +512,21 @@ void SimpleView::openOBJFile()
     if (fn.length() > 0) {
 	printf("Loading %s\n", fn.toStdString().c_str());
 	addObject(fn);
+    }
+}
+
+void SimpleView::saveToVRMLFile()
+{
+    // Show the save dialog
+    QString fn = QFileDialog::getSaveFileName(this,tr("Save To VRML"), "./", tr("VRML Files (*.vrml)"));
+
+    // Open the file for writing, use VTK to dump the scene to it
+    if (fn.length() > 0) {
+        printf("Saving to %s\n", fn.toStdString().c_str());
+        vtkSmartPointer<vtkVRMLExporter> exporter = vtkSmartPointer<vtkVRMLExporter>::New();
+        exporter->SetFileName(fn.toStdString().c_str());
+        exporter->SetRenderWindow(this->ui->qvtkWidget->GetRenderWindow());
+        exporter->Write();
     }
 }
 

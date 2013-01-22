@@ -47,7 +47,7 @@ SOURCE_GROUP("Generated" FILES
   ${MOCSrcs}
 )
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb -pg")
+SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
 ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( SketchBio

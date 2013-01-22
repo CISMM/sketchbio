@@ -65,6 +65,9 @@ public slots:
   // simplify.  Produce multiple simplifications, with smaller
   // fractional polygon counts.
   void simplifyOBJFile();
+
+  // Save the current scent to a VRML file
+  void saveToVRMLFile();
  
   virtual void slotExit();
   void slot_frameLoop();
