@@ -1,10 +1,13 @@
 #include "sketchmodel.h"
 #include <vtkExtractEdges.h>
 
-SketchModel::SketchModel(vtkTransformPolyDataFilter *data, double iMass, double iMoment)
+SketchModel::SketchModel(QString source, vtkTransformPolyDataFilter *data, double iMass, double iMoment) :
+    dataSource(source),
+    modelData(data),
+    collisionModel(new PQP_Model()),
+    invMass(iMass),
+    invMomentOfInertia(iMoment)
 {
-    modelData = data;
-    collisionModel = new PQP_Model();
     vtkSmartPointer<vtkExtractEdges> wireFrame = vtkSmartPointer<vtkExtractEdges>::New();
     wireFrame->SetInputConnection(data->GetOutputPort());
     wireFrame->Update();
@@ -14,8 +17,6 @@ SketchModel::SketchModel(vtkTransformPolyDataFilter *data, double iMass, double 
     wireFrameMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     wireFrameMapper->SetInputConnection(wireFrame->GetOutputPort());
     wireFrameMapper->Update();
-    invMass = iMass;
-    invMomentOfInertia = iMoment;
 }
 
 SketchModel::~SketchModel()

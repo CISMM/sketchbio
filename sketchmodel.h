@@ -5,6 +5,7 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkPolyDataMapper.h>
 #include <PQP.h>
+#include <QString>
 #include <list>
 
 /*
@@ -19,8 +20,9 @@
 class SketchModel
 {
 public:
-    SketchModel(vtkTransformPolyDataFilter *data, double iMass, double iMoment);
+    SketchModel(QString source, vtkTransformPolyDataFilter *data, double iMass, double iMoment);
     ~SketchModel();
+    inline QString getDataSource() const { return dataSource; }
     inline vtkTransformPolyDataFilter *getModelData() { return modelData; }
     inline vtkPolyDataMapper *getSolidMapper() { return normalMapper; }
     inline vtkPolyDataMapper *getWireFrameMapper() { return wireFrameMapper; }
@@ -28,6 +30,7 @@ public:
     inline double getInverseMass() const { return invMass;}
     inline double getInverseMomentOfInertia() const { return invMomentOfInertia; }
 private:
+    QString dataSource;
     vtkSmartPointer<vtkTransformPolyDataFilter> modelData;
     vtkSmartPointer<vtkPolyDataMapper> wireFrameMapper;
     vtkSmartPointer<vtkPolyDataMapper> normalMapper;

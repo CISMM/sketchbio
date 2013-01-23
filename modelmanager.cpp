@@ -89,7 +89,7 @@ SketchModelId ModelManager::addObjectType(int srcIndex, double scale) {
     transformPD->Update();
 
     // remember the mass and moment of inertia are inverses!!!!!!!!
-    SketchModel * sModel = new SketchModel(transformPD,INVERSEMASS,INVERSEMOMENT);
+    SketchModel * sModel = new SketchModel("",transformPD,INVERSEMASS,INVERSEMOMENT);
     // TODO these shouldn't be magic constants
 
     makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
