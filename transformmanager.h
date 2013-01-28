@@ -30,6 +30,11 @@ public:
     vtkTransform *getWorldToRoomTransform();
 
     /*
+     * Gets the scale factor between the world and room
+     */
+    double getWorldToRoomScale() const;
+
+    /*
      * Sets the given transform to the transform needed to put the origin at
      * the right tracker's eye coordinates and the orientation equal to the trackers
      */
@@ -39,6 +44,11 @@ public:
      * Gets the position of the right tracker in world coordinates
      */
     void getLeftTrackerPosInWorldCoords(q_vec_type dest_vec);
+
+    /*
+     * Gets the former position of the right tracker in world coordinates
+     */
+    void getOldLeftTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
      * Sets the given transform to the transform needed to put the origin at
@@ -52,9 +62,19 @@ public:
     void getRightTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
+     * Gets the former position of the left tracker in world coordinates
+     */
+    void getOldRightTrackerPosInWorldCoords(q_vec_type dest_vec);
+
+    /*
      * Gets left tracker orientation in world coordinates
      */
     void getLeftTrackerOrientInWorldCoords(q_type dest_vec);
+
+    /*
+     * Gets former left tracker orientation in world coordinates
+     */
+    void getOldLeftTrackerOrientInWorldCoords(q_type dest_vec);
 
     /*
      * Gets right tracker orientation in world coordinates
@@ -62,9 +82,19 @@ public:
     void getRightTrackerOrientInWorldCoords(q_type dest_vec);
 
     /*
+     * Gets former right tracker orientation in world coordinates
+     */
+    void getOldRightTrackerOrientInWorldCoords(q_type dest_vec);
+
+    /*
      * Gets the vector (in world coordinates) of the left hand to the right hand
      */
     void getLeftToRightHandWorldVector(q_vec_type destVec);
+
+    /*
+     * Gets the former vector (in world coordinates) of the left hand to the right hand
+     */
+    void getOldLeftToRightHandWorldVector(q_vec_type destVec);
 
     /*
      * Gets the distance (in room coordinates) of the left hand from the right hand
@@ -72,10 +102,21 @@ public:
     double getWorldDistanceBetweenHands();
 
     /*
+     * Gets the former distance (in room coordinates) of the left hand from the right hand
+     */
+    double getOldWorldDistanceBetweenHands();
+
+    /*
      * Sets the position and orientation of the left hand tracker
      *
      */
     void setLeftHandTransform(const q_xyz_quat_type *xyzQuat);
+
+    /*
+     * Sets the position and orientation of the right hand tracker
+     *
+     */
+    void setRightHandTransform(const q_xyz_quat_type *xyzQuat);
 
     /*
      * Gets the position/orientation of the left tracker in relation to the base
@@ -88,10 +129,11 @@ public:
     void getRightHand(q_xyz_quat_type *xyzQuat);
 
     /*
-     * Sets the position and orientation of the right hand tracker
-     *
+     * This method should be called to set the current hand transforms as the
+     * former hand transforms just before the new ones are set (in case multiple
+     * sets occur per frame, this forces correct behavior)
      */
-    void setRightHandTransform(const q_xyz_quat_type *xyzQuat);
+    void copyCurrentHandTransformsToOld();
 
     /*
      * Scales the room relative to the world
@@ -146,8 +188,17 @@ private:
     vtkSmartPointer<vtkTransform> roomToTrackerBase;
     vtkSmartPointer<vtkLinearTransform> trackerBaseToRoom;
 
+    double worldToRoomScale;
+
     q_xyz_quat_struct trackerBaseToLeftHand;
+    q_xyz_quat_struct trackerBaseToLeftHandOld;
     q_xyz_quat_struct trackerBaseToRightHand;
+    q_xyz_quat_struct trackerBaseToRightHandOld;
 };
+
+inline void q_xyz_quat_copy(q_xyz_quat_struct *dest, const q_xyz_quat_struct *src) {
+    q_copy(dest->quat,src->quat);
+    q_vec_copy(dest->xyz,src->xyz);
+}
 
 #endif // TRANSFORMMANAGER_H

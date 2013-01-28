@@ -157,6 +157,33 @@ SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type pos
 
 //##################################################################################################
 //##################################################################################################
+SpringId WorldManager::addSpring(ObjectId id1, SketchObject *o2,const q_vec_type pos1,
+                             const q_vec_type pos2, bool worldRelativePos, double k, double l)
+{
+    SketchObject *obj1 = *id1;
+    q_type oPos1, oPos2, newPos1, newPos2;
+    q_type orient1, orient2;
+    if (worldRelativePos) {
+        obj1->getPosition(oPos1);
+        obj1->getOrientation(orient1);
+        o2->getPosition(oPos2);
+        o2->getOrientation(orient2);
+        q_invert(orient1,orient1);
+        q_invert(orient2,orient2);
+        q_vec_subtract(newPos1,pos1,oPos1);
+        q_xform(newPos1,orient1,newPos1);
+        q_vec_subtract(newPos2,pos2,oPos2);
+        q_xform(newPos2,orient2,newPos2);
+    } else {
+        q_vec_copy(newPos1,pos1);
+        q_vec_copy(newPos2,pos2);
+    }
+    SpringConnection *spring = new TrackerObjectSpring(id1,o2,l,l,k,newPos1,newPos2);
+    return addSpring(spring);
+}
+
+//##################################################################################################
+//##################################################################################################
 void WorldManager::removeSpring(SpringId id) {
     SpringConnection *conn = (*id);
     connections.erase(id);
@@ -320,6 +347,44 @@ ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
     (*subj)->getPosition(t1);
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
         if (((*it)->doPhysics()) && it != subj) {
+            // get the collision models:
+            SketchModelId m2 = (*it)->getModelId();
+            SketchModel *model2 = (*m2);
+            PQP_Model *pqp_model2 = model2->getCollisionModel();
+
+            // get the offsets and rotations in PQP's format
+            PQP_DistanceResult dr;
+            PQP_REAL r2[3][3],t2[3];
+            q_type quat2;
+            (*it)->getOrientation(quat2);
+            quatToPQPMatrix(quat2,r2);
+            (*it)->getPosition(t2);
+            PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
+            if (dr.Distance() < dist) {
+                closest = it;
+                dist = dr.Distance();
+            }
+        }
+    }
+    *distOut = dist;
+    return closest;
+}
+
+//##################################################################################################
+//##################################################################################################
+ObjectId WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
+    ObjectId closest;
+    double dist = std::numeric_limits<double>::max();
+    SketchModelId m1 = subj->getModelId();
+    SketchModel *model1 = (*m1);
+    PQP_Model *pqp_model1 = model1->getCollisionModel();
+    PQP_REAL r1[3][3], t1[3];
+    q_type quat1;
+    subj->getOrientation(quat1);
+    quatToPQPMatrix(quat1,r1);
+    subj->getPosition(t1);
+    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
+        if ((*it)->doPhysics()) {
             // get the collision models:
             SketchModelId m2 = (*it)->getModelId();
             SketchModel *model2 = (*m2);

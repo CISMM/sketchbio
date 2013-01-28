@@ -30,10 +30,10 @@ endif (WIN32)
 
 # Set your files and resources here
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
-sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp)
+sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchproject.cpp)
 SET(SimpleViewUI SimpleView.ui)
 SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h modelmanager.h
-sketchobject.h sketchmodel.h worldmanager.h springconnection.h)
+sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )

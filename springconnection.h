@@ -66,6 +66,27 @@ private:
 };
 
 /*
+ * This class extends SpringConnection to define a spring between an object and a
+ * tracker which does not have an object id
+ */
+class TrackerObjectSpring : public SpringConnection
+{
+public:
+    TrackerObjectSpring(ObjectId o1, SketchObject *o2, double minRestLen, double maxRestLen,
+                        double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos);
+
+    inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
+    inline void setObject2ConnectionPosition(q_vec_type newPos) { q_vec_copy(object2ConnectionPosition,newPos);}
+    virtual void getEnd2WorldPosition(q_vec_type out) const;
+
+    virtual void addForce();
+private:
+    SketchObject *object2;
+    q_vec_type object2ConnectionPosition;
+};
+
+
+/*
  * This class extends SpringConnection to define a spring between an object and a location in the world
  */
 class ObjectPointSpring : public SpringConnection

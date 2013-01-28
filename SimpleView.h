@@ -17,14 +17,12 @@
 #include "modelmanager.h"
 #include "worldmanager.h"
 #include "structurereplicator.h"
+#include "sketchioconstants.h"
 #include <QString>
 #include <QVector>
  
 // Forward Qt class declarations
 class Ui_SimpleView;
-
-#define NUM_HYDRA_BUTTONS 16
-#define NUM_HYDRA_ANALOGS 6
 
 /*
  * SimpleView is the main GUI class in the SketchBio project.  It also manages

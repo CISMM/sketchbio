@@ -98,6 +98,24 @@ public:
 
     /*******************************************************************
      *
+     * Adds the a spring between the two models and returns its id.  Returns an iterator
+     * to the position of that spring in the list
+     *
+     * id1 - the id of the first object to connect
+     * o2 - the second object to connect
+     * pos1 - the position where the spring connects to the first model
+     * pos2 - the position where the spring connects to the second model
+     * worldRelativePos - true if the above positions are relative to the world coordinate space,
+     *                  - false if they are relative to the model coordiante space
+     * k - the stiffness of the spring
+     * l - the length of the spring
+     *
+     *******************************************************************/
+    SpringId addSpring(ObjectId id1, SketchObject *o2, const q_vec_type pos1,
+                       const q_vec_type pos2, bool worldRelativePos, double k, double l);
+
+    /*******************************************************************
+     *
      * Removes the spring identified by the given iterator from the list
      *
      *******************************************************************/
@@ -138,6 +156,18 @@ public:
      *
      *******************************************************************/
     ObjectId getClosestObject(ObjectId subj,double *distOut);
+    /*******************************************************************
+     *
+     * Returns the closest object to the given object, and the distance
+     * between the two objects.  Note: only "real" objects are tested, i.e.
+     * only objects with doPhysics() = true are checked.
+     *
+     * subj - the subject object (the one we are comparing to the others)
+     * distOut - a pointer to the location where the distance will be stored
+     *              when the function exits
+     *
+     *******************************************************************/
+    ObjectId getClosestObject(SketchObject *subj,double *distOut);
 private:
     /*******************************************************************
      *
