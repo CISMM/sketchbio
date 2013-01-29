@@ -18,8 +18,6 @@
 #include <vtkVRMLExporter.h>
 #include <limits>
 
-// scale between world and camera
-#define SCALE_DOWN_FACTOR (.03125)
 // default number extra fibers
 #define NUM_EXTRA_FIBERS 5
 // fibrin default spring constant

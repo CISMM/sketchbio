@@ -1,6 +1,7 @@
 #include "sketchproject.h"
 
 #include <vtkOBJReader.h>
+#include <vtkSphereSource.h>
 #include <vtkProperty.h>
 #include "sketchioconstants.h"
 #include <limits>
@@ -24,16 +25,23 @@ inline SketchObject *addTracker(vtkRenderer *r, SketchModelId modelId, vtkTransf
     return newObject;
 }
 
-SketchProject::SketchProject(vtkRenderer *r, SketchModelId trackerModel,
+SketchProject::SketchProject(vtkRenderer *r,
                              const bool *buttonStates, const double *analogStates) :
     models(new ModelManager()),
     transforms(new TransformManager()),
     world(new WorldManager(r,transforms->getWorldToEyeTransform())),
+    projectDir(NULL),
     buttonDown(buttonStates),
     analog(analogStates)
 {
-    leftHand = addTracker(r,trackerModel,transforms->getWorldToEyeTransform());
-    rightHand = addTracker(r,trackerModel,transforms->getWorldToEyeTransform());
+    vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+    sphereSource->SetRadius(4);
+    sphereSource->Update();
+    int sphereSourceType = models->addObjectSource(sphereSource.GetPointer());
+    SketchModelId sphereModelType = models->addObjectType(sphereSourceType,
+                                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+    leftHand = addTracker(r,sphereModelType,transforms->getWorldToEyeTransform());
+    rightHand = addTracker(r,sphereModelType,transforms->getWorldToEyeTransform());
     lObj = rObj = std::_List_iterator<SketchObject*>();
     lDist = rDist = std::numeric_limits<double>::max();
 }
@@ -42,6 +50,22 @@ SketchProject::~SketchProject() {
     delete world;
     delete transforms;
     delete models;
+    delete leftHand;
+    delete rightHand;
+}
+
+bool SketchProject::setProjectDir(QString dir) {
+    QDir tmp = QDir(dir);
+    bool exists;
+    if (!(exists = tmp.exists())) {
+        exists = QDir::root().mkpath(dir);
+    }
+    projectDir = new QDir(dir);
+    return exists;
+}
+
+QString SketchProject::getProjectDir() const {
+    return projectDir->absolutePath();
 }
 
 void SketchProject::timestep(double dt) {
@@ -49,20 +73,28 @@ void SketchProject::timestep(double dt) {
     world->stepPhysics(dt);
 }
 
-void SketchProject::addObject(QString filename) {
-    vtkSmartPointer<vtkOBJReader> objReader =
-            vtkSmartPointer<vtkOBJReader>::New();
-    objReader->SetFileName(filename.toStdString().c_str());
-    objReader->Update();
-    int fiberSourceType = models->addObjectSource(objReader.GetPointer());
-    SketchModelId fiberModelType = models->addObjectType(fiberSourceType,1);
+bool SketchProject::addObject(QString filename) {
+    QFile file(filename);
+    QString localname = filename.mid(filename.lastIndexOf("/")).toLower();
+    QString fullpath = projectDir->absoluteFilePath(localname);
+    if (projectDir->entryList().contains(localname,Qt::CaseInsensitive) || file.copy(filename,fullpath)) {
+        vtkSmartPointer<vtkOBJReader> objReader =
+                vtkSmartPointer<vtkOBJReader>::New();
+        objReader->SetFileName(fullpath.toStdString().c_str());
+        objReader->Update();
+        int fiberSourceType = models->addObjectSource(objReader.GetPointer());
+        SketchModelId fiberModelType = models->addObjectType(fiberSourceType,1);
 
-    q_vec_type pos = Q_NULL_VECTOR;
-    q_type orient = Q_ID_QUAT;
-    int myIdx = world->getNumberOfObjects();
-    q_vec_set(pos,0,2*myIdx/transforms->getWorldToRoomScale(),0);
-    ObjectId objectId = world->addObject(fiberModelType,pos,orient);
-    (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+        q_vec_type pos = Q_NULL_VECTOR;
+        q_type orient = Q_ID_QUAT;
+        int myIdx = world->getNumberOfObjects();
+        q_vec_set(pos,0,2*myIdx/transforms->getWorldToRoomScale(),0);
+        ObjectId objectId = world->addObject(fiberModelType,pos,orient);
+        (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool SketchProject::addObjects(QVector<QString> filenames) {
@@ -138,6 +170,7 @@ void SketchProject::handleInput() {
     updateTrackerObjectConnections();
 
     if (world->getNumberOfObjects() > 0) {
+        bool oldExists = lDist != std::numeric_limits<double>::max();
         ObjectId closest = world->getClosestObject(leftHand,&lDist);
 
         if (lObj == closest) {
@@ -147,13 +180,14 @@ void SketchProject::handleInput() {
                 (*closest)->setSolid();
             }
         } else {
-            if (*lObj)
+            if (oldExists)
                 (*lObj)->setSolid();
             lObj = closest;
             if (lDist < DISTANCE_THRESHOLD)
                 (*lObj)->setWireFrame();
         }
 
+        oldExists = rDist != std::numeric_limits<double>::max();
         closest = world->getClosestObject(rightHand,&rDist);
 
         if (rObj == closest) {
@@ -163,7 +197,7 @@ void SketchProject::handleInput() {
                 (*closest)->setSolid();
             }
         } else {
-            if (*rObj)
+            if (oldExists)
                 (*rObj)->setSolid();
             rObj = closest;
             if (rDist < DISTANCE_THRESHOLD)

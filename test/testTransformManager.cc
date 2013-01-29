@@ -2,6 +2,7 @@
 #include <quat.h>
 #include <iostream>
 #include <transformmanager.h>
+#include <sketchioconstants.h>
 
 
 /*

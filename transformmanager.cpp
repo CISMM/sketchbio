@@ -1,4 +1,5 @@
 #include "transformmanager.h"
+#include "sketchioconstants.h"
 
 
 TransformManager::TransformManager() {

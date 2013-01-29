@@ -28,4 +28,10 @@
 // debuggin flag
 #define VRPN_ON true
 
+// transform manager's tracker to workspace scale factor
+#define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE .0625
+
+// scale between world and camera (also used to determine tracker size)
+#define SCALE_DOWN_FACTOR (.03125)
+
 #endif // SKETCHIOCONSTANTS_H
