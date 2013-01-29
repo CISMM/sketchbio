@@ -54,6 +54,13 @@ public:
       *
       ****************************************************************************/
     SketchModel *modelForOBJSource(QString objFile, double scale = 1.0);
+    /*****************************************************************************
+      *
+      * This method returns an iterator that may be used to examine each of the
+      * models in the ModelManager.
+      *
+      ****************************************************************************/
+    QHashIterator<QString,SketchModel *> getModelIterator() const;
 
 private:
     // a hash of source to model

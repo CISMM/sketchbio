@@ -131,6 +131,16 @@ SketchModel *ModelManager::modelForOBJSource(QString objFile, double scale) {
     return sModel;
 }
 
+/*****************************************************************************
+  *
+  * This method returns an iterator that may be used to examine each of the
+  * models in the ModelManager.
+  *
+  ****************************************************************************/
+QHashIterator<QString,SketchModel *> ModelManager::getModelIterator() const {
+    return QHashIterator<QString,SketchModel *>(models);
+}
+
 
 /*****************************************************************************
   *
