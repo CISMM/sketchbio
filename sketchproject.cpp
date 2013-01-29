@@ -15,11 +15,10 @@ static double COLORS[][3] =
      { 1.0, 0.7, 1.0 },
      { 0.7, 1.0, 1.0 } };
 
-inline SketchObject *addTracker(vtkRenderer *r, SketchModelId modelId, vtkTransform *worldEyeTransform) {
-    SketchModel *model = (*modelId);
+inline SketchObject *addTracker(vtkRenderer *r, SketchModel *model, vtkTransform *worldEyeTransform) {
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(model->getSolidMapper());
-    SketchObject *newObject = new SketchObject(actor,modelId,worldEyeTransform);
+    SketchObject *newObject = new SketchObject(actor,model,worldEyeTransform);
     newObject->recalculateLocalTransform();
     r->AddActor(actor);
     return newObject;
@@ -38,12 +37,11 @@ SketchProject::SketchProject(vtkRenderer *r,
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereSource->SetRadius(4);
     sphereSource->Update();
-    int sphereSourceType = models->addObjectSource(sphereSource.GetPointer());
-    SketchModelId sphereModelType = models->addObjectType(sphereSourceType,
-                                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
-    leftHand = addTracker(r,sphereModelType,transforms->getWorldToEyeTransform());
+    SketchModel *sphereModel = models->modelForVTKSource(sphereSource,
+                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+    leftHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
     leftHand->setDoPhysics(false);
-    rightHand = addTracker(r,sphereModelType,transforms->getWorldToEyeTransform());
+    rightHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
     rightHand->setDoPhysics(false);
     lObj = rObj = std::_List_iterator<SketchObject*>();
     lDist = rDist = std::numeric_limits<double>::max();
@@ -64,6 +62,7 @@ bool SketchProject::setProjectDir(QString dir) {
         exists = QDir::root().mkpath(dir);
     }
     projectDir = new QDir(dir);
+    projectDir->setCurrent(projectDir->absolutePath());
     return exists;
 }
 
@@ -78,21 +77,16 @@ void SketchProject::timestep(double dt) {
 
 bool SketchProject::addObject(QString filename) {
     QFile file(filename);
-    QString localname = filename.mid(filename.lastIndexOf("/")).toLower();
+    QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
     if (projectDir->entryList().contains(localname,Qt::CaseInsensitive) || file.copy(filename,fullpath)) {
-        vtkSmartPointer<vtkOBJReader> objReader =
-                vtkSmartPointer<vtkOBJReader>::New();
-        objReader->SetFileName(fullpath.toStdString().c_str());
-        objReader->Update();
-        int fiberSourceType = models->addObjectSource(objReader.GetPointer());
-        SketchModelId fiberModelType = models->addObjectType(fiberSourceType,1);
+        SketchModel *model = models->modelForOBJSource(fullpath);
 
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;
         int myIdx = world->getNumberOfObjects();
         q_vec_set(pos,0,2*myIdx/transforms->getWorldToRoomScale(),0);
-        ObjectId objectId = world->addObject(fiberModelType,pos,orient);
+        ObjectId objectId = world->addObject(model,pos,orient);
         (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
         return true;
     } else {

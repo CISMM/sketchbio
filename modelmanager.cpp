@@ -10,61 +10,93 @@
 
 #include <vtkTransform.h>
 #include <vtkCellArray.h>
+#include <vtkOBJReader.h>
 
 #include <QDebug>
 
 #define INVERSEMASS 1.0
 #define INVERSEMOMENT (1.0/25000)
 
-ModelManager::ModelManager()
+ModelManager::ModelManager() :
+    models()
 {
-    sources = vtkSmartPointer<vtkCollection>::New();
-    models = std::list<SketchModel *>();
 }
 
 ModelManager::~ModelManager() {
     SketchModel * model;
-    while (!models.empty()) {
-        model = models.back();
-        models.pop_back();
-        delete model;
+    QMutableHashIterator<QString, SketchModel *> i(models);
+     while (i.hasNext()) {
+         i.next();
+         model = i.value();
+         i.setValue((SketchModel *) NULL);
+         delete model;
+     }
+}
+
+/*****************************************************************************
+  *
+  * This method creates a SketchModel from the given vtk source using the given
+  * scale factor.  If there is already a model using a vtk source of the same class name, this
+  * method simply returns the old one (ignores scale for now).
+  *
+  * source  - the VTK source that should be used to generate the geometry for
+  *             the model
+  * scale   - the scale at which the source should be interpreted
+  *
+  ****************************************************************************/
+SketchModel *ModelManager::modelForVTKSource(vtkPolyDataAlgorithm *source, double scale) {
+
+    const char *src = source->GetClassName();
+    QString srcString(src);
+    srcString = "VTK: " + srcString;
+
+    if (models.contains(srcString)) {
+        return models[srcString];
     }
-}
 
+    vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
+            vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+    source->Update();
+    transformPD->SetInputConnection(source->GetOutputPort());
+
+    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Identity();
+    transform->Scale(scale,scale,scale);
+
+    transformPD->SetTransform(transform);
+    transformPD->Update();
+
+    SketchModel *sModel = new SketchModel(srcString,transformPD,INVERSEMASS,INVERSEMOMENT);
+
+    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
+
+    models.insert(srcString,sModel);
+
+    return sModel;
+}
 
 /*****************************************************************************
   *
-  * Adds a new Algorithm to use as a source in vtk.
-  * Returns an index to this source to use with addObjectType.
+  * This method creates a SketchModel from the given obj file using the given
+  * scale factor.  If there is already a model using the given OBJ file, this
+  * method simply returns the old one (ignores scale for now).
   *
-  * Note: addObjectType initializes the model with scaling and must be called
-  * before it is available from the getPolyDataOutput and getOutputPort methods
-  *
-  * dataSource - the new source to use
+  * objFile - the filename of the obj file (should be absolute path, but in
+  *             the project folder
+  * scale   - the scale at which the obj should be interpreted
   *
   ****************************************************************************/
-int ModelManager::addObjectSource(vtkPolyDataAlgorithm *dataSource) {
-    dataSource->Update();
-    sources->AddItem(vtkObject::SafeDownCast(dataSource));
-    return sources->GetNumberOfItems() -1;
-}
+SketchModel *ModelManager::modelForOBJSource(QString objFile, double scale) {
+    if (models.contains(objFile)) {
+        return models[objFile];
+    }
 
-/*****************************************************************************
-  *
-  * Adds an instance of the identified model at scale factor scale.
-  * Returns the index of the scaled model in the usable models list
-  *
-  * srcIndex - the model ID, returned by addObjectSource
-  * scale    - the scale factor to scale the object by
-  *
-  ****************************************************************************/
-SketchModelId ModelManager::addObjectType(int srcIndex, double scale) {
     vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
             vtkSmartPointer<vtkTransformPolyDataFilter>::New();
     // set the correct input connection
-    vtkSmartPointer<vtkPolyDataAlgorithm> polyDataSrc =
-            (vtkPolyDataAlgorithm *)sources->GetItemAsObject(srcIndex);
-
+    vtkSmartPointer<vtkOBJReader> polyDataSrc = vtkSmartPointer<vtkOBJReader>::New();
+    polyDataSrc->SetFileName(objFile.toStdString().c_str());
+    polyDataSrc->Update();
 
     transformPD->SetInputConnection(polyDataSrc->GetOutputPort());
 
@@ -94,11 +126,11 @@ SketchModelId ModelManager::addObjectType(int srcIndex, double scale) {
 
     makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
 
-    models.push_back(sModel);
-    SketchModelId id = models.end();
-    id--;
-    return id;
+    models.insert(objFile,sModel);
+
+    return sModel;
 }
+
 
 /*****************************************************************************
   *

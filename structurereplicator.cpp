@@ -16,7 +16,7 @@
  */
 class ReplicatedObject : public SketchObject {
 public:
-    ReplicatedObject(vtkActor *actor, SketchModelId model, vtkTransform *worldEyeTransform,
+    ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
                      ObjectId original0, ObjectId original1, int num);
     virtual void addForce(q_vec_type point, const q_vec_type force);
     virtual void getPosition(q_vec_type dest) const;
@@ -32,7 +32,7 @@ private:
                     // 2 is first copy in positive direction
 };
 
-ReplicatedObject::ReplicatedObject(vtkActor *actor, SketchModelId model, vtkTransform *worldEyeTransform,
+ReplicatedObject::ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
                                    ObjectId original0, ObjectId original1, int num):
     SketchObject(actor, model, worldEyeTransform)
 {
@@ -125,8 +125,8 @@ void StructureReplicator::setNumShown(int num) {
         }
         for (; numShown < num; numShown++) {
             vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-            SketchModelId modelId = previous->getModelId();
-            actor->SetMapper(modelId.operator *()->getSolidMapper());
+            SketchModel *modelId = previous->getModelId();
+            actor->SetMapper(modelId->getSolidMapper());
             ReplicatedObject *obj = new ReplicatedObject(actor,modelId,
                                                          worldEyeTransform,
                                                          id1,id2,numShown+2);

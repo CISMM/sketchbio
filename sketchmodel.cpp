@@ -1,5 +1,6 @@
 #include "sketchmodel.h"
 #include <vtkExtractEdges.h>
+#include <vtkTransform.h>
 
 SketchModel::SketchModel(QString source, vtkTransformPolyDataFilter *data, double iMass, double iMoment) :
     dataSource(source),
@@ -22,4 +23,13 @@ SketchModel::SketchModel(QString source, vtkTransformPolyDataFilter *data, doubl
 SketchModel::~SketchModel()
 {
     delete collisionModel;
+}
+
+double SketchModel::getScale() const {
+    vtkSmartPointer<vtkTransform> tf = ((vtkTransform*)modelData->GetTransform());
+    return tf->GetScale()[0];
+}
+
+void SketchModel::getTranslate(double out[]) const {
+    ((vtkTransform*)modelData->GetTransform())->GetPosition(out);
 }

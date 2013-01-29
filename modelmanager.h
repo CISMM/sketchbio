@@ -19,8 +19,9 @@
 #include <vtkPolyData.h>
 #include <vtkAlgorithmOutput.h>
 #include "sketchmodel.h"
-#include <list>
 #include <PQP.h>
+#include <QString>
+#include <QHash>
 
 
 class ModelManager
@@ -28,37 +29,35 @@ class ModelManager
 public:
     ModelManager();
     ~ModelManager();
+
     /*****************************************************************************
       *
-      * Adds a new Algorithm to use as a source in vtk.
-      * Returns an index to this source to use with addObjectType.
+      * This method creates a SketchModel from the given vtk source using the given
+      * scale factor.  If there is already a model using a vtk source of the same class name, this
+      * method simply returns the old one (ignores scale for now).
       *
-      * Note: addObjectType initializes a transformation the model with scaling
-      * and must be called before it is available from the getPolyDataOutput and
-      * getOutputPort methods
-      *
-      * dataSource - the new source to use
+      * source  - the VTK source that should be used to generate the geometry for
+      *             the model
+      * scale   - the scale at which the source should be interpreted
       *
       ****************************************************************************/
-    int addObjectSource(vtkPolyDataAlgorithm *dataSource);
+    SketchModel *modelForVTKSource(vtkPolyDataAlgorithm *source, double scale = 1.0);
     /*****************************************************************************
       *
-      * Adds an instance of the identified model at scale factor scale.
-      * Returns the index of the scaled model in the usable models list
+      * This method creates a SketchModel from the given obj file using the given
+      * scale factor.  If there is already a model using the given OBJ file, this
+      * method simply returns the old one (ignores scale for now).
       *
-      * srcIndex - the model ID, returned by addObjectSource
-      * scale    - the scale factor to scale the object by
+      * objFile - the filename of the obj file (should be absolute path, but in
+      *             the project folder
+      * scale   - the scale at which the obj should be interpreted
       *
       ****************************************************************************/
-    SketchModelId addObjectType(int srcIndex, double scale);
+    SketchModel *modelForOBJSource(QString objFile, double scale = 1.0);
 
 private:
-    // no source collection... so fun with casting
-    // a collection of vtkPolyDataAlgorithm indexed by the order they are added
-    // they should not be removed.
-    vtkSmartPointer<vtkCollection> sources;
-
-    std::list<SketchModel *> models;
+    // a hash of source to model
+    QHash<QString,SketchModel *> models;
 };
 void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData);
 

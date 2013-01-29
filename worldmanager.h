@@ -39,7 +39,7 @@ public:
      *                  new object's actor
      *
      *******************************************************************/
-    ObjectId addObject(SketchModelId modelId,q_vec_type pos, q_type orient);
+    ObjectId addObject(SketchModel *model,q_vec_type pos, q_type orient);
     /*******************************************************************
      * Adds a the given object to the world and returns its index.
      *

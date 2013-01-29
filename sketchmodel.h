@@ -6,7 +6,6 @@
 #include <vtkPolyDataMapper.h>
 #include <PQP.h>
 #include <QString>
-#include <list>
 
 /*
  * This class holds data about a general type of object such as a fibrin molecule.  The vtk
@@ -23,6 +22,8 @@ public:
     SketchModel(QString source, vtkTransformPolyDataFilter *data, double iMass, double iMoment);
     ~SketchModel();
     inline QString getDataSource() const { return dataSource; }
+    double getScale() const;
+    void getTranslate(double out[3]) const;
     inline vtkTransformPolyDataFilter *getModelData() { return modelData; }
     inline vtkPolyDataMapper *getSolidMapper() { return normalMapper; }
     inline vtkPolyDataMapper *getWireFrameMapper() { return wireFrameMapper; }
@@ -38,7 +39,5 @@ private:
     double invMass;
     double invMomentOfInertia;
 };
-
-typedef std::list<SketchModel *>::iterator SketchModelId;
 
 #endif // SKETCHMODEL_H

@@ -56,11 +56,10 @@ WorldManager::~WorldManager() {
 
 //##################################################################################################
 //##################################################################################################
-ObjectId WorldManager::addObject(SketchModelId modelId,q_vec_type pos, q_type orient) {
-    SketchModel *model = (*modelId);
+ObjectId WorldManager::addObject(SketchModel *model,q_vec_type pos, q_type orient) {
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(model->getSolidMapper());
-    SketchObject *newObject = new SketchObject(actor,modelId,worldEyeTransform);
+    SketchObject *newObject = new SketchObject(actor,model,worldEyeTransform);
     newObject->setPosition(pos);
     newObject->setOrientation(orient);
     newObject->recalculateLocalTransform();
@@ -209,7 +208,7 @@ inline void euler(ObjectId o, double dt) {
     q_type spin, orient;
     SketchObject * obj = (*o);
     if (obj->doPhysics()) {
-        SketchModel *model = (*obj->getModelId());
+        SketchModel *model = obj->getModelId();
         // get force & torque
         obj->getForce(force);
         obj->getTorque(torque);
@@ -337,8 +336,7 @@ inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
 ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
     ObjectId closest;
     double dist = std::numeric_limits<double>::max();
-    SketchModelId m1 = (*subj)->getModelId();
-    SketchModel *model1 = (*m1);
+    SketchModel *model1 = (*subj)->getModelId();
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_REAL r1[3][3], t1[3];
     q_type quat1;
@@ -348,8 +346,7 @@ ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
         if (((*it)->doPhysics()) && it != subj) {
             // get the collision models:
-            SketchModelId m2 = (*it)->getModelId();
-            SketchModel *model2 = (*m2);
+            SketchModel *model2 = (*it)->getModelId();
             PQP_Model *pqp_model2 = model2->getCollisionModel();
 
             // get the offsets and rotations in PQP's format
@@ -375,8 +372,7 @@ ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
 ObjectId WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
     ObjectId closest;
     double dist = std::numeric_limits<double>::max();
-    SketchModelId m1 = subj->getModelId();
-    SketchModel *model1 = (*m1);
+    SketchModel *model1 = subj->getModelId();
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_REAL r1[3][3], t1[3];
     q_type quat1;
@@ -386,8 +382,7 @@ ObjectId WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
     for (ObjectId it = objects.begin(); it != objects.end(); it++) {
         if ((*it)->doPhysics()) {
             // get the collision models:
-            SketchModelId m2 = (*it)->getModelId();
-            SketchModel *model2 = (*m2);
+            SketchModel* model2 = (*it)->getModelId();
             PQP_Model *pqp_model2 = model2->getCollisionModel();
 
             // get the offsets and rotations in PQP's format
@@ -458,8 +453,8 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 //##################################################################################################
 void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
     // get the collision models:
-    SketchModel *model1 = (*((o1)->getModelId()));
-    SketchModel *model2 = (*((o2)->getModelId()));
+    SketchModel *model1 = ((o1)->getModelId());
+    SketchModel *model2 = ((o2)->getModelId());
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_Model *pqp_model2 = model2->getCollisionModel();
 

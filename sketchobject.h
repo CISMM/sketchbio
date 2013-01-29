@@ -31,14 +31,14 @@ public:
       *                     used to set up the actor's transform
       *
       ********************************************************************/
-    SketchObject(vtkActor *actor, SketchModelId model,vtkTransform *worldEyeTransform);
+    SketchObject(vtkActor *actor, SketchModel *model,vtkTransform *worldEyeTransform);
 
     /*********************************************************************
       *
       * Returns the model id used to create this object
       *
      *********************************************************************/
-    inline SketchModelId getModelId() const { return modelId; }
+    inline SketchModel *getModelId() const { return modelId; }
     /*********************************************************************
       *
       * Returns the actor this object stores physics data for
@@ -166,18 +166,18 @@ public:
       * Sets this object to be displayed as wireframe
       *
      *********************************************************************/
-    inline void setWireFrame() { actor->SetMapper((*modelId)->getWireFrameMapper());}
+    inline void setWireFrame() { actor->SetMapper(modelId->getWireFrameMapper());}
     /*********************************************************************
       *
       * Sets this object to be displayed as solid
       *
      *********************************************************************/
-    inline void setSolid() { actor->SetMapper((*modelId)->getSolidMapper());}
+    inline void setSolid() { actor->SetMapper(modelId->getSolidMapper());}
 protected:
     vtkSmartPointer<vtkTransform> localTransform;
     bool allowTransformUpdate, physicsEnabled;
 private:
-    SketchModelId modelId;
+    SketchModel *modelId;
     vtkSmartPointer<vtkActor> actor;
     q_vec_type position;
     q_type orientation;

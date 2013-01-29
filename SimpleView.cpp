@@ -198,12 +198,7 @@ void SimpleView::setAnalogStates(const double state[]) {
 
 ObjectId SimpleView::addObject(QString name)
 {
-    vtkSmartPointer<vtkOBJReader> objReader =
-            vtkSmartPointer<vtkOBJReader>::New();
-    objReader->SetFileName(name.toStdString().c_str());
-    objReader->Update();
-    int fiberSourceType = project.getModelManager()->addObjectSource(objReader.GetPointer());
-    SketchModelId fiberModelType = project.getModelManager()->addObjectType(fiberSourceType,1);
+    SketchModel *fiberModelType = project.getModelManager()->modelForOBJSource(name);
 
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
