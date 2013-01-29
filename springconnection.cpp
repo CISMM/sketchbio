@@ -95,7 +95,6 @@ void TrackerObjectSpring::addForce() {
     q_vec_scale(f2,displacement*stiffness,difference);
     q_vec_scale(f1,-1,f2);
     (*object1)->addForce(object1ConnectionPosition,f1);
-    object2->addForce(object2ConnectionPosition,f2);
 }
 
 void TrackerObjectSpring::getEnd2WorldPosition(q_vec_type out) const {

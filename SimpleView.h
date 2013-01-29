@@ -18,6 +18,7 @@
 #include "worldmanager.h"
 #include "structurereplicator.h"
 #include "sketchioconstants.h"
+#include "sketchproject.h"
 #include <QString>
 #include <QVector>
  
@@ -84,8 +85,6 @@ private:
   // Methods
   void addActor(vtkActor *actor, q_vec_type position, q_type orientation);
   void handleInput();
-  void updateTrackerPositions();
-  void updateTrackerObjectConnections();
 
   // Fields
   Ui_SimpleView *ui;
@@ -97,16 +96,8 @@ private:
   double analog[NUM_HYDRA_ANALOGS]; // number of analogs for hyrda
   QTimer *timer;
   vtkSmartPointer<vtkRenderer> renderer;
-  ModelManager models;
-  TransformManager transforms;
-  WorldManager world;
+  SketchProject project;
   StructureReplicator *copies;
-  ObjectId leftHand, rightHand;
-  ObjectId lObj, rObj;
-  double lDist, rDist;
-  int grabbedWorld;
-  std::vector<ObjectId> objects;
-  std::vector<SpringId> lhand, rhand;
 };
 
  

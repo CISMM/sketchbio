@@ -34,6 +34,7 @@ SketchProject::SketchProject(vtkRenderer *r,
     buttonDown(buttonStates),
     analog(analogStates)
 {
+    transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereSource->SetRadius(4);
     sphereSource->Update();
@@ -41,7 +42,9 @@ SketchProject::SketchProject(vtkRenderer *r,
     SketchModelId sphereModelType = models->addObjectType(sphereSourceType,
                                                TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
     leftHand = addTracker(r,sphereModelType,transforms->getWorldToEyeTransform());
+    leftHand->setDoPhysics(false);
     rightHand = addTracker(r,sphereModelType,transforms->getWorldToEyeTransform());
+    rightHand->setDoPhysics(false);
     lObj = rObj = std::_List_iterator<SketchObject*>();
     lDist = rDist = std::numeric_limits<double>::max();
 }
@@ -342,10 +345,12 @@ void SketchProject::updateTrackerPositions() {
     transforms->getLeftTrackerOrientInWorldCoords(orient);
     leftHand->setPosition(pos);
     leftHand->setOrientation(orient);
+    leftHand->recalculateLocalTransform();
     transforms->getLeftTrackerTransformInEyeCoords((vtkTransform*)leftHand->getActor()->GetUserTransform());
     transforms->getRightTrackerPosInWorldCoords(pos);
     transforms->getRightTrackerOrientInWorldCoords(orient);
     rightHand->setPosition(pos);
     rightHand->setOrientation(orient);
+    rightHand->recalculateLocalTransform();
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
 }

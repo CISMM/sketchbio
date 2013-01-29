@@ -51,25 +51,21 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     analogRemote("Tracker0@localhost"),
     timer(new QTimer()),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    models(ModelManager()),
-    transforms(),
-    world(renderer.GetPointer(),transforms.getWorldToEyeTransform()),
+    project(renderer.GetPointer(),buttonDown,analog),
     copies(NULL)
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
-    grabbedWorld = WORLD_NOT_GRABBED;
-    transforms.scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;
         q_type ident = Q_ID_QUAT;
         q_vec_set(pos.xyz,.5,0,.5);
         q_vec_scale(pos.xyz,.5,pos.xyz);
         q_copy(pos.quat,ident);
-        transforms.setLeftHandTransform(&pos);
+//        transforms.setLeftHandTransform(&pos);
         q_vec_set(pos.xyz,0,0,1);
         q_vec_scale(pos.xyz,.5,pos.xyz);
-        transforms.setRightHandTransform(&pos);
+//        transforms.setRightHandTransform(&pos);
     }
 
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
@@ -83,52 +79,34 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
         analog[i] = 0.0;
     }
 
-    // models
-    vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-    sphereSource->SetRadius(4);
-    sphereSource->Update();
-    int sphereSourceType = models.addObjectSource(sphereSource.GetPointer());
-    SketchModelId sphereModelType = models.addObjectType(sphereSourceType,
-                                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+    if (load_fibrin) {
+        // eventually we will just load the example...
+        project.setProjectDir("sampleProjects/fibrin_replication");
+        WorldManager *world = project.getWorldManager();
+        TransformManager *transforms = project.getTransformManager();
 
-    q_vec_type pos = Q_NULL_VECTOR;
-    q_type orient = Q_ID_QUAT;
-  if (load_fibrin) {
-    ObjectId object1Id = addObject("./models/1m1j.obj");
-    ObjectId object2Id = addObject("./models/1m1j.obj");
-    lDist = std::numeric_limits<double>::max();
-    rDist = lDist;
+        // ???
+        ObjectId object1Id = addObject("./models/1m1j.obj");
+        ObjectId object2Id = addObject("./models/1m1j.obj");
 
-   if (fibrin_springs) {
-    // creating springs
-    q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-    SpringConnection *spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
-    SpringId springId = world.addSpring(spring);
+        if (fibrin_springs) {
+            // creating springs
+            q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
+            SpringConnection *spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
+            SpringId springId = world->addSpring(spring);
 
-    q_vec_set(p1,0,-30,0);
-    q_vec_set(p2,200,-30,0);
-    spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
-    springId = world.addSpring(spring);
-   }
+            q_vec_set(p1,0,-30,0);
+            q_vec_set(p2,200,-30,0);
+            spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
+            springId = world->addSpring(spring);
+        }
 
-    // Replicate objects
-   if (do_replicate) {
-    copies = new StructureReplicator(object1Id,object2Id,&world,transforms.getWorldToEyeTransform());
-    copies->setNumShown(5);
-   }
-  }
-
-    // add objects for trackers
-    q_vec_set(pos,0,0,0);
-    q_from_axis_angle(orient,1,0,0,0);
-
-    leftHand = world.addObject(sphereModelType,pos,orient);
-    (*leftHand)->setDoPhysics(false);
-//    (*leftHand)->allowLocalTransformUpdates(false);
-    rightHand = world.addObject(sphereModelType,pos,orient);
-    (*rightHand)->setDoPhysics(false);
-//    (*rightHand)->allowLocalTransformUpdates(false);
-
+        // Replicate objects
+        if (do_replicate) {
+            copies = new StructureReplicator(object1Id,object2Id,world,transforms->getWorldToEyeTransform());
+            copies->setNumShown(5);
+        }
+    }
 
     // camera setup
     vtkSmartPointer<vtkCamera> camera =
@@ -166,14 +144,8 @@ void SimpleView::slotExit()
 }
 
 void SimpleView::handleInput() {
-    q_vec_type beforeDVect, afterDVect, beforeLPos, beforeRPos, afterLPos, afterRPos;
-    q_type beforeLOr, afterLOr, beforeROr, afterROr;
-    double dist = transforms.getWorldDistanceBetweenHands();
-    transforms.getLeftTrackerPosInWorldCoords(beforeLPos);
-    transforms.getRightTrackerPosInWorldCoords(beforeRPos);
-    transforms.getLeftTrackerOrientInWorldCoords(beforeLOr);
-    transforms.getRightTrackerOrientInWorldCoords(beforeROr);
-    transforms.getLeftToRightHandWorldVector(beforeDVect);
+    TransformManager *transforms = project.getTransformManager();
+    transforms->copyCurrentHandTransformsToOld();
     if (VRPN_ON) {
         tracker.mainloop();
         buttons.mainloop();
@@ -182,233 +154,12 @@ void SimpleView::handleInput() {
         q_xyz_quat_type pos;
         q_type q;
         q_from_axis_angle(q,0,1,0,.01);
-        transforms.getRightHand(&pos);
+        transforms->getRightHand(&pos);
         q_xform(pos.xyz,q,pos.xyz);
         q_mult(pos.quat,q,pos.quat);
 //        pos.xyz[1] += 0.01;
-        transforms.setRightHandTransform(&pos);
+        transforms->setRightHandTransform(&pos);
     }
-    double delta = transforms.getWorldDistanceBetweenHands() / dist;
-    transforms.getLeftToRightHandWorldVector(afterDVect);
-    transforms.getLeftTrackerPosInWorldCoords(afterLPos);
-    transforms.getRightTrackerPosInWorldCoords(afterRPos);
-    transforms.getLeftTrackerOrientInWorldCoords(afterLOr);
-    transforms.getRightTrackerOrientInWorldCoords(afterROr);
-    // possibly scale the world
-    if (buttonDown[SCALE_BUTTON]) {
-        transforms.scaleWithLeftTrackerFixed(delta);
-    }
-    // possibly rotate the world
-    if (buttonDown[ROTATE_BUTTON]) {
-        q_type rotation;
-        q_normalize(afterDVect,afterDVect);
-        q_normalize(beforeDVect,beforeDVect);
-        q_from_two_vecs(rotation,beforeDVect,afterDVect);
-        transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    }
-    // if the world is grabbed, translate/rotate it
-    if (grabbedWorld == LEFT_GRABBED_WORLD) {
-        // translate
-        q_vec_type delta;
-        q_vec_subtract(delta,afterLPos,beforeLPos);
-        transforms.translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv,beforeLOr);
-        q_mult(rotation,afterLOr,inv);
-        transforms.rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    } else if (grabbedWorld == RIGHT_GRABBED_WORLD) {
-        // translate
-        q_vec_type delta;
-        q_vec_subtract(delta,afterRPos,beforeRPos);
-        transforms.translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv,beforeROr);
-        q_mult(rotation,afterROr,inv);
-        transforms.rotateWorldRelativeToRoomAboutRightTracker(rotation);
-    }
-    // move fibers
-    updateTrackerObjectConnections();
-
-    if (objects.size() > 0) {
-        ObjectId closest = world.getClosestObject(leftHand,&lDist);
-
-        if (lObj == closest) {
-            if (lDist < DISTANCE_THRESHOLD) {
-                (*closest)->setWireFrame();
-            } else {
-                (*closest)->setSolid();
-            }
-        } else {
-            if (*lObj)
-                (*lObj)->setSolid();
-            lObj = closest;
-            if (lDist < DISTANCE_THRESHOLD)
-                (*lObj)->setWireFrame();
-        }
-
-        closest = world.getClosestObject(rightHand,&rDist);
-
-        if (rObj == closest) {
-            if (rDist < DISTANCE_THRESHOLD) {
-                (*closest)->setWireFrame();
-            } else {
-                (*closest)->setSolid();
-            }
-        } else {
-            if (*rObj)
-                (*rObj)->setSolid();
-            rObj = closest;
-            if (rDist < DISTANCE_THRESHOLD)
-                (*rObj)->setWireFrame();
-        }
-    }
-
-    // set tracker locations
-    updateTrackerPositions();
-}
-
-/*
- * This function takes a q_vec_type and returns the index of
- * the component with the minimum magnitude.
- */
-inline int getMinIdx(const q_vec_type vec) {
-    if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Y])) {
-        if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Z])) {
-            return Q_X;
-        } else {
-            return Q_Z;
-        }
-    } else {
-        if (Q_ABS(vec[Q_Y]) < Q_ABS(vec[Q_Z])) {
-            return Q_Y;
-        } else {
-            return Q_Z;
-        }
-    }
-}
-
-/*
- * This method updates the springs connecting the trackers and the objects in the world...
- */
-void SimpleView::updateTrackerObjectConnections() {
-    if (objects.size() == 0)
-        return;
-    for (int i = 0; i < 2; i++) {
-        int analogIdx;
-        int worldGrabConstant;
-        ObjectId objectToGrab;
-        ObjectId tracker;
-        std::vector<SpringId> *springs;
-        double dist;
-        // select left or right
-        if (i == 0) {
-            analogIdx = HYDRA_LEFT_TRIGGER;
-            worldGrabConstant = LEFT_GRABBED_WORLD;
-            tracker = leftHand;
-            springs = &lhand;
-            objectToGrab = lObj;
-            dist = lDist;
-        } else if (i == 1) {
-            analogIdx = HYDRA_RIGHT_TRIGGER;
-            worldGrabConstant = RIGHT_GRABBED_WORLD;
-            tracker = rightHand;
-            springs = &rhand;
-            objectToGrab = rObj;
-            dist = rDist;
-        }
-        // if they are gripping the trigger
-        if (analog[analogIdx] > .1) {
-            // if we do not have springs yet add them
-            if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
-                if (dist > DISTANCE_THRESHOLD) {
-                    if (grabbedWorld == WORLD_NOT_GRABBED) {
-                        grabbedWorld = worldGrabConstant;
-                    }
-                    // allow grabbing world & moving something with other hand...
-                    // discouraged, but allowed -> the results are not guaranteed.
-                } else {
-                    SketchObject *obj = (*objectToGrab);
-                    SketchObject *trackerObj = *tracker;
-                    q_vec_type oPos, tPos, vec;
-                    obj->getPosition(oPos);
-                    trackerObj->getPosition(tPos);
-                    q_vec_subtract(vec,tPos,oPos);
-                    q_vec_normalize(vec,vec);
-                    q_vec_type axis = Q_NULL_VECTOR;
-                    axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
-                                        // parallel to vec
-                    q_vec_type per1, per2; // create two perpendicular unit vectors
-                    q_vec_cross_product(per1,axis,vec);
-                    q_vec_normalize(per1,per1);
-                    q_vec_cross_product(per2,per1,vec); // should already be length 1
-                    // create scaled perpendicular vectors
-                    q_vec_type tPer1, tPer2;
-                    q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
-                    q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
-                    q_vec_type /*wPos1,*/ wPos2;
-                    // create springs and add them
-                    // first spring --defined along the "x" axis (per1)
-                    SpringId id;
-                    q_vec_add(wPos2,tPos,tPer1);
-                    id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(id);
-                    // second spring --defined as rotated 120 degrees about "z" axis.
-                    // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
-                    q_vec_scale(tPer1,-.5,tPer1);
-                    q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
-                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                    q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-                    id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(id);
-                    // third spring --defined as rotated 240 degrees about "z" axis.
-                    // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
-                    q_vec_invert(tPer2,tPer2);
-                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                    q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-                    id = world.addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(id);
-                }
-            } else { // update springs stiffness if they are already there
-                for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
-                    (*(*it))->setStiffness(analog[analogIdx]);
-                }
-            }
-        } else {
-            if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
-                // remove springs between model & tracker
-                for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
-                    world.removeSpring(*it);
-                }
-                springs->clear();
-            }
-            if (grabbedWorld == worldGrabConstant) {
-                grabbedWorld = WORLD_NOT_GRABBED;
-            }
-        }
-    }
-}
-
-/*
- * Updates the positions and transformations of the tracker objects.
- */
-void SimpleView::updateTrackerPositions() {
-    q_vec_type pos;
-    q_type orient;
-    transforms.getLeftTrackerPosInWorldCoords(pos);
-    transforms.getLeftTrackerOrientInWorldCoords(orient);
-    (*leftHand)->setPosition(pos);
-    (*leftHand)->setOrientation(orient);
-    transforms.getLeftTrackerTransformInEyeCoords((vtkTransform*)(*leftHand)->getActor()->GetUserTransform());
-    transforms.getRightTrackerPosInWorldCoords(pos);
-    transforms.getRightTrackerOrientInWorldCoords(orient);
-    (*rightHand)->setPosition(pos);
-    (*rightHand)->setOrientation(orient);
-    transforms.getRightTrackerTransformInEyeCoords((vtkTransform*)(*rightHand)->getActor()->GetUserTransform());
 }
 
 /*
@@ -418,8 +169,7 @@ void SimpleView::slot_frameLoop() {
     // input
     handleInput();
 
-    // physics
-    world.stepPhysics(TIMESTEP);
+    project.timestep(TIMESTEP);
     if (copies != NULL) {
 	copies->updateTransform();
     }
@@ -429,18 +179,14 @@ void SimpleView::slot_frameLoop() {
 }
 
 void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
-    transforms.setLeftHandTransform(newPos);
+    project.getTransformManager()->setLeftHandTransform(newPos);
 }
 
 void SimpleView::setRightPos(q_xyz_quat_type *newPos) {
-    transforms.setRightHandTransform(newPos);
+    project.getTransformManager()->setRightHandTransform(newPos);
 }
 
 void SimpleView::setButtonState(int buttonNum, bool buttonPressed) {
-    // added at a request from Joe
-    if (buttonNum == PAUSE_PHYSICS_BUTTON && buttonPressed && !buttonDown[buttonNum]) {
-        world.togglePhysics();
-    }
     buttonDown[buttonNum] = buttonPressed;
 }
 
@@ -456,19 +202,15 @@ ObjectId SimpleView::addObject(QString name)
             vtkSmartPointer<vtkOBJReader>::New();
     objReader->SetFileName(name.toStdString().c_str());
     objReader->Update();
-    int fiberSourceType = models.addObjectSource(objReader.GetPointer());
-    SketchModelId fiberModelType = models.addObjectType(fiberSourceType,1);
+    int fiberSourceType = project.getModelManager()->addObjectSource(objReader.GetPointer());
+    SketchModelId fiberModelType = project.getModelManager()->addObjectType(fiberSourceType,1);
 
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
-    int myIdx = objects.size();
+    int myIdx = project.getWorldManager()->getNumberOfObjects();
     q_vec_set(pos,0,2*myIdx/SCALE_DOWN_FACTOR,0);
-    ObjectId objectId = world.addObject(fiberModelType,pos,orient);
+    ObjectId objectId = project.getWorldManager()->addObject(fiberModelType,pos,orient);
     (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-    objects.push_back(objectId);
-    if (objects.size() == 1) {
-        lObj = rObj = objectId;
-    }
 
     return objectId;
 }
