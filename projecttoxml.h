@@ -11,5 +11,6 @@ vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &
 
 vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, const QString &id);
 
+vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms);
 
 #endif // PROJECTTOXML_H

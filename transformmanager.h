@@ -28,6 +28,16 @@ public:
     vtkTransform *getWorldToRoomTransform();
 
     /*
+     * Gets the transformation between world and room
+     */
+    const vtkMatrix4x4 *getWorldToRoomMatrix() const;
+
+    /*
+     * Gets the transformation between room and eye
+     */
+    const vtkMatrix4x4 *getRoomToEyeMatrix() const;
+
+    /*
      * Gets the scale factor between the world and room
      */
     double getWorldToRoomScale() const;

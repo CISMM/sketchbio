@@ -37,6 +37,14 @@ vtkTransform * TransformManager::getWorldToRoomTransform() {
     return worldToRoom;
 }
 
+const vtkMatrix4x4 *TransformManager::getWorldToRoomMatrix() const {
+    return worldToRoom->GetMatrix();
+}
+
+const vtkMatrix4x4 *TransformManager::getRoomToEyeMatrix() const {
+    return roomToEyes->GetMatrix();
+}
+
 double TransformManager::getWorldToRoomScale() const {
     return worldToRoomScale;
 }

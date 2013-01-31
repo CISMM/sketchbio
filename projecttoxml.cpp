@@ -8,14 +8,19 @@
 
 #define MODEL_MANAGER_ELEMENT_NAME  "models"
 
-#define MODEL_ELEMENT_NAME "model"
-#define MODEL_SOURCE_ELEMENT_NAME "source"
-#define MODEL_TRANSFORM_ELEMENT_NAME "transform"
-#define MODEL_SCALE_ATTRIBUTE_NAME "scale"
-#define MODEL_TRANSLATE_ATTRIBUTE_NAME "translate"
-#define MODEL_PHYSICAL_PROPERTIES_ELEMENT_NAME "properties"
-#define MODEL_IMASS_ATTRIBUTE_NAME "inverseMass"
-#define MODEL_IMOMENT_ATTRIBUTE_NAME "inverseMomentOfInertia"
+#define MODEL_ELEMENT_NAME                      "model"
+#define MODEL_SOURCE_ELEMENT_NAME               "source"
+#define MODEL_TRANSFORM_ELEMENT_NAME            "transform"
+#define MODEL_SCALE_ATTRIBUTE_NAME              "scale"
+#define MODEL_TRANSLATE_ATTRIBUTE_NAME          "translate"
+#define MODEL_PHYSICAL_PROPERTIES_ELEMENT_NAME  "properties"
+#define MODEL_IMASS_ATTRIBUTE_NAME              "inverseMass"
+#define MODEL_IMOMENT_ATTRIBUTE_NAME            "inverseMomentOfInertia"
+
+#define TRANSFORM_MANAGER_ELEMENT_NAME          "viewpoint"
+#define TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME    "worldToRoom"
+#define TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME      "roomToEye"
+#define TRANSFORM_MATRIX_ATTRIBUTE_NAME         "matrix"
 
 vtkXMLDataElement *projectToXML(const SketchProject *project) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
@@ -25,6 +30,7 @@ vtkXMLDataElement *projectToXML(const SketchProject *project) {
     QHash<const SketchModel *, QString> modelIds;
 
     element->AddNestedElement(modelManagerToXML(project->getModelManager(),project->getProjectDir(),modelIds));
+    element->AddNestedElement(transformManagerToXML(project->getTransformManager()));
 
     return element;
 }
@@ -79,6 +85,31 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
     child->SetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,translate);
     child->SetDoubleAttribute(MODEL_SCALE_ATTRIBUTE_NAME,model->getScale());
     element->AddNestedElement(child);
+
+    return element;
+}
+
+inline vtkXMLDataElement *matrixToXML(const char *elementName,const vtkMatrix4x4 *matrix) {
+    double mat[16];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            mat[i*4+j] = matrix->GetElement(i,j);
+        }
+    }
+    vtkXMLDataElement *child = vtkXMLDataElement::New();
+    child->SetName(elementName);
+    child->SetVectorAttribute(TRANSFORM_MATRIX_ATTRIBUTE_NAME,16,mat);
+    return child;
+}
+
+vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms) {
+    vtkXMLDataElement *element = vtkXMLDataElement::New();
+    element->SetName(TRANSFORM_MANAGER_ELEMENT_NAME);
+
+    element->AddNestedElement(matrixToXML(TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME,
+                                          transforms->getWorldToRoomMatrix()));
+    element->AddNestedElement(matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,
+                                          transforms->getRoomToEyeMatrix()));
 
     return element;
 }
