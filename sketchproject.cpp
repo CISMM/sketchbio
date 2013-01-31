@@ -45,7 +45,7 @@ SketchProject::SketchProject(vtkRenderer *r,
     leftHand->setDoPhysics(false);
     rightHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
     rightHand->setDoPhysics(false);
-    lObj = rObj = std::_List_iterator<SketchObject*>();
+    lObj = rObj = (SketchObject *) NULL;
     lDist = rDist = std::numeric_limits<double>::max();
 }
 
@@ -92,7 +92,7 @@ void SketchProject::timestep(double dt) {
     transforms->copyCurrentHandTransformsToOld();
 }
 
-ObjectId SketchProject::addObject(QString filename) {
+SketchObject *SketchProject::addObject(QString filename) {
     QFile file(filename);
     qDebug() << filename;
     QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
@@ -105,9 +105,9 @@ ObjectId SketchProject::addObject(QString filename) {
         q_type orient = Q_ID_QUAT;
         int myIdx = world->getNumberOfObjects();
         q_vec_set(pos,0,2*myIdx/transforms->getWorldToRoomScale(),0);
-        ObjectId objectId = world->addObject(model,pos,orient);
-        (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-        return objectId;
+        SketchObject *object = world->addObject(model,pos,orient);
+        object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+        return object;
     } else {
         throw "Could not create object";
     }
@@ -127,12 +127,12 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
     return true;
 }
 
-SpringId SketchProject::addSpring(ObjectId o1, ObjectId o2, double minRest, double maxRest,
+SpringConnection *SketchProject::addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
                                   double stiffness, q_vec_type o1Pos, q_vec_type o2Pos) {
     return world->addSpring(o1,o2,o1Pos,o2Pos,false,stiffness,minRest,maxRest);
 }
 
-StructureReplicator *SketchProject::addReplication(ObjectId o1, ObjectId o2, int numCopies) {
+StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObject *o2, int numCopies) {
     StructureReplicator *rep = new StructureReplicator(o1,o2,world,transforms->getWorldToEyeTransform());
     replicas.push_back(rep);
     rep->setNumShown(numCopies);
@@ -198,20 +198,20 @@ void SketchProject::handleInput() {
 
     if (world->getNumberOfObjects() > 0) {
         bool oldExists = lDist != std::numeric_limits<double>::max();
-        ObjectId closest = world->getClosestObject(leftHand,&lDist);
+        SketchObject *closest = world->getClosestObject(leftHand,&lDist);
 
         if (lObj == closest) {
             if (lDist < DISTANCE_THRESHOLD) {
-                (*closest)->setWireFrame();
+                closest->setWireFrame();
             } else {
-                (*closest)->setSolid();
+                closest->setSolid();
             }
         } else {
             if (oldExists)
-                (*lObj)->setSolid();
+                lObj->setSolid();
             lObj = closest;
             if (lDist < DISTANCE_THRESHOLD)
-                (*lObj)->setWireFrame();
+                lObj->setWireFrame();
         }
 
         oldExists = rDist != std::numeric_limits<double>::max();
@@ -219,16 +219,16 @@ void SketchProject::handleInput() {
 
         if (rObj == closest) {
             if (rDist < DISTANCE_THRESHOLD) {
-                (*closest)->setWireFrame();
+                closest->setWireFrame();
             } else {
-                (*closest)->setSolid();
+                closest->setSolid();
             }
         } else {
             if (oldExists)
-                (*rObj)->setSolid();
+                rObj->setSolid();
             rObj = closest;
             if (rDist < DISTANCE_THRESHOLD)
-                (*rObj)->setWireFrame();
+                rObj->setWireFrame();
         }
     }
 
@@ -265,9 +265,9 @@ void SketchProject::updateTrackerObjectConnections() {
     for (int i = 0; i < 2; i++) {
         int analogIdx;
         int worldGrabConstant;
-        ObjectId objectToGrab;
+        SketchObject *objectToGrab;
         SketchObject *tracker;
-        std::vector<SpringId> *springs;
+        QList<SpringConnection *> *springs;
         double dist;
         // select left or right
         if (i == 0) {
@@ -296,9 +296,8 @@ void SketchProject::updateTrackerObjectConnections() {
                     // allow grabbing world & moving something with other hand...
                     // discouraged, but allowed -> the results are not guaranteed.
                 } else {
-                    SketchObject *obj = (*objectToGrab);
                     q_vec_type oPos, tPos, vec;
-                    obj->getPosition(oPos);
+                    objectToGrab->getPosition(oPos);
                     tracker->getPosition(tPos);
                     q_vec_subtract(vec,tPos,oPos);
                     q_vec_normalize(vec,vec);
@@ -316,39 +315,39 @@ void SketchProject::updateTrackerObjectConnections() {
                     q_vec_type /*wPos1,*/ wPos2;
                     // create springs and add them
                     // first spring --defined along the "x" axis (per1)
-                    SpringId id;
+                    SpringConnection *spring;
                     q_vec_add(wPos2,tPos,tPer1);
-                    id = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                    spring = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                          analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(id);
+                    springs->push_back(spring);
                     // second spring --defined as rotated 120 degrees about "z" axis.
                     // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
                     q_vec_scale(tPer1,-.5,tPer1);
                     q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
                     q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
                     q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-                    id = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                    spring = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                          analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(id);
+                    springs->push_back(spring);
                     // third spring --defined as rotated 240 degrees about "z" axis.
                     // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
                     q_vec_invert(tPer2,tPer2);
                     q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
                     q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-                    id = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                    spring = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                          analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(id);
+                    springs->push_back(spring);
                 }
             } else { // update springs stiffness if they are already there
-                for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
-                    (*(*it))->setStiffness(analog[analogIdx]);
+                for (QListIterator<SpringConnection *> it(*springs); it.hasNext();) {
+                    it.next()->setStiffness(analog[analogIdx]);
                 }
             }
         } else {
             if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
                 // remove springs between model & tracker
-                for (std::vector<SpringId>::iterator it = springs->begin(); it != springs->end(); it++) {
-                    world->removeSpring(*it);
+                for (QListIterator<SpringConnection *> it(*springs); it.hasNext();) {
+                    world->removeSpring(it.next());
                 }
                 springs->clear();
             }

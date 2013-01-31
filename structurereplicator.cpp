@@ -17,14 +17,14 @@
 class ReplicatedObject : public SketchObject {
 public:
     ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
-                     ObjectId original0, ObjectId original1, int num);
+                     SketchObject *original0, SketchObject *original1, int num);
     virtual void addForce(q_vec_type point, const q_vec_type force);
     virtual void getPosition(q_vec_type dest) const;
     virtual void getOrientation(q_type dest) const;
 private:
     // need original(s) here
-    ObjectId id0; // first original
-    ObjectId id1; // second original
+    SketchObject *obj0; // first original
+    SketchObject *obj1; // second original
     int replicaNum; // how far down the chain we are indexed as follows:
                     // -1 is first copy in negative direction
                     // 0 is first original
@@ -33,11 +33,11 @@ private:
 };
 
 ReplicatedObject::ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
-                                   ObjectId original0, ObjectId original1, int num):
+                                   SketchObject *original0, SketchObject *original1, int num):
     SketchObject(actor, model, worldEyeTransform)
 {
-    id0 = original0;
-    id1 = original1;
+    obj0 = original0;
+    obj1 = original1;
     replicaNum = num;
     allowTransformUpdate = false;
 }
@@ -75,7 +75,7 @@ void ReplicatedObject::getOrientation(q_type dest) const {
  */
 void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
     double divisor = (replicaNum > 0) ? replicaNum : (-replicaNum +1);
-    SketchObject *original = (replicaNum > 0) ? *id1 : *id0;
+    SketchObject *original = (replicaNum > 0) ? obj1 : obj0;
     q_vec_type scaledForce;
     localTransform->Inverse();
     localTransform->TransformVector(force,scaledForce);
@@ -91,23 +91,22 @@ void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
 //############################################################################################
 //############################################################################################
 
-StructureReplicator::StructureReplicator(ObjectId object1Id, ObjectId object2Id, WorldManager *w,
-                                         vtkTransform *worldEyeTransform) {
-    id1 = object1Id;
-    id2 = object2Id;
-    (*id1)->recalculateLocalTransform();
-    (*id2)->recalculateLocalTransform();
-    world = w;
-    numShown = 0;
-    newIds = std::list<ObjectId>();
+StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w,
+                                         vtkTransform *worldEyeTransform) :
+    numShown(0),
+    obj1(object1),
+    obj2(object2),
+    world(w),
+    copies()
+{
+    obj1->recalculateLocalTransform();
+    obj2->recalculateLocalTransform();
     transform = vtkSmartPointer<vtkTransform>::New();
     transform->Identity();
     transform->PostMultiply();
-    SketchObject *object1 = (*id1);
-    SketchObject *object2 = (*id2);
-    vtkSmartPointer<vtkTransform> other = object1->getLocalTransform();
+    vtkSmartPointer<vtkTransform> other = obj1->getLocalTransform();
     transform->Concatenate(other->GetLinearInverse());
-    transform->Concatenate(object2->getLocalTransform());
+    transform->Concatenate(obj2->getLocalTransform());
     this->worldEyeTransform = worldEyeTransform;
 }
 
@@ -119,20 +118,19 @@ void StructureReplicator::setNumShown(int num) {
     if (num > numShown) {
         SketchObject *previous;
         if (numShown == 0) {
-            previous = (*id2);
+            previous = obj2;
         } else {
-            previous = (*newIds.back());
+            previous = copies.at(copies.size()-1);
         }
         for (; numShown < num; numShown++) {
             vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-            SketchModel *modelId = previous->getModelId();
+            SketchModel *modelId = previous->getModel();
             actor->SetMapper(modelId->getSolidMapper());
             ReplicatedObject *obj = new ReplicatedObject(actor,modelId,
                                                          worldEyeTransform,
-                                                         id1,id2,numShown+2);
-            ObjectId nextId = world->addObject(obj);
-            newIds.push_back(nextId);
-            SketchObject *next = (*nextId);
+                                                         obj1,obj2,numShown+2);
+            SketchObject *next = world->addObject(obj);
+            copies.append(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
             tform->Concatenate(previous->getLocalTransform());
@@ -143,8 +141,8 @@ void StructureReplicator::setNumShown(int num) {
         }
     } else {
         for (; numShown > num; numShown--) {
-            world->removeObject(newIds.back());
-            newIds.pop_back();
+            world->removeObject(copies.at(copies.size()-1));
+            copies.removeLast();
         }
     }
 }

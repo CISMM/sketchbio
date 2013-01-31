@@ -42,8 +42,8 @@ int main() {
 //    q_from_axis_angle(orient,0,1,0,Q_PI/22);
 //    ObjectId o2 = wmgr->addObject(model,pos,orient);
 
-    ObjectId o1 = project->addObject("models/1m1j.obj");
-    ObjectId o2 = project->addObject("models/1m1j.obj");
+    SketchObject *o1 = project->addObject("models/1m1j.obj");
+    SketchObject *o2 = project->addObject("models/1m1j.obj");
 
 //    StructureReplicator *rep = new StructureReplicator(o1,o2,wmgr,transform);
 //    StructureReplicator *rep = new StructureReplicator(o1,o2,wmgr,tmgr->getWorldToEyeTransform());

@@ -19,7 +19,7 @@ class SpringConnection
 {
 public:
 
-    SpringConnection(ObjectId o1, double minRestLen, double maxRestLen,
+    SpringConnection(SketchObject *o1, double minRestLen, double maxRestLen,
                      double k, const q_vec_type obj1Pos);
 
     inline double getStiffness() const { return stiffness; }
@@ -38,7 +38,7 @@ public:
     virtual void addForce() = 0;
 
 protected:
-    ObjectId object1;
+    SketchObject *object1;
     double minRestLength, maxRestLength;
     double stiffness;
     q_vec_type object1ConnectionPosition;
@@ -52,27 +52,7 @@ private:
 class InterObjectSpring : public SpringConnection
 {
 public:
-    InterObjectSpring(ObjectId o1, ObjectId o2, double minRestLen, double maxRestLen,
-                        double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos);
-
-    inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
-    inline void setObject2ConnectionPosition(q_vec_type newPos) { q_vec_copy(object2ConnectionPosition,newPos);}
-    virtual void getEnd2WorldPosition(q_vec_type out) const;
-
-    virtual void addForce();
-private:
-    ObjectId object2;
-    q_vec_type object2ConnectionPosition;
-};
-
-/*
- * This class extends SpringConnection to define a spring between an object and a
- * tracker which does not have an object id
- */
-class TrackerObjectSpring : public SpringConnection
-{
-public:
-    TrackerObjectSpring(ObjectId o1, SketchObject *o2, double minRestLen, double maxRestLen,
+    InterObjectSpring(SketchObject *o1, SketchObject *o2, double minRestLen, double maxRestLen,
                         double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos);
 
     inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
@@ -85,13 +65,12 @@ private:
     q_vec_type object2ConnectionPosition;
 };
 
-
 /*
  * This class extends SpringConnection to define a spring between an object and a location in the world
  */
 class ObjectPointSpring : public SpringConnection
 {
-    ObjectPointSpring(ObjectId o1, double minRestLen, double maxRestLen, double k,
+    ObjectPointSpring(SketchObject *o1, double minRestLen, double maxRestLen, double k,
                         const q_vec_type obj1Pos, const q_vec_type worldPoint);
 
     inline void setWorldPoint(q_vec_type newPos) { q_vec_copy(point,newPos); }
@@ -101,11 +80,5 @@ class ObjectPointSpring : public SpringConnection
 private:
     q_vec_type point;
 };
-
-/*
- * The springs are stored in a list and referenced via these iterators in
- * other parts of the program
- */
-typedef std::list<SpringConnection *>::iterator SpringId;
 
 #endif // SPRINGCONNECTION_H

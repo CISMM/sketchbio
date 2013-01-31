@@ -40,14 +40,14 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
 //##################################################################################################
 //##################################################################################################
 WorldManager::~WorldManager() {
-    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-        SketchObject *obj = (*it);
-        (*it) = NULL;
+    for (QMutableListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *obj = it.next();
+        it.setValue((SketchObject *)NULL);
         delete obj;
     }
-    for (SpringId it = connections.begin(); it != connections.end(); it++) {
-        SpringConnection *spring = (*it);
-        (*it) = NULL;
+    for (QMutableListIterator<SpringConnection *> it(connections); it.hasNext();) {
+        SpringConnection *spring = it.next();
+        it.setValue((SpringConnection *)NULL);
         delete spring;
     }
     objects.clear();
@@ -56,7 +56,7 @@ WorldManager::~WorldManager() {
 
 //##################################################################################################
 //##################################################################################################
-ObjectId WorldManager::addObject(SketchModel *model,q_vec_type pos, q_type orient) {
+SketchObject *WorldManager::addObject(SketchModel *model,q_vec_type pos, q_type orient) {
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(model->getSolidMapper());
     SketchObject *newObject = new SketchObject(actor,model,worldEyeTransform);
@@ -65,30 +65,26 @@ ObjectId WorldManager::addObject(SketchModel *model,q_vec_type pos, q_type orien
     newObject->recalculateLocalTransform();
     renderer->AddActor(actor);
     objects.push_back(newObject);
-    ObjectId id = objects.end();
-    id--;
-    return id;
+    return newObject;
 }
 
 //##################################################################################################
 //##################################################################################################
-ObjectId WorldManager::addObject(SketchObject *object) {
+SketchObject *WorldManager::addObject(SketchObject *object) {
     objects.push_back(object);
     renderer->AddActor(object->getActor());
-    ObjectId id = objects.end();
-    id--;
-    return id;
+    return object;
 }
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::removeObject(ObjectId objectId) {
+void WorldManager::removeObject(SketchObject *object) {
     // if we are deleting an object, it should not have any springs...
     // TODO - fix this assumption later
-    SketchObject *obj = (*objectId);
-    renderer->RemoveActor(obj->getActor());
-    objects.erase(objectId);
-    delete obj;
+    int index = objects.indexOf(object);
+    renderer->RemoveActor(object->getActor());
+    objects.removeAt(index);
+    delete object;
 }
 
 //##################################################################################################
@@ -99,10 +95,14 @@ int WorldManager::getNumberOfObjects() const {
 
 //##################################################################################################
 //##################################################################################################
-SpringId WorldManager::addSpring(SpringConnection *spring) {
+QListIterator<SketchObject *> WorldManager::getObjectIterator() const {
+    return QListIterator<SketchObject *>(objects);
+}
+
+//##################################################################################################
+//##################################################################################################
+SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
     connections.push_back(spring);
-    SpringId it = connections.end();
-    it--;
 
     // code to draw spring as a line
     if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
@@ -124,47 +124,19 @@ SpringId WorldManager::addSpring(SpringConnection *spring) {
 //    springEndConnections->Update();
     spring->setCellId(cellId);
 
-    return it;
+    return spring;
 }
 
 //##################################################################################################
 //##################################################################################################
-SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type pos1,
-                             const q_vec_type pos2, bool worldRelativePos, double k, double minL, double maxL)
+SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,const q_vec_type pos1,
+                             const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen)
 {
-    SketchObject *obj1 = *id1, *obj2 = *id2;
     q_type oPos1, oPos2, newPos1, newPos2;
     q_type orient1, orient2;
     if (worldRelativePos) {
-        obj1->getPosition(oPos1);
-        obj1->getOrientation(orient1);
-        obj2->getPosition(oPos2);
-        obj2->getOrientation(orient2);
-        q_invert(orient1,orient1);
-        q_invert(orient2,orient2);
-        q_vec_subtract(newPos1,pos1,oPos1);
-        q_xform(newPos1,orient1,newPos1);
-        q_vec_subtract(newPos2,pos2,oPos2);
-        q_xform(newPos2,orient2,newPos2);
-    } else {
-        q_vec_copy(newPos1,pos1);
-        q_vec_copy(newPos2,pos2);
-    }
-    SpringConnection *spring = new InterObjectSpring(id1,id2,minL,maxL,k,newPos1,newPos2);
-    return addSpring(spring);
-}
-
-//##################################################################################################
-//##################################################################################################
-SpringId WorldManager::addSpring(ObjectId id1, SketchObject *o2,const q_vec_type pos1,
-                             const q_vec_type pos2, bool worldRelativePos, double k, double l)
-{
-    SketchObject *obj1 = *id1;
-    q_type oPos1, oPos2, newPos1, newPos2;
-    q_type orient1, orient2;
-    if (worldRelativePos) {
-        obj1->getPosition(oPos1);
-        obj1->getOrientation(orient1);
+        o1->getPosition(oPos1);
+        o1->getOrientation(orient1);
         o2->getPosition(oPos2);
         o2->getOrientation(orient2);
         q_invert(orient1,orient1);
@@ -177,20 +149,20 @@ SpringId WorldManager::addSpring(ObjectId id1, SketchObject *o2,const q_vec_type
         q_vec_copy(newPos1,pos1);
         q_vec_copy(newPos2,pos2);
     }
-    SpringConnection *spring = new TrackerObjectSpring(id1,o2,l,l,k,newPos1,newPos2);
+    SpringConnection *spring = new InterObjectSpring(o1,o2,minLen,maxLen,k,newPos1,newPos2);
     return addSpring(spring);
 }
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::removeSpring(SpringId id) {
-    SpringConnection *conn = (*id);
-    connections.erase(id);
+void WorldManager::removeSpring(SpringConnection *spring) {
+    int index = connections.indexOf(spring);
+    connections.removeAt(index);
 
-    springEndConnections->DeleteCell(conn->getCellId());
+    springEndConnections->DeleteCell(spring->getCellId());
     // can't delete points...
 
-    delete conn;
+    delete spring;
 }
 
 //##################################################################################################
@@ -199,16 +171,22 @@ int WorldManager::getNumberOfSprings() const {
     return connections.size();
 }
 
+
+//##################################################################################################
+//##################################################################################################
+QListIterator<SpringConnection *> WorldManager::getSpringsIterator() const {
+    return QListIterator<SpringConnection *>(connections);
+}
+
 //##################################################################################################
 //##################################################################################################
 // helper method for stepPhysics -- does Euler's method once force
 // and torque on an object have been calculated
-inline void euler(ObjectId o, double dt) {
+inline void euler(SketchObject *obj, double dt) {
     q_vec_type pos, angularVel,deltaPos,force,torque;
     q_type spin, orient;
-    SketchObject * obj = (*o);
     if (obj->doPhysics()) {
-        SketchModel *model = obj->getModelId();
+        SketchModel *model = obj->getModel();
         // get force & torque
         obj->getForce(force);
         obj->getTorque(torque);
@@ -243,36 +221,39 @@ void WorldManager::stepPhysics(double dt) {
 
     if (!pausePhysics) {
         // clear the accumulated force in the objects
-        for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-            (*it)->clearForces();
+        for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+            it.next()->clearForces();
         }
 
         // collision detection - collision causes a force
-        for (ObjectId i = objects.begin(); i != objects.end(); i++) {
-            if ((*i)->doPhysics()) {
-                for (ObjectId j = i; j != objects.end(); j++) {
+        for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+            SketchObject *i = it.next();
+            if (i->doPhysics()) {
+                for (QListIterator<SketchObject *> it2(objects); it2.hasNext();) {
+                    SketchObject *j = it2.next();
                     if (i == j) // self collisions not handled now --TODO
                         continue;
-                    if ((*j)->doPhysics())
-                        collide(*i,*j);
+                    if (j->doPhysics())
+                        collide(i,j);
                 }
             }
         }
 
         // spring forces between models / models & trackers
-        for (SpringId it = connections.begin(); it != connections.end(); it++) {
-            (*it)->addForce();
+        for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
+            it.next()->addForce();
         }
     }
 
     // apply forces - this is using Euler's Method for now
-    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
+    for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *i = it.next();
         if (!pausePhysics) {
-            euler(it,dt);
+            euler(i,dt);
         }
         // even if physics is paused, some objects, such as the trackers may have moved, so we need
         // to update their transformations
-        (*it)->recalculateLocalTransform();
+        i->recalculateLocalTransform();
     }
 
     updateSprings();
@@ -289,12 +270,13 @@ void WorldManager::togglePhysics() {
 //##################################################################################################
 void WorldManager::updateSprings() {
     // set spring ends to new positions
-    for (SpringId id = connections.begin(); id != connections.end(); id++) {
+    for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
+        SpringConnection *s = it.next();
         q_vec_type pos1,pos2;
-        (*id)->getEnd1WorldPosition(pos1);
-        springEnds->SetPoint((*id)->getEnd1Id(),pos1);
-        (*id)->getEnd2WorldPosition(pos2);
-        springEnds->SetPoint((*id)->getEnd2Id(),pos2);
+        s->getEnd1WorldPosition(pos1);
+        springEnds->SetPoint(s->getEnd1Id(),pos1);
+        s->getEnd2WorldPosition(pos2);
+        springEnds->SetPoint(s->getEnd2Id(),pos2);
     }
     springEnds->Modified();
     int num = springEndConnections->GetNumberOfLines(), num2;
@@ -304,12 +286,13 @@ void WorldManager::updateSprings() {
             springEndConnections->DeleteCell(i);
         }
         springEndConnections->RemoveDeletedCells();
-        for (SpringId id = connections.begin(); id != connections.end(); id++) {
+        for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
+            SpringConnection *s = it.next();
             vtkIdType pts[2];
-            pts[0] = (*id)->getEnd1Id();
-            pts[1] = (*id)->getEnd2Id();
+            pts[0] = s->getEnd1Id();
+            pts[1] = s->getEnd2Id();
             vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
-            (*id)->setCellId(cellId);
+            s->setCellId(cellId);
         }
         springEndConnections->Modified();
         springEndConnections->Update();
@@ -333,68 +316,33 @@ inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
 
 //##################################################################################################
 //##################################################################################################
-ObjectId WorldManager::getClosestObject(ObjectId subj, double *distOut) {
-    ObjectId closest;
+SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
+    SketchObject *closest;
     double dist = std::numeric_limits<double>::max();
-    SketchModel *model1 = (*subj)->getModelId();
-    PQP_Model *pqp_model1 = model1->getCollisionModel();
-    PQP_REAL r1[3][3], t1[3];
-    q_type quat1;
-    (*subj)->getOrientation(quat1);
-    quatToPQPMatrix(quat1,r1);
-    (*subj)->getPosition(t1);
-    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-        if (((*it)->doPhysics()) && it != subj) {
-            // get the collision models:
-            SketchModel *model2 = (*it)->getModelId();
-            PQP_Model *pqp_model2 = model2->getCollisionModel();
-
-            // get the offsets and rotations in PQP's format
-            PQP_DistanceResult dr;
-            PQP_REAL r2[3][3],t2[3];
-            q_type quat2;
-            (*it)->getOrientation(quat2);
-            quatToPQPMatrix(quat2,r2);
-            (*it)->getPosition(t2);
-            PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
-            if (dr.Distance() < dist) {
-                closest = it;
-                dist = dr.Distance();
-            }
-        }
-    }
-    *distOut = dist;
-    return closest;
-}
-
-//##################################################################################################
-//##################################################################################################
-ObjectId WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
-    ObjectId closest;
-    double dist = std::numeric_limits<double>::max();
-    SketchModel *model1 = subj->getModelId();
+    SketchModel *model1 = subj->getModel();
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_REAL r1[3][3], t1[3];
     q_type quat1;
     subj->getOrientation(quat1);
     quatToPQPMatrix(quat1,r1);
     subj->getPosition(t1);
-    for (ObjectId it = objects.begin(); it != objects.end(); it++) {
-        if ((*it)->doPhysics()) {
+    for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *obj = it.next();
+        if (obj->doPhysics()) {
             // get the collision models:
-            SketchModel* model2 = (*it)->getModelId();
+            SketchModel* model2 = obj->getModel();
             PQP_Model *pqp_model2 = model2->getCollisionModel();
 
             // get the offsets and rotations in PQP's format
             PQP_DistanceResult dr;
             PQP_REAL r2[3][3],t2[3];
             q_type quat2;
-            (*it)->getOrientation(quat2);
+            obj->getOrientation(quat2);
             quatToPQPMatrix(quat2,r2);
-            (*it)->getPosition(t2);
+            obj->getPosition(t2);
             PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
             if (dr.Distance() < dist) {
-                closest = it;
+                closest = obj;
                 dist = dr.Distance();
             }
         }
@@ -453,8 +401,8 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 //##################################################################################################
 void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
     // get the collision models:
-    SketchModel *model1 = ((o1)->getModelId());
-    SketchModel *model2 = ((o2)->getModelId());
+    SketchModel *model1 = ((o1)->getModel());
+    SketchModel *model2 = ((o2)->getModel());
     PQP_Model *pqp_model1 = model1->getCollisionModel();
     PQP_Model *pqp_model2 = model2->getCollisionModel();
 

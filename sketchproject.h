@@ -3,6 +3,7 @@
 
 #include <vtkRenderer.h>
 #include <QVector>
+#include <QList>
 #include <QString>
 #include <QDir>
 
@@ -37,13 +38,13 @@ public:
 
     // adding things functions
     // for objects
-    ObjectId addObject(QString filename);
+    SketchObject *addObject(QString filename);
     bool addObjects(QVector<QString> filenames);
     // for springs between objects (object-tracker springs managed internally)
-    SpringId addSpring(ObjectId o1, ObjectId o2, double minRest, double maxRest,
+    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
                        double stiffness, q_vec_type o1Pos, q_vec_type o2Pos);
     // for structure replication chains
-    StructureReplicator *addReplication(ObjectId o1, ObjectId o2, int numCopies);
+    StructureReplicator *addReplication(SketchObject *o1, SketchObject *o2, int numCopies);
 private:
     // helper functions
     // input related functions
@@ -66,9 +67,9 @@ private:
     const double *analog;
     int grabbedWorld;
     SketchObject *leftHand, *rightHand;
-    std::vector<SpringId> lhand,rhand;
+    QList<SpringConnection *> lhand,rhand;
     double lDist, rDist;
-    ObjectId lObj, rObj;
+    SketchObject *lObj, *rObj;
 };
 
 inline const ModelManager *SketchProject::getModelManager() const {

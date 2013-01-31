@@ -44,7 +44,7 @@ public:
   void setAnalogStates(const double state[]);
 
   // Add an object (or objects) to be displayed.
-  ObjectId addObject(QString name);
+  SketchObject *addObject(QString name);
   bool addObjects(QVector<QString> names);
 
   // Simplify an external object based on the root file name.

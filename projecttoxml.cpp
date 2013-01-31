@@ -1,12 +1,12 @@
 #include "projecttoxml.h"
 
-#define ID_ATTRIBUTE_NAME   "id"
+#define ID_ATTRIBUTE_NAME                       "id"
 
-#define ROOT_ELEMENT_NAME   "sketchbio"
-#define VERSION_STRING      "version"
-#define SAVE_VERSION_NUM    "1.0"
+#define ROOT_ELEMENT_NAME                       "sketchbio"
+#define VERSION_STRING                          "version"
+#define SAVE_VERSION_NUM                        "1.0"
 
-#define MODEL_MANAGER_ELEMENT_NAME  "models"
+#define MODEL_MANAGER_ELEMENT_NAME              "models"
 
 #define MODEL_ELEMENT_NAME                      "model"
 #define MODEL_SOURCE_ELEMENT_NAME               "source"
@@ -21,6 +21,14 @@
 #define TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME    "worldToRoom"
 #define TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME      "roomToEye"
 #define TRANSFORM_MATRIX_ATTRIBUTE_NAME         "matrix"
+
+#define OBJECTLIST_ELEMENT_NAME                 "objectlist"
+#define OBJECT_ELEMENT_NAME                     "object"
+#define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
+#define OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME   "physicsEnabled"
+#define OBJECT_TRANSFORM_ELEMENT_NAME           "transform"
+#define OBJECT_POSITION_ATTRIBUTE_NAME          "position"
+#define OBJECT_ROTATION_ATTRIBUTE_NAME          "orientation"
 
 vtkXMLDataElement *projectToXML(const SketchProject *project) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
@@ -111,5 +119,35 @@ vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms) {
     element->AddNestedElement(matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,
                                           transforms->getRoomToEyeMatrix()));
 
+    return element;
+}
+
+vtkXMLDataElement *objectsToXML(const WorldManager *world,
+                              const QHash<const SketchModel *, QString> &modelIds,
+                              QHash<const SketchObject *, QString> &objectIds) {
+    vtkXMLDataElement *element = vtkXMLDataElement::New();
+    element->SetName(OBJECTLIST_ELEMENT_NAME);
+    return element;
+}
+
+vtkXMLDataElement *objectToXML(const SketchObject *object,
+                               const QHash<const SketchModel *,QString> modelIds) {
+    vtkXMLDataElement *element = vtkXMLDataElement::New();
+    element->SetName(OBJECT_ELEMENT_NAME);
+    QString modelId = "#" + modelIds.constFind(object->getConstModel()).value();
+    element->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
+    element->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
+                          QString(object->doPhysics()).toStdString().c_str());
+
+    vtkXMLDataElement *child = vtkXMLDataElement::New();
+    child->SetName(OBJECT_TRANSFORM_ELEMENT_NAME);
+    q_vec_type pos;
+    q_type orient;
+    object->getPosition(pos);
+    object->getOrientation(orient);
+    child->SetVectorAttribute(OBJECT_POSITION_ATTRIBUTE_NAME,3,pos);
+    child->SetVectorAttribute(OBJECT_ROTATION_ATTRIBUTE_NAME,4,orient);
+
+    element->AddNestedElement(child);
     return element;
 }

@@ -69,22 +69,22 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
         project.setProjectDir("sampleProjects/fibrin_replication");
 
         // ???
-        ObjectId object1Id = project.addObject("./models/1m1j.obj");
-        ObjectId object2Id = project.addObject("./models/1m1j.obj");
+        SketchObject *object1 = project.addObject("./models/1m1j.obj");
+        SketchObject *object2 = project.addObject("./models/1m1j.obj");
 
         if (fibrin_springs) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-            project.addSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
+            project.addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
 
             q_vec_set(p1,0,-30,0);
             q_vec_set(p2,200,-30,0);
-            project.addSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
+            project.addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
         }
 
         // Replicate objects
         if (do_replicate) {
-            project.addReplication(object1Id,object2Id,NUM_EXTRA_FIBERS);
+            project.addReplication(object1,object2,NUM_EXTRA_FIBERS);
         }
 
         vtkSmartPointer<vtkXMLDataElement> data = projectToXML(&project);
@@ -171,7 +171,7 @@ void SimpleView::setAnalogStates(const double state[]) {
     }
 }
 
-ObjectId SimpleView::addObject(QString name)
+SketchObject *SimpleView::addObject(QString name)
 {
     return project.addObject(name);
 }

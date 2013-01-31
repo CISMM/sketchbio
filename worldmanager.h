@@ -2,7 +2,7 @@
 #define WORLDMANAGER_H
 
 #include <map>
-#include <list>
+#include <QList>
 #include "sketchobject.h"
 #include "modelmanager.h"
 #include "springconnection.h"
@@ -25,7 +25,7 @@ public:
     /*******************************************************************
      *
      * Adds a new object with the given modelId to the world with the
-     * given position and orientation  Returns the index of this object.
+     * given position and orientation  Returns the object created
      *
      * All objects created here are deleted either in removeObject or
      * the destructor of the world manager.
@@ -39,22 +39,22 @@ public:
      *                  new object's actor
      *
      *******************************************************************/
-    ObjectId addObject(SketchModel *model,q_vec_type pos, q_type orient);
+    SketchObject *addObject(SketchModel *model,q_vec_type pos, q_type orient);
     /*******************************************************************
-     * Adds a the given object to the world and returns its index.
+     * Adds a the given object to the world and returns it.
      *
      * object - the object to add
      *******************************************************************/
-    ObjectId addObject(SketchObject *object);
+    SketchObject *addObject(SketchObject *object);
 
     /*******************************************************************
      *
      * Removes the SketchObject identified by the given index from the world
      *
-     * objectId - the index of the object, returned by addObject
+     * object - the object, returned by addObject
      *
      *******************************************************************/
-    void removeObject(ObjectId objectId);
+    void removeObject(SketchObject *object);
 
     /*******************************************************************
      *
@@ -66,8 +66,16 @@ public:
 
     /*******************************************************************
      *
-     * Adds the given spring to the list of springs.  Returns an iterator
-     * to the position of that spring in the list
+     * Returns the number of SketchObjects that are stored in the
+     * WorldManager
+     *
+     *******************************************************************/
+    QListIterator<SketchObject *> getObjectIterator() const;
+
+    /*******************************************************************
+     *
+     * Adds the given spring to the list of springs.  Returns a pointer to
+     * the spring (same as the one passed in).
      *
      * This passes ownership of the SpringConnection to the world manager
      * and the spring connection will be deleted in removeSpring
@@ -76,50 +84,51 @@ public:
      * spring - the spring to add
      *
      *******************************************************************/
-    SpringId addSpring(SpringConnection *spring);
+    SpringConnection *addSpring(SpringConnection *spring);
 
     /*******************************************************************
      *
-     * Adds the a spring between the two models and returns its id.  Returns an iterator
+     * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator
      * to the position of that spring in the list
      *
-     * id1 - the id of the first object to connect
-     * id2 - the id of the second object to connect
-     * pos1 - the position where the spring connects to the first model
-     * pos2 - the position where the spring connects to the second model
-     * worldRelativePos - true if the above positions are relative to the world coordinate space,
-     *                  - false if they are relative to the model coordiante space
-     * k - the stiffness of the spring
-     * l - the length of the spring
-     *
-     *******************************************************************/
-    SpringId addSpring(ObjectId id1, ObjectId id2, const q_vec_type pos1,
-                       const q_vec_type pos2, bool worldRelativePos, double k, double minL, double maxL);
-
-    /*******************************************************************
-     *
-     * Adds the a spring between the two models and returns its id.  Returns an iterator
-     * to the position of that spring in the list
-     *
-     * id1 - the id of the first object to connect
+     * o1 - the first object to connect
      * o2 - the second object to connect
      * pos1 - the position where the spring connects to the first model
      * pos2 - the position where the spring connects to the second model
      * worldRelativePos - true if the above positions are relative to the world coordinate space,
      *                  - false if they are relative to the model coordiante space
      * k - the stiffness of the spring
-     * l - the length of the spring
+     * minLen - the minimum rest length of the spring
+     * maxLen - the maximum rest length of the spring
      *
      *******************************************************************/
-    SpringId addSpring(ObjectId id1, SketchObject *o2, const q_vec_type pos1,
-                       const q_vec_type pos2, bool worldRelativePos, double k, double l);
+    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                       const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen);
 
     /*******************************************************************
      *
-     * Removes the spring identified by the given iterator from the list
+     * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator
+     * to the position of that spring in the list
+     *
+     * o1 - the first object to connect
+     * o2 - the second object to connect
+     * pos1 - the position where the spring connects to the first model
+     * pos2 - the position where the spring connects to the second model
+     * worldRelativePos - true if the above positions are relative to the world coordinate space,
+     *                  - false if they are relative to the model coordiante space
+     * k - the stiffness of the spring
+     * len - the length of the spring
      *
      *******************************************************************/
-    void removeSpring(SpringId id);
+    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                                       const q_vec_type pos2, bool worldRelativePos, double k, double len);
+
+    /*******************************************************************
+     *
+     * Removes the given spring from the list of springs
+     *
+     *******************************************************************/
+    void removeSpring(SpringConnection *spring);
 
     /*******************************************************************
      *
@@ -127,6 +136,13 @@ public:
      *
      *******************************************************************/
     int getNumberOfSprings() const;
+
+    /*******************************************************************
+     *
+     * Returns an iterator over all the springs in the list
+     *
+     *******************************************************************/
+    QListIterator<SpringConnection *> getSpringsIterator() const;
 
     /*******************************************************************
      *
@@ -155,19 +171,7 @@ public:
      *              when the function exits
      *
      *******************************************************************/
-    ObjectId getClosestObject(ObjectId subj,double *distOut);
-    /*******************************************************************
-     *
-     * Returns the closest object to the given object, and the distance
-     * between the two objects.  Note: only "real" objects are tested, i.e.
-     * only objects with doPhysics() = true are checked.
-     *
-     * subj - the subject object (the one we are comparing to the others)
-     * distOut - a pointer to the location where the distance will be stored
-     *              when the function exits
-     *
-     *******************************************************************/
-    ObjectId getClosestObject(SketchObject *subj,double *distOut);
+    SketchObject *getClosestObject(SketchObject *subj,double *distOut);
 private:
     /*******************************************************************
      *
@@ -179,8 +183,8 @@ private:
 
     void updateSprings();
 
-    std::list<SketchObject *> objects;
-    std::list<SpringConnection *> connections;
+    QList<SketchObject *> objects;
+    QList<SpringConnection *> connections;
     int nextIdx;
     vtkSmartPointer<vtkRenderer> renderer;
     int lastCapacityUpdate;
@@ -190,5 +194,10 @@ private:
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     bool pausePhysics;
 };
+
+inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                               const q_vec_type pos2, bool worldRelativePos, double k, double len) {
+    return addSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
+}
 
 #endif // WORLDMANAGER_H

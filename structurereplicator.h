@@ -22,7 +22,7 @@ public:
      * mapper containing the model to use on the newly created actors, and the given renderer
      * as the renderer to register the copies with.
      */
-    StructureReplicator(ObjectId object1Id, ObjectId object2Id, WorldManager *w, vtkTransform *worldEyeTransform);
+    StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w, vtkTransform *worldEyeTransform);
 
     /*
      * Changes the number of copies shown to the given amount
@@ -43,9 +43,9 @@ public:
 
 private:
     int numShown;
-    ObjectId id1, id2;
+    SketchObject *obj1, *obj2;
     WorldManager *world;
-    std::list<ObjectId> newIds;
+    QList<SketchObject *> copies;
     vtkSmartPointer<vtkTransform> transform;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
 };

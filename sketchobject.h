@@ -35,10 +35,16 @@ public:
 
     /*********************************************************************
       *
-      * Returns the model id used to create this object
+      * Returns the model used to create this object
       *
      *********************************************************************/
-    inline SketchModel *getModelId() const { return modelId; }
+    inline SketchModel *getModel() { return modelId; }
+    /*********************************************************************
+      *
+      * Returns a const pointer to the model used to create this object
+      *
+     *********************************************************************/
+    inline const SketchModel *getConstModel() const { return modelId; }
     /*********************************************************************
       *
       * Returns the actor this object stores physics data for
@@ -184,11 +190,5 @@ private:
     q_vec_type forceAccum;
     q_vec_type torqueAccum;
 };
-
-/*
- * All objects are stored in a list, and this is how they are referred to when passed around
- * to other parts of the program
- */
-typedef std::list<SketchObject *>::iterator ObjectId;
 
 #endif // SKETCHOBJECT_H
