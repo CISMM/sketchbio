@@ -13,7 +13,10 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
 
 vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms);
 
-vtkXMLDataElement *objectsToXML(const WorldManager *world, const QHash<const SketchModel *, QString> &modelIds,
+vtkXMLDataElement *objectListToXML(const WorldManager *world, const QHash<const SketchModel *, QString> &modelIds,
                               QHash<const SketchObject *, QString> &objectIds);
+
+vtkXMLDataElement *objectToXML(const SketchObject *object, const QHash<const SketchModel *, QString> &modelIds,
+                               const QString &id);
 
 #endif // PROJECTTOXML_H

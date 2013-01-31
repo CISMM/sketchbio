@@ -32,7 +32,7 @@ public:
     const TransformManager *getTransformManager() const;
     // get world manager
     const WorldManager *getWorldManager() const;
-    const std::vector<StructureReplicator *> *getReplicas() const;
+    const QList<StructureReplicator *> *getReplicas() const;
     // gets the directory path for this project (absolute path)
     QString getProjectDir() const;
 
@@ -57,7 +57,7 @@ private:
     ModelManager *models;
     TransformManager *transforms;
     WorldManager *world;
-    std::vector<StructureReplicator *> replicas;
+    QList<StructureReplicator *> replicas;
 
     // project dir
     QDir *projectDir;
@@ -84,7 +84,7 @@ inline const WorldManager *SketchProject::getWorldManager() const {
     return world;
 }
 
-inline const std::vector<StructureReplicator *> *SketchProject::getReplicas() const {
+inline const QList<StructureReplicator *> *SketchProject::getReplicas() const {
     return &replicas;
 }
 

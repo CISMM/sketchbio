@@ -11,8 +11,33 @@
 #define STRUCTURE_REPLICATOR_MAX_COPIES 100
 
 /*
- * This class replicates the transformation between the given two actors to a number of copies.
- * The number of copies can be changed dynamically.
+ * This class is a bit of a cheat, it allows replicated objects to transfer any forces
+ * applied to them back to the original objects so that it appears that the force was applied
+ * to the replica.  The forces applied to the original objects are scaled based on how many
+ * copies away the force is coming from.
+ */
+class ReplicatedObject : public SketchObject {
+public:
+    ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
+                     SketchObject *original0, SketchObject *original1, int num);
+    virtual void addForce(q_vec_type point, const q_vec_type force);
+    virtual void getPosition(q_vec_type dest) const;
+    virtual void getOrientation(q_type dest) const;
+    inline int getReplicaNum() const { return replicaNum; }
+private:
+    // need original(s) here
+    SketchObject *obj0; // first original
+    SketchObject *obj1; // second original
+    int replicaNum; // how far down the chain we are indexed as follows:
+                    // -1 is first copy in negative direction
+                    // 0 is first original
+                    // 1 is second original
+                    // 2 is first copy in positive direction
+};
+
+/*
+ * This class replicates the transformation between the given two objects to a number of copies.
+ * The number of copies can be changed dynamically.  Each copy will be of class ReplicatedObject.
  */
 class StructureReplicator
 {

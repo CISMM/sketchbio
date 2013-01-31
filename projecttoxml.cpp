@@ -24,8 +24,10 @@
 
 #define OBJECTLIST_ELEMENT_NAME                 "objectlist"
 #define OBJECT_ELEMENT_NAME                     "object"
+#define OBJECT_PROPERTIES_ELEMENT_NAME          "properties"
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
 #define OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME   "physicsEnabled"
+#define OBJECT_REPLICA_NUM_ATTRIBUTE_NAME       "replicaNum"
 #define OBJECT_TRANSFORM_ELEMENT_NAME           "transform"
 #define OBJECT_POSITION_ATTRIBUTE_NAME          "position"
 #define OBJECT_ROTATION_ATTRIBUTE_NAME          "orientation"
@@ -36,9 +38,11 @@ vtkXMLDataElement *projectToXML(const SketchProject *project) {
     element->SetAttribute(VERSION_STRING,SAVE_VERSION_NUM);
 
     QHash<const SketchModel *, QString> modelIds;
+    QHash<const SketchObject *, QString> objectIds;
 
     element->AddNestedElement(modelManagerToXML(project->getModelManager(),project->getProjectDir(),modelIds));
     element->AddNestedElement(transformManagerToXML(project->getTransformManager()));
+    element->AddNestedElement(objectListToXML(project->getWorldManager(),modelIds,objectIds));
 
     return element;
 }
@@ -122,24 +126,43 @@ vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms) {
     return element;
 }
 
-vtkXMLDataElement *objectsToXML(const WorldManager *world,
+vtkXMLDataElement *objectListToXML(const WorldManager *world,
                               const QHash<const SketchModel *, QString> &modelIds,
                               QHash<const SketchObject *, QString> &objectIds) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECTLIST_ELEMENT_NAME);
+    for (QListIterator<SketchObject *> it = world->getObjectIterator(); it.hasNext();) {
+        const SketchObject *obj = it.next();
+        const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(obj);
+        if (rObj == NULL) {
+            QString idStr = QString("O%1").arg(objectIds.size());
+            element->AddNestedElement(objectToXML(obj,modelIds,idStr));
+            objectIds.insert(obj,idStr);
+        }
+    }
     return element;
 }
 
 vtkXMLDataElement *objectToXML(const SketchObject *object,
-                               const QHash<const SketchModel *,QString> modelIds) {
+                               const QHash<const SketchModel *,QString> &modelIds, const QString &id) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECT_ELEMENT_NAME);
-    QString modelId = "#" + modelIds.constFind(object->getConstModel()).value();
-    element->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
-    element->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
-                          QString(object->doPhysics()).toStdString().c_str());
+    element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
 
     vtkXMLDataElement *child = vtkXMLDataElement::New();
+    child->SetName(OBJECT_PROPERTIES_ELEMENT_NAME);
+    QString modelId = "#" + modelIds.constFind(object->getConstModel()).value();
+    child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
+    child->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
+                          QString(object->doPhysics()?"true":"false").toStdString().c_str());
+
+    const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
+    if (rObj != NULL) {
+        child->SetIntAttribute(OBJECT_REPLICA_NUM_ATTRIBUTE_NAME,rObj->getReplicaNum());
+    }
+    element->AddNestedElement(child);
+
+    child = vtkXMLDataElement::New();
     child->SetName(OBJECT_TRANSFORM_ELEMENT_NAME);
     q_vec_type pos;
     q_type orient;

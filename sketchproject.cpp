@@ -50,10 +50,9 @@ SketchProject::SketchProject(vtkRenderer *r,
 }
 
 SketchProject::~SketchProject() {
-    for (std::vector<StructureReplicator *>::iterator it = replicas.begin();
-            it != replicas.end(); it++) {
-        StructureReplicator *rep = (*it);
-        (*it) = NULL;
+    for (QMutableListIterator<StructureReplicator *> it(replicas); it.hasNext();) {
+        StructureReplicator *rep = it.next();
+        it.setValue((StructureReplicator *) NULL);
         delete rep;
     }
     delete world;
@@ -134,7 +133,7 @@ SpringConnection *SketchProject::addSpring(SketchObject *o1, SketchObject *o2, d
 
 StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObject *o2, int numCopies) {
     StructureReplicator *rep = new StructureReplicator(o1,o2,world,transforms->getWorldToEyeTransform());
-    replicas.push_back(rep);
+    replicas.append(rep);
     rep->setNumShown(numCopies);
     return rep;
 }
