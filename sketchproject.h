@@ -9,6 +9,7 @@
 #include "modelmanager.h"
 #include "transformmanager.h"
 #include "worldmanager.h"
+#include "structurereplicator.h"
 
 class SketchProject
 {
@@ -17,21 +18,32 @@ public:
     ~SketchProject();
     // sets the directory path for this project (should be an absolute path)
     bool setProjectDir(QString dir);
+    // sets the left hand position/orientation
+    void setLeftHandPos(q_xyz_quat_type *loc);
+    // sets the right hand position/orientation
+    void setRightHandPos(q_xyz_quat_type *loc);
     // physics related functions
     void timestep(double dt);
 
     // get model manager
-    ModelManager *getModelManager();
+    const ModelManager *getModelManager() const;
     // get transform manager
-    TransformManager *getTransformManager();
+    const TransformManager *getTransformManager() const;
     // get world manager
-    WorldManager *getWorldManager();
+    const WorldManager *getWorldManager() const;
+    const std::vector<StructureReplicator *> *getReplicas() const;
     // gets the directory path for this project (absolute path)
     QString getProjectDir() const;
 
     // adding things functions
-    bool addObject(QString filename);
+    // for objects
+    ObjectId addObject(QString filename);
     bool addObjects(QVector<QString> filenames);
+    // for springs between objects (object-tracker springs managed internally)
+    SpringId addSpring(ObjectId o1, ObjectId o2, double minRest, double maxRest,
+                       double stiffness, q_vec_type o1Pos, q_vec_type o2Pos);
+    // for structure replication chains
+    StructureReplicator *addReplication(ObjectId o1, ObjectId o2, int numCopies);
 private:
     // helper functions
     // input related functions
@@ -44,6 +56,9 @@ private:
     ModelManager *models;
     TransformManager *transforms;
     WorldManager *world;
+    std::vector<StructureReplicator *> replicas;
+
+    // project dir
     QDir *projectDir;
 
     // user interaction stuff
@@ -56,16 +71,20 @@ private:
     ObjectId lObj, rObj;
 };
 
-inline ModelManager *SketchProject::getModelManager() {
+inline const ModelManager *SketchProject::getModelManager() const {
     return models;
 }
 
-inline TransformManager *SketchProject::getTransformManager() {
+inline const TransformManager *SketchProject::getTransformManager() const {
     return transforms;
 }
 
-inline WorldManager *SketchProject::getWorldManager() {
+inline const WorldManager *SketchProject::getWorldManager() const {
     return world;
+}
+
+inline const std::vector<StructureReplicator *> *SketchProject::getReplicas() const {
+    return &replicas;
 }
 
 #endif // SKETCHPROJECT_H

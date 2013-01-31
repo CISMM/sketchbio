@@ -93,7 +93,7 @@ void WorldManager::removeObject(ObjectId objectId) {
 
 //##################################################################################################
 //##################################################################################################
-int WorldManager::getNumberOfObjects() {
+int WorldManager::getNumberOfObjects() const {
     return objects.size();
 }
 
@@ -130,7 +130,7 @@ SpringId WorldManager::addSpring(SpringConnection *spring) {
 //##################################################################################################
 //##################################################################################################
 SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type pos1,
-                             const q_vec_type pos2, bool worldRelativePos, double k, double l)
+                             const q_vec_type pos2, bool worldRelativePos, double k, double minL, double maxL)
 {
     SketchObject *obj1 = *id1, *obj2 = *id2;
     q_type oPos1, oPos2, newPos1, newPos2;
@@ -150,7 +150,7 @@ SpringId WorldManager::addSpring(ObjectId id1, ObjectId id2,const q_vec_type pos
         q_vec_copy(newPos1,pos1);
         q_vec_copy(newPos2,pos2);
     }
-    SpringConnection *spring = new InterObjectSpring(id1,id2,l,l,k,newPos1,newPos2);
+    SpringConnection *spring = new InterObjectSpring(id1,id2,minL,maxL,k,newPos1,newPos2);
     return addSpring(spring);
 }
 
@@ -195,7 +195,7 @@ void WorldManager::removeSpring(SpringId id) {
 
 //##################################################################################################
 //##################################################################################################
-int WorldManager::getNumberOfSprings() {
+int WorldManager::getNumberOfSprings() const {
     return connections.size();
 }
 

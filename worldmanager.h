@@ -62,7 +62,7 @@ public:
      * WorldManager
      *
      *******************************************************************/
-    int getNumberOfObjects();
+    int getNumberOfObjects() const;
 
     /*******************************************************************
      *
@@ -94,7 +94,7 @@ public:
      *
      *******************************************************************/
     SpringId addSpring(ObjectId id1, ObjectId id2, const q_vec_type pos1,
-                       const q_vec_type pos2, bool worldRelativePos, double k, double l);
+                       const q_vec_type pos2, bool worldRelativePos, double k, double minL, double maxL);
 
     /*******************************************************************
      *
@@ -126,7 +126,7 @@ public:
      * Returns the number of springs stored in the spring list
      *
      *******************************************************************/
-    int getNumberOfSprings();
+    int getNumberOfSprings() const;
 
     /*******************************************************************
      *

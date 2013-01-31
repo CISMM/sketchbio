@@ -25,24 +25,6 @@
 // timestep
 #define TIMESTEP (16/1000.0)
 
-// parameters that define how trackers and objects are connected
-#define DISTANCE_THRESHOLD 30
-#define OBJECT_SIDE_LEN 200
-#define TRACKER_SIDE_LEN 200
-
-// constants for grabbing the world code
-#define WORLD_NOT_GRABBED 0
-#define LEFT_GRABBED_WORLD 1
-#define RIGHT_GRABBED_WORLD 2
-
-#define NUM_COLORS (6)
-static double COLORS[][3] =
-  {  { 1.0, 0.7, 0.7 },
-     { 0.7, 1.0, 0.8 },
-     { 0.7, 0.7, 1.0 },
-     { 1.0, 1.0, 0.7 },
-     { 1.0, 0.7, 1.0 },
-     { 0.7, 1.0, 1.0 } };
 
 // Constructor
 SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate) :
@@ -82,29 +64,24 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     if (load_fibrin) {
         // eventually we will just load the example...
         project.setProjectDir("sampleProjects/fibrin_replication");
-        WorldManager *world = project.getWorldManager();
-        TransformManager *transforms = project.getTransformManager();
 
         // ???
-        ObjectId object1Id = addObject("./models/1m1j.obj");
-        ObjectId object2Id = addObject("./models/1m1j.obj");
+        ObjectId object1Id = project.addObject("./models/1m1j.obj");
+        ObjectId object2Id = project.addObject("./models/1m1j.obj");
 
         if (fibrin_springs) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-            SpringConnection *spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
-            SpringId springId = world->addSpring(spring);
+            project.addSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
 
             q_vec_set(p1,0,-30,0);
             q_vec_set(p2,200,-30,0);
-            spring = new InterObjectSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
-            springId = world->addSpring(spring);
+            project.addSpring(object1Id,object2Id,0,0,BOND_SPRING_CONSTANT,p1,p2);
         }
 
         // Replicate objects
         if (do_replicate) {
-            copies = new StructureReplicator(object1Id,object2Id,world,transforms->getWorldToEyeTransform());
-            copies->setNumShown(5);
+            project.addReplication(object1Id,object2Id,NUM_EXTRA_FIBERS);
         }
     }
 
@@ -144,22 +121,9 @@ void SimpleView::slotExit()
 }
 
 void SimpleView::handleInput() {
-    TransformManager *transforms = project.getTransformManager();
-    transforms->copyCurrentHandTransformsToOld();
-    if (VRPN_ON) {
-        tracker.mainloop();
-        buttons.mainloop();
-        analogRemote.mainloop();
-    } else {
-        q_xyz_quat_type pos;
-        q_type q;
-        q_from_axis_angle(q,0,1,0,.01);
-        transforms->getRightHand(&pos);
-        q_xform(pos.xyz,q,pos.xyz);
-        q_mult(pos.quat,q,pos.quat);
-//        pos.xyz[1] += 0.01;
-        transforms->setRightHandTransform(&pos);
-    }
+    tracker.mainloop();
+    buttons.mainloop();
+    analogRemote.mainloop();
 }
 
 /*
@@ -179,11 +143,11 @@ void SimpleView::slot_frameLoop() {
 }
 
 void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
-    project.getTransformManager()->setLeftHandTransform(newPos);
+    project.setLeftHandPos(newPos);
 }
 
 void SimpleView::setRightPos(q_xyz_quat_type *newPos) {
-    project.getTransformManager()->setRightHandTransform(newPos);
+    project.setRightHandPos(newPos);
 }
 
 void SimpleView::setButtonState(int buttonNum, bool buttonPressed) {
@@ -198,30 +162,12 @@ void SimpleView::setAnalogStates(const double state[]) {
 
 ObjectId SimpleView::addObject(QString name)
 {
-    SketchModel *fiberModelType = project.getModelManager()->modelForOBJSource(name);
-
-    q_vec_type pos = Q_NULL_VECTOR;
-    q_type orient = Q_ID_QUAT;
-    int myIdx = project.getWorldManager()->getNumberOfObjects();
-    q_vec_set(pos,0,2*myIdx/SCALE_DOWN_FACTOR,0);
-    ObjectId objectId = project.getWorldManager()->addObject(fiberModelType,pos,orient);
-    (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-
-    return objectId;
+    return project.addObject(name);
 }
 
 bool SimpleView::addObjects(QVector<QString> names)
 {
-  int i;
-  for (i = 0; i < names.size(); i++) {
-    // XXX Check for error here and return false if one found.
-      // notes: no good cross-platform way to check if file exists
-      // VTK prints out errors but does not throw anything, so we must
-      // do error checking before calling this
-      addObject(names[i]);
-  }
-
-  return true;
+    return project.addObjects(names);
 }
 
 void SimpleView::openOBJFile()

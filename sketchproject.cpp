@@ -5,6 +5,7 @@
 #include <vtkProperty.h>
 #include "sketchioconstants.h"
 #include <limits>
+#include <QDebug>
 
 #define NUM_COLORS (6)
 static double COLORS[][3] =
@@ -29,6 +30,7 @@ SketchProject::SketchProject(vtkRenderer *r,
     models(new ModelManager()),
     transforms(new TransformManager()),
     world(new WorldManager(r,transforms->getWorldToEyeTransform())),
+    replicas(),
     projectDir(NULL),
     buttonDown(buttonStates),
     analog(analogStates)
@@ -48,6 +50,12 @@ SketchProject::SketchProject(vtkRenderer *r,
 }
 
 SketchProject::~SketchProject() {
+    for (std::vector<StructureReplicator *>::iterator it = replicas.begin();
+            it != replicas.end(); it++) {
+        StructureReplicator *rep = (*it);
+        (*it) = NULL;
+        delete rep;
+    }
     delete world;
     delete transforms;
     delete models;
@@ -59,11 +67,19 @@ bool SketchProject::setProjectDir(QString dir) {
     QDir tmp = QDir(dir);
     bool exists;
     if (!(exists = tmp.exists())) {
-        exists = QDir::root().mkpath(dir);
+        exists = QDir::root().mkpath(tmp.absolutePath());
     }
-    projectDir = new QDir(dir);
-    projectDir->setCurrent(projectDir->absolutePath());
+    projectDir = new QDir(tmp.absolutePath());
+//    projectDir->setCurrent(projectDir->absolutePath());
     return exists;
+}
+
+void SketchProject::setLeftHandPos(q_xyz_quat_type *loc) {
+    transforms->setLeftHandTransform(loc);
+}
+
+void SketchProject::setRightHandPos(q_xyz_quat_type *loc) {
+    transforms->setRightHandTransform(loc);
 }
 
 QString SketchProject::getProjectDir() const {
@@ -73,13 +89,16 @@ QString SketchProject::getProjectDir() const {
 void SketchProject::timestep(double dt) {
     handleInput();
     world->stepPhysics(dt);
+    transforms->copyCurrentHandTransformsToOld();
 }
 
-bool SketchProject::addObject(QString filename) {
+ObjectId SketchProject::addObject(QString filename) {
     QFile file(filename);
+    qDebug() << filename;
     QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
-    if (projectDir->entryList().contains(localname,Qt::CaseInsensitive) || file.copy(filename,fullpath)) {
+    qDebug() << fullpath;
+    if (projectDir->entryList().contains(localname) || file.copy(filename,fullpath)) {
         SketchModel *model = models->modelForOBJSource(fullpath);
 
         q_vec_type pos = Q_NULL_VECTOR;
@@ -88,9 +107,9 @@ bool SketchProject::addObject(QString filename) {
         q_vec_set(pos,0,2*myIdx/transforms->getWorldToRoomScale(),0);
         ObjectId objectId = world->addObject(model,pos,orient);
         (*objectId)->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-        return true;
+        return objectId;
     } else {
-        return false;
+        throw "Could not create object";
     }
 }
 
@@ -108,6 +127,17 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
     return true;
 }
 
+SpringId SketchProject::addSpring(ObjectId o1, ObjectId o2, double minRest, double maxRest,
+                                  double stiffness, q_vec_type o1Pos, q_vec_type o2Pos) {
+    return world->addSpring(o1,o2,o1Pos,o2Pos,false,stiffness,minRest,maxRest);
+}
+
+StructureReplicator *SketchProject::addReplication(ObjectId o1, ObjectId o2, int numCopies) {
+    StructureReplicator *rep = new StructureReplicator(o1,o2,world,transforms->getWorldToEyeTransform());
+    replicas.push_back(rep);
+    rep->setNumShown(numCopies);
+    return rep;
+}
 
 void SketchProject::handleInput() {
     q_vec_type beforeDVect, afterDVect, beforeLPos, beforeRPos, afterLPos, afterRPos;
