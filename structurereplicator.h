@@ -62,6 +62,20 @@ public:
     int getNumShown();
 
     /*
+     * Gets an iterator over the copies that have been generated
+     */
+    QListIterator<SketchObject *> getReplicaIterator() const;
+
+    /*
+     * Gets the first original object
+     */
+    inline const SketchObject *getFirstObject() const { return obj1; }
+    /*
+     * Gets the second original object
+     */
+    inline const SketchObject *getSecondObject() const { return obj2; }
+
+    /*
      * Updates the transform used to generate all the models
      */
     void updateTransform();
@@ -74,5 +88,9 @@ private:
     vtkSmartPointer<vtkTransform> transform;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
 };
+
+inline QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
+    return QListIterator<SketchObject *>(copies);
+}
 
 #endif // STRUCTUREREPLICATOR_H

@@ -32,6 +32,12 @@
 #define OBJECT_POSITION_ATTRIBUTE_NAME          "position"
 #define OBJECT_ROTATION_ATTRIBUTE_NAME          "orientation"
 
+#define REPLICATOR_LIST_ELEMENT_NAME            "replicatorList"
+#define REPLICATOR_ELEMENT_NAME                 "replicator"
+#define REPLICATOR_NUM_SHOWN_ATTRIBUTE_NAME     "numReplicas"
+#define REPLICATOR_OBJECT1_ATTRIBUTE_NAME       "original1"
+#define REPLICATOR_OBJECT2_ATTRIBUTE_NAME       "original2"
+
 vtkXMLDataElement *projectToXML(const SketchProject *project) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(ROOT_ELEMENT_NAME);
@@ -43,6 +49,7 @@ vtkXMLDataElement *projectToXML(const SketchProject *project) {
     element->AddNestedElement(modelManagerToXML(project->getModelManager(),project->getProjectDir(),modelIds));
     element->AddNestedElement(transformManagerToXML(project->getTransformManager()));
     element->AddNestedElement(objectListToXML(project->getWorldManager(),modelIds,objectIds));
+    element->AddNestedElement(replicatorListToXML(project->getReplicas(),modelIds,objectIds));
 
     return element;
 }
@@ -172,5 +179,36 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     child->SetVectorAttribute(OBJECT_ROTATION_ATTRIBUTE_NAME,4,orient);
 
     element->AddNestedElement(child);
+    return element;
+}
+vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *replicaList,
+                                       const QHash<const SketchModel *, QString> &modelIds,
+                                       QHash<const SketchObject *, QString> &objectIds) {
+    vtkXMLDataElement *element = vtkXMLDataElement::New();
+    element->SetName(REPLICATOR_LIST_ELEMENT_NAME);
+    for (QListIterator<StructureReplicator *> it(*replicaList); it.hasNext();) {
+        StructureReplicator *rep = it.next();
+        vtkXMLDataElement *repElement = vtkXMLDataElement::New();
+        repElement->SetName(REPLICATOR_ELEMENT_NAME);
+        repElement->SetAttribute(REPLICATOR_NUM_SHOWN_ATTRIBUTE_NAME,
+                                 QString::number(rep->getNumShown()).toStdString().c_str());
+        // i'm not checking contains, it had better be in there
+        repElement->SetAttribute(REPLICATOR_OBJECT1_ATTRIBUTE_NAME,
+                                 ("#" + objectIds.value(rep->getFirstObject())).toStdString().c_str());
+        repElement->SetAttribute(REPLICATOR_OBJECT2_ATTRIBUTE_NAME,
+                                 ("#" + objectIds.value(rep->getSecondObject())).toStdString().c_str());
+
+        vtkXMLDataElement *list = vtkXMLDataElement::New();
+        list->SetName(OBJECTLIST_ELEMENT_NAME);
+        for (QListIterator<SketchObject *> tr = rep->getReplicaIterator(); tr.hasNext();) {
+            const SketchObject *obj = tr.next();
+            QString idStr = QString("O%1").arg(objectIds.size());
+            list->AddNestedElement(objectToXML(obj,modelIds,idStr));
+            objectIds.insert(obj,idStr);
+        }
+        repElement->AddNestedElement(list);
+
+        element->AddNestedElement(repElement);
+    }
     return element;
 }
