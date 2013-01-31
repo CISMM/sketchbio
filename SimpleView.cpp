@@ -18,6 +18,9 @@
 #include <vtkVRMLExporter.h>
 #include <limits>
 
+#include <vtkXMLUtilities.h>
+#include <projecttoxml.h>
+
 // default number extra fibers
 #define NUM_EXTRA_FIBERS 5
 // fibrin default spring constant
@@ -83,6 +86,14 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
         if (do_replicate) {
             project.addReplication(object1Id,object2Id,NUM_EXTRA_FIBERS);
         }
+
+        vtkSmartPointer<vtkXMLDataElement> data = projectToXML(&project);
+
+        vtkIndent indent = vtkIndent();
+        vtkXMLUtilities::FlattenElement(data,std::cout,&indent);
+        std::cout << endl;
+
+        data->Delete();
     }
 
     // camera setup

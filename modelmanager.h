@@ -61,6 +61,12 @@ public:
       *
       ****************************************************************************/
     QHashIterator<QString,SketchModel *> getModelIterator() const;
+    /*****************************************************************************
+      *
+      * This method returns the number of models in the model manager
+      *
+      ****************************************************************************/
+    int getNumberOfModels() const;
 
 private:
     // a hash of source to model

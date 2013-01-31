@@ -121,7 +121,7 @@ SketchModel *ModelManager::modelForOBJSource(QString objFile, double scale) {
     transformPD->Update();
 
     // remember the mass and moment of inertia are inverses!!!!!!!!
-    SketchModel * sModel = new SketchModel("",transformPD,INVERSEMASS,INVERSEMOMENT);
+    SketchModel * sModel = new SketchModel(objFile,transformPD,INVERSEMASS,INVERSEMOMENT);
     // TODO these shouldn't be magic constants
 
     makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
@@ -139,6 +139,15 @@ SketchModel *ModelManager::modelForOBJSource(QString objFile, double scale) {
   ****************************************************************************/
 QHashIterator<QString,SketchModel *> ModelManager::getModelIterator() const {
     return QHashIterator<QString,SketchModel *>(models);
+}
+
+/*****************************************************************************
+  *
+  * This method returns the number of models in the model manager
+  *
+  ****************************************************************************/
+int ModelManager::getNumberOfModels() const {
+    return models.size();
 }
 
 
