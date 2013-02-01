@@ -24,7 +24,10 @@ public:
 
     inline double getStiffness() const { return stiffness; }
     inline void setStiffness(double newK) { stiffness = newK; }
+    inline double getMinRestLength() const { return minRestLength; }
+    inline double getMaxRestLength() const { return maxRestLength; }
     inline void getObject1ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object1ConnectionPosition);}
+    inline const SketchObject *getObject1() const { return object1; }
     inline void setObject1ConnectionPosition(q_vec_type newPos) { q_vec_copy(object1ConnectionPosition,newPos);}
     void getEnd1WorldPosition(q_vec_type out) const;
     virtual void getEnd2WorldPosition(q_vec_type out) const = 0;
@@ -56,6 +59,7 @@ public:
                         double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos);
 
     inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
+    inline const SketchObject *getObject2() const { return object2; }
     inline void setObject2ConnectionPosition(q_vec_type newPos) { q_vec_copy(object2ConnectionPosition,newPos);}
     virtual void getEnd2WorldPosition(q_vec_type out) const;
 
@@ -70,6 +74,7 @@ private:
  */
 class ObjectPointSpring : public SpringConnection
 {
+public:
     ObjectPointSpring(SketchObject *o1, double minRestLen, double maxRestLen, double k,
                         const q_vec_type obj1Pos, const q_vec_type worldPoint);
 

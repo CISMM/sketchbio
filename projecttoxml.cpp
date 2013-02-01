@@ -1,6 +1,10 @@
 #include "projecttoxml.h"
 
 #define ID_ATTRIBUTE_NAME                       "id"
+#define POSITION_ATTRIBUTE_NAME                 "position"
+#define ROTATION_ATTRIBUTE_NAME                 "orientation"
+#define PROPERTIES_ELEMENT_NAME                 "properties"
+#define TRANSFORM_ELEMENT_NAME                  "transform"
 
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_STRING                          "version"
@@ -10,10 +14,8 @@
 
 #define MODEL_ELEMENT_NAME                      "model"
 #define MODEL_SOURCE_ELEMENT_NAME               "source"
-#define MODEL_TRANSFORM_ELEMENT_NAME            "transform"
 #define MODEL_SCALE_ATTRIBUTE_NAME              "scale"
 #define MODEL_TRANSLATE_ATTRIBUTE_NAME          "translate"
-#define MODEL_PHYSICAL_PROPERTIES_ELEMENT_NAME  "properties"
 #define MODEL_IMASS_ATTRIBUTE_NAME              "inverseMass"
 #define MODEL_IMOMENT_ATTRIBUTE_NAME            "inverseMomentOfInertia"
 
@@ -24,19 +26,25 @@
 
 #define OBJECTLIST_ELEMENT_NAME                 "objectlist"
 #define OBJECT_ELEMENT_NAME                     "object"
-#define OBJECT_PROPERTIES_ELEMENT_NAME          "properties"
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
 #define OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME   "physicsEnabled"
 #define OBJECT_REPLICA_NUM_ATTRIBUTE_NAME       "replicaNum"
-#define OBJECT_TRANSFORM_ELEMENT_NAME           "transform"
-#define OBJECT_POSITION_ATTRIBUTE_NAME          "position"
-#define OBJECT_ROTATION_ATTRIBUTE_NAME          "orientation"
 
 #define REPLICATOR_LIST_ELEMENT_NAME            "replicatorList"
 #define REPLICATOR_ELEMENT_NAME                 "replicator"
 #define REPLICATOR_NUM_SHOWN_ATTRIBUTE_NAME     "numReplicas"
 #define REPLICATOR_OBJECT1_ATTRIBUTE_NAME       "original1"
 #define REPLICATOR_OBJECT2_ATTRIBUTE_NAME       "original2"
+
+#define SPRING_LIST_ELEMENT_NAME                "springList"
+#define SPRING_ELEMENT_NAME                     "spring"
+#define SPRING_OBJECT_END_ELEMENT_NAME          "objConnection"
+#define SPRING_POINT_END_ELEMENT_NAME           "pointConnection"
+#define SPRING_OBJECT_ID_ATTRIBUTE_NAME         "objId"
+#define SPRING_CONNECTION_POINT_ATTRIBUTE_NAME  "connectionPoint"
+#define SPRING_STIFFNESS_ATTRIBUTE_NAME         "stiffness"
+#define SPRING_MIN_REST_ATTRIBUTE_NAME          "minRestLen"
+#define SPRING_MAX_REST_ATTRIBUTE_NAME          "maxRestLen"
 
 vtkXMLDataElement *projectToXML(const SketchProject *project) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
@@ -50,6 +58,7 @@ vtkXMLDataElement *projectToXML(const SketchProject *project) {
     element->AddNestedElement(transformManagerToXML(project->getTransformManager()));
     element->AddNestedElement(objectListToXML(project->getWorldManager(),modelIds,objectIds));
     element->AddNestedElement(replicatorListToXML(project->getReplicas(),modelIds,objectIds));
+    element->AddNestedElement(springListToXML(project->getWorldManager(),objectIds));
 
     return element;
 }
@@ -91,14 +100,14 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
 
     // physical properties (mass, etc..)
     child = vtkXMLDataElement::New();
-    child->SetName(MODEL_PHYSICAL_PROPERTIES_ELEMENT_NAME);
+    child->SetName(PROPERTIES_ELEMENT_NAME);
     child->SetDoubleAttribute(MODEL_IMASS_ATTRIBUTE_NAME,model->getInverseMass());
     child->SetDoubleAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,model->getInverseMomentOfInertia());
     element->AddNestedElement(child);
 
     // transformations from source to model
     child = vtkXMLDataElement::New();
-    child->SetName(MODEL_TRANSFORM_ELEMENT_NAME);
+    child->SetName(TRANSFORM_ELEMENT_NAME);
     double translate[3];
     model->getTranslate(translate);
     child->SetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,translate);
@@ -157,7 +166,7 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
 
     vtkXMLDataElement *child = vtkXMLDataElement::New();
-    child->SetName(OBJECT_PROPERTIES_ELEMENT_NAME);
+    child->SetName(PROPERTIES_ELEMENT_NAME);
     QString modelId = "#" + modelIds.constFind(object->getConstModel()).value();
     child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
     child->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
@@ -170,13 +179,13 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     element->AddNestedElement(child);
 
     child = vtkXMLDataElement::New();
-    child->SetName(OBJECT_TRANSFORM_ELEMENT_NAME);
+    child->SetName(TRANSFORM_ELEMENT_NAME);
     q_vec_type pos;
     q_type orient;
     object->getPosition(pos);
     object->getOrientation(orient);
-    child->SetVectorAttribute(OBJECT_POSITION_ATTRIBUTE_NAME,3,pos);
-    child->SetVectorAttribute(OBJECT_ROTATION_ATTRIBUTE_NAME,4,orient);
+    child->SetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
+    child->SetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
 
     element->AddNestedElement(child);
     return element;
@@ -209,6 +218,58 @@ vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *repli
         repElement->AddNestedElement(list);
 
         element->AddNestedElement(repElement);
+    }
+    return element;
+}
+
+vtkXMLDataElement *springListToXML(const WorldManager *world, const QHash<const SketchObject *, QString> &objectIds) {
+    vtkXMLDataElement *element = vtkXMLDataElement::New();
+    element->SetName(SPRING_LIST_ELEMENT_NAME);
+    for (QListIterator<SpringConnection *> it = world->getSpringsIterator(); it.hasNext();) {
+        const SpringConnection *spring = it.next();
+        element->AddNestedElement(springToXML(spring,objectIds));
+    }
+    return element;
+}
+
+vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const SketchObject *, QString> &objectIds) {
+    vtkXMLDataElement *element = vtkXMLDataElement::New();
+    element->SetName(SPRING_ELEMENT_NAME);
+    // object 1 connection
+    vtkXMLDataElement *child = vtkXMLDataElement::New();
+    child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
+    child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+                        ("#" + objectIds.value(spring->getObject1())).toStdString().c_str());
+    q_vec_type pos1;
+    spring->getObject1ConnectionPosition(pos1);
+    child->SetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,pos1);
+    element->AddNestedElement(child);
+    // spring properties
+    child = vtkXMLDataElement::New();
+    child->SetName(PROPERTIES_ELEMENT_NAME);
+    child->SetDoubleAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,spring->getStiffness());
+    child->SetDoubleAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,spring->getMinRestLength());
+    child->SetDoubleAttribute(SPRING_MAX_REST_ATTRIBUTE_NAME,spring->getMaxRestLength());
+    element->AddNestedElement(child);
+    // second end, depends on spring type
+    const InterObjectSpring *ispring = dynamic_cast<const InterObjectSpring *>(spring);
+    const ObjectPointSpring *pspring = dynamic_cast<const ObjectPointSpring *>(spring);
+    if (ispring != NULL) {
+        child = vtkXMLDataElement::New();
+        child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
+        child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+                            ("#" +objectIds.value(ispring->getObject2())).toStdString().c_str());
+        q_vec_type pos2;
+        ispring->getObject2ConnectionPosition(pos2);
+        child->SetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,pos2);
+        element->AddNestedElement(child);
+    } else if (pspring != NULL) {
+        child = vtkXMLDataElement::New();
+        child->SetName(SPRING_POINT_END_ELEMENT_NAME);
+        q_vec_type pos2;
+        pspring->getEnd2WorldPosition(pos2);
+        child->SetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,pos2);
+        element->AddNestedElement(child);
     }
     return element;
 }
