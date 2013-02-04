@@ -93,10 +93,10 @@ void SketchProject::timestep(double dt) {
 
 SketchObject *SketchProject::addObject(QString filename) {
     QFile file(filename);
-    qDebug() << filename;
+//    qDebug() << filename;
     QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
-    qDebug() << fullpath;
+//    qDebug() << fullpath;
     if (projectDir->entryList().contains(localname) || file.copy(filename,fullpath)) {
         SketchModel *model = models->modelForOBJSource(fullpath);
 
