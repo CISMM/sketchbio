@@ -43,4 +43,7 @@ void xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem);
 void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,
                      SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds);
 
+void xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
+                         QHash<QString, SketchObject *> &objectIds);
+
 #endif // PROJECTTOXML_H

@@ -415,3 +415,34 @@ void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
         }
     }
 }
+
+void xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
+                         QHash<QString, SketchObject *> &objectIds) {
+    if (QString(elem->GetName()) != QString(REPLICATOR_LIST_ELEMENT_NAME)) {
+        throw "Wrong element type";
+    }
+    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
+        vtkXMLDataElement *child = elem->GetNestedElement(i);
+        if (QString(child->GetName()) == QString(REPLICATOR_ELEMENT_NAME)) {
+            QString obj1Id, obj2Id;
+            int numReplicas;
+            const char *c = child->GetAttribute(REPLICATOR_OBJECT1_ATTRIBUTE_NAME);
+            if (c == NULL) {
+                // error - bad xml
+            }
+            obj1Id = c;
+            c = child->GetAttribute(REPLICATOR_OBJECT2_ATTRIBUTE_NAME);
+            if (c == NULL) {
+                // error - bad xml
+            }
+            obj2Id = c;
+            int err = child->GetScalarAttribute(REPLICATOR_NUM_SHOWN_ATTRIBUTE_NAME,numReplicas);
+            if (!err) {
+                // error - bad xml
+            }
+            proj->addReplication(objectIds.value(obj1Id),objectIds.value(obj2Id),numReplicas);
+            // Eventually if there is special data about each replica, read it in here and apply it
+        }
+    }
+    //todo
+}
