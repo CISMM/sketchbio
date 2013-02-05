@@ -46,4 +46,10 @@ void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString
 void xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
                          QHash<QString, SketchObject *> &objectIds);
 
+void xmlToSpringList(SketchProject *proj, vtkXMLDataElement *elem,
+                     QHash<QString, SketchObject *> &objectIds);
+
+void xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
+                 QHash<QString, SketchObject *> &objectIds);
+
 #endif // PROJECTTOXML_H

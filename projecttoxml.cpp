@@ -294,6 +294,16 @@ void xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
             // error - bad xml
         }
         xmlToObjectList(proj,objs,modelIds,objectIds);
+        vtkXMLDataElement *reps = elem->FindNestedElementWithName(REPLICATOR_LIST_ELEMENT_NAME);
+        if (reps == NULL) {
+            // error - bad xml
+        }
+        xmlToReplicatorList(proj,reps,objectIds);
+        vtkXMLDataElement *springs = elem->FindNestedElementWithName(SPRING_LIST_ELEMENT_NAME);
+        if (springs == NULL) {
+            // error - bad xml
+        }
+        xmlToSpringList(proj,springs,objectIds);
     } else {
         // error - bad xml
     }
@@ -445,4 +455,62 @@ void xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
         }
     }
     //todo
+}
+
+void xmlToSpringList(SketchProject *proj, vtkXMLDataElement *elem,
+                     QHash<QString, SketchObject *> &objectIds) {
+    if (QString(elem->GetName()) != QString(SPRING_LIST_ELEMENT_NAME)) {
+        throw "Wrong element type";
+    }
+    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
+        vtkXMLDataElement *child = elem->GetNestedElement(i);
+        if (QString(child->GetName()) == QString(SPRING_ELEMENT_NAME)) {
+            xmlToSpring(proj,child,objectIds);
+        }
+    }
+}
+
+void xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
+                 QHash<QString, SketchObject *> &objectIds) {
+    if (QString(elem->GetName()) != QString(SPRING_ELEMENT_NAME)) {
+        throw "Wrong element type";
+    }
+    QString obj1Id, obj2Id;
+    int objCount = 0;
+    bool seenWPoint = false;
+    double k, minRLen, maxRLen;
+    q_vec_type o1Pos, o2Pos, wPos;
+    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
+        vtkXMLDataElement *child = elem->GetNestedElement(i);
+        QString name = child->GetName();
+        if (name == QString(SPRING_OBJECT_END_ELEMENT_NAME)) {
+            if (objCount == 0) {
+                obj1Id = child->GetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME);
+                int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,o1Pos);
+                // check results
+            } else if (objCount == 1) {
+                obj2Id = child->GetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME);
+                int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,o2Pos);
+                // check results
+            }
+            objCount++;
+        } else if (name == QString(PROPERTIES_ELEMENT_NAME)) {
+            int err = child->GetScalarAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,k);
+            err += child->GetScalarAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,minRLen);
+            err += child->GetScalarAttribute(SPRING_MAX_REST_ATTRIBUTE_NAME,maxRLen);
+        } else if (name == QString(SPRING_POINT_END_ELEMENT_NAME)) {
+            int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,wPos);
+            seenWPoint = true;
+        }
+    }
+    SpringConnection *spring = NULL;
+    if ((seenWPoint ? 1 : 0) + objCount != 2) {
+        // we have too few or too many endpoints
+    } else if (seenWPoint) {
+        spring = new ObjectPointSpring(objectIds.value(obj1Id),minRLen,maxRLen,k,o1Pos,wPos);
+        proj->addSpring(spring);
+    } else if (objCount == 2) {
+        spring = proj->addSpring(objectIds.value(obj1Id),
+                                 objectIds.value(obj2Id),minRLen,maxRLen,k,o1Pos,o2Pos);
+    }
 }

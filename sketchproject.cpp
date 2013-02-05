@@ -168,6 +168,10 @@ SpringConnection *SketchProject::addSpring(SketchObject *o1, SketchObject *o2, d
     return world->addSpring(o1,o2,o1Pos,o2Pos,false,stiffness,minRest,maxRest);
 }
 
+SpringConnection *SketchProject::addSpring(SpringConnection *spring) {
+    return world->addSpring(spring);
+}
+
 StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObject *o2, int numCopies) {
     StructureReplicator *rep = new StructureReplicator(o1,o2,world,transforms->getWorldToEyeTransform());
     replicas.append(rep);

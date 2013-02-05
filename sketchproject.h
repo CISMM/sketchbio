@@ -50,6 +50,8 @@ public:
     // for springs between objects (object-tracker springs managed internally)
     SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
                        double stiffness, q_vec_type o1Pos, q_vec_type o2Pos);
+    // for other springs
+    SpringConnection *addSpring(SpringConnection *spring);
     // for structure replication chains
     StructureReplicator *addReplication(SketchObject *o1, SketchObject *o2, int numCopies);
 private:
