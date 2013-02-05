@@ -32,10 +32,15 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring,
 // assumes proj is a NEW SketchProject with nothing in it
 void xmlToProject(SketchProject *proj, vtkXMLDataElement *elem);
 
-void xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString, SketchModel *> &modelIds);
+void xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem,
+                       QHash<QString, SketchModel *> &modelIds);
 
-void xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString, SketchModel *> &modelIds);
+void xmlToModel(SketchProject *proj, vtkXMLDataElement *elem,
+                QHash<QString, SketchModel *> &modelIds);
 
 void xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem);
+
+void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,
+                     SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds);
 
 #endif // PROJECTTOXML_H

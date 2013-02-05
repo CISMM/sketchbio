@@ -44,6 +44,7 @@ public:
     // for models
     SketchModel *addModelFromFile(QString fileName, double iMass, double iMoment, double scale);
     // for objects
+    SketchObject *addObject(SketchModel *model, const q_vec_type pos, const q_type orient);
     SketchObject *addObject(QString filename);
     bool addObjects(QVector<QString> filenames);
     // for springs between objects (object-tracker springs managed internally)

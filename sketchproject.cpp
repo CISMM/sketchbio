@@ -121,6 +121,13 @@ SketchModel *SketchProject::addModelFromFile(QString fileName, double iMass, dou
     }
 }
 
+SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos, const q_type orient) {
+    int myIdx = world->getNumberOfObjects();
+    SketchObject *object = world->addObject(model,pos,orient);
+    object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+    return object;
+}
+
 SketchObject *SketchProject::addObject(QString filename) {
     QFile file(filename);
 //    qDebug() << filename;
@@ -138,7 +145,7 @@ SketchObject *SketchProject::addObject(QString filename) {
         object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
         return object;
     } else {
-        throw "Could not create object";
+        throw "Could not create local copy of model file";
     }
 }
 

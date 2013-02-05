@@ -275,7 +275,7 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
 }
 
 void xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
-    if (QString(elem->GetName()) == ROOT_ELEMENT_NAME) {
+    if (QString(elem->GetName()) == QString(ROOT_ELEMENT_NAME)) {
         // do something with version... test if newer... something like that
         vtkXMLDataElement *models = elem->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
         if (models == NULL) {
@@ -288,6 +288,12 @@ void xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
             // error - bad xml
         }
         xmlToTransforms(proj,view);
+        QHash<QString,SketchObject *> objectIds;
+        vtkXMLDataElement *objs = elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
+        if (objs == NULL) {
+            // error - bad xml
+        }
+        xmlToObjectList(proj,objs,modelIds,objectIds);
     } else {
         // error - bad xml
     }
@@ -299,7 +305,10 @@ void xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem, QHash<QStri
         throw "Wrong element type";
     }
     for(int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
-        xmlToModel(proj,elem->GetNestedElement(i),modelIds);
+        vtkXMLDataElement *child = elem->GetNestedElement(i);
+        if (QString(child->GetName()) == QString(MODEL_ELEMENT_NAME)) {
+            xmlToModel(proj,child,modelIds);
+        }
     }
 
 }
@@ -367,4 +376,42 @@ void xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem) {
     vtkSmartPointer<vtkMatrix4x4> reMat = vtkSmartPointer<vtkMatrix4x4>::New();
     matrixFromDoubleArray(reMat,roomEye);
     proj->setViewpoint(rwMat,reMat);
+}
+
+void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
+                     QHash<QString, SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds) {
+    if (QString(elem->GetName()) != QString(OBJECTLIST_ELEMENT_NAME)) {
+        throw "Wrong element type";
+    }
+    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
+        vtkXMLDataElement *child = elem->GetNestedElement(i);
+        if (QString(child->GetName()) == QString(OBJECT_ELEMENT_NAME)) {
+            QString mId, oId;
+            q_vec_type pos;
+            q_type orient;
+            bool physicsEnabled;
+            oId = QString("#") + child->GetAttribute(ID_ATTRIBUTE_NAME);
+            vtkXMLDataElement *props = child->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+            if (props == NULL) {
+                // error - bad xml
+            }
+            mId = props->GetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME);
+            const char *c = props->GetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME);
+            if (c != NULL) {
+                physicsEnabled = (QString(c) == "false") ? true : false;
+            } else {
+                physicsEnabled = true; // default to true
+                // error - bad xml
+            }
+            vtkXMLDataElement *trans = child->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
+            if (trans == NULL) {
+                // error - bad xml
+            }
+            int err = trans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
+            err = err | trans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
+            SketchObject *obj = proj->addObject(modelIds.value(mId),pos,orient);
+            obj->setDoPhysics(physicsEnabled);
+            objectIds.insert(oId,obj);
+        }
+    }
 }

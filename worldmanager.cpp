@@ -56,7 +56,7 @@ WorldManager::~WorldManager() {
 
 //##################################################################################################
 //##################################################################################################
-SketchObject *WorldManager::addObject(SketchModel *model,q_vec_type pos, q_type orient) {
+SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, const q_type orient) {
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(model->getSolidMapper());
     SketchObject *newObject = new SketchObject(actor,model,worldEyeTransform);
