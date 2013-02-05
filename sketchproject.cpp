@@ -55,6 +55,11 @@ SketchProject::~SketchProject() {
         it.setValue((StructureReplicator *) NULL);
         delete rep;
     }
+    if (projectDir != NULL) {
+        delete projectDir;
+    }
+    delete leftHand;
+    delete rightHand;
     delete world;
     delete transforms;
     delete models;
@@ -67,6 +72,9 @@ bool SketchProject::setProjectDir(QString dir) {
     bool exists;
     if (!(exists = tmp.exists())) {
         exists = QDir::root().mkpath(tmp.absolutePath());
+    }
+    if (projectDir != NULL) {
+        delete projectDir;
     }
     projectDir = new QDir(tmp.absolutePath());
 //    projectDir->setCurrent(projectDir->absolutePath());
@@ -81,6 +89,11 @@ void SketchProject::setRightHandPos(q_xyz_quat_type *loc) {
     transforms->setRightHandTransform(loc);
 }
 
+void SketchProject::setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes) {
+    transforms->setWorldToRoomMatrix(worldToRoom);
+    transforms->setRoomToEyeMatrix(roomToEyes);
+}
+
 QString SketchProject::getProjectDir() const {
     return projectDir->absolutePath();
 }
@@ -89,6 +102,23 @@ void SketchProject::timestep(double dt) {
     handleInput();
     world->stepPhysics(dt);
     transforms->copyCurrentHandTransformsToOld();
+}
+
+SketchModel *SketchProject::addModelFromFile(QString fileName, double iMass, double iMoment, double scale) {
+    QFile file(fileName);
+//    qDebug() << filename;
+    QString localname = fileName.mid(fileName.lastIndexOf("/") +1).toLower();
+    QString fullpath = projectDir->absoluteFilePath(localname);
+//    qDebug() << fullpath;
+    if (projectDir->entryList().contains(localname) || file.copy(fileName,fullpath)) {
+        SketchModel *model = NULL;
+        if (fileName.endsWith("obj", Qt::CaseInsensitive)) {
+            model = models->modelForOBJSource(fullpath,iMass,iMoment,scale);
+        }
+        return model;
+    } else {
+        throw "Cannot create local copy of model file";
+    }
 }
 
 SketchObject *SketchProject::addObject(QString filename) {

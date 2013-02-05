@@ -14,8 +14,6 @@
 
 #include <QDebug>
 
-#define INVERSEMASS 1.0
-#define INVERSEMOMENT (1.0/25000)
 
 ModelManager::ModelManager() :
     models()
@@ -86,7 +84,7 @@ SketchModel *ModelManager::modelForVTKSource(vtkPolyDataAlgorithm *source, doubl
   * scale   - the scale at which the obj should be interpreted
   *
   ****************************************************************************/
-SketchModel *ModelManager::modelForOBJSource(QString objFile, double scale) {
+SketchModel *ModelManager::modelForOBJSource(QString objFile, double iMass, double iMoment, double scale) {
     if (models.contains(objFile)) {
         return models[objFile];
     }
@@ -121,8 +119,7 @@ SketchModel *ModelManager::modelForOBJSource(QString objFile, double scale) {
     transformPD->Update();
 
     // remember the mass and moment of inertia are inverses!!!!!!!!
-    SketchModel * sModel = new SketchModel(objFile,transformPD,INVERSEMASS,INVERSEMOMENT);
-    // TODO these shouldn't be magic constants
+    SketchModel * sModel = new SketchModel(objFile,transformPD,iMass,iMoment);
 
     makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
 

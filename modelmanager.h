@@ -24,6 +24,9 @@
 #include <QHash>
 
 
+#define INVERSEMASS 1.0
+#define INVERSEMOMENT (1.0/25000)
+
 class ModelManager
 {
 public:
@@ -51,9 +54,13 @@ public:
       * objFile - the filename of the obj file (should be absolute path, but in
       *             the project folder
       * scale   - the scale at which the obj should be interpreted
+      * iMass   - 1/mass where mass is the mass of an object of this type
+      * iMoment - 1/moment where moment is the (approximate) moment of inertia (pick an axis)
+      *             for an object of this type
       *
       ****************************************************************************/
-    SketchModel *modelForOBJSource(QString objFile, double scale = 1.0);
+    SketchModel *modelForOBJSource(QString objFile, double iMass = INVERSEMASS,
+                                   double iMoment = INVERSEMOMENT, double scale = 1.0);
     /*****************************************************************************
       *
       * This method returns an iterator that may be used to examine each of the

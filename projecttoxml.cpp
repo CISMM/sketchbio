@@ -273,3 +273,98 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
     }
     return element;
 }
+
+void xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
+    if (QString(elem->GetName()) == ROOT_ELEMENT_NAME) {
+        // do something with version... test if newer... something like that
+        vtkXMLDataElement *models = elem->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
+        if (models == NULL) {
+            // error - bad xml
+        }
+        QHash<QString,SketchModel *> modelIds;
+        xmlToModelManager(proj,models,modelIds);
+        vtkXMLDataElement *view = elem->FindNestedElementWithName(TRANSFORM_MANAGER_ELEMENT_NAME);
+        if (view == NULL) {
+            // error - bad xml
+        }
+        xmlToTransforms(proj,view);
+    } else {
+        // error - bad xml
+    }
+}
+
+
+void xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,SketchModel *> &modelIds) {
+    if (QString(elem->GetName()) != QString(MODEL_MANAGER_ELEMENT_NAME)) {
+        throw "Wrong element type";
+    }
+    for(int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
+        xmlToModel(proj,elem->GetNestedElement(i),modelIds);
+    }
+
+}
+
+void xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,SketchModel *> &modelIds) {
+    if (QString(elem->GetName()) != QString(MODEL_ELEMENT_NAME)) {
+        throw "Wrong element type";
+    }
+    // need addmodel method on project...
+    QString source, id;
+    double invMass, invMoment, scale;
+    q_vec_type trans; // calculated to center object... we really don't need it (yet)
+    id = elem->GetAttribute(ID_ATTRIBUTE_NAME);
+    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
+        vtkXMLDataElement *child = elem->GetNestedElement(i);
+        if (QString(child->GetName()) == QString(MODEL_SOURCE_ELEMENT_NAME)) {
+            source = child->GetCharacterData();
+        } else if (QString(child->GetName()) == QString(TRANSFORM_ELEMENT_NAME)) {
+            int err = child->GetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,trans);
+            err = err | child->GetScalarAttribute(MODEL_SCALE_ATTRIBUTE_NAME,scale);
+            if (err) {
+                std::cout << "GOT " << err << std::endl;
+            }
+        } else if (QString(child->GetName()) == QString(PROPERTIES_ELEMENT_NAME)) {
+            int err = child->GetScalarAttribute(MODEL_IMASS_ATTRIBUTE_NAME,invMass);
+            err = err | child->GetScalarAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,invMoment);
+        }
+    }
+    SketchModel *model = NULL;
+    if (!QString(source).startsWith("VTK")) {
+        model = proj->addModelFromFile(proj->getProjectDir() + "/" + source,invMass,invMoment,scale);
+    }
+    if (model != NULL) {
+        modelIds.insert("#" + id,model);
+    }
+    // need hash of id to model...
+}
+
+inline void matrixFromDoubleArray(vtkMatrix4x4 *mat, double *data) {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mat->SetElement(i,j,data[i*4+j]);
+            }
+        }
+}
+
+void xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem) {
+    if (QString(elem->GetName()) != TRANSFORM_MANAGER_ELEMENT_NAME) {
+        throw "Wrong element type";
+    }
+    double roomWorld[16];
+    double roomEye[16];
+    vtkXMLDataElement *rtW = elem->FindNestedElementWithName(TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME);
+    if (rtW == NULL) {
+        // problems
+    }
+    int err = rtW->GetVectorAttribute(TRANSFORM_MATRIX_ATTRIBUTE_NAME,16,roomWorld);
+    vtkXMLDataElement *rtE = elem->FindNestedElementWithName(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME);
+    if (rtE == NULL) {
+        // problems
+    }
+    err = err | rtE->GetVectorAttribute(TRANSFORM_MATRIX_ATTRIBUTE_NAME,16,roomEye);
+    vtkSmartPointer<vtkMatrix4x4> rwMat = vtkSmartPointer<vtkMatrix4x4>::New();
+    matrixFromDoubleArray(rwMat,roomWorld);
+    vtkSmartPointer<vtkMatrix4x4> reMat = vtkSmartPointer<vtkMatrix4x4>::New();
+    matrixFromDoubleArray(reMat,roomEye);
+    proj->setViewpoint(rwMat,reMat);
+}

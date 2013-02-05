@@ -33,9 +33,19 @@ public:
     const vtkMatrix4x4 *getWorldToRoomMatrix() const;
 
     /*
+     * Sets the transformation between world and room
+     */
+    void setWorldToRoomMatrix(vtkMatrix4x4 *matrix);
+
+    /*
      * Gets the transformation between room and eye
      */
     const vtkMatrix4x4 *getRoomToEyeMatrix() const;
+
+    /*
+     * Sets the transformation between room and eye
+     */
+    void setRoomToEyeMatrix(vtkMatrix4x4 *matrix);
 
     /*
      * Gets the scale factor between the world and room

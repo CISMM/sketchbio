@@ -17,12 +17,16 @@ class SketchProject
 public:
     SketchProject(vtkRenderer *r, const bool *buttonStates, const double *analogStates);
     ~SketchProject();
+    // setters
     // sets the directory path for this project (should be an absolute path)
     bool setProjectDir(QString dir);
     // sets the left hand position/orientation
     void setLeftHandPos(q_xyz_quat_type *loc);
     // sets the right hand position/orientation
     void setRightHandPos(q_xyz_quat_type *loc);
+    // sets the viewpoint
+    void setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes);
+
     // physics related functions
     void timestep(double dt);
 
@@ -37,6 +41,8 @@ public:
     QString getProjectDir() const;
 
     // adding things functions
+    // for models
+    SketchModel *addModelFromFile(QString fileName, double iMass, double iMoment, double scale);
     // for objects
     SketchObject *addObject(QString filename);
     bool addObjects(QVector<QString> filenames);
