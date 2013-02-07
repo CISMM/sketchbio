@@ -1,4 +1,5 @@
 #include "projecttoxml.h"
+#include <ios>
 
 #define ID_ATTRIBUTE_NAME                       "id"
 #define POSITION_ATTRIBUTE_NAME                 "position"
@@ -45,6 +46,14 @@
 #define SPRING_STIFFNESS_ATTRIBUTE_NAME         "stiffness"
 #define SPRING_MIN_REST_ATTRIBUTE_NAME          "minRestLen"
 #define SPRING_MAX_REST_ATTRIBUTE_NAME          "maxRestLen"
+
+inline void setPreciseVectorAttribute(vtkXMLDataElement *elem, const double *vect, int len, const char *attrName) {
+    QString data;
+    for (int i = 0; i < len; i++) {
+        data = data + QString::number(vect[i],'g',11) + " ";
+    }
+    elem->SetAttribute(attrName,data.toStdString().c_str());
+}
 
 vtkXMLDataElement *projectToXML(const SketchProject *project) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
@@ -110,7 +119,7 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
     child->SetName(TRANSFORM_ELEMENT_NAME);
     double translate[3];
     model->getTranslate(translate);
-    child->SetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,translate);
+    setPreciseVectorAttribute(child,translate,3,MODEL_TRANSLATE_ATTRIBUTE_NAME);
     child->SetDoubleAttribute(MODEL_SCALE_ATTRIBUTE_NAME,model->getScale());
     element->AddNestedElement(child);
 
@@ -126,7 +135,7 @@ inline vtkXMLDataElement *matrixToXML(const char *elementName,const vtkMatrix4x4
     }
     vtkXMLDataElement *child = vtkXMLDataElement::New();
     child->SetName(elementName);
-    child->SetVectorAttribute(TRANSFORM_MATRIX_ATTRIBUTE_NAME,16,mat);
+    setPreciseVectorAttribute(child,mat,16,TRANSFORM_MATRIX_ATTRIBUTE_NAME);
     return child;
 }
 
@@ -184,8 +193,8 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     q_type orient;
     object->getPosition(pos);
     object->getOrientation(orient);
-    child->SetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
-    child->SetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
+    setPreciseVectorAttribute(child,pos,3,POSITION_ATTRIBUTE_NAME);
+    setPreciseVectorAttribute(child,orient,4,ROTATION_ATTRIBUTE_NAME);
 
     element->AddNestedElement(child);
     return element;
@@ -242,7 +251,7 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
                         ("#" + objectIds.value(spring->getObject1())).toStdString().c_str());
     q_vec_type pos1;
     spring->getObject1ConnectionPosition(pos1);
-    child->SetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,pos1);
+    setPreciseVectorAttribute(child,pos1,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
     element->AddNestedElement(child);
     // spring properties
     child = vtkXMLDataElement::New();
@@ -261,14 +270,14 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
                             ("#" +objectIds.value(ispring->getObject2())).toStdString().c_str());
         q_vec_type pos2;
         ispring->getObject2ConnectionPosition(pos2);
-        child->SetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,pos2);
+        setPreciseVectorAttribute(child,pos2,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
         element->AddNestedElement(child);
     } else if (pspring != NULL) {
         child = vtkXMLDataElement::New();
         child->SetName(SPRING_POINT_END_ELEMENT_NAME);
         q_vec_type pos2;
         pspring->getEnd2WorldPosition(pos2);
-        child->SetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,pos2);
+        setPreciseVectorAttribute(child,pos2,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
         element->AddNestedElement(child);
     }
     return element;
@@ -338,13 +347,13 @@ void xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,Sket
             source = child->GetCharacterData();
         } else if (QString(child->GetName()) == QString(TRANSFORM_ELEMENT_NAME)) {
             int err = child->GetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,trans);
-            err = err | child->GetScalarAttribute(MODEL_SCALE_ATTRIBUTE_NAME,scale);
+            err = err + child->GetScalarAttribute(MODEL_SCALE_ATTRIBUTE_NAME,scale);
             if (err) {
                 std::cout << "GOT " << err << std::endl;
             }
         } else if (QString(child->GetName()) == QString(PROPERTIES_ELEMENT_NAME)) {
             int err = child->GetScalarAttribute(MODEL_IMASS_ATTRIBUTE_NAME,invMass);
-            err = err | child->GetScalarAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,invMoment);
+            err = err + child->GetScalarAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,invMoment);
         }
     }
     SketchModel *model = NULL;
@@ -408,7 +417,7 @@ void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
             mId = props->GetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME);
             const char *c = props->GetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME);
             if (c != NULL) {
-                physicsEnabled = (QString(c) == "false") ? true : false;
+                physicsEnabled = (QString(c) == QString("false")) ? false : true;
             } else {
                 physicsEnabled = true; // default to true
                 // error - bad xml
@@ -419,6 +428,7 @@ void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
             }
             int err = trans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
             err = err | trans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
+            q_normalize(orient,orient);
             SketchObject *obj = proj->addObject(modelIds.value(mId),pos,orient);
             obj->setDoPhysics(physicsEnabled);
             objectIds.insert(oId,obj);

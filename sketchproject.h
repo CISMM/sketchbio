@@ -37,6 +37,7 @@ public:
     // get world manager
     const WorldManager *getWorldManager() const;
     const QList<StructureReplicator *> *getReplicas() const;
+    int getNumberOfReplications() const;
     // gets the directory path for this project (absolute path)
     QString getProjectDir() const;
 
@@ -95,6 +96,10 @@ inline const WorldManager *SketchProject::getWorldManager() const {
 
 inline const QList<StructureReplicator *> *SketchProject::getReplicas() const {
     return &replicas;
+}
+
+inline int SketchProject::getNumberOfReplications() const {
+    return replicas.size();
 }
 
 #endif // SKETCHPROJECT_H

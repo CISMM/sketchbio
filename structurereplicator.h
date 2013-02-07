@@ -49,6 +49,8 @@ public:
      */
     StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w, vtkTransform *worldEyeTransform);
 
+    ~StructureReplicator();
+
     /*
      * Changes the number of copies shown to the given amount
      *

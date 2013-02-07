@@ -8,7 +8,6 @@ SketchObject::SketchObject(vtkActor *a, SketchModel *model, vtkTransform *worldE
     q_vec_copy(forceAccum,position);
     q_vec_copy(torqueAccum,forceAccum);
     q_make(orientation,1,0,0,0);
-    allowTransformUpdate = true;
     vtkSmartPointer<vtkTransform> trans = (vtkTransform *) a->GetUserTransform();
     if (trans == NULL) {
         trans = vtkSmartPointer<vtkTransform>::New();

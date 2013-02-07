@@ -41,6 +41,7 @@ SketchProject::SketchProject(vtkRenderer *r,
     sphereSource->Update();
     SketchModel *sphereModel = models->modelForVTKSource(sphereSource,
                               TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+    grabbedWorld = WORLD_NOT_GRABBED;
     leftHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
     leftHand->setDoPhysics(false);
     rightHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
@@ -55,29 +56,37 @@ SketchProject::~SketchProject() {
         it.setValue((StructureReplicator *) NULL);
         delete rep;
     }
+    replicas.clear();
+    delete leftHand;
+    leftHand = NULL;
+    delete rightHand;
+    rightHand = NULL;
+    delete world;
+    world = NULL;
+    delete transforms;
+    transforms = NULL;
+    delete models;
+    models = NULL;
     if (projectDir != NULL) {
         delete projectDir;
     }
-    delete leftHand;
-    delete rightHand;
-    delete world;
-    delete transforms;
-    delete models;
-    delete leftHand;
-    delete rightHand;
 }
 
 bool SketchProject::setProjectDir(QString dir) {
     QDir tmp = QDir(dir);
+    if (tmp.isRelative()) {
+        QString abs = QDir::current().absoluteFilePath(dir);
+        tmp = QDir(abs);
+    }
     bool exists;
     if (!(exists = tmp.exists())) {
-        exists = QDir::root().mkpath(tmp.absolutePath());
+        tmp.mkpath(".");
+        exists = tmp.exists();
     }
     if (projectDir != NULL) {
         delete projectDir;
     }
     projectDir = new QDir(tmp.absolutePath());
-//    projectDir->setCurrent(projectDir->absolutePath());
     return exists;
 }
 
@@ -110,7 +119,7 @@ SketchModel *SketchProject::addModelFromFile(QString fileName, double iMass, dou
     QString localname = fileName.mid(fileName.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
 //    qDebug() << fullpath;
-    if (projectDir->entryList().contains(localname) || file.copy(fileName,fullpath)) {
+    if (projectDir->entryList().contains(localname, Qt::CaseInsensitive) || file.copy(fileName,fullpath)) {
         SketchModel *model = NULL;
         if (fileName.endsWith("obj", Qt::CaseInsensitive)) {
             model = models->modelForOBJSource(fullpath,iMass,iMoment,scale);
@@ -134,16 +143,13 @@ SketchObject *SketchProject::addObject(QString filename) {
     QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
 //    qDebug() << fullpath;
-    if (projectDir->entryList().contains(localname) || file.copy(filename,fullpath)) {
+    if (projectDir->entryList().contains(localname,Qt::CaseInsensitive) || file.copy(filename,fullpath)) {
         SketchModel *model = models->modelForOBJSource(fullpath);
 
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;
-        int myIdx = world->getNumberOfObjects();
-        q_vec_set(pos,0,2*myIdx/transforms->getWorldToRoomScale(),0);
-        SketchObject *object = world->addObject(model,pos,orient);
-        object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-        return object;
+        pos[Q_Y] = 2 * world->getNumberOfObjects() / transforms->getWorldToRoomScale();
+        return addObject(model,pos,orient);
     } else {
         throw "Could not create local copy of model file";
     }

@@ -23,8 +23,9 @@ ReplicatedObject::ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTrans
  * getting the outdated variable from the parent class
  */
 void ReplicatedObject::getPosition(q_vec_type dest) const {
-    q_vec_type origin = Q_NULL_VECTOR;
-    localTransform->TransformPoint(origin,dest);
+    localTransform->GetPosition(dest);
+//    q_vec_type origin = Q_NULL_VECTOR;
+//    localTransform->TransformPoint(origin,dest);
 }
 
 /*
@@ -32,17 +33,23 @@ void ReplicatedObject::getPosition(q_vec_type dest) const {
  * using the outdated variable in the parent class
  */
 void ReplicatedObject::getOrientation(q_type dest) const {
-    q_vec_type xaxis = {1, 0, 0};
-    q_vec_type yaxis = {0, 1, 0};
-    q_vec_type xout,yout;
-    localTransform->TransformVector(xaxis,xout);
-    if (xout[0] == 1 && xout[1] == 0 && xout[2] == 0) {
-        // localtransform shouldn't have scales, so if it is still the x_axis use y instead
-        localTransform->TransformVector(yaxis,yout);
-        q_from_two_vecs(dest,yaxis,yout); // if y is also the same, it is not rotated
-    } else {
-        q_from_two_vecs(dest,xaxis,xout);
-    }
+    double ori[4];
+    localTransform->GetOrientationWXYZ(ori);
+    dest[Q_W] = ori[0];
+    dest[Q_X] = ori[1];
+    dest[Q_Y] = ori[2];
+    dest[Q_Z] = ori[3];
+//    q_vec_type xaxis = {1, 0, 0};
+//    q_vec_type yaxis = {0, 1, 0};
+//    q_vec_type xout,yout;
+//    localTransform->TransformVector(xaxis,xout);
+//    if (xout[0] == 1 && xout[1] == 0 && xout[2] == 0) {
+//        // localtransform shouldn't have scales, so if it is still the x_axis use y instead
+//        localTransform->TransformVector(yaxis,yout);
+//        q_from_two_vecs(dest,yaxis,yout); // if y is also the same, it is not rotated
+//    } else {
+//        q_from_two_vecs(dest,xaxis,xout);
+//    }
 }
 
 /*
@@ -84,6 +91,10 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     transform->Concatenate(other->GetLinearInverse());
     transform->Concatenate(obj2->getLocalTransform());
     this->worldEyeTransform = worldEyeTransform;
+}
+
+StructureReplicator::~StructureReplicator() {
+    setNumShown(0);
 }
 
 
