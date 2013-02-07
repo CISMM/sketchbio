@@ -134,7 +134,7 @@ void StructureReplicator::setNumShown(int num) {
     }
 }
 
-int StructureReplicator::getNumShown() {
+int StructureReplicator::getNumShown() const {
     return numShown;
 }
 

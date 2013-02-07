@@ -123,6 +123,26 @@ void compareObjectLists(SketchProject *proj1, SketchProject *proj2, int &retVal)
     delete[] used;
 }
 
+void compareReplications(const StructureReplicator *rep1, const StructureReplicator *rep2,
+                        int &diffs, bool printDiffs = false) {
+    int v = 0;
+    compareObjects(rep1->getFirstObject(),rep2->getFirstObject(),v,printDiffs);
+    if ( v != 0) {
+        diffs++;
+        if (printDiffs) cout << "First objects didn't match" << endl;
+    }
+    v = 0;
+    compareObjects(rep1->getSecondObject(),rep2->getSecondObject(),v,printDiffs);
+    if ( v != 0) {
+        diffs++;
+        if (printDiffs) cout << "Second objects didn't match" << endl;
+    }
+    if (rep1->getNumShown() != rep2->getNumShown()) {
+        diffs++;
+        if (printDiffs) cout << "Number of replicas different" << endl;
+    }
+}
+
 int testSave1() {
     bool a[NUM_HYDRA_BUTTONS];
     double b[NUM_HYDRA_ANALOGS];
@@ -155,9 +175,7 @@ int testSave1() {
         cout << "Passed test 1" << endl;
     }
 
-    cout << "ref count " << root->GetReferenceCount() << endl;
     root->Delete();
-    root = NULL;
     delete proj1;
     delete proj2;
     return retVal;
@@ -199,7 +217,6 @@ int testSave2() {
     }
 
     root->Delete();
-    root = NULL;
     delete proj1;
     delete proj2;
     return retVal;
@@ -236,18 +253,65 @@ int testSave3() {
 
     compareNumbers(proj1,proj2,retVal);
     compareObjectLists(proj1,proj2,retVal);
+    compareReplications(proj1->getReplicas()->at(0),proj2->getReplicas()->at(0),retVal);
 
     if (retVal == 0) {
         cout << "Passed test 3" << endl;
     }
 
     root->Delete();
-    root = NULL;
+    delete proj1;
+    delete proj2;
+    return retVal;
+}
+
+int testSave4() {
+    bool a[NUM_HYDRA_BUTTONS];
+    double b[NUM_HYDRA_ANALOGS];
+    int retVal = 0;
+    vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
+    SketchProject *proj1 = new SketchProject(r1,a,b);
+    SketchProject *proj2 = new SketchProject(r2,a,b);
+    proj1->setProjectDir("test/test1");
+    proj2->setProjectDir("test/test1");
+
+    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3,4,1);
+    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
+    q_type orient1;
+    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
+    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
+    pos1[Q_X] += 2 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
+    proj1->addReplication(o1,o2,12);
+    q_vec_type p1, p2;
+    q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
+    q_vec_set(p2,2.23,6.06,7.97); // sqrt(5)
+    proj1->addSpring(o1,o2,1.41,4.21,3.56,p1,p2); // sqrt(2)
+
+
+    vtkXMLDataElement *root = projectToXML(proj1);
+
+//    vtkIndent indent(0);
+//    vtkXMLUtilities::FlattenElement(root,cout,&indent);
+
+    xmlToProject(proj2,root);
+
+    compareNumbers(proj1,proj2,retVal);
+    compareObjectLists(proj1,proj2,retVal);
+    compareReplications(proj1->getReplicas()->at(0),proj2->getReplicas()->at(0),retVal);
+
+    if (retVal == 0) {
+        cout << "Passed test 4" << endl;
+    }
+
+    root->Delete();
     delete proj1;
     delete proj2;
     return retVal;
 }
 
 int main() {
-    return testSave1() + testSave2() + testSave3();
+    return testSave1() + testSave2() + testSave3() + testSave4();
 }

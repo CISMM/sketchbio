@@ -61,7 +61,7 @@ public:
     /*
      * Gets the number of copies that are being shown
      */
-    int getNumShown();
+    int getNumShown() const;
 
     /*
      * Gets an iterator over the copies that have been generated

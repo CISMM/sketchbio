@@ -4,6 +4,9 @@
 #include <vtkXMLDataElement.h>
 #include "sketchproject.h"
 
+#define XML_TO_DATA_FAILURE 0
+#define XML_TO_DATA_SUCCESS 1
+
 vtkXMLDataElement *projectToXML(const SketchProject *project);
 
 vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &dir,
@@ -29,27 +32,35 @@ vtkXMLDataElement *springListToXML(const WorldManager *world,
 vtkXMLDataElement *springToXML(const SpringConnection *spring,
                                const QHash<const SketchObject *, QString> &objectIds);
 
-// assumes proj is a NEW SketchProject with nothing in it
-void xmlToProject(SketchProject *proj, vtkXMLDataElement *elem);
+// these all return an error code, XML_TO_DATA_SUCCESS for succeeded
+// and XML_TO_DATA_FAILURE for failed
 
-void xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem,
+
+// assumes proj is a NEW SketchProject with nothing in it
+// if there is an insufficient data error at any point in the tree,
+// the methods return immediately and whatever halfway state they were in is
+// the final state of the project.  So the final state of the project is undefined if
+// there is bad xml
+int xmlToProject(SketchProject *proj, vtkXMLDataElement *elem);
+
+int xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem,
                        QHash<QString, SketchModel *> &modelIds);
 
-void xmlToModel(SketchProject *proj, vtkXMLDataElement *elem,
+int xmlToModel(SketchProject *proj, vtkXMLDataElement *elem,
                 QHash<QString, SketchModel *> &modelIds);
 
-void xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem);
+int xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem);
 
-void xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,
+int xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,
                      SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds);
 
-void xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
+int xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
                          QHash<QString, SketchObject *> &objectIds);
 
-void xmlToSpringList(SketchProject *proj, vtkXMLDataElement *elem,
+int xmlToSpringList(SketchProject *proj, vtkXMLDataElement *elem,
                      QHash<QString, SketchObject *> &objectIds);
 
-void xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
+int xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
                  QHash<QString, SketchObject *> &objectIds);
 
 #endif // PROJECTTOXML_H
