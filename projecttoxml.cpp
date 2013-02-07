@@ -63,11 +63,21 @@ vtkXMLDataElement *projectToXML(const SketchProject *project) {
     QHash<const SketchModel *, QString> modelIds;
     QHash<const SketchObject *, QString> objectIds;
 
-    element->AddNestedElement(modelManagerToXML(project->getModelManager(),project->getProjectDir(),modelIds));
-    element->AddNestedElement(transformManagerToXML(project->getTransformManager()));
-    element->AddNestedElement(objectListToXML(project->getWorldManager(),modelIds,objectIds));
-    element->AddNestedElement(replicatorListToXML(project->getReplicas(),modelIds,objectIds));
-    element->AddNestedElement(springListToXML(project->getWorldManager(),objectIds));
+    vtkSmartPointer<vtkXMLDataElement> child =modelManagerToXML(project->getModelManager(),project->getProjectDir(),modelIds);
+    element->AddNestedElement(child);
+    child->Delete();
+    child = transformManagerToXML(project->getTransformManager());
+    element->AddNestedElement(child);
+    child->Delete();
+    child = objectListToXML(project->getWorldManager(),modelIds,objectIds);
+    element->AddNestedElement(child);
+    child->Delete();
+    child = replicatorListToXML(project->getReplicas(),modelIds,objectIds);
+    element->AddNestedElement(child);
+    child->Delete();
+    child = springListToXML(project->getWorldManager(),objectIds);
+    element->AddNestedElement(child);
+    child->Delete();
 
     return element;
 }
@@ -84,7 +94,9 @@ vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &
     while (it.hasNext()) {
         const SketchModel *model = it.next().value();
         QString idStr = QString("M%1").arg(id);
-        element->AddNestedElement(modelToXML(model, dir,idStr));
+        vtkSmartPointer<vtkXMLDataElement> child = modelToXML(model, dir,idStr);
+        element->AddNestedElement(child);
+        child->Delete();
         modelIds.insert(model,idStr);
         id++;
     }
@@ -98,7 +110,7 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
 
     // the source of the model TODO - fix filenames to relative, do something about vtk classes...
-    vtkXMLDataElement *child = vtkXMLDataElement::New();
+    vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(MODEL_SOURCE_ELEMENT_NAME);
     QString source = model->getDataSource();
     if (source.indexOf(dir) != -1) {
@@ -108,14 +120,14 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
     element->AddNestedElement(child);
 
     // physical properties (mass, etc..)
-    child = vtkXMLDataElement::New();
+    child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
     child->SetDoubleAttribute(MODEL_IMASS_ATTRIBUTE_NAME,model->getInverseMass());
     child->SetDoubleAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,model->getInverseMomentOfInertia());
     element->AddNestedElement(child);
 
     // transformations from source to model
-    child = vtkXMLDataElement::New();
+    child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(TRANSFORM_ELEMENT_NAME);
     double translate[3];
     model->getTranslate(translate);
@@ -143,10 +155,14 @@ vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(TRANSFORM_MANAGER_ELEMENT_NAME);
 
-    element->AddNestedElement(matrixToXML(TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME,
-                                          transforms->getWorldToRoomMatrix()));
-    element->AddNestedElement(matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,
-                                          transforms->getRoomToEyeMatrix()));
+    vtkSmartPointer<vtkXMLDataElement> child = matrixToXML(TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME,
+                                                           transforms->getWorldToRoomMatrix());
+    element->AddNestedElement(child);
+    child->Delete();
+    child = matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,
+                        transforms->getRoomToEyeMatrix());
+    element->AddNestedElement(child);
+    child->Delete();
 
     return element;
 }
@@ -161,7 +177,9 @@ vtkXMLDataElement *objectListToXML(const WorldManager *world,
         const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(obj);
         if (rObj == NULL) {
             QString idStr = QString("O%1").arg(objectIds.size());
-            element->AddNestedElement(objectToXML(obj,modelIds,idStr));
+            vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,idStr);
+            element->AddNestedElement(child);
+            child->Delete();
             objectIds.insert(obj,idStr);
         }
     }
@@ -174,7 +192,7 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     element->SetName(OBJECT_ELEMENT_NAME);
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
 
-    vtkXMLDataElement *child = vtkXMLDataElement::New();
+    vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
     QString modelId = "#" + modelIds.constFind(object->getConstModel()).value();
     child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
@@ -187,7 +205,7 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     }
     element->AddNestedElement(child);
 
-    child = vtkXMLDataElement::New();
+    child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(TRANSFORM_ELEMENT_NAME);
     q_vec_type pos;
     q_type orient;
@@ -197,6 +215,7 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
     setPreciseVectorAttribute(child,orient,4,ROTATION_ATTRIBUTE_NAME);
 
     element->AddNestedElement(child);
+//    child->Delete();
     return element;
 }
 vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *replicaList,
@@ -206,7 +225,7 @@ vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *repli
     element->SetName(REPLICATOR_LIST_ELEMENT_NAME);
     for (QListIterator<StructureReplicator *> it(*replicaList); it.hasNext();) {
         StructureReplicator *rep = it.next();
-        vtkXMLDataElement *repElement = vtkXMLDataElement::New();
+        vtkSmartPointer<vtkXMLDataElement> repElement = vtkSmartPointer<vtkXMLDataElement>::New();
         repElement->SetName(REPLICATOR_ELEMENT_NAME);
         repElement->SetAttribute(REPLICATOR_NUM_SHOWN_ATTRIBUTE_NAME,
                                  QString::number(rep->getNumShown()).toStdString().c_str());
@@ -216,12 +235,14 @@ vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *repli
         repElement->SetAttribute(REPLICATOR_OBJECT2_ATTRIBUTE_NAME,
                                  ("#" + objectIds.value(rep->getSecondObject())).toStdString().c_str());
 
-        vtkXMLDataElement *list = vtkXMLDataElement::New();
+        vtkSmartPointer<vtkXMLDataElement> list = vtkSmartPointer<vtkXMLDataElement>::New();
         list->SetName(OBJECTLIST_ELEMENT_NAME);
         for (QListIterator<SketchObject *> tr = rep->getReplicaIterator(); tr.hasNext();) {
             const SketchObject *obj = tr.next();
             QString idStr = QString("O%1").arg(objectIds.size());
-            list->AddNestedElement(objectToXML(obj,modelIds,idStr));
+            vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,idStr);
+            list->AddNestedElement(child);
+            child->Delete();
             objectIds.insert(obj,idStr);
         }
         repElement->AddNestedElement(list);
@@ -236,7 +257,8 @@ vtkXMLDataElement *springListToXML(const WorldManager *world, const QHash<const 
     element->SetName(SPRING_LIST_ELEMENT_NAME);
     for (QListIterator<SpringConnection *> it = world->getSpringsIterator(); it.hasNext();) {
         const SpringConnection *spring = it.next();
-        element->AddNestedElement(springToXML(spring,objectIds));
+        vtkSmartPointer<vtkXMLDataElement> child = springToXML(spring,objectIds);
+        element->AddNestedElement(child);
     }
     return element;
 }
@@ -245,7 +267,7 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(SPRING_ELEMENT_NAME);
     // object 1 connection
-    vtkXMLDataElement *child = vtkXMLDataElement::New();
+    vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
     child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
                         ("#" + objectIds.value(spring->getObject1())).toStdString().c_str());
@@ -254,7 +276,7 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
     setPreciseVectorAttribute(child,pos1,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
     element->AddNestedElement(child);
     // spring properties
-    child = vtkXMLDataElement::New();
+    child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
     child->SetDoubleAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,spring->getStiffness());
     child->SetDoubleAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,spring->getMinRestLength());
@@ -264,7 +286,7 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
     const InterObjectSpring *ispring = dynamic_cast<const InterObjectSpring *>(spring);
     const ObjectPointSpring *pspring = dynamic_cast<const ObjectPointSpring *>(spring);
     if (ispring != NULL) {
-        child = vtkXMLDataElement::New();
+        child = vtkSmartPointer<vtkXMLDataElement>::New();
         child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
         child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
                             ("#" +objectIds.value(ispring->getObject2())).toStdString().c_str());
@@ -273,7 +295,7 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
         setPreciseVectorAttribute(child,pos2,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
         element->AddNestedElement(child);
     } else if (pspring != NULL) {
-        child = vtkXMLDataElement::New();
+        child = vtkSmartPointer<vtkXMLDataElement>::New();
         child->SetName(SPRING_POINT_END_ELEMENT_NAME);
         q_vec_type pos2;
         pspring->getEnd2WorldPosition(pos2);

@@ -25,7 +25,7 @@ ModelManager::~ModelManager() {
     QMutableHashIterator<QString, SketchModel *> i(models);
      while (i.hasNext()) {
          i.next();
-         qDebug() << i.key();
+//         qDebug() << i.key();
          model = i.value();
          i.setValue((SketchModel *) NULL);
          delete model;

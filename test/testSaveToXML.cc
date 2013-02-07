@@ -103,8 +103,8 @@ void compareObjectLists(SketchProject *proj1, SketchProject *proj2, int &retVal)
         bool failed = true;
         for (QListIterator<SketchObject *> it2 = proj2->getWorldManager()->getObjectIterator();
              it2.hasNext();i++) {
+            const SketchObject *n2 = it2.next();
             if (!used[i]) {
-                const SketchObject *n2 = it2.next();
                 int diffs = 0;
                 compareObjects(n1,n2,diffs);
                 if (diffs == 0) {
@@ -140,7 +140,7 @@ int testSave1() {
     q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
     SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
 
-    vtkSmartPointer<vtkXMLDataElement> root = projectToXML(proj1);
+    vtkXMLDataElement *root = projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
@@ -155,7 +155,9 @@ int testSave1() {
         cout << "Passed test 1" << endl;
     }
 
+    cout << "ref count " << root->GetReferenceCount() << endl;
     root->Delete();
+    root = NULL;
     delete proj1;
     delete proj2;
     return retVal;
@@ -182,7 +184,7 @@ int testSave2() {
     q_mult(orient1,orient1,orient1);
     proj1->addObject(m1,pos1,orient1);
 
-    vtkSmartPointer<vtkXMLDataElement> root = projectToXML(proj1);
+    vtkXMLDataElement *root = projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
@@ -197,6 +199,7 @@ int testSave2() {
     }
 
     root->Delete();
+    root = NULL;
     delete proj1;
     delete proj2;
     return retVal;
@@ -224,7 +227,7 @@ int testSave3() {
     proj1->addReplication(o1,o2,12);
 
 
-    vtkSmartPointer<vtkXMLDataElement> root = projectToXML(proj1);
+    vtkXMLDataElement *root = projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
@@ -239,6 +242,7 @@ int testSave3() {
     }
 
     root->Delete();
+    root = NULL;
     delete proj1;
     delete proj2;
     return retVal;
