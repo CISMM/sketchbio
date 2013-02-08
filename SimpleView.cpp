@@ -36,7 +36,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     analogRemote("Tracker0@localhost"),
     timer(new QTimer()),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(renderer.GetPointer(),buttonDown,analog),
+    project(new SketchProject(renderer.GetPointer(),buttonDown,analog)),
     copies(NULL)
 {
     this->ui = new Ui_SimpleView;
@@ -66,28 +66,28 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
 
     if (load_fibrin) {
         // eventually we will just load the example...
-        project.setProjectDir("sampleProjects/fibrin_replication");
+        project->setProjectDir("sampleProjects/fibrin_replication");
 
         // ???
-        SketchObject *object1 = project.addObject("./models/1m1j.obj");
-        SketchObject *object2 = project.addObject("./models/1m1j.obj");
+        SketchObject *object1 = project->addObject("./models/1m1j.obj");
+        SketchObject *object2 = project->addObject("./models/1m1j.obj");
 
         if (fibrin_springs) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-            project.addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
+            project->addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
 
             q_vec_set(p1,0,-30,0);
             q_vec_set(p2,200,-30,0);
-            project.addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
+            project->addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
         }
 
         // Replicate objects
         if (do_replicate) {
-            project.addReplication(object1,object2,NUM_EXTRA_FIBERS);
+            project->addReplication(object1,object2,NUM_EXTRA_FIBERS);
         }
 
-        vtkSmartPointer<vtkXMLDataElement> data = projectToXML(&project);
+        vtkSmartPointer<vtkXMLDataElement> data = projectToXML(project);
 
         vtkIndent indent = vtkIndent();
         vtkXMLUtilities::FlattenElement(data,std::cout,&indent);
@@ -122,6 +122,7 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
 }
 
 SimpleView::~SimpleView() {
+    delete project;
     delete timer;
     delete copies;
 }
@@ -144,7 +145,7 @@ void SimpleView::slot_frameLoop() {
     // input
     handleInput();
 
-    project.timestep(TIMESTEP);
+    project->timestep(TIMESTEP);
     if (copies != NULL) {
 	copies->updateTransform();
     }
@@ -154,11 +155,11 @@ void SimpleView::slot_frameLoop() {
 }
 
 void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
-    project.setLeftHandPos(newPos);
+    project->setLeftHandPos(newPos);
 }
 
 void SimpleView::setRightPos(q_xyz_quat_type *newPos) {
-    project.setRightHandPos(newPos);
+    project->setRightHandPos(newPos);
 }
 
 void SimpleView::setButtonState(int buttonNum, bool buttonPressed) {
@@ -173,12 +174,12 @@ void SimpleView::setAnalogStates(const double state[]) {
 
 SketchObject *SimpleView::addObject(QString name)
 {
-    return project.addObject(name);
+    return project->addObject(name);
 }
 
 bool SimpleView::addObjects(QVector<QString> names)
 {
-    return project.addObjects(names);
+    return project->addObjects(names);
 }
 
 void SimpleView::openOBJFile()
@@ -209,6 +210,45 @@ void SimpleView::saveToVRMLFile()
         exporter->SetRenderWindow(this->ui->qvtkWidget->GetRenderWindow());
         exporter->Write();
     }
+}
+
+void SimpleView::saveProjectAs() {
+    QString path = QFileDialog::getExistingDirectory(this,tr("Save Project As..."),"./");
+    if (path.length() == 0) {
+        return;
+    } else {
+        project->setProjectDir(path);
+        saveProject();
+    }
+}
+
+void SimpleView::saveProject() {
+    QString path = project->getProjectDir();
+    if (path.length() == 0) {
+        // maybe eventually allow them to select if nothing exists... but for now,
+        // enforce dir as part of project.
+//        saveProjectAs();
+        return;
+    }
+    QDir dir(path);
+    QString file = dir.absoluteFilePath("project.xml");
+    vtkXMLDataElement *root = projectToXML(project);
+    vtkIndent indent(0);
+    vtkXMLUtilities::WriteElementToFile(root,file.toStdString().c_str(),&indent);
+    root->Delete();
+}
+
+void SimpleView::loadProject() {
+    QString dirPath = QFileDialog::getExistingDirectory(this,tr("Load Project"), "./");
+    if (dirPath.length() == 0) {
+        return;
+    }
+    project->setProjectDir(dirPath);
+    QDir dir = project->getProjectDir();
+    QString file = dir.absoluteFilePath("project.xml");
+    vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
+    xmlToProject(project,root);
+    root->Delete();
 }
 
 bool SimpleView::simplifyObjectByName(const QString name)
@@ -245,7 +285,7 @@ void SimpleView::importPDBId()
 	QString fn = QFileDialog::getExistingDirectory ( this,
 					"Choose a directory to save to");
 
-	if (fn.length() > 0) {
+    if (fn.length() > 0) {
 	  printf("Importing %s from PDB\n", text.toStdString().c_str());
 
 	  // Start the pymol process and then write the commands to it

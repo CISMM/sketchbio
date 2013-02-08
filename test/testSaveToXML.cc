@@ -423,6 +423,27 @@ int testSave4() {
     return retVal;
 }
 
+int testSave5() {
+    bool a[NUM_HYDRA_BUTTONS];
+    double b[NUM_HYDRA_ANALOGS];
+    vtkSmartPointer<vtkRenderer> r = vtkSmartPointer<vtkRenderer>::New();
+    SketchProject *project = new SketchProject(r,a,b);
+    project->setProjectDir("sampleProjects/fibrin_replication");
+    QDir dir = project->getProjectDir();
+    QString file = dir.absoluteFilePath("project.xml");
+
+    vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
+
+    if (xmlToProject(project,root) == XML_TO_DATA_SUCCESS) {
+        cout << "Passed test 5" << endl;
+    } else {
+        cout << "Failed to load" << endl;
+    }
+    root->Delete();
+    delete project;
+    return 0;
+}
+
 int main() {
-    return testSave1() + testSave2() + testSave3() + testSave4();
+    return testSave1() + testSave2() + testSave3() + testSave4() + testSave5();
 }

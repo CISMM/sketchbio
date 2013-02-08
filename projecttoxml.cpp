@@ -322,28 +322,38 @@ int xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
             return XML_TO_DATA_FAILURE;
         }
         QHash<QString,SketchModel *> modelIds;
-        xmlToModelManager(proj,models,modelIds);
+        if (xmlToModelManager(proj,models,modelIds) == XML_TO_DATA_FAILURE) {
+            return XML_TO_DATA_FAILURE;
+        }
         vtkXMLDataElement *view = elem->FindNestedElementWithName(TRANSFORM_MANAGER_ELEMENT_NAME);
         if (view == NULL) {
             return XML_TO_DATA_FAILURE;
         }
-        xmlToTransforms(proj,view);
+        if (xmlToTransforms(proj,view) == XML_TO_DATA_FAILURE) {
+            return XML_TO_DATA_FAILURE;
+        }
         QHash<QString,SketchObject *> objectIds;
         vtkXMLDataElement *objs = elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
         if (objs == NULL) {
             return XML_TO_DATA_FAILURE;
         }
-        xmlToObjectList(proj,objs,modelIds,objectIds);
+        if (xmlToObjectList(proj,objs,modelIds,objectIds) == XML_TO_DATA_FAILURE) {
+            return XML_TO_DATA_FAILURE;
+        }
         vtkXMLDataElement *reps = elem->FindNestedElementWithName(REPLICATOR_LIST_ELEMENT_NAME);
         if (reps == NULL) {
             return XML_TO_DATA_FAILURE;
         }
-        xmlToReplicatorList(proj,reps,objectIds);
+        if (xmlToReplicatorList(proj,reps,objectIds) == XML_TO_DATA_FAILURE) {
+            return XML_TO_DATA_FAILURE;
+        }
         vtkXMLDataElement *springs = elem->FindNestedElementWithName(SPRING_LIST_ELEMENT_NAME);
         if (springs == NULL) {
             return XML_TO_DATA_FAILURE;
         }
-        xmlToSpringList(proj,springs,objectIds);
+        if (xmlToSpringList(proj,springs,objectIds) == XML_TO_DATA_FAILURE) {
+            return XML_TO_DATA_FAILURE;
+        }
     } else {
         return XML_TO_DATA_FAILURE;
     }
@@ -385,6 +395,7 @@ int xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,Sketc
             if (source == NULL) {
                 return XML_TO_DATA_FAILURE;
             }
+            source = source.trimmed();
         } else if (QString(child->GetName()) == QString(TRANSFORM_ELEMENT_NAME)) {
             int err = child->GetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,trans);
             if (err != 3) {
@@ -402,7 +413,10 @@ int xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,Sketc
     SketchModel *model = NULL;
     QString src = source;
     if (!src.startsWith("VTK")) {
+        // trans not used right now
         model = proj->addModelFromFile(proj->getProjectDir() + "/" + source,invMass,invMoment,scale);
+    } else {
+        return XML_TO_DATA_SUCCESS;
     }
     if (model != NULL) {
         modelIds.insert("#" + id,model);

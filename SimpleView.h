@@ -67,7 +67,14 @@ public slots:
 
   // Save the current scent to a VRML file
   void saveToVRMLFile();
- 
+
+  // Save the current project
+  void saveProjectAs();
+  void saveProject();
+
+  // Load a project
+  void loadProject();
+
   virtual void slotExit();
   void slot_frameLoop();
  
@@ -96,7 +103,7 @@ private:
   double analog[NUM_HYDRA_ANALOGS]; // number of analogs for hyrda
   QTimer *timer;
   vtkSmartPointer<vtkRenderer> renderer;
-  SketchProject project;
+  SketchProject *project;
   StructureReplicator *copies;
 };
 
