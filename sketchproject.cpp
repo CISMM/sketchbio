@@ -142,8 +142,9 @@ SketchObject *SketchProject::addObject(QString filename) {
 //    qDebug() << filename;
     QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
+    QFile localfile(fullpath);
 //    qDebug() << fullpath;
-    if (projectDir->entryList().contains(localname,Qt::CaseInsensitive) || file.copy(filename,fullpath)) {
+    if (localfile.exists() || file.copy(filename,fullpath)) {
         SketchModel *model = models->modelForOBJSource(fullpath);
 
         q_vec_type pos = Q_NULL_VECTOR;
@@ -151,6 +152,12 @@ SketchObject *SketchProject::addObject(QString filename) {
         pos[Q_Y] = 2 * world->getNumberOfObjects() / transforms->getWorldToRoomScale();
         return addObject(model,pos,orient);
     } else {
+        if (!localfile.exists()) {
+            qDebug() << "File is not there" << endl;
+            if (!file.copy(filename,fullpath)) {
+                qDebug() << "Cannot create copy" << endl;
+            }
+        }
         throw "Could not create local copy of model file";
     }
 }

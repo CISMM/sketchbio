@@ -30,7 +30,7 @@
 
 
 // Constructor
-SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate) :
+SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, bool do_replicate) :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
@@ -63,10 +63,10 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
     for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
         analog[i] = 0.0;
     }
+    project->setProjectDir(projDir);
 
     if (load_fibrin) {
         // eventually we will just load the example...
-        project->setProjectDir("sampleProjects/fibrin_replication");
 
         // ???
         SketchObject *object1 = project->addObject("./models/1m1j.obj");
@@ -190,21 +190,6 @@ void SimpleView::openOBJFile()
     }
 }
 
-void SimpleView::saveToVRMLFile()
-{
-    // Show the save dialog
-    QString fn = QFileDialog::getSaveFileName(this,tr("Save To VRML"), "./", tr("VRML Files (*.vrml)"));
-
-    // Open the file for writing, use VTK to dump the scene to it
-    if (fn.length() > 0) {
-        printf("Saving to %s\n", fn.toStdString().c_str());
-        vtkSmartPointer<vtkVRMLExporter> exporter = vtkSmartPointer<vtkVRMLExporter>::New();
-        exporter->SetFileName(fn.toStdString().c_str());
-        exporter->SetRenderWindow(this->ui->qvtkWidget->GetRenderWindow());
-        exporter->Write();
-    }
-}
-
 void SimpleView::saveProjectAs() {
     QString path = QFileDialog::getExistingDirectory(this,tr("Save Project As..."),"./");
     if (path.length() == 0) {
@@ -232,12 +217,20 @@ void SimpleView::saveProject() {
 }
 
 void SimpleView::loadProject() {
-    QString dirPath = QFileDialog::getExistingDirectory(this,tr("Load Project"), "./");
+    QString dirPath = QFileDialog::getExistingDirectory(this,tr("Select Project Directory (New or Existing)"), "./");
     if (dirPath.length() == 0) {
         return;
     }
+    // clean up old project
+    this->ui->qvtkWidget->GetRenderWindow()->RemoveRenderer(renderer);
+    renderer = vtkSmartPointer<vtkRenderer>::New();
+    delete project;
+    // create new one
+    this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
+    project = new SketchProject(renderer,buttonDown,analog);
     project->setProjectDir(dirPath);
-    QDir dir = project->getProjectDir();
+    // load project into new one
+    QDir dir(project->getProjectDir());
     QString file = dir.absoluteFilePath("project.xml");
     vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
     xmlToProject(project,root);

@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QFileDialog>
 #include "SimpleView.h"
 
 void Usage(const char *n)
@@ -40,11 +41,15 @@ int main( int argc, char** argv )
 	do_fibrin_springs = false;
 	do_fibrin_replicate = false;
   }
+  QString projDir = QFileDialog::getExistingDirectory((QWidget *)NULL,
+                               QString("Select Project Folder"),QString("./"));
+  if (projDir.length() != 0) {
 
-  SimpleView mySimpleView(do_fibrin, do_fibrin_springs, do_fibrin_replicate);
-  mySimpleView.addObjects(object_names);
-  mySimpleView.setWindowTitle("SketchBio");
-  mySimpleView.show();
+    SimpleView mySimpleView(projDir,do_fibrin, do_fibrin_springs, do_fibrin_replicate);
+    mySimpleView.addObjects(object_names);
+    mySimpleView.setWindowTitle("SketchBio");
+    mySimpleView.show();
  
-  return app.exec();
+    return app.exec();
+  }
 }
