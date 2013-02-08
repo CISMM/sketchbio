@@ -47,12 +47,15 @@
 #define SPRING_MIN_REST_ATTRIBUTE_NAME          "minRestLen"
 #define SPRING_MAX_REST_ATTRIBUTE_NAME          "maxRestLen"
 
+inline int max(int a, int b) { return (a > b) ? a : b; }
+
 inline void setPreciseVectorAttribute(vtkXMLDataElement *elem, const double *vect, int len, const char *attrName) {
     QString data;
     for (int i = 0; i < len; i++) {
-        data = data + QString::number(vect[i],'g',11) + " ";
+        int precision = (int) round(log(vect[i])-log(Q_EPSILON));
+        data = data + QString::number(vect[i],'g',max(11,precision)) + " ";
     }
-    elem->SetAttribute(attrName,data.toStdString().c_str());
+    elem->SetAttribute(attrName,data.trimmed().toStdString().c_str());
 }
 
 vtkXMLDataElement *projectToXML(const SketchProject *project) {
@@ -122,8 +125,10 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
     // physical properties (mass, etc..)
     child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
-    child->SetDoubleAttribute(MODEL_IMASS_ATTRIBUTE_NAME,model->getInverseMass());
-    child->SetDoubleAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,model->getInverseMomentOfInertia());
+    double v = model->getInverseMass();
+    setPreciseVectorAttribute(child,&v,1,MODEL_IMASS_ATTRIBUTE_NAME);
+    v = model->getInverseMomentOfInertia();
+    setPreciseVectorAttribute(child,&v,1,MODEL_IMOMENT_ATTRIBUTE_NAME);
     element->AddNestedElement(child);
 
     // transformations from source to model
@@ -132,7 +137,8 @@ vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, cons
     double translate[3];
     model->getTranslate(translate);
     setPreciseVectorAttribute(child,translate,3,MODEL_TRANSLATE_ATTRIBUTE_NAME);
-    child->SetDoubleAttribute(MODEL_SCALE_ATTRIBUTE_NAME,model->getScale());
+    v = model->getScale();
+    setPreciseVectorAttribute(child,&v,1,MODEL_SCALE_ATTRIBUTE_NAME);
     element->AddNestedElement(child);
 
     return element;
@@ -278,9 +284,12 @@ vtkXMLDataElement *springToXML(const SpringConnection *spring, const QHash<const
     // spring properties
     child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
-    child->SetDoubleAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,spring->getStiffness());
-    child->SetDoubleAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,spring->getMinRestLength());
-    child->SetDoubleAttribute(SPRING_MAX_REST_ATTRIBUTE_NAME,spring->getMaxRestLength());
+    double v = spring->getStiffness();
+    setPreciseVectorAttribute(child,&v,1,SPRING_STIFFNESS_ATTRIBUTE_NAME);
+    v = spring->getMinRestLength();
+    setPreciseVectorAttribute(child,&v,1,SPRING_MIN_REST_ATTRIBUTE_NAME);
+    v = spring->getMaxRestLength();
+    setPreciseVectorAttribute(child,&v,1,SPRING_MAX_REST_ATTRIBUTE_NAME);
     element->AddNestedElement(child);
     // second end, depends on spring type
     const InterObjectSpring *ispring = dynamic_cast<const InterObjectSpring *>(spring);
