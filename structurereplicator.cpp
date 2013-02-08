@@ -35,10 +35,8 @@ void ReplicatedObject::getPosition(q_vec_type dest) const {
 void ReplicatedObject::getOrientation(q_type dest) const {
     double ori[4];
     localTransform->GetOrientationWXYZ(ori);
-    dest[Q_W] = ori[0];
-    dest[Q_X] = ori[1];
-    dest[Q_Y] = ori[2];
-    dest[Q_Z] = ori[3];
+    double angle = ori[0] * Q_PI/180.0;
+    q_from_axis_angle(dest,ori[1],ori[2],ori[3],angle);
 //    q_vec_type xaxis = {1, 0, 0};
 //    q_vec_type yaxis = {0, 1, 0};
 //    q_vec_type xout,yout;

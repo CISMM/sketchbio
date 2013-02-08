@@ -87,13 +87,6 @@ SimpleView::SimpleView(bool load_fibrin, bool fibrin_springs, bool do_replicate)
             project->addReplication(object1,object2,NUM_EXTRA_FIBERS);
         }
 
-        vtkSmartPointer<vtkXMLDataElement> data = projectToXML(project);
-
-        vtkIndent indent = vtkIndent();
-        vtkXMLUtilities::FlattenElement(data,std::cout,&indent);
-        std::cout << endl;
-
-        data->Delete();
     }
 
     // camera setup
