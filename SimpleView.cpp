@@ -224,6 +224,12 @@ void SimpleView::loadProject() {
     // clean up old project
     this->ui->qvtkWidget->GetRenderWindow()->RemoveRenderer(renderer);
     renderer = vtkSmartPointer<vtkRenderer>::New();
+
+    vtkSmartPointer<vtkCamera> camera =
+            vtkSmartPointer<vtkCamera>::New();
+    camera->SetPosition(0, 0, 50);
+    camera->SetFocalPoint(0, 0, 30);
+    renderer->SetActiveCamera(camera);
     delete project;
     // create new one
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
