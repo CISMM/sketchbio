@@ -28,6 +28,8 @@
 // timestep
 #define TIMESTEP (16/1000.0)
 
+#define PROJECT_XML_FILENAME "project.xml"
+
 
 // Constructor
 SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, bool do_replicate) :
@@ -64,8 +66,14 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
         analog[i] = 0.0;
     }
     project->setProjectDir(projDir);
-
-    if (load_fibrin) {
+    QDir pd(project->getProjectDir());
+    QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
+    QFile f(file);
+    if (f.exists()) {
+        vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
+        xmlToProject(project,root);
+        root->Delete();
+    } else if (load_fibrin) {
         // eventually we will just load the example...
 
         // ???
@@ -209,7 +217,7 @@ void SimpleView::saveProject() {
         return;
     }
     QDir dir(path);
-    QString file = dir.absoluteFilePath("project.xml");
+    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
     vtkXMLDataElement *root = projectToXML(project);
     vtkIndent indent(0);
     vtkXMLUtilities::WriteElementToFile(root,file.toStdString().c_str(),&indent);
@@ -237,10 +245,14 @@ void SimpleView::loadProject() {
     project->setProjectDir(dirPath);
     // load project into new one
     QDir dir(project->getProjectDir());
-    QString file = dir.absoluteFilePath("project.xml");
-    vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
-    xmlToProject(project,root);
-    root->Delete();
+    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
+    QFile f(file);
+    // only load if xml file exists
+    if (f.exists()) {
+        vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
+        xmlToProject(project,root);
+        root->Delete();
+    }
 }
 
 bool SimpleView::simplifyObjectByName(const QString name)
