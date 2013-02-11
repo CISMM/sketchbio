@@ -9,7 +9,10 @@
 //##################################################################################################
 WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     objects(),
-    connections()
+    connections(),
+    lHand(),
+    rHand(),
+    maxGroupNum(0)
 {
     renderer = r;
     pausePhysics = false;
@@ -50,6 +53,8 @@ WorldManager::~WorldManager() {
         it.setValue((SpringConnection *)NULL);
         delete spring;
     }
+    clearLeftHandSprings();
+    clearRightHandSprings();
     objects.clear();
     connections.clear();
 }
@@ -63,6 +68,7 @@ SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, c
     newObject->setPosition(pos);
     newObject->setOrientation(orient);
     newObject->recalculateLocalTransform();
+    newObject->setPrimaryGroupNum(maxGroupNum++);
     renderer->AddActor(actor);
     objects.push_back(newObject);
     return newObject;
@@ -72,6 +78,9 @@ SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, c
 //##################################################################################################
 SketchObject *WorldManager::addObject(SketchObject *object) {
     objects.push_back(object);
+    if (object->getPrimaryGroupNum() == OBJECT_HAS_NO_GROUP) {
+        object->setPrimaryGroupNum(maxGroupNum++);
+    }
     renderer->AddActor(object->getActor());
     return object;
 }
@@ -102,29 +111,29 @@ QListIterator<SketchObject *> WorldManager::getObjectIterator() const {
 //##################################################################################################
 //##################################################################################################
 SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
-    connections.push_back(spring);
-
-    // code to draw spring as a line
-    if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
-        vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
-        springEnds->Allocate(newCapacity*4);
-        springEndConnections->Allocate(newCapacity*2);
-        lastCapacityUpdate = newCapacity *2;
-    }
-    q_vec_type endOfSpring;
-    spring->getEnd1WorldPosition(endOfSpring);
-    vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
-    spring->setEnd1Id(end1Id);
-    spring->getEnd2WorldPosition(endOfSpring);
-    vtkIdType end2Id = springEnds->InsertNextPoint(endOfSpring);
-    spring->setEnd2Id(end2Id);
-//    springEnds->Modified();
-    vtkIdType pts[2] = { end1Id, end2Id };
-    vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
-//    springEndConnections->Update();
-    spring->setCellId(cellId);
+    addSpring(spring,&connections);
 
     return spring;
+}
+
+void WorldManager::clearLeftHandSprings() {
+    for (QMutableListIterator<SpringConnection *> it(lHand); it.hasNext();) {
+        SpringConnection *spring = it.next();
+        springEndConnections->DeleteCell(spring->getCellId());
+        it.setValue((SpringConnection *)NULL);
+        delete spring;
+    }
+    lHand.clear();
+}
+
+void WorldManager::clearRightHandSprings() {
+    for (QMutableListIterator<SpringConnection *> it(rHand); it.hasNext();) {
+        SpringConnection *spring = it.next();
+        springEndConnections->DeleteCell(spring->getCellId());
+        it.setValue((SpringConnection *)NULL);
+        delete spring;
+    }
+    rHand.clear();
 }
 
 //##################################################################################################
@@ -132,25 +141,9 @@ SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
 SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,const q_vec_type pos1,
                              const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen)
 {
-    q_type oPos1, oPos2, newPos1, newPos2;
-    q_type orient1, orient2;
-    if (worldRelativePos) {
-        o1->getPosition(oPos1);
-        o1->getOrientation(orient1);
-        o2->getPosition(oPos2);
-        o2->getOrientation(orient2);
-        q_invert(orient1,orient1);
-        q_invert(orient2,orient2);
-        q_vec_subtract(newPos1,pos1,oPos1);
-        q_xform(newPos1,orient1,newPos1);
-        q_vec_subtract(newPos2,pos2,oPos2);
-        q_xform(newPos2,orient2,newPos2);
-    } else {
-        q_vec_copy(newPos1,pos1);
-        q_vec_copy(newPos2,pos2);
-    }
-    SpringConnection *spring = new InterObjectSpring(o1,o2,minLen,maxLen,k,newPos1,newPos2);
-    return addSpring(spring);
+    SpringConnection *spring = InterObjectSpring::makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,minLen,maxLen);
+    addSpring(spring, &connections);
+    return spring;
 }
 
 //##################################################################################################
@@ -239,8 +232,16 @@ void WorldManager::stepPhysics(double dt) {
             }
         }
 
-        // spring forces between models / models & trackers
+        // spring forces between models
         for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
+            it.next()->addForce();
+        }
+        // spring forces for left hand interaction
+        for (QListIterator<SpringConnection *> it(lHand); it.hasNext();) {
+            it.next()->addForce();
+        }
+        // spring forces for right hand interacton
+        for (QListIterator<SpringConnection *> it(rHand); it.hasNext();) {
             it.next()->addForce();
         }
     }
@@ -265,19 +266,40 @@ void WorldManager::togglePhysics() {
     pausePhysics = ! pausePhysics;
 }
 
+//##################################################################################################
+//##################################################################################################
+// helper function for updateSprings
+inline void updatePoints(QList<SpringConnection *> &list, vtkPoints *pts) {
+    for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
+        SpringConnection *s = it.next();
+        q_vec_type pos1,pos2;
+        s->getEnd1WorldPosition(pos1);
+        pts->SetPoint(s->getEnd1Id(),pos1);
+        s->getEnd2WorldPosition(pos2);
+        pts->SetPoint(s->getEnd2Id(),pos2);
+    }
+}
+//##################################################################################################
+//##################################################################################################
+// helper function for updateSprings
+inline void addSpringCells(QList<SpringConnection *> &list, vtkPolyData *data) {
+    for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
+        SpringConnection *s = it.next();
+        vtkIdType pts[2];
+        pts[0] = s->getEnd1Id();
+        pts[1] = s->getEnd2Id();
+        vtkIdType cellId = data->InsertNextCell(VTK_LINE,2,pts);
+        s->setCellId(cellId);
+    }
+}
 
 //##################################################################################################
 //##################################################################################################
 void WorldManager::updateSprings() {
     // set spring ends to new positions
-    for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
-        SpringConnection *s = it.next();
-        q_vec_type pos1,pos2;
-        s->getEnd1WorldPosition(pos1);
-        springEnds->SetPoint(s->getEnd1Id(),pos1);
-        s->getEnd2WorldPosition(pos2);
-        springEnds->SetPoint(s->getEnd2Id(),pos2);
-    }
+    updatePoints(connections,springEnds);
+    updatePoints(lHand,springEnds);
+    updatePoints(rHand,springEnds);
     springEnds->Modified();
     int num = springEndConnections->GetNumberOfLines(), num2;
     springEndConnections->RemoveDeletedCells();
@@ -286,32 +308,14 @@ void WorldManager::updateSprings() {
             springEndConnections->DeleteCell(i);
         }
         springEndConnections->RemoveDeletedCells();
-        for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
-            SpringConnection *s = it.next();
-            vtkIdType pts[2];
-            pts[0] = s->getEnd1Id();
-            pts[1] = s->getEnd2Id();
-            vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
-            s->setCellId(cellId);
-        }
+        addSpringCells(connections,springEndConnections);
+        addSpringCells(lHand,springEndConnections);
+        addSpringCells(rHand,springEndConnections);
         springEndConnections->Modified();
         springEndConnections->Update();
         tubeFilter->Update();
     }
     springEndConnections->Update();
-}
-
-//##################################################################################################
-//##################################################################################################
-// helper function-- converts quaternion to a PQP matrix
-inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
-    q_matrix_type rowMat;
-    q_to_col_matrix(rowMat,quat);
-    for (int i = 0; i < 3; i++) {
-        mat[i][0] = rowMat[i][0];
-        mat[i][1] = rowMat[i][1];
-        mat[i][2] = rowMat[i][2];
-    }
 }
 
 //##################################################################################################
@@ -408,17 +412,11 @@ void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
 
     // get the offsets and rotations in PQP's format
     PQP_CollideResult cr;
-    PQP_REAL r1[3][3], t1[3], r2[3][3],t2[3];
     q_type quat1, quat2;
     (o1)->getOrientation(quat1);
-    quatToPQPMatrix(quat1,r1);
-    (o1)->getPosition(t1);
     (o2)->getOrientation(quat2);
-    quatToPQPMatrix(quat2,r2);
-    (o2)->getPosition(t2);
 
-    // collide them
-    PQP_Collide(&cr,r1,t1,pqp_model1,r2,t2,pqp_model2,PQP_ALL_CONTACTS);
+    SketchObject::collide(o1,o2,&cr);
 
     // for each pair in collision
     for (int i = 0; i < cr.NumPairs(); i++) {
@@ -443,4 +441,30 @@ void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
         (o1)->addForce(p1,f1);
         (o2)->addForce(p2,f2);
     }
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
+    list->push_back(spring);
+
+    // code to draw spring as a line
+    if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
+        vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
+        springEnds->Allocate(newCapacity*4);
+        springEndConnections->Allocate(newCapacity*2);
+        lastCapacityUpdate = newCapacity *2;
+    }
+    q_vec_type endOfSpring;
+    spring->getEnd1WorldPosition(endOfSpring);
+    vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
+    spring->setEnd1Id(end1Id);
+    spring->getEnd2WorldPosition(endOfSpring);
+    vtkIdType end2Id = springEnds->InsertNextPoint(endOfSpring);
+    spring->setEnd2Id(end2Id);
+//    springEnds->Modified();
+    vtkIdType pts[2] = { end1Id, end2Id };
+    vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
+//    springEndConnections->Update();
+    spring->setCellId(cellId);
 }

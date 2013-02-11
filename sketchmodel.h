@@ -40,4 +40,5 @@ private:
     double invMomentOfInertia;
 };
 
+
 #endif // SKETCHMODEL_H

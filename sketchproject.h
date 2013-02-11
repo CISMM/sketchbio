@@ -77,7 +77,6 @@ private:
     const double *analog;
     int grabbedWorld;
     SketchObject *leftHand, *rightHand;
-    QList<SpringConnection *> lhand,rhand;
     double lDist, rDist;
     SketchObject *lObj, *rObj;
 };

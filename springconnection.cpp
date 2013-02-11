@@ -96,3 +96,27 @@ void ObjectPointSpring::addForce() {
     q_vec_scale(f,-displacement*stiffness,difference);
     object1->addForce(object1ConnectionPosition,f);
 }
+
+
+SpringConnection *InterObjectSpring::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                   const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen) {
+    q_type oPos1, oPos2, newPos1, newPos2;
+    q_type orient1, orient2;
+    if (worldRelativePos) {
+        o1->getPosition(oPos1);
+        o1->getOrientation(orient1);
+        o2->getPosition(oPos2);
+        o2->getOrientation(orient2);
+        q_invert(orient1,orient1);
+        q_invert(orient2,orient2);
+        q_vec_subtract(newPos1,pos1,oPos1);
+        q_xform(newPos1,orient1,newPos1);
+        q_vec_subtract(newPos2,pos2,oPos2);
+        q_xform(newPos2,orient2,newPos2);
+    } else {
+        q_vec_copy(newPos1,pos1);
+        q_vec_copy(newPos2,pos2);
+    }
+    SpringConnection *spring = new InterObjectSpring(o1,o2,minLen,maxLen,k,newPos1,newPos2);
+    return spring;
+}

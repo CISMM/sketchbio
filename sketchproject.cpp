@@ -327,14 +327,14 @@ void SketchProject::updateTrackerObjectConnections() {
             analogIdx = HYDRA_LEFT_TRIGGER;
             worldGrabConstant = LEFT_GRABBED_WORLD;
             tracker = leftHand;
-            springs = &lhand;
+            springs = world->getLeftSprings();
             objectToGrab = lObj;
             dist = lDist;
         } else if (i == 1) {
             analogIdx = HYDRA_RIGHT_TRIGGER;
             worldGrabConstant = RIGHT_GRABBED_WORLD;
             tracker = rightHand;
-            springs = &rhand;
+            springs = world->getRightSprings();
             objectToGrab = rObj;
             dist = rDist;
         }
@@ -370,26 +370,38 @@ void SketchProject::updateTrackerObjectConnections() {
                     // first spring --defined along the "x" axis (per1)
                     SpringConnection *spring;
                     q_vec_add(wPos2,tPos,tPer1);
-                    spring = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(spring);
+                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                                           analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                    if (i == 0) {
+                        world->addLeftHandSpring(spring);
+                    } else if (i == 1) {
+                        world->addRightHandSpring(spring);
+                    }
                     // second spring --defined as rotated 120 degrees about "z" axis.
                     // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
                     q_vec_scale(tPer1,-.5,tPer1);
                     q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
                     q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
                     q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-                    spring = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(spring);
+                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                                           analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                    if (i == 0) {
+                        world->addLeftHandSpring(spring);
+                    } else if (i == 1) {
+                        world->addRightHandSpring(spring);
+                    }
                     // third spring --defined as rotated 240 degrees about "z" axis.
                     // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
                     q_vec_invert(tPer2,tPer2);
                     q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
                     q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-                    spring = world->addSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                         analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    springs->push_back(spring);
+                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                                           analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                    if (i == 0) {
+                        world->addLeftHandSpring(spring);
+                    } else if (i == 1) {
+                        world->addRightHandSpring(spring);
+                    }
                 }
             } else { // update springs stiffness if they are already there
                 for (QListIterator<SpringConnection *> it(*springs); it.hasNext();) {
@@ -399,10 +411,11 @@ void SketchProject::updateTrackerObjectConnections() {
         } else {
             if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
                 // remove springs between model & tracker
-                for (QListIterator<SpringConnection *> it(*springs); it.hasNext();) {
-                    world->removeSpring(it.next());
+                if (i == 0) {
+                    world->clearLeftHandSprings();
+                } else if (i == 1) {
+                    world->clearRightHandSprings();
                 }
-                springs->clear();
             }
             if (grabbedWorld == worldGrabConstant) {
                 grabbedWorld = WORLD_NOT_GRABBED;

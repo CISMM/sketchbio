@@ -17,6 +17,10 @@
  * object.
  */
 
+// used by getPrimaryGroupNum to indicate that the object has not been
+// assigned a group
+#define OBJECT_HAS_NO_GROUP (-1)
+
 class SketchObject
 {
 public:
@@ -201,6 +205,16 @@ public:
       *
      *********************************************************************/
     inline void setSolid() { actor->SetMapper(modelId->getSolidMapper());}
+    /*********************************************************************
+      *
+      * Converts between the objects' local transformations and the transformations
+      * that the collision detection library needs and runs the collisions.  cr is
+      * assumed to be a new collision result object that will be filled with data
+      * from the test that is run
+      *
+     *********************************************************************/
+    static void collide(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr,
+                        int pqpFlags = PQP_ALL_CONTACTS);
 protected:
     vtkSmartPointer<vtkTransform> localTransform;
     bool allowTransformUpdate, physicsEnabled;
@@ -219,6 +233,17 @@ private:
 inline void SketchObject::setLastLocation() {
     q_vec_copy(lastPosition,position);
     q_copy(lastOrientation,orientation);
+}
+
+// helper function-- converts quaternion to a PQP matrix
+inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
+    q_matrix_type rowMat;
+    q_to_col_matrix(rowMat,quat);
+    for (int i = 0; i < 3; i++) {
+        mat[i][0] = rowMat[i][0];
+        mat[i][1] = rowMat[i][1];
+        mat[i][2] = rowMat[i][2];
+    }
 }
 
 #endif // SKETCHOBJECT_H

@@ -85,6 +85,54 @@ public:
      *
      *******************************************************************/
     SpringConnection *addSpring(SpringConnection *spring);
+    /*******************************************************************
+     *
+     * Adds the given spring to the list of springs for the left hand
+     *
+     * This passes ownership of the SpringConnection to the world manager
+     * and the spring connection will be deleted in removeSpring
+     * or the world manager's destructor
+     *
+     * spring - the spring to add
+     *
+     *******************************************************************/
+    inline void addLeftHandSpring(SpringConnection *spring) {addSpring(spring,&lHand); }
+    /*******************************************************************
+     *
+     * Adds the given spring to the list of springs for the right hand
+     *
+     * This passes ownership of the SpringConnection to the world manager
+     * and the spring connection will be deleted in removeSpring
+     * or the world manager's destructor
+     *
+     * spring - the spring to add
+     *
+     *******************************************************************/
+    inline void addRightHandSpring(SpringConnection *spring) {addSpring(spring,&rHand); }
+    /*******************************************************************
+     *
+     * Gets the list of springs for the left hand
+     *
+     *******************************************************************/
+    inline QList<SpringConnection *> *getLeftSprings() { return &lHand; }
+    /*******************************************************************
+     *
+     * Gets the list of springs for the right hand
+     *
+     *******************************************************************/
+    inline QList<SpringConnection *> *getRightSprings() { return &rHand; }
+    /*******************************************************************
+     *
+     * Clears the list of springs for the left hand
+     *
+     *******************************************************************/
+    void clearLeftHandSprings();
+    /*******************************************************************
+     *
+     * Clears the list of springs for the right hand
+     *
+     *******************************************************************/
+    void clearRightHandSprings();
 
     /*******************************************************************
      *
@@ -180,11 +228,18 @@ private:
      *
      *******************************************************************/
     void collide(SketchObject *o1, SketchObject *o2);
+    /*******************************************************************
+     *
+     * This method adds the spring to the given list and performs the
+     * other steps necessary for the spring to be shown onscreen
+     *
+     *******************************************************************/
+    void addSpring(SpringConnection *spring, QList<SpringConnection *> *list);
 
     void updateSprings();
 
     QList<SketchObject *> objects;
-    QList<SpringConnection *> connections;
+    QList<SpringConnection *> connections, lHand, rHand;
     int nextIdx;
     vtkSmartPointer<vtkRenderer> renderer;
     int lastCapacityUpdate;
@@ -192,6 +247,7 @@ private:
     vtkSmartPointer<vtkPolyData> springEndConnections;
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
+    int maxGroupNum;
     bool pausePhysics;
 };
 

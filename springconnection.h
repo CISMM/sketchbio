@@ -64,10 +64,51 @@ public:
     virtual void getEnd2WorldPosition(q_vec_type out) const;
 
     virtual void addForce();
+
+    /*******************************************************************
+     *
+     * Creates the spring between the two objects and returns a pointer to it.
+     *
+     * o1 - the first object to connect
+     * o2 - the second object to connect
+     * pos1 - the position where the spring connects to the first model
+     * pos2 - the position where the spring connects to the second model
+     * worldRelativePos - true if the above positions are relative to the world coordinate space,
+     *                  - false if they are relative to the model coordiante space
+     * k - the stiffness of the spring
+     * minLen - the minimum rest length of the spring
+     * maxLen - the maximum rest length of the spring
+     *
+     *******************************************************************/
+    static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                      const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen);
+    /*******************************************************************
+     *
+     * Creates the spring between the two objects and returns a pointer to it.
+     *
+     * o1 - the first object to connect
+     * o2 - the second object to connect
+     * pos1 - the position where the spring connects to the first model
+     * pos2 - the position where the spring connects to the second model
+     * worldRelativePos - true if the above positions are relative to the world coordinate space,
+     *                  - false if they are relative to the model coordiante space
+     * k - the stiffness of the spring
+     * len - the length of the spring
+     *
+     *******************************************************************/
+    static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                      const q_vec_type pos2, bool worldRelativePos, double k, double len);
 private:
     SketchObject *object2;
     q_vec_type object2ConnectionPosition;
 };
+
+
+inline SpringConnection *InterObjectSpring::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+                                   const q_vec_type pos2, bool worldRelativePos, double k, double len) {
+    return makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
+}
+
 
 /*
  * This class extends SpringConnection to define a spring between an object and a location in the world

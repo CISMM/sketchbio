@@ -10,7 +10,7 @@ SketchObject::SketchObject(vtkActor *a, SketchModel *model, vtkTransform *worldE
     q_vec_copy(torqueAccum,forceAccum);
     q_make(orientation,1,0,0,0);
     q_copy(lastOrientation,orientation);
-    groupNum = -1;
+    groupNum = OBJECT_HAS_NO_GROUP;
     vtkSmartPointer<vtkTransform> trans = (vtkTransform *) a->GetUserTransform();
     if (trans == NULL) {
         trans = vtkSmartPointer<vtkTransform>::New();
@@ -74,4 +74,25 @@ void SketchObject::addForce(q_vec_type point, const q_vec_type force) {
     localTransform->Inverse();
     q_vec_cross_product(torque,point,modelForce);
     q_vec_add(torqueAccum,torque,torqueAccum);
+}
+
+void SketchObject::collide(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqpFlags) {
+    // get the collision models:
+    SketchModel *model1 = ((o1)->getModel());
+    SketchModel *model2 = ((o2)->getModel());
+    PQP_Model *pqp_model1 = model1->getCollisionModel();
+    PQP_Model *pqp_model2 = model2->getCollisionModel();
+
+    // get the offsets and rotations in PQP's format
+    PQP_REAL r1[3][3], t1[3], r2[3][3],t2[3];
+    q_type quat1, quat2;
+    (o1)->getOrientation(quat1);
+    quatToPQPMatrix(quat1,r1);
+    (o1)->getPosition(t1);
+    (o2)->getOrientation(quat2);
+    quatToPQPMatrix(quat2,r2);
+    (o2)->getPosition(t2);
+
+    // collide them
+    PQP_Collide(cr,r1,t1,pqp_model1,r2,t2,pqp_model2,pqpFlags);
 }
