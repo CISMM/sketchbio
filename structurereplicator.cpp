@@ -66,6 +66,16 @@ void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
     original->addForce(point,scaledForce);
 }
 
+void ReplicatedObject::setPrimaryGroupNum(int num) {} // does nothing, group num based on originals
+
+int ReplicatedObject::getPrimaryGroupNum() {
+    return ((replicaNum > 0) ? obj1 : obj0)->getPrimaryGroupNum();
+}
+
+bool ReplicatedObject::isInGroup(int num) {
+    return obj1->isInGroup(num) || obj0->isInGroup(num);
+}
+
 //############################################################################################
 //############################################################################################
 // StructureReplicator class methods

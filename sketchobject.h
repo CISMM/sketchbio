@@ -56,13 +56,32 @@ public:
       * Copies the position of the object into the given vector
       *
      *********************************************************************/
-    virtual void getPosition(q_vec_type dest) const { q_vec_copy(dest,position); }
+    virtual void getPosition(q_vec_type dest) const;
+    /*********************************************************************
+      *
+      * Copies the old position of the object into the given vector
+      *
+     *********************************************************************/
+    inline void getLastPosition(q_vec_type dest) const { q_vec_copy(dest,lastPosition); }
     /*********************************************************************
       *
       * Copies the orientation of the object into the given quaternion
       *
      *********************************************************************/
-    virtual void getOrientation(q_type dest) const { q_copy(dest,orientation); }
+    virtual void getOrientation(q_type dest) const;
+    /*********************************************************************
+      *
+      * Copies the old orientation of the object into the given quaternion
+      *
+     *********************************************************************/
+    inline void getLastOrientation(q_type dest) const { q_copy(dest,lastOrientation); }
+    /*********************************************************************
+      *
+      * Sets the current position and orientation of the object to be the old
+      * ones returned by getLastPosition and getLastOrientation
+      *
+     *********************************************************************/
+    void setLastLocation();
     /*********************************************************************
       *
       * Sets the orientation of the object to the given new orientation
@@ -75,6 +94,9 @@ public:
       *
      *********************************************************************/
     inline void setPosition(const q_vec_type newPosition) { q_vec_copy(position, newPosition); }
+    virtual void setPrimaryGroupNum(int num);
+    virtual int getPrimaryGroupNum();
+    virtual bool isInGroup(int num);
     /*********************************************************************
       *
       * Gets the transformation within world coordinates that defines this
@@ -187,8 +209,16 @@ private:
     vtkSmartPointer<vtkActor> actor;
     q_vec_type position;
     q_type orientation;
+    q_vec_type lastPosition;
+    q_type lastOrientation;
     q_vec_type forceAccum;
     q_vec_type torqueAccum;
+    int groupNum;
 };
+
+inline void SketchObject::setLastLocation() {
+    q_vec_copy(lastPosition,position);
+    q_copy(lastOrientation,orientation);
+}
 
 #endif // SKETCHOBJECT_H

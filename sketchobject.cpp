@@ -5,9 +5,12 @@ SketchObject::SketchObject(vtkActor *a, SketchModel *model, vtkTransform *worldE
     actor = a;
     modelId = model;
     q_vec_set(position,0,0,0);
+    q_vec_copy(lastPosition,position);
     q_vec_copy(forceAccum,position);
     q_vec_copy(torqueAccum,forceAccum);
     q_make(orientation,1,0,0,0);
+    q_copy(lastOrientation,orientation);
+    groupNum = -1;
     vtkSmartPointer<vtkTransform> trans = (vtkTransform *) a->GetUserTransform();
     if (trans == NULL) {
         trans = vtkSmartPointer<vtkTransform>::New();
@@ -22,6 +25,26 @@ SketchObject::SketchObject(vtkActor *a, SketchModel *model, vtkTransform *worldE
     a->SetUserTransform(trans);
     physicsEnabled = true;
     allowTransformUpdate = true;
+}
+
+void SketchObject::getPosition(q_vec_type dest) const {
+    q_vec_copy(dest,position);
+}
+
+void SketchObject::getOrientation(q_type dest) const {
+    q_copy(dest,orientation);
+}
+
+void SketchObject::setPrimaryGroupNum(int num) {
+    groupNum = num;
+}
+
+int SketchObject::getPrimaryGroupNum() {
+   return groupNum;
+}
+
+bool SketchObject::isInGroup(int num) {
+    return num == groupNum;
 }
 
 void SketchObject::recalculateLocalTransform() {

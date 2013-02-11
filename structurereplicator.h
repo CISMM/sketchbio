@@ -23,7 +23,10 @@ public:
     virtual void addForce(q_vec_type point, const q_vec_type force);
     virtual void getPosition(q_vec_type dest) const;
     virtual void getOrientation(q_type dest) const;
-    inline int getReplicaNum() const { return replicaNum; }
+    virtual void setPrimaryGroupNum(int num);
+    virtual int  getPrimaryGroupNum();
+    virtual bool isInGroup(int num);
+    inline  int  getReplicaNum() const { return replicaNum; }
 private:
     // need original(s) here
     SketchObject *obj0; // first original
