@@ -206,7 +206,14 @@ public:
      * Turns on or off the non-user related spring forces.
      *
      *******************************************************************/
-    void togglePhysics();
+    void togglePhysicsSprings();
+    /*******************************************************************
+     *
+     * Turns on or off the collision tests (when off, objects can pass
+     * through each other)
+     *
+     *******************************************************************/
+    void toggleCollisionCheck();
     /*******************************************************************
      *
      * Returns the closest object to the given object, and the distance
@@ -257,7 +264,7 @@ private:
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     int maxGroupNum;
-    bool pausePhysics, usePoseMode;
+    bool doPhysicsSprings, doCollisionCheck, usePoseMode;
 };
 
 inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

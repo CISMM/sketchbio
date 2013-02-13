@@ -15,7 +15,8 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     maxGroupNum(0)
 {
     renderer = r;
-    pausePhysics = false;
+    doPhysicsSprings = true;
+    doCollisionCheck = true;
     usePoseMode = true;
     nextIdx = 0;
     lastCapacityUpdate = 1000;
@@ -311,12 +312,14 @@ inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int
 //##################################################################################################
 // -helper function applies the forces from the list of springs to the objects and does pose-mode
 //   collision response on them.
-inline void poseModeForSprings(QList<SpringConnection *> springs, QList<SketchObject *> objs, double dt) {
+inline void poseModeForSprings(QList<SpringConnection *> springs, QList<SketchObject *> objs,
+                               double dt, bool doCollisionCheck) {
     QSet<int> affectedGroups;
     if (!springs.empty()) {
         springForcesFromList(springs,affectedGroups);
         applyEuler(objs,dt);
-        applyPoseModeCollisionResponse(objs,affectedGroups,dt);
+        if (doCollisionCheck)
+            applyPoseModeCollisionResponse(objs,affectedGroups,dt);
     }
 }
 
@@ -332,23 +335,24 @@ void WorldManager::stepPhysics(double dt) {
     }
     if (usePoseMode) { // pose mode
         // spring forces for right hand interacton
-        poseModeForSprings(rHand,objects,dt);
+        poseModeForSprings(rHand,objects,dt,doCollisionCheck);
         // spring forces for left hand interaction
-        poseModeForSprings(lHand,objects,dt);
+        poseModeForSprings(lHand,objects,dt,doCollisionCheck);
 
         // spring forces for physics springs interaction
-        if (!pausePhysics) {
-            poseModeForSprings(connections,objects,dt);
+        if (!doPhysicsSprings) {
+            poseModeForSprings(connections,objects,dt,doCollisionCheck);
         }
     } else { // non-pose-mode
         QSet<int> affectedGroups;
         springForcesFromList(rHand,affectedGroups);
         springForcesFromList(lHand,affectedGroups);
-        if (!pausePhysics)
+        if (!doPhysicsSprings)
             springForcesFromList(connections,affectedGroups);
         applyEuler(objects,dt);
         affectedGroups.clear(); // if passed an empty set, it does full collision checks
-        collideAndRespond(objects,affectedGroups,dt,true); // calculates collision response
+        if (doCollisionCheck)
+            collideAndRespond(objects,affectedGroups,dt,true); // calculates collision response
         applyEuler(objects,dt);
     }
 
@@ -357,8 +361,13 @@ void WorldManager::stepPhysics(double dt) {
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::togglePhysics() {
-    pausePhysics = ! pausePhysics;
+void WorldManager::togglePhysicsSprings() {
+    doPhysicsSprings = !doPhysicsSprings;
+}
+//##################################################################################################
+//##################################################################################################
+void WorldManager::toggleCollisionCheck() {
+    doCollisionCheck = ! doCollisionCheck;
 }
 
 //##################################################################################################
