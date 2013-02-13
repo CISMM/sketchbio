@@ -81,11 +81,18 @@ public:
     inline void getLastOrientation(q_type dest) const { q_copy(dest,lastOrientation); }
     /*********************************************************************
       *
-      * Sets the current position and orientation of the object to be the old
-      * ones returned by getLastPosition and getLastOrientation
+      * Saves the current position and orientation of the object to the
+      * lastPosition and lastOrientation
       *
      *********************************************************************/
     void setLastLocation();
+    /*********************************************************************
+      *
+      * Restores the values saved by setLastLocation to be the current
+      * position and orientation of the object
+      *
+     *********************************************************************/
+    void restoreToLastLocation();
     /*********************************************************************
       *
       * Sets the orientation of the object to the given new orientation
@@ -99,8 +106,8 @@ public:
      *********************************************************************/
     inline void setPosition(const q_vec_type newPosition) { q_vec_copy(position, newPosition); }
     virtual void setPrimaryGroupNum(int num);
-    virtual int getPrimaryGroupNum();
-    virtual bool isInGroup(int num);
+    virtual int getPrimaryGroupNum() const;
+    virtual bool isInGroup(int num) const;
     /*********************************************************************
       *
       * Gets the transformation within world coordinates that defines this
@@ -233,6 +240,11 @@ private:
 inline void SketchObject::setLastLocation() {
     q_vec_copy(lastPosition,position);
     q_copy(lastOrientation,orientation);
+}
+
+inline void SketchObject::restoreToLastLocation() {
+    q_vec_copy(position,lastPosition);
+    q_copy(orientation,lastOrientation);
 }
 
 // helper function-- converts quaternion to a PQP matrix

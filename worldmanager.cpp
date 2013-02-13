@@ -210,51 +210,122 @@ inline void euler(SketchObject *obj, double dt) {
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::stepPhysics(double dt) {
-
-    if (!pausePhysics) {
-        // clear the accumulated force in the objects
-        for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
-            it.next()->clearForces();
+// -helper function to apply spring forces from a list of springs
+inline void springForcesFromList(QList<SpringConnection *> &list, QSet<int> &affectedGroups) {
+    for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
+        SpringConnection *c = it.next();
+        InterObjectSpring *cp = dynamic_cast<InterObjectSpring *>(c);
+        c->addForce();
+        int i = c->getObject1()->getPrimaryGroupNum();
+        if (i != OBJECT_HAS_NO_GROUP) { // if this one isn't the tracker
+            affectedGroups.insert(i);
         }
+        if (cp != NULL && cp->getObject2()->getPrimaryGroupNum() != OBJECT_HAS_NO_GROUP) {
+            affectedGroups.insert(cp->getObject2()->getPrimaryGroupNum());
+        }
+    }
+}
+//##################################################################################################
+//##################################################################################################
+// -helper function that loops over all objects and updates their locations based on current
+//   forces on them
+inline void applyEuler(QList<SketchObject *> &list, double dt) {
+    int n = list.size();
+    for (int i = 0; i < n; i++) {
+        euler(list.at(i),dt);
+        list.at(i)->recalculateLocalTransform();
+    }
+}
 
-        // collision detection - collision causes a force
-        for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
-            SketchObject *i = it.next();
-            if (i->doPhysics()) {
-                for (QListIterator<SketchObject *> it2(objects); it2.hasNext();) {
-                    SketchObject *j = it2.next();
-                    if (i == j) // self collisions not handled now --TODO
-                        continue;
-                    if (j->doPhysics())
-                        collide(i,j);
+//##################################################################################################
+//##################################################################################################
+// -helper function that runs the double loop of collision detection over list with only objects
+//   from the affected groups selected as the first object in the collision detection.  Does collision
+//   response only if the last parameter is set.  Returns true if a collision was found anywhere, false
+//   otherwise
+inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt, bool respond) {
+    int n = list.size();
+    bool foundCollision = false;
+    for (int i = 0; i < n; i++) {
+        // TODO - self collision once deformation added
+        bool needsTest = false;
+        for (QSetIterator<int> it(affectedGroups); it.hasNext();) {
+            if (list.at(i)->isInGroup(it.next())) {
+                needsTest = true;
+            }
+        }
+        if (needsTest) {
+            for (int j = 0; j < n; j++) {
+                if (j != i) {
+                    PQP_CollideResult cr;
+                    SketchObject::collide(list.at(i),list.at(j),&cr);
+                    if (cr.NumPairs() != 0) {
+                        if (respond) {
+                            WorldManager::applyCollisionResponseForce(list.at(i),list.at(j),&cr,affectedGroups);
+                        }
+                        foundCollision = true;
+                    }
                 }
             }
         }
+    }
+    if (foundCollision && respond) {
+        applyEuler(list,dt);
+    }
+    return foundCollision;
+}
 
-        // spring forces between models
-        for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
-            it.next()->addForce();
-        }
-        // spring forces for left hand interaction
-        for (QListIterator<SpringConnection *> it(lHand); it.hasNext();) {
-            it.next()->addForce();
-        }
-        // spring forces for right hand interacton
-        for (QListIterator<SpringConnection *> it(rHand); it.hasNext();) {
-            it.next()->addForce();
+//##################################################################################################
+//##################################################################################################
+// -helper function that does what its name says
+inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt) {
+    int n = list.size();
+    bool appliedResponse = collideAndRespond(list,affectedGroups,dt,true);
+    if (appliedResponse) {
+        bool stillColliding = collideAndRespond(list,affectedGroups,dt,false);
+        if (stillColliding) {
+            // if we couldn't fix collisions, undo the motion and return
+            for (int i = 0; i < n; i++) {
+                list.at(i)->restoreToLastLocation();
+                list.at(i)->recalculateLocalTransform();
+            }
+            return;
         }
     }
+    // if we fixed the collision or there were none, finalize new positions
+    for (int i = 0; i < n; i++) {
+        list.at(i)->setLastLocation();
+    }
+}
 
-    // apply forces - this is using Euler's Method for now
+//##################################################################################################
+//##################################################################################################
+void WorldManager::stepPhysics(double dt) {
+
+    // clear the accumulated force in the objects
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
-        SketchObject *i = it.next();
-        if (!pausePhysics) {
-            euler(i,dt);
-        }
-        // even if physics is paused, some objects, such as the trackers may have moved, so we need
-        // to update their transformations
-        i->recalculateLocalTransform();
+        SketchObject * obj = it.next();
+        obj->clearForces();
+        obj->setLastLocation();
+    }
+    QSet<int> affectedGroups;
+    // spring forces for right hand interacton
+    springForcesFromList(rHand,affectedGroups);
+    applyEuler(objects,dt);
+    applyPoseModeCollisionResponse(objects,affectedGroups,dt);
+    affectedGroups.clear();
+    // spring forces for left hand interaction
+    springForcesFromList(lHand,affectedGroups);
+    applyEuler(objects,dt);
+    applyPoseModeCollisionResponse(objects,affectedGroups,dt);
+    affectedGroups.clear();
+
+    // spring forces for physics springs interaction
+    if (!pausePhysics) {
+        springForcesFromList(connections,affectedGroups);
+        applyEuler(objects,dt);
+        applyPoseModeCollisionResponse(objects,affectedGroups,dt);
+        affectedGroups.clear();
     }
 
     updateSprings();
@@ -400,28 +471,23 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
     q_vec_scale(c,1/3.0,c);
 }
 
-
 //##################################################################################################
 //##################################################################################################
-void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
+void WorldManager::applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
+                                               PQP_CollideResult *cr, QSet<int> affectedGroups) {
     // get the collision models:
-    SketchModel *model1 = ((o1)->getModel());
-    SketchModel *model2 = ((o2)->getModel());
-    PQP_Model *pqp_model1 = model1->getCollisionModel();
-    PQP_Model *pqp_model2 = model2->getCollisionModel();
+    PQP_Model *pqp_model1 = o1->getModel()->getCollisionModel();
+    PQP_Model *pqp_model2 = o2->getModel()->getCollisionModel();
 
-    // get the offsets and rotations in PQP's format
-    PQP_CollideResult cr;
+    // get object's orientations
     q_type quat1, quat2;
     (o1)->getOrientation(quat1);
     (o2)->getOrientation(quat2);
 
-    SketchObject::collide(o1,o2,&cr);
-
     // for each pair in collision
-    for (int i = 0; i < cr.NumPairs(); i++) {
-        int m1Tri = cr.Id1(i);
-        int m2Tri = cr.Id2(i);
+    for (int i = 0; i < cr->NumPairs(); i++) {
+        int m1Tri = cr->Id1(i);
+        int m2Tri = cr->Id2(i);
         // compute the normal vectors...
         q_vec_type n1, n2;
         unit_normal(n1,pqp_model1,m1Tri);
@@ -438,8 +504,12 @@ void WorldManager::collide(SketchObject *o1, SketchObject *o2) {
         centriod(p1,pqp_model1,m1Tri);
         centriod(p2,pqp_model2,m2Tri);
         // apply the forces
-        (o1)->addForce(p1,f1);
-        (o2)->addForce(p2,f2);
+        if (affectedGroups.contains(o1->getPrimaryGroupNum())) {
+            (o1)->addForce(p1,f1);
+        }
+        if (affectedGroups.contains(o2->getPrimaryGroupNum())) {
+            (o2)->addForce(p2,f2);
+        }
     }
 }
 

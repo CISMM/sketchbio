@@ -39,11 +39,11 @@ void SketchObject::setPrimaryGroupNum(int num) {
     groupNum = num;
 }
 
-int SketchObject::getPrimaryGroupNum() {
+int SketchObject::getPrimaryGroupNum() const {
    return groupNum;
 }
 
-bool SketchObject::isInGroup(int num) {
+bool SketchObject::isInGroup(int num) const {
     return num == groupNum;
 }
 

@@ -24,8 +24,8 @@ public:
     virtual void getPosition(q_vec_type dest) const;
     virtual void getOrientation(q_type dest) const;
     virtual void setPrimaryGroupNum(int num);
-    virtual int  getPrimaryGroupNum();
-    virtual bool isInGroup(int num);
+    virtual int  getPrimaryGroupNum() const;
+    virtual bool isInGroup(int num) const;
     inline  int  getReplicaNum() const { return replicaNum; }
 private:
     // need original(s) here

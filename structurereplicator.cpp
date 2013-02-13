@@ -68,11 +68,11 @@ void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
 
 void ReplicatedObject::setPrimaryGroupNum(int num) {} // does nothing, group num based on originals
 
-int ReplicatedObject::getPrimaryGroupNum() {
+int ReplicatedObject::getPrimaryGroupNum() const {
     return ((replicaNum > 0) ? obj1 : obj0)->getPrimaryGroupNum();
 }
 
-bool ReplicatedObject::isInGroup(int num) {
+bool ReplicatedObject::isInGroup(int num) const {
     return obj1->isInGroup(num) || obj0->isInGroup(num);
 }
 

@@ -220,14 +220,21 @@ public:
      *
      *******************************************************************/
     SketchObject *getClosestObject(SketchObject *subj,double *distOut);
-private:
     /*******************************************************************
      *
-     * Computes collisions between the given objects and applies the
-     * resultant forces to them -- subroutine of stepPhysics
+     * Computes collision response force between the two objects based on
+     * the given collision data.  Only applies collision response to the
+     * objects whose primary group numbers are in affectedGroups.
+     *
+     * o1 - the first object (first passed to SketchObject::collide)
+     * o2 - the second object (second passed to SketchObject::collide)
+     * cr - the result of colliding the objects (result of SketchObject::collide)
+     * affectedGroups - the group numbers that collision response should be applied to
      *
      *******************************************************************/
-    void collide(SketchObject *o1, SketchObject *o2);
+    static void applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
+                                            PQP_CollideResult *cr, QSet<int> affectedGroups);
+private:
     /*******************************************************************
      *
      * This method adds the spring to the given list and performs the
