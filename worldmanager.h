@@ -203,8 +203,7 @@ public:
     void stepPhysics(double dt);
     /*******************************************************************
      *
-     * Turns on or off the physics, with physics off, this becomes a
-     * visualization tool.
+     * Turns on or off the non-user related spring forces.
      *
      *******************************************************************/
     void togglePhysics();
@@ -225,6 +224,9 @@ public:
      * Computes collision response force between the two objects based on
      * the given collision data.  Only applies collision response to the
      * objects whose primary group numbers are in affectedGroups.
+     *
+     * However, if affectedGroups is empty it assumes we are doing non-pose
+     * mode physics and applies the collision response to both objects.
      *
      * o1 - the first object (first passed to SketchObject::collide)
      * o2 - the second object (second passed to SketchObject::collide)

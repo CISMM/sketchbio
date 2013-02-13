@@ -211,7 +211,8 @@ inline void euler(SketchObject *obj, double dt) {
 
 //##################################################################################################
 //##################################################################################################
-// -helper function to apply spring forces from a list of springs
+// -helper function to add spring forces from a list of springs to the objects the springs are
+//   attached to.  Does not actually update object position
 inline void springForcesFromList(QList<SpringConnection *> &list, QSet<int> &affectedGroups) {
     for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
         SpringConnection *c = it.next();
@@ -246,8 +247,8 @@ inline void applyEuler(QList<SketchObject *> &list, double dt) {
 //   from the affected groups selected as the first object in the collision detection.  Does collision
 //   response only if the last parameter is set.  Returns true if a collision was found anywhere, false
 //   otherwise
-// note - if affectedGroups is empty, this does full collision detection and response over all objects
-//         non pose-mode
+// note - if affectedGroups is empty, this does full n^2 collision detection and response over all objects
+//         (non pose-mode)
 
 inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt, bool respond) {
     int n = list.size();
@@ -283,7 +284,10 @@ inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGr
 
 //##################################################################################################
 //##################################################################################################
-// -helper function that does what its name says
+// -helper function that does what its name says, applies pose-mode style collision response to the
+//   objects.  This means that the objects are tested for collisions, then respond, then are tested again.
+//   If the collision response did not fix the collision, then the entire movement (including changes
+//   from before this) is undone.
 inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt) {
     int n = list.size();
     bool appliedResponse = collideAndRespond(list,affectedGroups,dt,true);
@@ -305,7 +309,8 @@ inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int
 }
 //##################################################################################################
 //##################################################################################################
-// -helper function to apply with pose mode collision response the forces from a list of springs
+// -helper function applies the forces from the list of springs to the objects and does pose-mode
+//   collision response on them.
 inline void poseModeForSprings(QList<SpringConnection *> springs, QList<SketchObject *> objs, double dt) {
     QSet<int> affectedGroups;
     if (!springs.empty()) {
@@ -325,7 +330,7 @@ void WorldManager::stepPhysics(double dt) {
         obj->clearForces();
         obj->setLastLocation();
     }
-    if (usePoseMode) {
+    if (usePoseMode) { // pose mode
         // spring forces for right hand interacton
         poseModeForSprings(rHand,objects,dt);
         // spring forces for left hand interaction
@@ -335,7 +340,7 @@ void WorldManager::stepPhysics(double dt) {
         if (!pausePhysics) {
             poseModeForSprings(connections,objects,dt);
         }
-    } else {
+    } else { // non-pose-mode
         QSet<int> affectedGroups;
         springForcesFromList(rHand,affectedGroups);
         springForcesFromList(lHand,affectedGroups);
@@ -358,7 +363,7 @@ void WorldManager::togglePhysics() {
 
 //##################################################################################################
 //##################################################################################################
-// helper function for updateSprings
+// helper function for updateSprings - updates the endpoints of the springs in the vtkPoints object
 inline void updatePoints(QList<SpringConnection *> &list, vtkPoints *pts) {
     for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
         SpringConnection *s = it.next();
@@ -371,7 +376,8 @@ inline void updatePoints(QList<SpringConnection *> &list, vtkPoints *pts) {
 }
 //##################################################################################################
 //##################################################################################################
-// helper function for updateSprings
+// helper function for updateSprings - adds in cells to the vtkPolyData for each spring a line-type
+//   cell is added
 inline void addSpringCells(QList<SpringConnection *> &list, vtkPolyData *data) {
     for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
         SpringConnection *s = it.next();
