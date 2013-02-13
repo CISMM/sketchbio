@@ -233,7 +233,7 @@ public:
      *
      *******************************************************************/
     static void applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
-                                            PQP_CollideResult *cr, QSet<int> affectedGroups);
+                                            PQP_CollideResult *cr, QSet<int> &affectedGroups);
 private:
     /*******************************************************************
      *
@@ -255,7 +255,7 @@ private:
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     int maxGroupNum;
-    bool pausePhysics;
+    bool pausePhysics, usePoseMode;
 };
 
 inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

@@ -16,6 +16,7 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
 {
     renderer = r;
     pausePhysics = false;
+    usePoseMode = true;
     nextIdx = 0;
     lastCapacityUpdate = 1000;
     springEnds = vtkSmartPointer<vtkPoints>::New();
@@ -232,8 +233,10 @@ inline void springForcesFromList(QList<SpringConnection *> &list, QSet<int> &aff
 inline void applyEuler(QList<SketchObject *> &list, double dt) {
     int n = list.size();
     for (int i = 0; i < n; i++) {
-        euler(list.at(i),dt);
-        list.at(i)->recalculateLocalTransform();
+        SketchObject *obj = list.at(i);
+        euler(obj,dt);
+        obj->recalculateLocalTransform();
+        obj->clearForces();
     }
 }
 
@@ -243,12 +246,15 @@ inline void applyEuler(QList<SketchObject *> &list, double dt) {
 //   from the affected groups selected as the first object in the collision detection.  Does collision
 //   response only if the last parameter is set.  Returns true if a collision was found anywhere, false
 //   otherwise
+// note - if affectedGroups is empty, this does full collision detection and response over all objects
+//         non pose-mode
+
 inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt, bool respond) {
     int n = list.size();
     bool foundCollision = false;
     for (int i = 0; i < n; i++) {
         // TODO - self collision once deformation added
-        bool needsTest = false;
+        bool needsTest = affectedGroups.empty();
         for (QSetIterator<int> it(affectedGroups); it.hasNext();) {
             if (list.at(i)->isInGroup(it.next())) {
                 needsTest = true;
@@ -297,6 +303,17 @@ inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int
         list.at(i)->setLastLocation();
     }
 }
+//##################################################################################################
+//##################################################################################################
+// -helper function to apply with pose mode collision response the forces from a list of springs
+inline void poseModeForSprings(QList<SpringConnection *> springs, QList<SketchObject *> objs, double dt) {
+    QSet<int> affectedGroups;
+    if (!springs.empty()) {
+        springForcesFromList(springs,affectedGroups);
+        applyEuler(objs,dt);
+        applyPoseModeCollisionResponse(objs,affectedGroups,dt);
+    }
+}
 
 //##################################################################################################
 //##################################################################################################
@@ -308,24 +325,26 @@ void WorldManager::stepPhysics(double dt) {
         obj->clearForces();
         obj->setLastLocation();
     }
-    QSet<int> affectedGroups;
-    // spring forces for right hand interacton
-    springForcesFromList(rHand,affectedGroups);
-    applyEuler(objects,dt);
-    applyPoseModeCollisionResponse(objects,affectedGroups,dt);
-    affectedGroups.clear();
-    // spring forces for left hand interaction
-    springForcesFromList(lHand,affectedGroups);
-    applyEuler(objects,dt);
-    applyPoseModeCollisionResponse(objects,affectedGroups,dt);
-    affectedGroups.clear();
+    if (usePoseMode) {
+        // spring forces for right hand interacton
+        poseModeForSprings(rHand,objects,dt);
+        // spring forces for left hand interaction
+        poseModeForSprings(lHand,objects,dt);
 
-    // spring forces for physics springs interaction
-    if (!pausePhysics) {
-        springForcesFromList(connections,affectedGroups);
+        // spring forces for physics springs interaction
+        if (!pausePhysics) {
+            poseModeForSprings(connections,objects,dt);
+        }
+    } else {
+        QSet<int> affectedGroups;
+        springForcesFromList(rHand,affectedGroups);
+        springForcesFromList(lHand,affectedGroups);
+        if (!pausePhysics)
+            springForcesFromList(connections,affectedGroups);
         applyEuler(objects,dt);
-        applyPoseModeCollisionResponse(objects,affectedGroups,dt);
-        affectedGroups.clear();
+        affectedGroups.clear(); // if passed an empty set, it does full collision checks
+        collideAndRespond(objects,affectedGroups,dt,true); // calculates collision response
+        applyEuler(objects,dt);
     }
 
     updateSprings();
@@ -474,7 +493,7 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 //##################################################################################################
 //##################################################################################################
 void WorldManager::applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
-                                               PQP_CollideResult *cr, QSet<int> affectedGroups) {
+                                               PQP_CollideResult *cr, QSet<int> &affectedGroups) {
     // get the collision models:
     PQP_Model *pqp_model1 = o1->getModel()->getCollisionModel();
     PQP_Model *pqp_model2 = o2->getModel()->getCollisionModel();
@@ -483,6 +502,10 @@ void WorldManager::applyCollisionResponseForce(SketchObject *o1, SketchObject *o
     q_type quat1, quat2;
     (o1)->getOrientation(quat1);
     (o2)->getOrientation(quat2);
+
+    double cForce = COLLISION_FORCE *40 / cr->NumPairs();
+    // scale it by the number of colliding primaries so that we have some chance of sliding along surfaces
+    // instead of sticking
 
     // for each pair in collision
     for (int i = 0; i < cr->NumPairs(); i++) {
@@ -496,18 +519,18 @@ void WorldManager::applyCollisionResponseForce(SketchObject *o1, SketchObject *o
         q_vec_type f1,f2;
         q_xform(f1,quat2,n2);
         q_xform(f2,quat1,n1);
-        q_vec_scale(f1,COLLISION_FORCE,f1);
-        q_vec_scale(f2,COLLISION_FORCE,f2);
+        q_vec_scale(f1,cForce,f1);
+        q_vec_scale(f2,cForce,f2);
         // compute the centroids of the triangles as the point to which
         // the forces is applied
         q_vec_type p1,p2;
         centriod(p1,pqp_model1,m1Tri);
         centriod(p2,pqp_model2,m2Tri);
         // apply the forces
-        if (affectedGroups.contains(o1->getPrimaryGroupNum())) {
+        if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryGroupNum())) {
             (o1)->addForce(p1,f1);
         }
-        if (affectedGroups.contains(o2->getPrimaryGroupNum())) {
+        if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryGroupNum())) {
             (o2)->addForce(p2,f2);
         }
     }
