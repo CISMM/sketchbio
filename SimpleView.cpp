@@ -37,12 +37,15 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
     timer(new QTimer()),
+    collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer(),buttonDown,analog)),
-    copies(NULL)
+    project(new SketchProject(renderer.GetPointer(),buttonDown,analog))
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
+    collisionModeGroup->addAction(this->ui->actionPose_Mode_1);
+    collisionModeGroup->addAction(this->ui->actionOld_Style);
+    this->ui->actionPose_Mode_1->setChecked(true);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;
         q_type ident = Q_ID_QUAT;
@@ -124,8 +127,8 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
 
 SimpleView::~SimpleView() {
     delete project;
+    delete collisionModeGroup;
     delete timer;
-    delete copies;
 }
 
 void SimpleView::slotExit() 
@@ -147,12 +150,17 @@ void SimpleView::slot_frameLoop() {
     handleInput();
 
     project->timestep(TIMESTEP);
-    if (copies != NULL) {
-	copies->updateTransform();
-    }
 
     // render
     this->ui->qvtkWidget->GetRenderWindow()->Render();
+}
+
+void SimpleView::oldCollisionMode() {
+    project->setCollisionMode(CollisionMode::ORIGINAL_COLLISION_RESPONSE);
+}
+
+void SimpleView::poseModeTry1() {
+    project->setCollisionMode(CollisionMode::POSE_MODE_TRY_ONE);
 }
 
 void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
@@ -243,6 +251,7 @@ void SimpleView::loadProject() {
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
     project = new SketchProject(renderer,buttonDown,analog);
     project->setProjectDir(dirPath);
+    this->ui->actionPose_Mode_1->setChecked(true);
     // load project into new one
     QDir dir(project->getProjectDir());
     QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);

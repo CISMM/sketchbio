@@ -11,6 +11,17 @@
 #include <vtkTubeFilter.h>
 
 /*
+ * For testing only: dynamic changing of collision response types. Each enum is a
+ * response strategy
+ */
+namespace CollisionMode {
+    enum Type {
+        ORIGINAL_COLLISION_RESPONSE,
+        POSE_MODE_TRY_ONE
+    };
+}
+
+/*
  * This class contains the data that is in the modeled "world", all the objects and
  * springs.  It also contains code to step the "physics" of the simulation and run
  * collision tests.
@@ -191,6 +202,12 @@ public:
      *
      *******************************************************************/
     QListIterator<SpringConnection *> getSpringsIterator() const;
+    /*******************************************************************
+     *
+     * Sets the collision response mode
+     *
+     *******************************************************************/
+    void setCollisionMode(CollisionMode::Type mode);
 
     /*******************************************************************
      *
@@ -264,7 +281,8 @@ private:
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     int maxGroupNum;
-    bool doPhysicsSprings, doCollisionCheck, usePoseMode;
+    bool doPhysicsSprings, doCollisionCheck;
+    CollisionMode::Type collisionResponseMode;
 };
 
 inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

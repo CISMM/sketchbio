@@ -103,6 +103,10 @@ void SketchProject::setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomTo
     transforms->setRoomToEyeMatrix(roomToEyes);
 }
 
+void SketchProject::setCollisionMode(CollisionMode::Type mode) {
+    world->setCollisionMode(mode);
+}
+
 QString SketchProject::getProjectDir() const {
     return projectDir->absolutePath();
 }

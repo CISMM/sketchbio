@@ -17,7 +17,7 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     renderer = r;
     doPhysicsSprings = true;
     doCollisionCheck = true;
-    usePoseMode = true;
+    collisionResponseMode = CollisionMode::POSE_MODE_TRY_ONE;
     nextIdx = 0;
     lastCapacityUpdate = 1000;
     springEnds = vtkSmartPointer<vtkPoints>::New();
@@ -171,6 +171,12 @@ int WorldManager::getNumberOfSprings() const {
 //##################################################################################################
 QListIterator<SpringConnection *> WorldManager::getSpringsIterator() const {
     return QListIterator<SpringConnection *>(connections);
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setCollisionMode(CollisionMode::Type mode) {
+    collisionResponseMode = mode;
 }
 
 //##################################################################################################
@@ -333,7 +339,7 @@ void WorldManager::stepPhysics(double dt) {
         obj->clearForces();
         obj->setLastLocation();
     }
-    if (usePoseMode) { // pose mode
+    if (collisionResponseMode == CollisionMode::POSE_MODE_TRY_ONE) { // pose mode
         // spring forces for right hand interacton
         poseModeForSprings(rHand,objects,dt,doCollisionCheck);
         // spring forces for left hand interaction
@@ -343,7 +349,7 @@ void WorldManager::stepPhysics(double dt) {
         if (!doPhysicsSprings) {
             poseModeForSprings(connections,objects,dt,doCollisionCheck);
         }
-    } else { // non-pose-mode
+    } else if (collisionResponseMode == CollisionMode::ORIGINAL_COLLISION_RESPONSE) { // non-pose-mode
         QSet<int> affectedGroups;
         springForcesFromList(rHand,affectedGroups);
         springForcesFromList(lHand,affectedGroups);

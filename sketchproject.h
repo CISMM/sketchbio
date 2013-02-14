@@ -26,6 +26,8 @@ public:
     void setRightHandPos(q_xyz_quat_type *loc);
     // sets the viewpoint
     void setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes);
+    // sets the collision mode (testing only)
+    void setCollisionMode(CollisionMode::Type mode);
 
     // physics related functions
     void timestep(double dt);

@@ -4,21 +4,25 @@
 #define SIMPLEVIEW_NUM_ACTORS 4
  
 #include <vtkSmartPointer.h>
-#include <vrpn_Tracker.h>
-#include <vrpn_Button.h>
-#include <vrpn_Analog.h>
-#include "transformmanager.h"
-#include <quat.h>
-#include <QMainWindow>
 #include <vtkActor.h>
 #include <vtkTransform.h>
 #include <vtkRenderer.h>
-#include <QTimer>
+
+#include <vrpn_Tracker.h>
+#include <vrpn_Button.h>
+#include <vrpn_Analog.h>
+#include <quat.h>
+
+#include "transformmanager.h"
 #include "modelmanager.h"
 #include "worldmanager.h"
 #include "structurereplicator.h"
 #include "sketchioconstants.h"
 #include "sketchproject.h"
+
+#include <QMainWindow>
+#include <QActionGroup>
+#include <QTimer>
 #include <QString>
 #include <QVector>
  
@@ -69,6 +73,10 @@ public slots:
   void saveProjectAs();
   void saveProject();
 
+  // Collision modes (for testing)
+  void oldCollisionMode();
+  void poseModeTry1();
+
   // Load a project
   void loadProject();
 
@@ -99,9 +107,9 @@ private:
                        // 1 = pressed, 0 = not pressed.
   double analog[NUM_HYDRA_ANALOGS]; // number of analogs for hyrda
   QTimer *timer;
+  QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   SketchProject *project;
-  StructureReplicator *copies;
 };
 
  
