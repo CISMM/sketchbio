@@ -105,8 +105,29 @@ public:
       *
      *********************************************************************/
     inline void setPosition(const q_vec_type newPosition) { q_vec_copy(position, newPosition); }
+    /*********************************************************************
+      *
+      * Sets the primary group number of the object... may be overridden to do nothing if
+      * primary group is determined some other way
+      *
+     *********************************************************************/
     virtual void setPrimaryGroupNum(int num);
+    /*********************************************************************
+      *
+      * Gets the primary group number of the object, may be overridden to
+      * define an algorithmic group number assignment
+      *
+     *********************************************************************/
     virtual int getPrimaryGroupNum() const;
+    /*********************************************************************
+      *
+      * Returns true if the object is in the given group.  Objects may be
+      * in multiple groups (via subclassing and overriding this), but
+      * by default this simply returns true if the group passed in is the
+      * object's primary group.  An object should be in a group IFF moving
+      * one object with that primary group number causes this object to move.
+      *
+     *********************************************************************/
     virtual bool isInGroup(int num) const;
     /*********************************************************************
       *

@@ -28,6 +28,7 @@ public:
     inline double getMaxRestLength() const { return maxRestLength; }
     inline void getObject1ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object1ConnectionPosition);}
     inline const SketchObject *getObject1() const { return object1; }
+    inline SketchObject *getObject1() { return object1; } // if we have a non-const spring, get a non-const object
     inline void setObject1ConnectionPosition(q_vec_type newPos) { q_vec_copy(object1ConnectionPosition,newPos);}
     void getEnd1WorldPosition(q_vec_type out) const;
     virtual void getEnd2WorldPosition(q_vec_type out) const = 0;
@@ -60,6 +61,7 @@ public:
 
     inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
     inline const SketchObject *getObject2() const { return object2; }
+    inline SketchObject *getObject2() { return object2; } // if not a const reference to spring, get non-const obj
     inline void setObject2ConnectionPosition(q_vec_type newPos) { q_vec_copy(object2ConnectionPosition,newPos);}
     virtual void getEnd2WorldPosition(q_vec_type out) const;
 

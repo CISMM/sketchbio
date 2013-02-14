@@ -250,38 +250,54 @@ void SketchProject::handleInput() {
     updateTrackerObjectConnections();
 
     if (world->getNumberOfObjects() > 0) {
-        bool oldExists = lDist != std::numeric_limits<double>::max();
-        SketchObject *closest = world->getClosestObject(leftHand,&lDist);
+        bool oldExists = false;
+        bool leftWired = false;
+        bool rightGrabbed = world->getRightSprings()->size() > 0;
 
-        if (lObj == closest) {
-            if (lDist < DISTANCE_THRESHOLD) {
-                closest->setWireFrame();
+        SketchObject *closest = NULL;
+
+        if (world->getLeftSprings()->size() == 0 ) {
+            oldExists = lDist != std::numeric_limits<double>::max();
+            closest = world->getClosestObject(leftHand,&lDist);
+            if (lObj == closest) {
+                if (lDist < DISTANCE_THRESHOLD) {
+                    closest->setWireFrame();
+                    leftWired = true;
+                } else if (!rightGrabbed || closest != rObj) {
+                    closest->setSolid();
+                }
             } else {
-                closest->setSolid();
+                if (oldExists && (!rightGrabbed || lObj != rObj)) {
+                    lObj->setSolid();
+                }
+                lObj = closest;
+                if (lDist < DISTANCE_THRESHOLD) {
+                    lObj->setWireFrame();
+                    leftWired = true;
+                }
             }
         } else {
-            if (oldExists)
-                lObj->setSolid();
-            lObj = closest;
-            if (lDist < DISTANCE_THRESHOLD)
-                lObj->setWireFrame();
+            leftWired = true;
         }
 
-        oldExists = rDist != std::numeric_limits<double>::max();
-        closest = world->getClosestObject(rightHand,&rDist);
+        if (!rightGrabbed) {
+            oldExists = rDist != std::numeric_limits<double>::max();
+            closest = world->getClosestObject(rightHand,&rDist);
 
-        if (rObj == closest) {
-            if (rDist < DISTANCE_THRESHOLD) {
-                closest->setWireFrame();
+            if (rObj == closest) {
+                if (rDist < DISTANCE_THRESHOLD) {
+                    closest->setWireFrame();
+                } else if (!leftWired || lObj != closest) {
+                    closest->setSolid();
+                }
             } else {
-                closest->setSolid();
+                if (oldExists && (!leftWired || lObj != rObj)) {
+                    rObj->setSolid();
+                }
+                rObj = closest;
+                if (rDist < DISTANCE_THRESHOLD)
+                    rObj->setWireFrame();
             }
-        } else {
-            if (oldExists)
-                rObj->setSolid();
-            rObj = closest;
-            if (rDist < DISTANCE_THRESHOLD)
-                rObj->setWireFrame();
         }
     }
 
@@ -410,10 +426,22 @@ void SketchProject::updateTrackerObjectConnections() {
             }
         } else {
             if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
-                // remove springs between model & tracker
+                // remove springs between model & tracker, set grabbed objects solid
                 if (i == 0) {
+                    SketchObject *obj = world->getLeftSprings()->first()->getObject1();
+                    if (obj != leftHand) {
+                        obj->setSolid();
+                    } else {
+                        (dynamic_cast<InterObjectSpring *>(world->getLeftSprings()->first()))->getObject2()->setSolid();
+                    }
                     world->clearLeftHandSprings();
                 } else if (i == 1) {
+                    SketchObject *obj = world->getRightSprings()->first()->getObject1();
+                    if (obj != rightHand) {
+                        obj->setSolid();
+                    } else {
+                        (dynamic_cast<InterObjectSpring *>(world->getRightSprings()->first()))->getObject2()->setSolid();
+                    }
                     world->clearRightHandSprings();
                 }
             }
