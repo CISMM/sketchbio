@@ -171,6 +171,14 @@ void SimpleView::poseModePCA() {
     project->setCollisionMode(CollisionMode::POSE_WITH_PCA_COLLISION_RESPONSE);
 }
 
+void SimpleView::setWorldSpringsEnabled(bool enabled) {
+    project->setWorldSpringsEnabled(enabled);
+}
+
+void SimpleView::setCollisionTestsOn(bool on) {
+    project->setCollisionTestsOn(on);
+}
+
 void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
     project->setLeftHandPos(newPos);
 }

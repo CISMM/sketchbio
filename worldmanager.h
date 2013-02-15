@@ -225,14 +225,14 @@ public:
      * Turns on or off the non-user related spring forces.
      *
      *******************************************************************/
-    void togglePhysicsSprings();
+    void setPhysicsSpringsOn(bool on);
     /*******************************************************************
      *
      * Turns on or off the collision tests (when off, objects can pass
      * through each other)
      *
      *******************************************************************/
-    void toggleCollisionCheck();
+    void setCollisionCheckOn(bool on);
     /*******************************************************************
      *
      * Returns the closest object to the given object, and the distance

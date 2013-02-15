@@ -72,6 +72,8 @@
      <addaction name="actionPose_Mode_PCA"/>
     </widget>
     <addaction name="menuCollision_Mode"/>
+    <addaction name="actionWorld_Springs_On"/>
+    <addaction name="actionCollision_Tests_On"/>
    </widget>
    <addaction name="menuFIle"/>
    <addaction name="menuOptions"/>
@@ -179,6 +181,28 @@
   <action name="actionPose_Mode_PCA">
    <property name="text">
     <string>Pose Mode PCA</string>
+   </property>
+  </action>
+  <action name="actionWorld_Springs_On">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>World Springs On</string>
+   </property>
+  </action>
+  <action name="actionCollision_Tests_On">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Collision Tests On</string>
    </property>
   </action>
  </widget>
@@ -335,6 +359,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCollision_Tests_On</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>SimpleView</receiver>
+   <slot>setCollisionTestsOn(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWorld_Springs_On</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>SimpleView</receiver>
+   <slot>setWorldSpringsEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -347,5 +403,7 @@
   <slot>poseModeTry1()</slot>
   <slot>binaryCollisionSearch()</slot>
   <slot>poseModePCA()</slot>
+  <slot>setWorldSpringsEnabled(bool)</slot>
+  <slot>setCollisionTestsOn(bool)</slot>
  </slots>
 </ui>

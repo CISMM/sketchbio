@@ -28,6 +28,9 @@ public:
     void setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes);
     // sets the collision mode (testing only)
     void setCollisionMode(CollisionMode::Type mode);
+    // toggle settings in the physics
+    void setCollisionTestsOn(bool on);
+    void setWorldSpringsEnabled(bool enabled);
 
     // physics related functions
     void timestep(double dt);

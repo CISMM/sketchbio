@@ -454,13 +454,13 @@ void WorldManager::stepPhysics(double dt) {
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::togglePhysicsSprings() {
-    doPhysicsSprings = !doPhysicsSprings;
+void WorldManager::setPhysicsSpringsOn(bool on) {
+    doPhysicsSprings = on;
 }
 //##################################################################################################
 //##################################################################################################
-void WorldManager::toggleCollisionCheck() {
-    doCollisionCheck = ! doCollisionCheck;
+void WorldManager::setCollisionCheckOn(bool on) {
+    doCollisionCheck = on;
 }
 
 //##################################################################################################

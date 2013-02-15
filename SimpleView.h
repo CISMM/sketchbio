@@ -79,6 +79,10 @@ public slots:
   void binaryCollisionSearch();
   void poseModePCA();
 
+  // Physics settings
+  void setWorldSpringsEnabled(bool enabled);
+  void setCollisionTestsOn(bool on);
+
   // Load a project
   void loadProject();
 

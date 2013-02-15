@@ -107,6 +107,14 @@ void SketchProject::setCollisionMode(CollisionMode::Type mode) {
     world->setCollisionMode(mode);
 }
 
+void SketchProject::setCollisionTestsOn(bool on) {
+    world->setCollisionCheckOn(on);
+}
+
+void SketchProject::setWorldSpringsEnabled(bool enabled) {
+    world->setPhysicsSpringsOn(enabled);
+}
+
 QString SketchProject::getProjectDir() const {
     return projectDir->absolutePath();
 }
