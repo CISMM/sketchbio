@@ -45,6 +45,8 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
     this->ui->setupUi(this);
     collisionModeGroup->addAction(this->ui->actionPose_Mode_1);
     collisionModeGroup->addAction(this->ui->actionOld_Style);
+    collisionModeGroup->addAction(this->ui->actionBinary_Collision_Search);
+    collisionModeGroup->addAction(this->ui->actionPose_Mode_PCA);
     this->ui->actionPose_Mode_1->setChecked(true);
     if (!VRPN_ON) {
         q_xyz_quat_type pos;

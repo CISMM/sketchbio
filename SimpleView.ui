@@ -72,6 +72,7 @@
      <addaction name="actionPose_Mode_PCA"/>
     </widget>
     <addaction name="menuCollision_Mode"/>
+    <addaction name="separator"/>
     <addaction name="actionWorld_Springs_On"/>
     <addaction name="actionCollision_Tests_On"/>
    </widget>
@@ -174,11 +175,17 @@
    </property>
   </action>
   <action name="actionBinary_Collision_Search">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Binary Collision Search</string>
    </property>
   </action>
   <action name="actionPose_Mode_PCA">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Pose Mode PCA</string>
    </property>
