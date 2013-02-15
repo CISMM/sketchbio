@@ -68,6 +68,8 @@
      </property>
      <addaction name="actionPose_Mode_1"/>
      <addaction name="actionOld_Style"/>
+     <addaction name="actionBinary_Collision_Search"/>
+     <addaction name="actionPose_Mode_PCA"/>
     </widget>
     <addaction name="menuCollision_Mode"/>
    </widget>
@@ -167,6 +169,16 @@
    </property>
    <property name="text">
     <string>Old Style</string>
+   </property>
+  </action>
+  <action name="actionBinary_Collision_Search">
+   <property name="text">
+    <string>Binary Collision Search</string>
+   </property>
+  </action>
+  <action name="actionPose_Mode_PCA">
+   <property name="text">
+    <string>Pose Mode PCA</string>
    </property>
   </action>
  </widget>
@@ -291,6 +303,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionBinary_Collision_Search</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>binaryCollisionSearch()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPose_Mode_PCA</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>poseModePCA()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -301,5 +345,7 @@
   <slot>loadProject()</slot>
   <slot>oldCollisionMode()</slot>
   <slot>poseModeTry1()</slot>
+  <slot>binaryCollisionSearch()</slot>
+  <slot>poseModePCA()</slot>
  </slots>
 </ui>

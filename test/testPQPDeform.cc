@@ -76,7 +76,8 @@ int main() {
 //    makeTetrahedron(&tetra);
     tetra = sphere->GetOutput();
     PQP_Model model, model2;
-    makePQP_Model(model,*tetra);
+    QHash<int,int> hash;
+    makePQP_Model(model,*tetra,&hash);
 #ifdef PQP_UPDATE_EPSILON
     makePQP_Model(model2,*tetra);
 #endif
@@ -104,7 +105,7 @@ int main() {
     // update model
 
 #ifndef PQP_UPDATE_EPSILON
-    makePQP_Model(model2,*tetra);
+    makePQP_Model(model2,*tetra, &hash);
     cout << "Using original PQP rebuild" << endl;
 #else
     updatePQP_Model(model2,*tetra);

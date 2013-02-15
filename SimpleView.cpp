@@ -163,6 +163,14 @@ void SimpleView::poseModeTry1() {
     project->setCollisionMode(CollisionMode::POSE_MODE_TRY_ONE);
 }
 
+void SimpleView::binaryCollisionSearch() {
+    project->setCollisionMode(CollisionMode::BINARY_COLLISION_SEARCH);
+}
+
+void SimpleView::poseModePCA() {
+    project->setCollisionMode(CollisionMode::POSE_WITH_PCA_COLLISION_RESPONSE);
+}
+
 void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
     project->setLeftHandPos(newPos);
 }

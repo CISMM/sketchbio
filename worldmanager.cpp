@@ -238,13 +238,15 @@ inline void springForcesFromList(QList<SpringConnection *> &list, QSet<int> &aff
 //##################################################################################################
 // -helper function that loops over all objects and updates their locations based on current
 //   forces on them
-inline void applyEuler(QList<SketchObject *> &list, double dt) {
+inline void applyEuler(QList<SketchObject *> &list, double dt, bool clearForces = true) {
     int n = list.size();
     for (int i = 0; i < n; i++) {
         SketchObject *obj = list.at(i);
         euler(obj,dt);
         obj->recalculateLocalTransform();
-        obj->clearForces();
+        if (clearForces) {
+            obj->clearForces();
+        }
     }
 }
 
@@ -257,7 +259,8 @@ inline void applyEuler(QList<SketchObject *> &list, double dt) {
 // note - if affectedGroups is empty, this does full n^2 collision detection and response over all objects
 //         (non pose-mode)
 
-inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt, bool respond) {
+inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt,
+                              bool respond, bool usePCAResponse = false) {
     int n = list.size();
     bool foundCollision = false;
     for (int i = 0; i < n; i++) {
@@ -272,10 +275,16 @@ inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGr
             for (int j = 0; j < n; j++) {
                 if (j != i) {
                     PQP_CollideResult cr;
-                    SketchObject::collide(list.at(i),list.at(j),&cr);
+                    SketchObject::collide(list.at(i),list.at(j),&cr, respond ? PQP_ALL_CONTACTS : PQP_FIRST_CONTACT);
                     if (cr.NumPairs() != 0) {
                         if (respond) {
-                            WorldManager::applyCollisionResponseForce(list.at(i),list.at(j),&cr,affectedGroups);
+                            if (usePCAResponse) {
+                                WorldManager::applyPCACollisionResponseForce(
+                                            list.at(i),list.at(j),&cr,affectedGroups);
+                            } else {
+                                WorldManager::applyCollisionResponseForce(
+                                            list.at(i),list.at(j),&cr,affectedGroups);
+                            }
                         }
                         foundCollision = true;
                     }
@@ -295,9 +304,10 @@ inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGr
 //   objects.  This means that the objects are tested for collisions, then respond, then are tested again.
 //   If the collision response did not fix the collision, then the entire movement (including changes
 //   from before this) is undone.
-inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt) {
+inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int> &affectedGroups,
+                                           double dt,bool usePCAResponse = false) {
     int n = list.size();
-    bool appliedResponse = collideAndRespond(list,affectedGroups,dt,true);
+    bool appliedResponse = collideAndRespond(list,affectedGroups,dt,true,usePCAResponse);
     if (appliedResponse) {
         bool stillColliding = collideAndRespond(list,affectedGroups,dt,false);
         if (stillColliding) {
@@ -314,11 +324,50 @@ inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int
         list.at(i)->setLastLocation();
     }
 }
+
+inline void divideForces(QList<SketchObject *> &list,double divisor) {
+    for (QMutableListIterator<SketchObject *> it(list); it.hasNext();) {
+        q_vec_type f, t;
+        SketchObject *obj = it.next();
+        obj->getForce(f);
+        obj->getTorque(t);
+        q_vec_scale(f,divisor,f);
+        q_vec_scale(t,divisor,t);
+        obj->setForceAndTorque(f,t);
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
+// -helper function applies the forces from the list of springs to the objects and does binary
+//   collision search on the force/torque applied
+// -assumes that applyEuler has NOT been called on the list, but the forces have been added to each
+//   object
+inline void applyBinaryCollisionSearch(QList<SketchObject *> &list, QSet<int> &affectedGroups,
+                                       double dt, bool testCollisions) {
+    applyEuler(list,dt,false);
+    if (testCollisions) {
+        int times = 1;
+        while (collideAndRespond(list,affectedGroups,dt,false) && times < 10) {
+            for (int i = 0; i < list.size(); i++) {
+                list.at(i)->restoreToLastLocation();
+                list.at(i)->recalculateLocalTransform();
+            }
+            divideForces(list,.5);
+            applyEuler(list,dt,false);
+            times++;
+        }
+    }
+    for (int i = 0; i < list.size(); i++) {
+        list.at(i)->setLastLocation();
+    }
+}
+
 //##################################################################################################
 //##################################################################################################
 // -helper function applies the forces from the list of springs to the objects and does pose-mode
 //   collision response on them.
-inline void poseModeForSprings(QList<SpringConnection *> springs, QList<SketchObject *> objs,
+inline void poseModeForSprings(QList<SpringConnection *> &springs, QList<SketchObject *> &objs,
                                double dt, bool doCollisionCheck) {
     QSet<int> affectedGroups;
     if (!springs.empty()) {
@@ -326,6 +375,32 @@ inline void poseModeForSprings(QList<SpringConnection *> springs, QList<SketchOb
         applyEuler(objs,dt);
         if (doCollisionCheck)
             applyPoseModeCollisionResponse(objs,affectedGroups,dt);
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
+// -helper function applies the forces from the list of springs to the objects and does pose-mode
+//  pca collision response on them.
+inline void poseModePCAForSprings(QList<SpringConnection *> &springs, QList<SketchObject *> &objs,
+                               double dt, bool doCollisionCheck) {
+    QSet<int> affectedGroups;
+    if (!springs.empty()) {
+        springForcesFromList(springs,affectedGroups);
+        applyEuler(objs,dt);
+        if (doCollisionCheck)
+            applyPoseModeCollisionResponse(objs,affectedGroups,dt,true);
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
+inline void binaryCollisionSearch(QList<SpringConnection *> &springs, QList<SketchObject *> &objs,
+                                  double dt, bool doCollisionCheck) {
+    QSet<int> affectedGroups;
+    if (!springs.empty()) {
+        springForcesFromList(springs,affectedGroups);
+        applyBinaryCollisionSearch(objs,affectedGroups,dt,doCollisionCheck);
     }
 }
 
@@ -346,20 +421,32 @@ void WorldManager::stepPhysics(double dt) {
         poseModeForSprings(lHand,objects,dt,doCollisionCheck);
 
         // spring forces for physics springs interaction
-        if (!doPhysicsSprings) {
+        if (doPhysicsSprings) {
             poseModeForSprings(connections,objects,dt,doCollisionCheck);
         }
     } else if (collisionResponseMode == CollisionMode::ORIGINAL_COLLISION_RESPONSE) { // non-pose-mode
         QSet<int> affectedGroups;
         springForcesFromList(rHand,affectedGroups);
         springForcesFromList(lHand,affectedGroups);
-        if (!doPhysicsSprings)
+        if (doPhysicsSprings)
             springForcesFromList(connections,affectedGroups);
         applyEuler(objects,dt);
         affectedGroups.clear(); // if passed an empty set, it does full collision checks
         if (doCollisionCheck)
             collideAndRespond(objects,affectedGroups,dt,true); // calculates collision response
         applyEuler(objects,dt);
+    } else if (collisionResponseMode == CollisionMode::BINARY_COLLISION_SEARCH) {
+        binaryCollisionSearch(rHand,objects,dt,doCollisionCheck);
+        binaryCollisionSearch(lHand,objects,dt,doCollisionCheck);
+        if (doPhysicsSprings) {
+            binaryCollisionSearch(connections,objects,dt,doCollisionCheck);
+        }
+    } else if (collisionResponseMode == CollisionMode::POSE_WITH_PCA_COLLISION_RESPONSE) {
+        poseModePCAForSprings(rHand,objects,dt,doCollisionCheck);
+        poseModePCAForSprings(lHand,objects,dt,doCollisionCheck);
+        if (doPhysicsSprings) {
+            poseModePCAForSprings(connections,objects,dt,doCollisionCheck);
+        }
     }
 
     updateSprings();
@@ -466,6 +553,33 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
     return closest;
 }
 
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
+    list->push_back(spring);
+
+    // code to draw spring as a line
+    if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
+        vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
+        springEnds->Allocate(newCapacity*4);
+        springEndConnections->Allocate(newCapacity*2);
+        lastCapacityUpdate = newCapacity *2;
+    }
+    q_vec_type endOfSpring;
+    spring->getEnd1WorldPosition(endOfSpring);
+    vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
+    spring->setEnd1Id(end1Id);
+    spring->getEnd2WorldPosition(endOfSpring);
+    vtkIdType end2Id = springEnds->InsertNextPoint(endOfSpring);
+    spring->setEnd2Id(end2Id);
+//    springEnds->Modified();
+    vtkIdType pts[2] = { end1Id, end2Id };
+    vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
+//    springEndConnections->Update();
+    spring->setCellId(cellId);
+}
+
 //##################################################################################################
 //##################################################################################################
 // helper function-- compute the normal n of triangle tri in the model
@@ -509,6 +623,148 @@ inline void centriod(q_vec_type c, PQP_Model *m, int t) {
     q_vec_add(c,tri->p2,c);
     q_vec_add(c,tri->p3,c);
     q_vec_scale(c,1/3.0,c);
+}
+
+//##################################################################################################
+//##################################################################################################
+// -helper function to compute mean point of all triangle points where the triangles are involved in
+//   the collision
+inline void computeMeanCollisionPoint(PQP_REAL mean[3], PQP_CollideResult *cr,
+                                      SketchModel *model1, bool isFirst,
+                                      PQP_Model *m1) {
+    int total = 3 * cr->NumPairs();
+    mean[0] = mean[1] = mean[2] = 0.0;
+
+    for (int i = 0; i < cr->NumPairs(); i++) {
+        int m1Tri;
+        if (isFirst)
+            m1Tri= cr->Id1(i);
+        else
+            m1Tri = cr->Id2(i);
+        int triId1;
+#ifndef PQP_UPDATE_EPSILON
+        triId1 = model1->getTriIdToTriIndexHash()->value(m1Tri);
+#else
+        triId1 = m1->idsToIndices(m1Tri);
+#endif
+        mean[0] += m1->tris[triId1].p1[0] + m1->tris[triId1].p2[0] + m1->tris[triId1].p3[0];
+        mean[1] += m1->tris[triId1].p1[1] + m1->tris[triId1].p2[1] + m1->tris[triId1].p3[1];
+        mean[2] += m1->tris[triId1].p1[2] + m1->tris[triId1].p2[2] + m1->tris[triId1].p3[2];
+    }
+    mean[0] = mean[0] / total;
+    mean[1] = mean[1] / total;
+    mean[2] = mean[2] / total;
+}
+//##################################################################################################
+//##################################################################################################
+// -helper function to compute the covariance of all triangle points involved in the collision on the
+//   given model
+inline void computeCollisonPointCovariance(PQP_REAL mean[3], PQP_CollideResult *cr,
+                                           SketchModel *model1, bool isFirst,
+                                           PQP_Model *m1, PQP_REAL cov[3][3]) {
+    int total = 3 * cr->NumPairs();
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            cov[i][j] = 0;
+        }
+    }
+    for (int k = 0; k < cr->NumPairs(); k++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                int m1Tri;
+                if (isFirst) {
+                    m1Tri = cr->Id1(k);
+                } else {
+                    m1Tri = cr->Id2(k);
+                }
+                int triId1;
+#ifndef PQP_UPDATE_EPSILON
+                triId1 = model1->getTriIdToTriIndexHash()->value(m1Tri);
+#else
+                triId1 = m1->idsToIndices(m1Tri);
+#endif
+                cov[i][j] += (mean[i] - m1->tris[triId1].p1[i]) *
+                             (mean[j] - m1->tris[triId1].p1[j])
+                          +  (mean[i] - m1->tris[triId1].p2[i]) *
+                             (mean[j] - m1->tris[triId1].p2[j])
+                          +  (mean[i] - m1->tris[triId1].p3[i]) *
+                             (mean[j] - m1->tris[triId1].p3[j]);
+            }
+        }
+    }
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            cov[i][j] = cov[i][j] / (total-1);
+        }
+    }
+}
+
+
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::applyPCACollisionResponseForce(SketchObject *o1, SketchObject *o2,
+                                               PQP_CollideResult *cr, QSet<int> &affectedGroups) {
+    // get the collision models:
+    SketchModel *model1 = o1->getModel();
+    SketchModel *model2 = o2->getModel();
+    PQP_Model *m1 = model1->getCollisionModel();
+    PQP_Model *m2 = model2->getCollisionModel();
+
+    // get object's orientations
+    q_type quat1, quat2;
+    (o1)->getOrientation(quat1);
+    (o2)->getOrientation(quat2);
+
+    PQP_REAL mean1[3], covariance1[3][3];
+    PQP_REAL mean2[3], covariance2[3][3];
+
+    computeMeanCollisionPoint(mean1,cr,model1,true,m1);
+    computeCollisonPointCovariance(mean1,cr,model1,true,m1,covariance1);
+    PQP_REAL covEigenVecs1[3][3], covEigenVals1[3];
+    Meigen(covEigenVecs1,covEigenVals1,covariance1);
+    int min1 = (covEigenVals1[0] < covEigenVals1[1]) ?
+                ((covEigenVals1[2] < covEigenVals1[0]) ? 2 : 0) :
+                ((covEigenVals1[2] < covEigenVals1[1]) ? 2 : 1);
+
+    computeMeanCollisionPoint(mean2,cr,model2,false,m2);
+    computeCollisonPointCovariance(mean2,cr,model2,false,m2,covariance2);
+    PQP_REAL covEigenVecs2[3][3], covEigenVals2[3];
+    Meigen(covEigenVecs2,covEigenVals2,covariance2);
+    int min2 = (covEigenVals2[0] < covEigenVals2[1]) ?
+                ((covEigenVals2[2] < covEigenVals2[0]) ? 2 : 0) :
+                ((covEigenVals2[2] < covEigenVals2[1]) ? 2 : 1);
+
+    q_vec_type dir1, dir2;
+    dir1[0] = covEigenVecs1[0][min1];
+    dir1[1] = covEigenVecs1[1][min1];
+    dir1[2] = covEigenVecs1[2][min1];
+    dir2[0] = covEigenVecs2[0][min2];
+    dir2[1] = covEigenVecs2[1][min2];
+    dir2[2] = covEigenVecs2[2][min2];
+    q_vec_normalize(dir1,dir1);
+    q_vec_normalize(dir2,dir2);
+    if (q_vec_dot_product(dir1,mean1) < 0) {
+        q_vec_invert(dir1,dir1);
+    }
+    if (q_vec_dot_product(dir2,mean2) < 0) {
+        q_vec_invert(dir2,dir2);
+    }
+
+    q_vec_type dir1W, dir2W;
+    q_vec_type mean1W, mean2W;
+    o1->getModelSpacePointInWorldCoordinates(mean1,mean1W);
+    o2->getModelSpacePointInWorldCoordinates(mean2,mean2W);
+    o1->getLocalTransform()->TransformVector(dir1,dir1W);
+    o2->getLocalTransform()->TransformVector(dir2,dir2W);
+    q_vec_scale(dir1W,COLLISION_FORCE*30,dir1W);
+    q_vec_scale(dir2W,COLLISION_FORCE*30,dir2W);
+    if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryGroupNum())) {
+        o1->addForce(mean1W,dir1W);
+    }
+    if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryGroupNum())) {
+        o2->addForce(mean2W,dir2W);
+    }
 }
 
 //##################################################################################################
@@ -557,28 +813,3 @@ void WorldManager::applyCollisionResponseForce(SketchObject *o1, SketchObject *o
     }
 }
 
-//##################################################################################################
-//##################################################################################################
-void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
-    list->push_back(spring);
-
-    // code to draw spring as a line
-    if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
-        vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
-        springEnds->Allocate(newCapacity*4);
-        springEndConnections->Allocate(newCapacity*2);
-        lastCapacityUpdate = newCapacity *2;
-    }
-    q_vec_type endOfSpring;
-    spring->getEnd1WorldPosition(endOfSpring);
-    vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
-    spring->setEnd1Id(end1Id);
-    spring->getEnd2WorldPosition(endOfSpring);
-    vtkIdType end2Id = springEnds->InsertNextPoint(endOfSpring);
-    spring->setEnd2Id(end2Id);
-//    springEnds->Modified();
-    vtkIdType pts[2] = { end1Id, end2Id };
-    vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
-//    springEndConnections->Update();
-    spring->setCellId(cellId);
-}

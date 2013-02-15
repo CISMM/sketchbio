@@ -6,6 +6,7 @@
 #include <vtkPolyDataMapper.h>
 #include <PQP.h>
 #include <QString>
+#include <QHash>
 
 /*
  * This class holds data about a general type of object such as a fibrin molecule.  The vtk
@@ -28,6 +29,9 @@ public:
     inline vtkPolyDataMapper *getSolidMapper() { return normalMapper; }
     inline vtkPolyDataMapper *getWireFrameMapper() { return wireFrameMapper; }
     inline PQP_Model *getCollisionModel() { return collisionModel; }
+#ifndef PQP_UPDATE_EPSILON
+    inline QHash<int,int> *getTriIdToTriIndexHash() { return &triIdToTriIndex; }
+#endif
     inline double getInverseMass() const { return invMass;}
     inline double getInverseMomentOfInertia() const { return invMomentOfInertia; }
 private:
@@ -36,6 +40,9 @@ private:
     vtkSmartPointer<vtkPolyDataMapper> wireFrameMapper;
     vtkSmartPointer<vtkPolyDataMapper> normalMapper;
     PQP_Model *collisionModel;
+#ifndef PQP_UPDATE_EPSILON
+    QHash<int,int> triIdToTriIndex;
+#endif
     double invMass;
     double invMomentOfInertia;
 };

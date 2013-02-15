@@ -6,6 +6,9 @@ SketchModel::SketchModel(QString source, vtkTransformPolyDataFilter *data, doubl
     dataSource(source),
     modelData(data),
     collisionModel(new PQP_Model()),
+#ifndef PQP_UPDATE_EPSILON
+    triIdToTriIndex(),
+#endif
     invMass(iMass),
     invMomentOfInertia(iMoment)
 {

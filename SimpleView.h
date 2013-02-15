@@ -76,6 +76,8 @@ public slots:
   // Collision modes (for testing)
   void oldCollisionMode();
   void poseModeTry1();
+  void binaryCollisionSearch();
+  void poseModePCA();
 
   // Load a project
   void loadProject();

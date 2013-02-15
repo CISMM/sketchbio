@@ -79,7 +79,11 @@ private:
     // a hash of source to model
     QHash<QString,SketchModel *> models;
 };
-void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData);
+void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData
+#ifndef PQP_UPDATE_EPSILON
+                   , QHash<int,int> *idToIndexHash
+#endif
+                   );
 
 #ifdef PQP_UPDATE_EPSILON
 void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);

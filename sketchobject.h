@@ -184,6 +184,15 @@ public:
     virtual void addForce(q_vec_type point, const q_vec_type force);
     /*********************************************************************
       *
+      * Sets the sum of forces and torques on the object
+      *
+      * force - the new force
+      * torque - the new torque
+      *
+     *********************************************************************/
+    void setForceAndTorque(const q_vec_type force,const q_vec_type torque);
+    /*********************************************************************
+      *
       * Gets the sum of forces on the object (relative to world coordinates)
       *
       * out - the vector where the output will be stored
@@ -266,6 +275,11 @@ inline void SketchObject::setLastLocation() {
 inline void SketchObject::restoreToLastLocation() {
     q_vec_copy(position,lastPosition);
     q_copy(orientation,lastOrientation);
+}
+
+inline void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque) {
+    q_vec_copy(forceAccum,force);
+    q_vec_copy(torqueAccum,torque);
 }
 
 // helper function-- converts quaternion to a PQP matrix

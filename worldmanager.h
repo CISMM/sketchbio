@@ -17,7 +17,9 @@
 namespace CollisionMode {
     enum Type {
         ORIGINAL_COLLISION_RESPONSE,
-        POSE_MODE_TRY_ONE
+        POSE_MODE_TRY_ONE,
+        BINARY_COLLISION_SEARCH,
+        POSE_WITH_PCA_COLLISION_RESPONSE
     };
 }
 
@@ -247,7 +249,28 @@ public:
      *
      * Computes collision response force between the two objects based on
      * the given collision data.  Only applies collision response to the
-     * objects whose primary group numbers are in affectedGroups.
+     * objects whose primary group numbers are in affectedGroups.  This
+     * function applies collision force along the normal of a plane fitted
+     * to the corners of all triangles that are in collision.
+     *
+     * However, if affectedGroups is empty it assumes we are doing non-pose
+     * mode physics and applies the collision response to both objects.
+     *
+     * o1 - the first object (first passed to SketchObject::collide)
+     * o2 - the second object (second passed to SketchObject::collide)
+     * cr - the result of colliding the objects (result of SketchObject::collide)
+     * affectedGroups - the group numbers that collision response should be applied to
+     *
+     *******************************************************************/
+    static void applyPCACollisionResponseForce(SketchObject *o1, SketchObject *o2,
+                                            PQP_CollideResult *cr, QSet<int> &affectedGroups);
+    /*******************************************************************
+     *
+     * Computes collision response force between the two objects based on
+     * the given collision data.  Only applies collision response to the
+     * objects whose primary group numbers are in affectedGroups.  This
+     * function applies collision force along the normals of the colliding
+     * pairs of triangles
      *
      * However, if affectedGroups is empty it assumes we are doing non-pose
      * mode physics and applies the collision response to both objects.
@@ -289,5 +312,108 @@ inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject 
                                const q_vec_type pos2, bool worldRelativePos, double k, double len) {
     return addSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
 }
+
+
+
+/*
+ * This next bit was stolen from PQP's matrix library.  It computes the eigenvalues/eigenvectors
+ * of a matrix.  The #define was part of its code
+ */
+#define ROTATE(a,i,j,k,l) g=a[i][j]; h=a[k][l]; a[i][j]=g-s*(h+g*tau); a[k][l]=h+s*(g-h*tau);
+
+void
+inline
+Meigen(PQP_REAL vout[3][3], PQP_REAL dout[3], PQP_REAL a[3][3])
+{
+  int n = 3;
+  int j,iq,ip,i;
+  PQP_REAL tresh,theta,tau,t,sm,s,h,g,c;
+  int nrot;
+  PQP_REAL b[3];
+  PQP_REAL z[3];
+  PQP_REAL v[3][3];
+  PQP_REAL d[3];
+
+  // identity
+  v[0][0] = v[1][1] = v[2][2] = 1;
+  v[0][1] = v[0][2] = v[1][0] = v[1][2] = v[2][0] = v[2][1] = 0;
+
+  for(ip=0; ip<n; ip++)
+    {
+      b[ip] = a[ip][ip];
+      d[ip] = a[ip][ip];
+      z[ip] = 0.0;
+    }
+
+  nrot = 0;
+
+  for(i=0; i<50; i++)
+    {
+
+      sm=0.0;
+      for(ip=0;ip<n;ip++) for(iq=ip+1;iq<n;iq++) sm+=fabs(a[ip][iq]);
+      if (sm == 0.0)
+    {
+          // matrix & vector copies
+          for (int ii = 0; ii < 3; ii++) {
+              for (int jj = 0; jj < 3; jj++) {
+                  vout[ii][jj] = v[ii][jj];
+              }
+              dout[ii] = d[ii];
+          }
+      return;
+    }
+
+
+      if (i < 3) tresh=(PQP_REAL)0.2*sm/(n*n);
+      else tresh=0.0;
+
+      for(ip=0; ip<n; ip++) for(iq=ip+1; iq<n; iq++)
+    {
+      g = (PQP_REAL)100.0*fabs(a[ip][iq]);
+      if (i>3 &&
+          fabs(d[ip])+g==fabs(d[ip]) &&
+          fabs(d[iq])+g==fabs(d[iq]))
+        a[ip][iq]=0.0;
+      else if (fabs(a[ip][iq])>tresh)
+        {
+          h = d[iq]-d[ip];
+          if (fabs(h)+g == fabs(h)) t=(a[ip][iq])/h;
+          else
+        {
+          theta=(PQP_REAL)0.5*h/(a[ip][iq]);
+          t=(PQP_REAL)(1.0/(fabs(theta)+sqrt(1.0+theta*theta)));
+          if (theta < 0.0) t = -t;
+        }
+          c=(PQP_REAL)1.0/sqrt(1+t*t);
+          s=t*c;
+          tau=s/((PQP_REAL)1.0+c);
+          h=t*a[ip][iq];
+          z[ip] -= h;
+          z[iq] += h;
+          d[ip] -= h;
+          d[iq] += h;
+          a[ip][iq]=0.0;
+          for(j=0;j<ip;j++) { ROTATE(a,j,ip,j,iq); }
+          for(j=ip+1;j<iq;j++) { ROTATE(a,ip,j,j,iq); }
+          for(j=iq+1;j<n;j++) { ROTATE(a,ip,j,iq,j); }
+          for(j=0;j<n;j++) { ROTATE(v,j,ip,j,iq); }
+          nrot++;
+        }
+    }
+      for(ip=0;ip<n;ip++)
+    {
+      b[ip] += z[ip];
+      d[ip] = b[ip];
+      z[ip] = 0.0;
+    }
+    }
+
+  fprintf(stderr, "eigen: too many iterations in Jacobi transform.\n");
+
+  return;
+}
+
+#undef ROTATE
 
 #endif // WORLDMANAGER_H

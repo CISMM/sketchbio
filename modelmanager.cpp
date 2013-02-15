@@ -67,7 +67,11 @@ SketchModel *ModelManager::modelForVTKSource(vtkPolyDataAlgorithm *source, doubl
 
     SketchModel *sModel = new SketchModel(srcString,transformPD,INVERSEMASS,INVERSEMOMENT);
 
-    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
+    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput())
+#ifndef PQP_UPDATE_EPSILON
+                  , sModel->getTriIdToTriIndexHash()
+#endif
+                  );
 
     models.insert(srcString,sModel);
 
@@ -122,7 +126,11 @@ SketchModel *ModelManager::modelForOBJSource(QString objFile, double iMass, doub
     // remember the mass and moment of inertia are inverses!!!!!!!!
     SketchModel * sModel = new SketchModel(objFile,transformPD,iMass,iMoment);
 
-    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput()));
+    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput())
+              #ifndef PQP_UPDATE_EPSILON
+                  , sModel->getTriIdToTriIndexHash()
+              #endif
+                  );
 
     models.insert(objFile,sModel);
 
@@ -158,7 +166,11 @@ int ModelManager::getNumberOfModels() const {
   * polyData a reference parameter to a vtkPolyData to pull the model data from
   *
   ****************************************************************************/
-void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData) {
+void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData
+#ifndef PQP_UPDATE_EPSILON
+                   , QHash<int, int> *idToIndexHash
+#endif
+                   ) {
 
     int numPoints = polyData.GetNumberOfPoints();
 
@@ -232,6 +244,11 @@ void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData) {
         }
         m1.EndModel();
     }
+#ifndef PQP_UPDATE_EPSILON
+    for (int i = 0; i < m1.num_tris; i++) {
+        idToIndexHash->insert(m1.tris[i].id,i);
+    }
+#endif
 
     delete[] points;
 }
