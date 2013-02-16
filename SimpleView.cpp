@@ -6,6 +6,7 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QThread>
+#include <QTemporaryFile>
 
 #include <stdexcept>
 
@@ -284,9 +285,94 @@ void SimpleView::loadProject() {
 
 bool SimpleView::simplifyObjectByName(const QString name)
 {
-    fprintf(stderr, "XXX Use importPDBId as a model to call Blender and have it simplify\n");
-    fprintf(stderr, "XXX   (Should do several levels of simplification, or parameterize)\n");
-    return false;
+    if (name.length() == 0) {
+        return false;
+    }
+    printf("Simplifying %s ", name.toStdString().c_str());
+
+    // Create a temporary file to hold the Python script that we're going to pass
+    // to Blender.  It will be automatically deleted by the destructor.
+    QTemporaryFile  py_file("XXXXXX.py");
+    if (!py_file.open()) {
+        fprintf(stderr,"Could not open temporary file %s\n", py_file.fileName().toStdString().c_str());
+        return false;
+    }
+    printf("using %s as a temporary file\n", py_file.fileName().toStdString().c_str());
+
+    //----------------------------------------------------------------
+    // Write the Python script we'll pass to Blender into the file.
+    char    *buf = new char[name.size() + 4096];
+    if (buf == NULL) {
+        fprintf(stderr,"Out of memory simplifying object\n");
+        return false;
+    }
+    py_file.write("import bpy\n");
+    // Read the data file
+    sprintf(buf, "bpy.ops.import_scene.obj(filepath='%s')\n", name.toStdString().c_str());
+    py_file.write(buf);
+    // Delete the cube object
+    py_file.write("bpy.ops.object.select_all(action='DESELECT')\n");
+    py_file.write("myobject = bpy.data.objects['Cube']\n");
+    py_file.write("myobject.select = True\n");
+    py_file.write("bpy.context.scene.objects.active = myobject\n");
+    py_file.write("bpy.ops.object.delete()\n");
+    // Select the data object
+    py_file.write("bpy.ops.object.select_all(action='DESELECT')\n");
+    py_file.write("myobject = bpy.data.objects['Mesh']\n");
+    py_file.write("myobject.select = True\n");
+    py_file.write("bpy.context.scene.objects.active = myobject\n");
+    // Turn on edit mode and adjust the mesh to remove all non-manifold
+    // vertices.
+    py_file.write("bpy.ops.object.mode_set(mode='EDIT')\n");
+    py_file.write("bpy.ops.mesh.remove_doubles()\n");
+    py_file.write("bpy.ops.mesh.select_all(action='DESELECT')\n");
+    py_file.write("bpy.ops.mesh.select_non_manifold()\n");
+    py_file.write("bpy.ops.mesh.delete()\n");
+    // Switch back to object mode.
+    py_file.write("bpy.ops.object.mode_set(mode='OBJECT')\n");
+    // Run the decimate modifier.
+    py_file.write("bpy.ops.object.modifier_add(type='DECIMATE')\n");
+    py_file.write("bpy.context.active_object.modifiers[0].ratio = 0.1\n");
+    py_file.write("bpy.ops.object.modifier_apply()\n");
+    // Save the resulting simplified object.
+    sprintf(buf, "bpy.ops.export_scene.obj(filepath='%s.decimated.0.1.obj')\n", name.toStdString().c_str());
+    py_file.write(buf);
+    py_file.close();
+
+    //----------------------------------------------------------------
+    // Start the Blender process and then write the commands to it
+    // that will cause it to load the OBJ file, simplify it,
+    // and then save the file.
+    QProcess blender;
+    // Combine stderr with stdout and send back back together.
+    blender.setProcessChannelMode(QProcess::MergedChannels);
+    // -P: Run the specified Python script
+    // -b: Run in background
+    blender.start("blender", QStringList() << "-noaudio" << "-b" << "-P" << py_file.fileName());
+    if (!blender.waitForStarted()) {
+      QMessageBox::warning(NULL, "Could not run Blender to simplify file ", name);
+    }
+
+    //----------------------------------------------------------------
+    // Time out after 2 minutes if the process does not exit
+    // on its own by then.
+    if (!blender.waitForFinished(120000)) {
+        QMessageBox::warning(NULL, "Could not complete blender simplify", name);
+    }
+
+    //----------------------------------------------------------------
+    // Read all of the output from the program and then
+    // see if we got what we expected.  We look for reports
+    // that it saved the file and that it exited normally.
+    // XXX This does not guarantee that it saved the file.
+    // can we check return codes in pymol and print an error?
+    QByteArray result = blender.readAll();
+    if ( !result.contains("OBJ Export time:") ) {
+    QMessageBox::warning(NULL, "Error while simplifying", name);
+        printf("Blender problem:\n%s\n", result.data());
+    }
+    delete [] buf;
+    return true;
 }
 
 void SimpleView::simplifyOBJFile()
@@ -328,7 +414,7 @@ void SimpleView::importPDBId()
 	  // -c: Don't display graphics; -p: Read commands from stdin
 	  pymol.start("pymol", QStringList() << "-c" << "-p");
 	  if (!pymol.waitForStarted()) {
-		QMessageBox::warning(NULL, "Could not run pymol to import molecule ", text);;
+        QMessageBox::warning(NULL, "Could not run pymol to import molecule ", text);
 	  } else {
 	    // Send the commands to Pymol to make it do what we want.
 	    QString cmd;
