@@ -64,13 +64,12 @@ WorldManager::~WorldManager() {
 //##################################################################################################
 //##################################################################################################
 SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, const q_type orient) {
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(model->getSolidMapper());
-    SketchObject *newObject = new SketchObject(actor,model,worldEyeTransform);
-    newObject->setPosition(pos);
-    newObject->setOrientation(orient);
-    newObject->recalculateLocalTransform();
-    newObject->setPrimaryGroupNum(maxGroupNum++);
+    vtkSmartPointer<vtkActor> actor;
+    SketchObject *newObject = new ModelInstance(model);
+    actor = newObject->getActor();
+    actor->SetUserTransform(worldEyeTransform);
+    newObject->setPosAndOrient(pos,orient);
+    newObject->setPrimaryCollisionGroupNum(maxGroupNum++);
     renderer->AddActor(actor);
     objects.push_back(newObject);
     return newObject;
@@ -80,8 +79,8 @@ SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, c
 //##################################################################################################
 SketchObject *WorldManager::addObject(SketchObject *object) {
     objects.push_back(object);
-    if (object->getPrimaryGroupNum() == OBJECT_HAS_NO_GROUP) {
-        object->setPrimaryGroupNum(maxGroupNum++);
+    if (object->getPrimaryCollisionGroupNum() == OBJECT_HAS_NO_GROUP) {
+        object->setPrimaryCollisionGroupNum(maxGroupNum++);
     }
     renderer->AddActor(object->getActor());
     return object;
@@ -186,7 +185,7 @@ void WorldManager::setCollisionMode(CollisionMode::Type mode) {
 inline void euler(SketchObject *obj, double dt) {
     q_vec_type pos, angularVel,deltaPos,force,torque;
     q_type spin, orient;
-    if (obj->doPhysics()) {
+//    if (obj->doPhysics()) {
         SketchModel *model = obj->getModel();
         // get force & torque
         obj->getForce(force);
@@ -211,9 +210,8 @@ inline void euler(SketchObject *obj, double dt) {
         orient[Q_Z] += spin[Q_Z]*.5*dt;
         q_normalize(orient,orient);
         // end quaternion integration
-        obj->setPosition(pos);
-        obj->setOrientation(orient);
-    }
+        obj->setPosAndOrient(pos,orient);
+//    }
 }
 
 //##################################################################################################
@@ -225,12 +223,12 @@ inline void springForcesFromList(QList<SpringConnection *> &list, QSet<int> &aff
         SpringConnection *c = it.next();
         InterObjectSpring *cp = dynamic_cast<InterObjectSpring *>(c);
         c->addForce();
-        int i = c->getObject1()->getPrimaryGroupNum();
+        int i = c->getObject1()->getPrimaryCollisionGroupNum();
         if (i != OBJECT_HAS_NO_GROUP) { // if this one isn't the tracker
             affectedGroups.insert(i);
         }
-        if (cp != NULL && cp->getObject2()->getPrimaryGroupNum() != OBJECT_HAS_NO_GROUP) {
-            affectedGroups.insert(cp->getObject2()->getPrimaryGroupNum());
+        if (cp != NULL && cp->getObject2()->getPrimaryCollisionGroupNum() != OBJECT_HAS_NO_GROUP) {
+            affectedGroups.insert(cp->getObject2()->getPrimaryCollisionGroupNum());
         }
     }
 }
@@ -243,7 +241,6 @@ inline void applyEuler(QList<SketchObject *> &list, double dt, bool clearForces 
     for (int i = 0; i < n; i++) {
         SketchObject *obj = list.at(i);
         euler(obj,dt);
-        obj->recalculateLocalTransform();
         if (clearForces) {
             obj->clearForces();
         }
@@ -267,26 +264,29 @@ inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGr
         // TODO - self collision once deformation added
         bool needsTest = affectedGroups.empty();
         for (QSetIterator<int> it(affectedGroups); it.hasNext();) {
-            if (list.at(i)->isInGroup(it.next())) {
+            if (list.at(i)->isInCollisionGroup(it.next())) {
                 needsTest = true;
             }
         }
         if (needsTest) {
             for (int j = 0; j < n; j++) {
                 if (j != i) {
-                    PQP_CollideResult cr;
-                    SketchObject::collide(list.at(i),list.at(j),&cr, respond ? PQP_ALL_CONTACTS : PQP_FIRST_CONTACT);
-                    if (cr.NumPairs() != 0) {
+                    PQP_CollideResult *cr = NULL;
+                    cr = list.at(i)->collide(list.at(j), respond ? PQP_ALL_CONTACTS : PQP_FIRST_CONTACT);
+                    if (cr->NumPairs() != 0) {
                         if (respond) {
                             if (usePCAResponse) {
                                 WorldManager::applyPCACollisionResponseForce(
-                                            list.at(i),list.at(j),&cr,affectedGroups);
+                                            list.at(i),list.at(j),cr,affectedGroups);
                             } else {
                                 WorldManager::applyCollisionResponseForce(
-                                            list.at(i),list.at(j),&cr,affectedGroups);
+                                            list.at(i),list.at(j),cr,affectedGroups);
                             }
                         }
                         foundCollision = true;
+                    }
+                    if (cr != NULL) {
+                        delete cr;
                     }
                 }
             }
@@ -314,7 +314,6 @@ inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int
             // if we couldn't fix collisions, undo the motion and return
             for (int i = 0; i < n; i++) {
                 list.at(i)->restoreToLastLocation();
-                list.at(i)->recalculateLocalTransform();
             }
             return;
         }
@@ -351,7 +350,6 @@ inline void applyBinaryCollisionSearch(QList<SketchObject *> &list, QSet<int> &a
         while (collideAndRespond(list,affectedGroups,dt,false) && times < 10) {
             for (int i = 0; i < list.size(); i++) {
                 list.at(i)->restoreToLastLocation();
-                list.at(i)->recalculateLocalTransform();
             }
             divideForces(list,.5);
             applyEuler(list,dt,false);
@@ -530,7 +528,7 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
     subj->getPosition(t1);
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
-        if (obj->doPhysics()) {
+//        if (obj->doPhysics()) {
             // get the collision models:
             SketchModel* model2 = obj->getModel();
             PQP_Model *pqp_model2 = model2->getCollisionModel();
@@ -547,7 +545,7 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
                 closest = obj;
                 dist = dr.Distance();
             }
-        }
+//        }
     }
     *distOut = dist;
     return closest;
@@ -759,10 +757,10 @@ void WorldManager::applyPCACollisionResponseForce(SketchObject *o1, SketchObject
     o2->getLocalTransform()->TransformVector(dir2,dir2W);
     q_vec_scale(dir1W,COLLISION_FORCE*30,dir1W);
     q_vec_scale(dir2W,COLLISION_FORCE*30,dir2W);
-    if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryGroupNum())) {
+    if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryCollisionGroupNum())) {
         o1->addForce(mean1W,dir1W);
     }
-    if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryGroupNum())) {
+    if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryCollisionGroupNum())) {
         o2->addForce(mean2W,dir2W);
     }
 }
@@ -804,10 +802,10 @@ void WorldManager::applyCollisionResponseForce(SketchObject *o1, SketchObject *o
         centriod(p1,pqp_model1,m1Tri);
         centriod(p2,pqp_model2,m2Tri);
         // apply the forces
-        if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryGroupNum())) {
+        if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryCollisionGroupNum())) {
             (o1)->addForce(p1,f1);
         }
-        if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryGroupNum())) {
+        if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryCollisionGroupNum())) {
             (o2)->addForce(p2,f2);
         }
     }

@@ -2,8 +2,8 @@
 #include <vtkExtractEdges.h>
 
 SketchObject::SketchObject() :
-    parent(NULL),
     localTransform(vtkSmartPointer<vtkTransform>::New()),
+    parent(NULL),
     primaryCollisionGroup(OBJECT_HAS_NO_GROUP),
     localTransformPrecomputed(false)
 {
@@ -13,108 +13,114 @@ SketchObject::SketchObject() :
     q_vec_set(lastPosition,0,0,0);
     q_from_axis_angle(orientation,1,0,0,0);
     q_from_axis_angle(lastOrientation,1,0,0,0);
+    recalculateLocalTransform();
 }
 
 //#########################################################################
-virtual SketchObject *SketchObject::getParent() {
+SketchObject *SketchObject::getParent() {
     return parent;
 }
 
 //#########################################################################
-virtual void SketchObject::setParent(SketchObject *p) {
-    parent = p
+void SketchObject::setParent(SketchObject *p) {
+    parent = p;
 }
 
 //#########################################################################
-virtual SketchModel *SketchObject::getModel() {
+SketchModel *SketchObject::getModel() {
     return NULL;
 }
 //#########################################################################
-virtual const SketchModel *SketchObject::getModel() const {
+const SketchModel *SketchObject::getModel() const {
     return NULL;
 }
 //#########################################################################
-virtual vtkActor *getActor() {
+vtkActor *SketchObject::getActor() {
     return NULL;
 }
 //#########################################################################
-virtual void SketchObject::getPosition(q_vec_type dest) const {
+void SketchObject::getPosition(q_vec_type dest) const {
     q_vec_copy(dest,position);
 }
 //#########################################################################
-virtual void SketchObject::getOrientation(q_type dest) const {
+void SketchObject::getOrientation(q_type dest) const {
     q_copy(dest,orientation);
 }
 //#########################################################################
-virtual void SketchObject::setPosition(const q_vec_type newPosition) {
+void SketchObject::getOrientation(PQP_REAL matrix[3][3]) const {
+    quatToPQPMatrix(orientation,matrix);
+}
+
+//#########################################################################
+void SketchObject::setPosition(const q_vec_type newPosition) {
     q_vec_copy(position,newPosition);
     recalculateLocalTransform();
 }
 
 //#########################################################################
-virtual void SketchObject::setOrientation(const q_type newOrientation) {
+void SketchObject::setOrientation(const q_type newOrientation) {
     q_copy(orientation,newOrientation);
     recalculateLocalTransform();
 }
 
 //#########################################################################
-virtual void SketchObject::setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation) {
+void SketchObject::setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation) {
     q_vec_copy(position,newPosition);
     q_copy(orientation,newOrientation);
     recalculateLocalTransform();
 }
 
 //#########################################################################
-virtual void SketchObject::getLastPosition(q_vec_type dest) const {
+void SketchObject::getLastPosition(q_vec_type dest) const {
     q_vec_copy(dest,lastPosition);
 }
 //#########################################################################
-virtual void SketchObject::getLastOrientation(q_type dest) const {
+void SketchObject::getLastOrientation(q_type dest) const {
     q_copy(dest,lastOrientation);
 }
 //#########################################################################
-virtual void SketchObject::setLastLocation() {
+void SketchObject::setLastLocation() {
     getPosition(lastPosition);
     getOrientation(lastOrientation);
 }
 
 //#########################################################################
-virtual void SketchObject::restoreToLastLocation() {
+void SketchObject::restoreToLastLocation() {
     setPosAndOrient(lastPosition,lastOrientation);
 }
 
 //#########################################################################
-virtual int SketchObject::getPrimaryCollisionGroupNum() {
+int SketchObject::getPrimaryCollisionGroupNum() {
     return primaryCollisionGroup;
 }
 
 //#########################################################################
-virtual void SketchObject::setPrimaryCollisionGroupNum(int num) {
+void SketchObject::setPrimaryCollisionGroupNum(int num) {
     primaryCollisionGroup = num;
 }
 
 //#########################################################################
-virtual bool SketchObject::isInCollisionGroup(int num) const {
+bool SketchObject::isInCollisionGroup(int num) const {
     return num == primaryCollisionGroup;
 }
 //#########################################################################
-virtual vtkTransform *SketchObject::getLocalTransform() {
+vtkTransform *SketchObject::getLocalTransform() {
     return localTransform;
 }
 
 //#########################################################################
-virtual void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint,
+void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint,
                                                                 q_vec_type worldCoordsOut) const {
     localTransform->TransformPoint(modelPoint,worldCoordsOut);
 }
 //#########################################################################
-virtual void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
+void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
     localTransform->Inverse();
     localTransform->TransformVector(worldVec,modelVecOut);
     localTransform->Inverse();
 }
 //#########################################################################
-virtual void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
+void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
     q_vec_add(forceAccum,forceAccum,force);
     q_vec_type tmp;
     getWorldVectorInModelSpace(force,tmp);
@@ -123,27 +129,27 @@ virtual void SketchObject::addForce(const q_vec_type point, const q_vec_type for
 }
 
 //#########################################################################
-virtual void SketchObject::getForce(q_vec_type out) const {
+void SketchObject::getForce(q_vec_type out) const {
     q_vec_copy(out,forceAccum);
 }
 //#########################################################################
-virtual void SketchObject::getTorque(q_vec_type out) const {
+void SketchObject::getTorque(q_vec_type out) const {
     q_vec_copy(out,torqueAccum);
 }
 //#########################################################################
-virtual void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque) {
+void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque) {
     q_vec_copy(forceAccum,force);
     q_vec_copy(torqueAccum,torque);
 }
 
 //#########################################################################
-virtual void SketchObject::clearForces() {
+void SketchObject::clearForces() {
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
 }
 
 //#########################################################################
-virtual void SketchObject::recalculateLocalTransform()  {
+void SketchObject::recalculateLocalTransform()  {
     if (isLocalTransformPrecomputed())
         return;
     double angle,x,y,z;
@@ -154,12 +160,12 @@ virtual void SketchObject::recalculateLocalTransform()  {
 }
 
 //#########################################################################
-virtual void SketchObject::setLocalTransformPrecomputed(bool isComputed) {
+void SketchObject::setLocalTransformPrecomputed(bool isComputed) {
     localTransformPrecomputed = isComputed;
 }
 
 //#########################################################################
-virtual bool SketchObject::isLocalTransformPrecomputed() {
+bool SketchObject::isLocalTransformPrecomputed() {
     return localTransformPrecomputed;
 }
 
@@ -172,8 +178,8 @@ virtual bool SketchObject::isLocalTransformPrecomputed() {
 //#########################################################################
 ModelInstance::ModelInstance(SketchModel *m) :
     SketchObject(),
-    model(m),
     actor(vtkSmartPointer<vtkActor>::New()),
+    model(m),
     modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
     wireframeMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
@@ -191,42 +197,58 @@ ModelInstance::ModelInstance(SketchModel *m) :
     actor->SetMapper(solidMapper);
 }
 
-virtual int ModelInstance::numInstances() {
+//#########################################################################
+int ModelInstance::numInstances() {
     return 1;
 }
 
-virtual SketchModel *getModel() {
+//#########################################################################
+SketchModel *ModelInstance::getModel() {
     return model;
 }
 
-virtual const SketchModel *getModel() const {
+//#########################################################################
+const SketchModel *ModelInstance::getModel() const {
     return model;
 }
 
-virtual vtkActor *ModelInstance::getActor() {
+//#########################################################################
+vtkActor *ModelInstance::getActor() {
     return actor;
 }
 
-virtual void ModelInstance::setSolid() {
+//#########################################################################
+void ModelInstance::setSolid() {
     actor->SetMapper(solidMapper);
 }
 
-virtual void ModelInstance::setWireFrame() {
+//#########################################################################
+void ModelInstance::setWireFrame() {
     actor->SetMapper(wireframeMapper);
 }
 
-virtual PQP_CollideResult *ModelInstance::collide(SketchObject *other) {
-    if (other->numInstances() != 1) {
+//#########################################################################
+PQP_CollideResult *ModelInstance::collide(SketchObject *other, int pqp_flags) {
+    if (other->numInstances() != 1 || other->getModel() == NULL) {
         return other->collide(this);
     } else {
-        // TODO
+        PQP_CollideResult *cr = new PQP_CollideResult();
+        PQP_REAL r1[3][3], r2[3][3], t1[3], t2[3];
+        getPosition(t1);
+        getOrientation(r1);
+        other->getPosition(t2);
+        other->getOrientation(r2);
+        PQP_Collide(cr,r1,t1,model->getCollisionModel(),r2,t2,other->getModel()->getCollisionModel(),pqp_flags);
+        return cr;
     }
 }
 
-virtual void ModelInstance::getAABoundingBox(double bb[]) {
+//#########################################################################
+void ModelInstance::getAABoundingBox(double bb[]) {
     modelTransformed->GetOutput()->GetBounds(bb);
 }
 
+//#########################################################################
 /*
 SketchObject::SketchObject(vtkActor *a, SketchModel *model, vtkTransform *worldEyeTransform)
 {

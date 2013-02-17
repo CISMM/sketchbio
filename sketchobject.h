@@ -13,6 +13,15 @@
 // assigned a group
 #define OBJECT_HAS_NO_GROUP (-1)
 
+/*
+ * This class is an abstract representation of some instance or group of instances
+ * in the world that the user would like to treat as a single object in terms of
+ * position/orientation and movement relative to other things.
+ *
+ * This class is the abstract superclass for the Composite Pattern, although the
+ * data that will be the same for both instances and groups is stored and accessed
+ * from here, such as position/orientation and force/torque.
+ */
 
 class SketchObject {
 public:
@@ -20,6 +29,7 @@ public:
     SketchObject();
     // the number of instances controlled by this object (is single or group?)
     virtual int numInstances() =0;
+    // the parent "object"/group
     virtual SketchObject *getParent();
     virtual void setParent(SketchObject *p);
     // model information
@@ -30,6 +40,7 @@ public:
     // position and orientation
     virtual void getPosition(q_vec_type dest) const;
     virtual void getOrientation(q_type dest) const;
+    virtual void getOrientation(PQP_REAL matrix[3][3]) const;
     virtual void setPosition(const q_vec_type newPosition);
     virtual void setOrientation(const q_type newOrientation);
     virtual void setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation);
@@ -56,16 +67,17 @@ public:
     virtual void setWireFrame() =0;
     virtual void setSolid() =0;
     // collision with other... ?
-    virtual PQP_CollideResult *collide(SketchObject *other) =0; // signature may change
+    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS) =0; // signature may change
     // bounding box info for grab (have to stop using PQP_Distance)
     virtual void getAABoundingBox(double bb[6]) = 0;
 protected: // methods
     virtual void recalculateLocalTransform();
     virtual void setLocalTransformPrecomputed(bool isComputed);
     virtual bool isLocalTransformPrecomputed();
+protected: // fields
+    vtkSmartPointer<vtkTransform> localTransform;
 private: // fields
     SketchObject *parent;
-    vtkSmartPointer<vtkTransform> localTransform;
     q_vec_type forceAccum,torqueAccum;
     q_vec_type position, lastPosition;
     q_type orientation, lastOrientation;
@@ -73,16 +85,26 @@ private: // fields
     bool localTransformPrecomputed;
 };
 
+/*
+ * This class extends SketchObject to provide an object that is a single instance of a
+ * single SketchModel's data.
+ */
+
 class ModelInstance : public SketchObject {
 public:
+    // constructor
     ModelInstance(SketchModel *m);
+    // specify that this is a leaf by returning 1
     virtual int numInstances();
+    // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
     virtual vtkActor *getActor();
+    // functions that the parent can't implement
     virtual void setWireFrame();
     virtual void setSolid();
-    virtual PQP_CollideResult *collide(SketchObject *other);
+    // collision function that depend on data in this subclass
+    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
 private:
     vtkSmartPointer<vtkActor> actor;

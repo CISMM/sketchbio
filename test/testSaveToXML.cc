@@ -75,15 +75,15 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             }
         }
     }
-    if (o1->doPhysics() != o2->doPhysics()) {
-        numDifferences++;
-        if (printDiffs) {
-            cout << "Physics info wrong" << endl;
-            cout << o1->doPhysics() << " " << o2->doPhysics() << endl;
-        }
-    }
+//    if (o1->doPhysics() != o2->doPhysics()) {
+//        numDifferences++;
+//        if (printDiffs) {
+//            cout << "Physics info wrong" << endl;
+//            cout << o1->doPhysics() << " " << o2->doPhysics() << endl;
+//        }
+//    }
 
-    if (o2->getConstModel()->getDataSource() != o1->getConstModel()->getDataSource()) {
+    if (o2->getModel()->getDataSource() != o1->getModel()->getDataSource()) {
         numDifferences++;
         if (printDiffs) {
             cout << "Model got mixed up" << endl;

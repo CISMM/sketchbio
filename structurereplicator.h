@@ -16,16 +16,16 @@
  * to the replica.  The forces applied to the original objects are scaled based on how many
  * copies away the force is coming from.
  */
-class ReplicatedObject : public SketchObject {
+class ReplicatedObject : public ModelInstance {
 public:
-    ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
+    ReplicatedObject(SketchModel *model,
                      SketchObject *original0, SketchObject *original1, int num);
     virtual void addForce(q_vec_type point, const q_vec_type force);
     virtual void getPosition(q_vec_type dest) const;
     virtual void getOrientation(q_type dest) const;
-    virtual void setPrimaryGroupNum(int num);
-    virtual int  getPrimaryGroupNum() const;
-    virtual bool isInGroup(int num) const;
+    virtual void setPrimaryCollisionGroupNum(int num);
+    virtual int  getPrimaryCollisionGroupNum() const;
+    virtual bool isInCollisionGroup(int num) const;
     inline  int  getReplicaNum() const { return replicaNum; }
 private:
     // need original(s) here

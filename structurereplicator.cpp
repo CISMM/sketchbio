@@ -8,14 +8,14 @@
 //############################################################################################
 //############################################################################################
 
-ReplicatedObject::ReplicatedObject(vtkActor *actor, SketchModel *model, vtkTransform *worldEyeTransform,
-                                   SketchObject *original0, SketchObject *original1, int num):
-    SketchObject(actor, model, worldEyeTransform)
+ReplicatedObject::ReplicatedObject(SketchModel *model, SketchObject *original0, SketchObject *original1,
+                                   int num):
+    ModelInstance(model)
 {
     obj0 = original0;
     obj1 = original1;
     replicaNum = num;
-    allowTransformUpdate = false;
+    setLocalTransformPrecomputed(true);
 }
 
 /*
@@ -58,22 +58,20 @@ void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
     double divisor = (replicaNum > 0) ? replicaNum : (-replicaNum +1);
     SketchObject *original = (replicaNum > 0) ? obj1 : obj0;
     q_vec_type scaledForce;
-    localTransform->Inverse();
-    localTransform->TransformVector(force,scaledForce);
-    localTransform->Inverse();
+    getWorldVectorInModelSpace(force,scaledForce);
     q_vec_scale(scaledForce, 1/divisor, scaledForce);
     original->getLocalTransform()->TransformVector(scaledForce,scaledForce);
     original->addForce(point,scaledForce);
 }
 
-void ReplicatedObject::setPrimaryGroupNum(int num) {} // does nothing, group num based on originals
+void ReplicatedObject::setPrimaryCollisionGroupNum(int num) {} // does nothing, group num based on originals
 
-int ReplicatedObject::getPrimaryGroupNum() const {
-    return ((replicaNum > 0) ? obj1 : obj0)->getPrimaryGroupNum();
+int ReplicatedObject::getPrimaryCollisionGroupNum() const {
+    return ((replicaNum > 0) ? obj1 : obj0)->getPrimaryCollisionGroupNum();
 }
 
-bool ReplicatedObject::isInGroup(int num) const {
-    return obj1->isInGroup(num) || obj0->isInGroup(num);
+bool ReplicatedObject::isInCollisionGroup(int num) const {
+    return obj1->isInCollisionGroup(num) || obj0->isInCollisionGroup(num);
 }
 
 //############################################################################################
@@ -90,8 +88,6 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     world(w),
     copies()
 {
-    obj1->recalculateLocalTransform();
-    obj2->recalculateLocalTransform();
     transform = vtkSmartPointer<vtkTransform>::New();
     transform->Identity();
     transform->PostMultiply();
@@ -118,19 +114,18 @@ void StructureReplicator::setNumShown(int num) {
             previous = copies.at(copies.size()-1);
         }
         for (; numShown < num; numShown++) {
-            vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+            vtkSmartPointer<vtkActor> actor;
             SketchModel *modelId = previous->getModel();
             actor->SetMapper(modelId->getSolidMapper());
-            ReplicatedObject *obj = new ReplicatedObject(actor,modelId,
-                                                         worldEyeTransform,
+            ReplicatedObject *obj = new ReplicatedObject(modelId,
                                                          obj1,obj2,numShown+2);
+            actor = obj->getActor();
             SketchObject *next = world->addObject(obj);
             copies.append(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
             tform->Concatenate(previous->getLocalTransform());
             tform->Concatenate(transform);
-            next->allowLocalTransformUpdates(false);
 //            next->setDoPhysics(false);
             previous = next;
         }

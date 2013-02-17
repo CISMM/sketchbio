@@ -200,10 +200,10 @@ vtkXMLDataElement *objectToXML(const SketchObject *object,
 
     vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
-    QString modelId = "#" + modelIds.constFind(object->getConstModel()).value();
+    QString modelId = "#" + modelIds.constFind(object->getModel()).value();
     child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
-    child->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
-                          QString(object->doPhysics()?"true":"false").toStdString().c_str());
+//    child->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
+//                          QString(object->doPhysics()?"true":"false").toStdString().c_str());
 
     const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
     if (rObj != NULL) {
@@ -475,7 +475,7 @@ int xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
             QString mId, oId;
             q_vec_type pos;
             q_type orient;
-            bool physicsEnabled;
+//            bool physicsEnabled;
             oId = QString("#") + child->GetAttribute(ID_ATTRIBUTE_NAME);
             vtkXMLDataElement *props = child->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
             if (props == NULL) {
@@ -486,12 +486,12 @@ int xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
                 return XML_TO_DATA_FAILURE;
             }
             mId = c;
-            c = props->GetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME);
-            if (c != NULL) {
-                physicsEnabled = (QString(c) == QString("false")) ? false : true;
-            } else {
-                return XML_TO_DATA_FAILURE;
-            }
+//            c = props->GetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME);
+//            if (c != NULL) {
+//                physicsEnabled = (QString(c) == QString("false")) ? false : true;
+//            } else {
+//                return XML_TO_DATA_FAILURE;
+//            }
             vtkXMLDataElement *trans = child->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
             if (trans == NULL) {
                 return XML_TO_DATA_FAILURE;
@@ -503,7 +503,7 @@ int xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
             }
             q_normalize(orient,orient);
             SketchObject *obj = proj->addObject(modelIds.value(mId),pos,orient);
-            obj->setDoPhysics(physicsEnabled);
+//            obj->setDoPhysics(physicsEnabled);
             objectIds.insert(oId,obj);
         }
     }

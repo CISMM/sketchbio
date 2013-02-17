@@ -16,13 +16,39 @@ static double COLORS[][3] =
      { 1.0, 0.7, 1.0 },
      { 0.7, 1.0, 1.0 } };
 
-inline SketchObject *addTracker(vtkRenderer *r, SketchModel *model, vtkTransform *worldEyeTransform) {
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(model->getSolidMapper());
-    SketchObject *newObject = new SketchObject(actor,model,worldEyeTransform);
-    newObject->recalculateLocalTransform();
+class TrackerObject : public SketchObject {
+public:
+    TrackerObject() : SketchObject(), actor(vtkSmartPointer<vtkActor>::New()) {
+        vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+        sphereSource->SetRadius(4 * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+        sphereSource->Update();
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputConnection(sphereSource->GetOutputPort());
+        mapper->Update();
+        actor->SetMapper(mapper);
+        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        transform->Identity();
+        actor->SetUserTransform(transform);
+        setLocalTransformPrecomputed(true);
+    }
+
+    virtual int numInstances() { return 0; }
+    virtual vtkActor *getActor() { return actor; }
+    virtual void setWireFrame() {}
+    virtual void setSolid() {}
+    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags) { return NULL;}
+    virtual void getAABoundingBox(double bb[]) {}
+
+private:
+    vtkSmartPointer<vtkActor> actor;
+};
+
+inline SketchObject *addTracker(vtkRenderer *r) {
+    vtkSmartPointer<vtkActor> actor;
+    SketchObject *tracker = new TrackerObject();
+    actor = tracker->getActor();
     r->AddActor(actor);
-    return newObject;
+    return tracker;
 }
 
 SketchProject::SketchProject(vtkRenderer *r,
@@ -36,16 +62,11 @@ SketchProject::SketchProject(vtkRenderer *r,
     analog(analogStates)
 {
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
-    vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-    sphereSource->SetRadius(4);
-    sphereSource->Update();
-    SketchModel *sphereModel = models->modelForVTKSource(sphereSource,
-                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
     grabbedWorld = WORLD_NOT_GRABBED;
-    leftHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
-    leftHand->setDoPhysics(false);
-    rightHand = addTracker(r,sphereModel,transforms->getWorldToEyeTransform());
-    rightHand->setDoPhysics(false);
+    leftHand = addTracker(r);
+//    leftHand->setDoPhysics(false);
+    rightHand = addTracker(r);
+//    rightHand->setDoPhysics(false);
     lObj = rObj = (SketchObject *) NULL;
     lDist = rDist = std::numeric_limits<double>::max();
 }
@@ -472,14 +493,10 @@ void SketchProject::updateTrackerPositions() {
     q_type orient;
     transforms->getLeftTrackerPosInWorldCoords(pos);
     transforms->getLeftTrackerOrientInWorldCoords(orient);
-    leftHand->setPosition(pos);
-    leftHand->setOrientation(orient);
-    leftHand->recalculateLocalTransform();
+    leftHand->setPosAndOrient(pos,orient);
     transforms->getLeftTrackerTransformInEyeCoords((vtkTransform*)leftHand->getActor()->GetUserTransform());
     transforms->getRightTrackerPosInWorldCoords(pos);
     transforms->getRightTrackerOrientInWorldCoords(orient);
-    rightHand->setPosition(pos);
-    rightHand->setOrientation(orient);
-    rightHand->recalculateLocalTransform();
+    rightHand->setPosAndOrient(pos,orient);
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
 }
