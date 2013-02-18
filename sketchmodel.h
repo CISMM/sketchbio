@@ -26,8 +26,6 @@ public:
     double getScale() const;
     void getTranslate(double out[3]) const;
     inline vtkTransformPolyDataFilter *getModelData() { return modelData; }
-    inline vtkPolyDataMapper *getSolidMapper() { return normalMapper; }
-    inline vtkPolyDataMapper *getWireFrameMapper() { return wireFrameMapper; }
     inline PQP_Model *getCollisionModel() { return collisionModel; }
 #ifndef PQP_UPDATE_EPSILON
     inline QHash<int,int> *getTriIdToTriIndexHash() { return &triIdToTriIndex; }
@@ -37,8 +35,6 @@ public:
 private:
     QString dataSource;
     vtkSmartPointer<vtkTransformPolyDataFilter> modelData;
-    vtkSmartPointer<vtkPolyDataMapper> wireFrameMapper;
-    vtkSmartPointer<vtkPolyDataMapper> normalMapper;
     PQP_Model *collisionModel;
 #ifndef PQP_UPDATE_EPSILON
     QHash<int,int> triIdToTriIndex;

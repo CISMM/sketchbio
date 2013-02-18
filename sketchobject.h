@@ -32,10 +32,10 @@ public:
     // the parent "object"/group
     virtual SketchObject *getParent();
     virtual void setParent(SketchObject *p);
-    // model information
+    // model information - NULL by default since not all objects will have one model
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    // actor
+    // actor - NULL by default since not all objects will have one actor
     virtual vtkActor *getActor();
     // position and orientation
     virtual void getPosition(q_vec_type dest) const;
@@ -45,16 +45,16 @@ public:
     virtual void setOrientation(const q_type newOrientation);
     virtual void setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation);
     // to do with setting undo position
-    virtual void getLastPosition(q_vec_type dest) const;
-    virtual void getLastOrientation(q_type dest) const;
-    virtual void setLastLocation();
-    virtual void restoreToLastLocation();
+    void getLastPosition(q_vec_type dest) const;
+    void getLastOrientation(q_type dest) const;
+    void setLastLocation();
+    void restoreToLastLocation();
     // to do with collision groups
     virtual int  getPrimaryCollisionGroupNum();
     virtual void setPrimaryCollisionGroupNum(int num);
     virtual bool isInCollisionGroup(int num) const;
     // local transformation & transforming points/vectors
-    virtual vtkTransform *getLocalTransform();
+    vtkTransform *getLocalTransform();
     virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const;
     virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const;
     // add, get, set and clear forces and torques on the object
@@ -71,9 +71,10 @@ public:
     // bounding box info for grab (have to stop using PQP_Distance)
     virtual void getAABoundingBox(double bb[6]) = 0;
 protected: // methods
-    virtual void recalculateLocalTransform();
-    virtual void setLocalTransformPrecomputed(bool isComputed);
-    virtual bool isLocalTransformPrecomputed();
+    // to deal with local transformation
+    void recalculateLocalTransform();
+    void setLocalTransformPrecomputed(bool isComputed);
+    bool isLocalTransformPrecomputed();
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
 private: // fields
