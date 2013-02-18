@@ -32,6 +32,23 @@ public:
         setLocalTransformPrecomputed(true);
     }
 
+    // I'm using disabling localTransform, so I need to reimplement these
+    virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const {
+        q_vec_type pos; q_type orient;
+        getPosition(pos);
+        getOrientation(orient);
+        q_xform(worldCoordsOut,orient,modelPoint);
+        q_vec_add(worldCoordsOut,pos,worldCoordsOut);
+    }
+    virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
+        q_type orient;
+        getOrientation(orient);
+        q_type orientInv;
+        q_invert(orientInv,orient);
+        q_xform(modelVecOut,orientInv,worldVec);
+
+    }
+
     virtual int numInstances() { return 0; }
     virtual vtkActor *getActor() { return actor; }
     virtual void setWireFrame() {}
