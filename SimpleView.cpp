@@ -318,7 +318,12 @@ bool SimpleView::simplifyObjectByName(const QString name)
     py_file.write("bpy.ops.object.delete()\n");
     // Select the data object
     py_file.write("bpy.ops.object.select_all(action='DESELECT')\n");
-    py_file.write("myobject = bpy.data.objects['Mesh']\n");
+//    py_file.write("myobject = bpy.data.objects['Mesh']\n");
+    py_file.write("keys = bpy.data.objects.keys()\n");
+    py_file.write("for key in keys:\n");
+    py_file.write("\tif key != 'Camera' and key != 'Lamp':\n");
+    py_file.write("\t\tmyobject = bpy.data.objects[key]\n");
+    py_file.write("\t\tbreak\n");
     py_file.write("myobject.select = True\n");
     py_file.write("bpy.context.scene.objects.active = myobject\n");
     // Turn on edit mode and adjust the mesh to remove all non-manifold
