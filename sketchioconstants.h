@@ -3,7 +3,7 @@
 
 
 // parameters that define how trackers and objects are connected
-#define DISTANCE_THRESHOLD 30
+#define DISTANCE_THRESHOLD 0
 #define OBJECT_SIDE_LEN 200
 #define TRACKER_SIDE_LEN 200
 

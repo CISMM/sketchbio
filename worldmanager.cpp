@@ -513,41 +513,88 @@ void WorldManager::updateSprings() {
     }
     springEndConnections->Update();
 }
+//##################################################################################################
+//##################################################################################################
+inline double min(double a, double b) {
+    return a < b ? a : b;
+}
+
+//##################################################################################################
+//##################################################################################################
+inline double max(double a, double b) {
+    return a > b ? a : b;
+}
+
+//##################################################################################################
+//##################################################################################################
+// if outside the bounding box returns an approximate distance to it
+// else returns negative how far into the box the point as a fraction of the way through (.5 for halfway through)
+inline double distOutsideAABB(q_vec_type point, double bb[6]) {
+    double xD, yD, zD, dist;
+    bool inX = false, inY = false, inZ = false;
+    if (point[Q_X] > bb[0] && point[Q_X] < bb[1]) {
+        inX = true;
+        xD = -min(point[Q_X]-bb[0],bb[1]-point[Q_X]);
+    } else {
+        xD = min(Q_ABS(bb[0]-point[Q_X]), Q_ABS(point[Q_X] - bb[1]));
+    }
+    if (point[Q_Y] > bb[2] && point[Q_Y] < bb[3]) {
+        inY = true;
+        yD = -min(point[Q_Y]-bb[2],bb[3]-point[Q_Y]);
+    } else {
+        yD = min(Q_ABS(bb[2]-point[Q_Y]),Q_ABS(point[Q_Y]-bb[3]));
+    }
+    if (point[Q_Z] > bb[4] && point[Q_Z] < bb[5]) {
+        inZ = true;
+        zD = -min(point[Q_Z]-bb[4],bb[5]-point[Q_Z]);
+    } else {
+        zD = min(Q_ABS(bb[4]-point[Q_Z]),Q_ABS(point[Q_Z]-bb[5]));
+    }
+    if (inX && inY && inZ) {
+        dist = min(min(xD / (bb[1]-bb[0]),yD / (bb[3]-bb[2])),zD / (bb[5]-bb[4]));
+    } else if (inX) {
+        if (inY) {
+            dist = zD;
+        } else if (inZ) {
+            dist = yD;
+        } else {
+            dist = max(yD,zD);
+        }
+    } else if (inY) {
+        if (inZ) {
+            dist = xD;
+        } else {
+            dist = max(xD,zD);
+        }
+    } else if (inZ) {
+        dist = max(xD,yD);
+    } else {
+        dist = max(max(xD,yD),zD);
+    }
+    return dist;
+}
 
 //##################################################################################################
 //##################################################################################################
 SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
     SketchObject *closest;
-    double dist = std::numeric_limits<double>::max();
-    SketchModel *model1 = subj->getModel();
-    PQP_Model *pqp_model1 = model1->getCollisionModel();
-    PQP_REAL r1[3][3], t1[3];
-    q_type quat1;
-    subj->getOrientation(quat1);
-    quatToPQPMatrix(quat1,r1);
-    subj->getPosition(t1);
+    double distance = std::numeric_limits<double>::max();
+    q_vec_type pos1;
+    subj->getPosition(pos1);
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
-//        if (obj->doPhysics()) {
-            // get the collision models:
-            SketchModel* model2 = obj->getModel();
-            PQP_Model *pqp_model2 = model2->getCollisionModel();
-
-            // get the offsets and rotations in PQP's format
-            PQP_DistanceResult dr;
-            PQP_REAL r2[3][3],t2[3];
-            q_type quat2;
-            obj->getOrientation(quat2);
-            quatToPQPMatrix(quat2,r2);
-            obj->getPosition(t2);
-            PQP_Distance(&dr,r1,t1,pqp_model1,r2,t2,pqp_model2,1.5,500);
-            if (dr.Distance() < dist) {
-                closest = obj;
-                dist = dr.Distance();
-            }
-//        }
+        double bb[6];
+        double dist;
+        q_vec_type pos2;
+        obj->getAABoundingBox(bb);
+        obj->getPosition(pos2);
+        dist = distOutsideAABB(pos1,bb);
+        if (dist < distance) {
+            distance = dist;
+            closest = obj;
+        }
     }
-    *distOut = dist;
+    *distOut = distance;
     return closest;
 }
 
