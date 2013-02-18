@@ -114,12 +114,9 @@ void StructureReplicator::setNumShown(int num) {
             previous = copies.at(copies.size()-1);
         }
         for (; numShown < num; numShown++) {
-            vtkSmartPointer<vtkActor> actor;
             SketchModel *modelId = previous->getModel();
-            actor->SetMapper(modelId->getSolidMapper());
             ReplicatedObject *obj = new ReplicatedObject(modelId,
                                                          obj1,obj2,numShown+2);
-            actor = obj->getActor();
             SketchObject *next = world->addObject(obj);
             copies.append(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
