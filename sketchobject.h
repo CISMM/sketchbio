@@ -75,6 +75,8 @@ protected: // methods
     void recalculateLocalTransform();
     void setLocalTransformPrecomputed(bool isComputed);
     bool isLocalTransformPrecomputed();
+    // to be overridden as a template method if something needs to occur when the transform is updated
+    virtual void localTransformUpdated();
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
 private: // fields
@@ -107,6 +109,10 @@ public:
     // collision function that depend on data in this subclass
     virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
+protected:
+    virtual void localTransformUpdated();
+public:
+    static int testModelInstance();
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;

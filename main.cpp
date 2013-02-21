@@ -12,6 +12,10 @@ int main( int argc, char** argv )
   // QT Stuff
   QApplication app( argc, argv );
 
+  if (ModelInstance::testModelInstance()) {
+      return 1;
+  }
+
   // Parse the non-Qt part of the command line.
   // Start with default values.
   bool  do_fibrin = true;
