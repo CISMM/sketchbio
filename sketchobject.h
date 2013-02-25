@@ -77,6 +77,8 @@ protected: // methods
     bool isLocalTransformPrecomputed();
     // to be overridden as a template method if something needs to occur when the transform is updated
     virtual void localTransformUpdated();
+    // to allow localTransformUpdated to be called from subclasses on other SketchObjects...
+    static void localTransformUpdated(SketchObject *obj);
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
 private: // fields
@@ -119,6 +121,37 @@ private:
     vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
     vtkSmartPointer<vtkPolyDataMapper> solidMapper;
     vtkSmartPointer<vtkPolyDataMapper> wireframeMapper;
+};
+
+class ObjectGroup : public SketchObject {
+public:
+    // constructor
+    ObjectGroup();
+    // destructor
+    ~ObjectGroup();
+    // specify this is not a leaf (returns -1 * number of objects)
+    virtual int numInstances();
+    // methods to add/remove objects
+    // note: this method gives ObjectGroup ownership until the object is removed
+    // so these objects are cleaned up in ObjectGroup's destructor
+    void addObject(const SketchObject *obj);
+    // when the object is removed it is no longer owned by ObjectGroup, the remover is responsible
+    // for ensuring it is deallocated
+    void removeObject(const SketchObject *obj);
+    // get the list of objects
+    const QList<SketchObject *> *getSubObjects() const;
+    // recursive on group functions
+    virtual void setWireFrame();
+    virtual void setSolid();
+    // collision function... have to change declaration
+    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS);
+    virtual void getAABoundingBox(double bb[]);
+protected:
+    virtual void localTransformUpdated();
+public:
+    static int testObjectGroup();
+private:
+    QList<SketchObject *> children;
 };
 
 // helper function-- converts quaternion to a PQP rotation matrix

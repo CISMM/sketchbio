@@ -15,6 +15,9 @@ int main( int argc, char** argv )
   if (ModelInstance::testModelInstance()) {
       return 1;
   }
+  if (ObjectGroup::testObjectGroup()) {
+      return 1;
+  }
 
   // Parse the non-Qt part of the command line.
   // Start with default values.

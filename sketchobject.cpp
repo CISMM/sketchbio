@@ -44,7 +44,7 @@ vtkActor *SketchObject::getActor() {
 //#########################################################################
 void SketchObject::getPosition(q_vec_type dest) const {
     if (parent != NULL) {
-        parent->getModelSpacePointInWorldCoordinates(position);
+        parent->getModelSpacePointInWorldCoordinates(position,dest);
     } else {
         q_vec_copy(dest,position);
     }
@@ -201,6 +201,11 @@ bool SketchObject::isLocalTransformPrecomputed() {
 void SketchObject::localTransformUpdated() {}
 
 //#########################################################################
+void SketchObject::localTransformUpdated(SketchObject *obj) {
+    obj->localTransformUpdated();
+}
+
+//#########################################################################
 //#########################################################################
 //#########################################################################
 // Model Instance class
@@ -279,9 +284,83 @@ void ModelInstance::getAABoundingBox(double bb[]) {
     modelTransformed->GetOutput()->GetBounds(bb);
 }
 
+//#########################################################################
 void ModelInstance::localTransformUpdated() {
     modelTransformed->Update();
 }
+
+//#########################################################################
+//#########################################################################
+//#########################################################################
+// Object Group class
+//#########################################################################
+//#########################################################################
+//#########################################################################
+
+//#########################################################################
+ObjectGroup::ObjectGroup() : SketchObject(), children() {}
+
+//#########################################################################
+ObjectGroup::~ObjectGroup() {
+    SketchObject *obj;
+    for (int i = 0; i < children.length(); i++) {
+        obj = children.at(i);
+        delete obj;
+        children.replace(i,(SketchObject *)NULL);
+    }
+    children.clear();
+}
+
+//#########################################################################
+int ObjectGroup::numInstances() {
+    return -1 * children.size();
+}
+
+//#########################################################################
+void ObjectGroup::addObject(const SketchObject *obj) {
+    // todo
+}
+
+//#########################################################################
+void ObjectGroup::removeObject(const SketchObject *obj) {
+    // todo
+}
+
+//#########################################################################
+const QList<SketchObject *> *ObjectGroup::getSubObjects() const {
+    return NULL;
+}
+
+//#########################################################################
+void ObjectGroup::setWireFrame() {
+    for (int i = 0; i < children.size(); i++) {
+        children[i]->setWireFrame();
+    }
+}
+
+//#########################################################################
+void ObjectGroup::setSolid() {
+    for (int i = 0; i < children.size(); i++) {
+        children[i]->setSolid();
+    }
+}
+
+//#########################################################################
+PQP_CollideResult *ObjectGroup::collide(SketchObject *other, int pqp_flags) {
+    // todo
+    return NULL;
+}
+
+//#########################################################################
+void ObjectGroup::getAABoundingBox(double bb[]) {} // todo
+
+//#########################################################################
+void ObjectGroup::localTransformUpdated() {
+    for (int i = 0; i < children.size(); i++) {
+        SketchObject::localTransformUpdated(children[i]);
+    }
+}
+
 
 //#########################################################################
 //#########################################################################
@@ -655,4 +734,11 @@ int ModelInstance::testModelInstance() {
 }
 
 //#########################################################################
-
+int ObjectGroup::testObjectGroup() {
+    // set up
+    int errors = 0;
+    ObjectGroup *grp = new ObjectGroup();
+    errors += testNewSketchObject(grp);
+    delete grp;
+    return errors;
+}
