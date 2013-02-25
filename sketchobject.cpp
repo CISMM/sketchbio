@@ -26,6 +26,7 @@ SketchObject *SketchObject::getParent() {
 //#########################################################################
 void SketchObject::setParent(SketchObject *p) {
     parent = p;
+    recalculateLocalTransform();
 }
 
 //#########################################################################
@@ -42,15 +43,27 @@ vtkActor *SketchObject::getActor() {
 }
 //#########################################################################
 void SketchObject::getPosition(q_vec_type dest) const {
-    q_vec_copy(dest,position);
+    if (parent != NULL) {
+        parent->getModelSpacePointInWorldCoordinates(position);
+    } else {
+        q_vec_copy(dest,position);
+    }
 }
 //#########################################################################
 void SketchObject::getOrientation(q_type dest) const {
-    q_copy(dest,orientation);
+    if (parent != NULL) {
+        q_type tmp;
+        parent->getOrientation(tmp);
+        q_mult(dest,orientation,tmp);
+    } else {
+        q_copy(dest,orientation);
+    }
 }
 //#########################################################################
 void SketchObject::getOrientation(PQP_REAL matrix[3][3]) const {
-    quatToPQPMatrix(orientation,matrix);
+    q_type tmp;
+    getOrientation(tmp); // simpler than duplicating case code
+    quatToPQPMatrix(tmp,matrix);
 }
 
 //#########################################################################
@@ -93,6 +106,9 @@ void SketchObject::restoreToLastLocation() {
 
 //#########################################################################
 int SketchObject::getPrimaryCollisionGroupNum() {
+    if (parent != NULL) {
+        return parent->getPrimaryCollisionGroupNum();
+    }
     return primaryCollisionGroup;
 }
 
@@ -103,6 +119,9 @@ void SketchObject::setPrimaryCollisionGroupNum(int num) {
 
 //#########################################################################
 bool SketchObject::isInCollisionGroup(int num) const {
+    if (parent != NULL && parent->isInCollisionGroup(num)) {
+        return true;
+    }
     return num == primaryCollisionGroup;
 }
 //#########################################################################
@@ -159,6 +178,9 @@ void SketchObject::recalculateLocalTransform()  {
     angle = angle * 180 / Q_PI; // convert to degrees
     localTransform->PostMultiply();
     localTransform->Identity();
+    if (parent != NULL) {
+        localTransform->Concatenate(parent->getLocalTransform());
+    }
     localTransform->RotateWXYZ(angle,x,y,z);
     localTransform->Translate(position);
     localTransform->Update();
