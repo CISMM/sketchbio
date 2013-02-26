@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QFileDialog>
 #include "SimpleView.h"
+#include <QDebug>
 
 void Usage(const char *n)
 {
@@ -12,10 +13,13 @@ int main( int argc, char** argv )
   // QT Stuff
   QApplication app( argc, argv );
 
-  if (ModelInstance::testModelInstance()) {
+  int errors = 0;
+  if ((errors = ModelInstance::testModelInstance()) != 0) {
+      qDebug() << "Found " << errors << " errors in ModelInstance.";
       return 1;
   }
-  if (ObjectGroup::testObjectGroup()) {
+  if ((errors = ObjectGroup::testObjectGroup()) != 0) {
+      qDebug() << "Found " << errors << " errors in ObjectGroup.";
       return 1;
   }
 
