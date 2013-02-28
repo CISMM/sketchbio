@@ -31,7 +31,7 @@ class ModelManager
 {
 public:
     ModelManager();
-    ~ModelManager();
+    virtual ~ModelManager();
 
     /*****************************************************************************
       *

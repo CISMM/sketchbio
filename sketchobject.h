@@ -27,6 +27,7 @@ class SketchObject {
 public:
     // constructor
     SketchObject();
+    virtual ~SketchObject();
     // the number of instances controlled by this object (is single or group?)
     virtual int numInstances() =0;
     // the parent "object"/group
@@ -99,6 +100,7 @@ class ModelInstance : public SketchObject {
 public:
     // constructor
     ModelInstance(SketchModel *m);
+    virtual ~ModelInstance();
     // specify that this is a leaf by returning 1
     virtual int numInstances();
     // getters for data this subclass holds
@@ -128,16 +130,16 @@ public:
     // constructor
     ObjectGroup();
     // destructor
-    ~ObjectGroup();
+    virtual ~ObjectGroup();
     // specify this is not a leaf (returns -1 * number of objects)
     virtual int numInstances();
     // methods to add/remove objects
     // note: this method gives ObjectGroup ownership until the object is removed
     // so these objects are cleaned up in ObjectGroup's destructor
-    void addObject(const SketchObject *obj);
+    void addObject(SketchObject *obj);
     // when the object is removed it is no longer owned by ObjectGroup, the remover is responsible
     // for ensuring it is deallocated
-    void removeObject(const SketchObject *obj);
+    void removeObject(SketchObject *obj);
     // get the list of objects
     const QList<SketchObject *> *getSubObjects() const;
     // recursive on group functions

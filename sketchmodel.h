@@ -21,7 +21,7 @@ class SketchModel
 {
 public:
     SketchModel(QString source, vtkTransformPolyDataFilter *data, double iMass, double iMoment);
-    ~SketchModel();
+    virtual ~SketchModel();
     inline QString getDataSource() const { return dataSource; }
     double getScale() const;
     void getTranslate(double out[3]) const;

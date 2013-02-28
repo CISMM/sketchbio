@@ -19,6 +19,9 @@ SketchObject::SketchObject() :
 }
 
 //#########################################################################
+SketchObject::~SketchObject() {}
+
+//#########################################################################
 SketchObject *SketchObject::getParent() {
     return parent;
 }
@@ -44,7 +47,7 @@ vtkActor *SketchObject::getActor() {
 //#########################################################################
 void SketchObject::getPosition(q_vec_type dest) const {
     if (parent != NULL) {
-        parent->getModelSpacePointInWorldCoordinates(position,dest);
+        localTransform->GetPosition(dest);
     } else {
         q_vec_copy(dest,position);
     }
@@ -52,9 +55,9 @@ void SketchObject::getPosition(q_vec_type dest) const {
 //#########################################################################
 void SketchObject::getOrientation(q_type dest) const {
     if (parent != NULL) {
-        q_type tmp;
-        parent->getOrientation(tmp);
-        q_mult(dest,orientation,tmp);
+        double wxyz[4];
+        localTransform->GetOrientationWXYZ(wxyz);
+        q_from_axis_angle(dest,wxyz[1],wxyz[2],wxyz[3],wxyz[0]*Q_PI/180.0);
     } else {
         q_copy(dest,orientation);
     }
@@ -178,11 +181,11 @@ void SketchObject::recalculateLocalTransform()  {
     angle = angle * 180 / Q_PI; // convert to degrees
     localTransform->PostMultiply();
     localTransform->Identity();
+    localTransform->RotateWXYZ(angle,x,y,z);
+    localTransform->Translate(position);
     if (parent != NULL) {
         localTransform->Concatenate(parent->getLocalTransform());
     }
-    localTransform->RotateWXYZ(angle,x,y,z);
-    localTransform->Translate(position);
     localTransform->Update();
     localTransformUpdated();
 }
@@ -232,6 +235,9 @@ ModelInstance::ModelInstance(SketchModel *m) :
     wireframeMapper->Update();
     actor->SetMapper(solidMapper);
 }
+
+//#########################################################################
+ModelInstance::~ModelInstance() {}
 
 //#########################################################################
 int ModelInstance::numInstances() {
@@ -304,31 +310,94 @@ ObjectGroup::ObjectGroup() : SketchObject(), children() {}
 ObjectGroup::~ObjectGroup() {
     SketchObject *obj;
     for (int i = 0; i < children.length(); i++) {
-        obj = children.at(i);
+        obj = children[i];
         delete obj;
-        children.replace(i,(SketchObject *)NULL);
+        children[i] = (SketchObject *) NULL;
     }
     children.clear();
 }
 
 //#########################################################################
 int ObjectGroup::numInstances() {
-    return -1 * children.size();
+    int sum = 0;
+    for (int i = 0; i < children.length(); i++) {
+        int num = children[i]->numInstances();
+        sum += (num <= 0) ? num : -1 * num;
+    }
+    return sum;
 }
 
 //#########################################################################
-void ObjectGroup::addObject(const SketchObject *obj) {
-    // todo
+void ObjectGroup::addObject(SketchObject *obj) {
+    SketchObject *p = this;
+    // no "I'm my own grandpa" allowed
+    while (p != NULL) {
+        if (obj == p) return;
+        p = p->getParent();
+    }
+    // calculate new position & orientation
+    if (children.empty()) { // special case when first thing is added
+        q_vec_type pos, idV = Q_NULL_VECTOR;
+        q_type idQ = Q_ID_QUAT;
+        obj->getPosition(pos);
+        setPosAndOrient(pos,idQ);
+        // object gets position equal to group center, orientation is not messed with
+        obj->setPosition(idV);
+    } else { // if we already have some items in the list...
+        q_vec_type pos, nPos, oPos, delta;
+        q_type orient, idQ = Q_ID_QUAT;
+        getPosition(pos);
+        obj->getPosition(oPos);
+        getOrientation(orient);
+        q_vec_scale(nPos,children.length(),pos);
+        q_vec_add(nPos,oPos,nPos);
+        q_vec_scale(nPos,1.0/(children.length()+1),nPos);
+        // calculate change and apply it to children
+        q_vec_subtract(delta,nPos,pos);
+        for (int i = 0; i < children.length(); i++) {
+            q_vec_type cPos;
+            q_type cOrient;
+            children[i]->getPosition(cPos);
+            children[i]->getOrientation(cOrient);
+//            q_vec_add(cPos,delta,cPos);
+            q_vec_subtract(cPos,cPos,nPos);
+            q_mult(cOrient,orient,cOrient);
+            children[i]->setPosAndOrient(cPos,cOrient);
+        }
+        // set group's new position and orientation
+        setPosAndOrient(nPos,idQ);
+        // set the new object's position
+        q_vec_subtract(oPos,oPos,nPos);
+        obj->setPosition(oPos);
+    }
+    // set parent and child relation for new object
+    obj->setParent(this);
+    children.append(obj);
 }
 
 //#########################################################################
-void ObjectGroup::removeObject(const SketchObject *obj) {
+void ObjectGroup::removeObject(SketchObject *obj) {
     // todo
+    q_vec_type pos, nPos, oPos;
+    q_type orient, oOrient, idQ = Q_ID_QUAT;
+    // get inital positions/orientations
+    getPosition(pos);
+    getOrientation(orient);
+    obj->getOrientation(oPos);
+    obj->getOrientation(oOrient);
+    // compute new group position...
+    q_vec_scale(nPos,children.length(),pos);
+    q_vec_subtract(nPos,nPos,oPos);
+    q_vec_scale(nPos,1/(children.length()-1),pos);
+    // remove the item
+    children.removeOne(obj);
+    obj->setPosAndOrient(oPos,oOrient);
+    obj->setParent((SketchObject *)NULL);
 }
 
 //#########################################################################
 const QList<SketchObject *> *ObjectGroup::getSubObjects() const {
-    return NULL;
+    return &children;
 }
 
 //#########################################################################
@@ -744,22 +813,27 @@ inline int testObjectGroupActions() {
     ObjectGroup grp, grp2;
     int errors = testSketchObjectActions(&grp2);
     SketchModel *m = getSphereModel();
-    ModelInstance a(m), b(m), c(m);
+    ModelInstance *a = new ModelInstance(m), *b = new ModelInstance(m), *c = new ModelInstance(m);
     q_vec_type va = {2,0,0}, vb = {0,4,0}, vc = {0,-1,-5};
     q_vec_type v1 = {0,0,1}, v2, v3;
     q_type q1, q2, q3, qtmp;
     q_from_axis_angle(q1,1,0,0,Q_PI/4);
     q_from_axis_angle(q2,0,1,0,Q_PI/2);
-    a.setPosition(va);
-    a.setOrientation(q1);
-    b.setPosition(vb);
-    c.setPosition(vc);
+    a->setPosition(va);
+    a->setOrientation(q1);
+    b->setPosition(vb);
+    c->setPosition(vc);
     // test adding an object
-    grp.addObject(&a);
-    a.getPosition(v2);
+    grp.addObject(a);
+    a->getPosition(v2);
     if (!q_vec_equals(v2,va)) {
         errors++;
         qDebug() << "Item in group in wrong position";
+    }
+    a->getOrientation(q3);
+    if (!q_vec_equals(q3,q1)) {
+        errors++;
+        qDebug() << "Item in group changed orientation";
     }
     // test group position
     grp.getPosition(v2);
@@ -771,18 +845,18 @@ inline int testObjectGroupActions() {
         errors++;
         qDebug() << "Group number instances wrong after add";
     }
-    if (a.getParent() != &grp) {
+    if (a->getParent() != &grp) {
         errors++;
         qDebug() << "Parent not set correctly";
     }
     // add another item and test positions
-    grp.addObject(&b);
-    a.getPosition(v2);
+    grp.addObject(b);
+    a->getPosition(v2);
     if (!q_vec_equals(v2,va)) {
         errors++;
         qDebug() << "Item in group in wrong position";
     }
-    b.getPosition(v2);
+    b->getPosition(v2);
     if (!q_vec_equals(v2,vb)) {
         errors++;
         qDebug() << "Item in group in wrong position";
@@ -793,26 +867,28 @@ inline int testObjectGroupActions() {
     q_vec_scale(v3,.5,v3);
     if (!q_vec_equals(v2,v3)) {
         errors++;
-        qDebug() << "Group position wrong with one item";
+        qDebug() << "Group position wrong with two item";
+        q_vec_print(v3);
+        q_vec_print(v2);
     }
-    grp.addObject(&c);
+    grp.addObject(c);
     // test getting number of instances in group
     if (grp.numInstances() != -3) {
         errors++;
         qDebug() << "Group number instances wrong after add";
     }
     // check net positions of group items
-    a.getPosition(v2);
+    a->getPosition(v2);
     if (!q_vec_equals(v2,va)) {
         errors++;
         qDebug() << "Item in group in wrong position";
     }
-    b.getPosition(v2);
+    b->getPosition(v2);
     if (!q_vec_equals(v2,vb)) {
         errors++;
         qDebug() << "Item in group in wrong position";
     }
-    c.getPosition(v2);
+    c->getPosition(v2);
     if (!q_vec_equals(v2,vc)) {
         errors++;
         qDebug() << "Item in group in wrong position";
@@ -824,12 +900,14 @@ inline int testObjectGroupActions() {
     q_vec_scale(v3,1/3.0,v3);
     if (!q_vec_equals(v2,v3)) {
         errors++;
-        qDebug() << "Group position wrong with one item";
+        qDebug() << "Group position wrong with three item";
     }
     // check position of group members after group translation
-    grp.setPosition(v1);
+    grp.getPosition(v2);
+    q_vec_add(v2,v1,v2);
+    grp.setPosition(v2);
     q_vec_add(v2,v1,vb);
-    b.getPosition(v3);
+    b->getPosition(v3);
     if (!q_vec_equals(v2,v3)) {
         errors++;
         qDebug() << "Group member didn't move right";
@@ -837,7 +915,7 @@ inline int testObjectGroupActions() {
     // check orientation of members after rotation
     grp.setOrientation(q2);
     q_mult(qtmp,q2,q1);
-    a.getOrientation(q3);
+    a->getOrientation(q3);
     if (!q_equals(qtmp,q3)) {
         errors++;
         qDebug() << "Group member didn't rotate right";
@@ -845,23 +923,23 @@ inline int testObjectGroupActions() {
     // check positions of group members after rotation
     q_xform(v2,q2,va);
     q_vec_add(v2,v2,v1);
-    a.getPosition(v3);
+    a->getPosition(v3);
     if (!q_vec_equals(v2,v3)) {
         errors++;
         qDebug() << "Group member not in right position after rotation/movement";
     }
     // check combination of move, rotate, add (group orientation should reset, but net rotation of
     //         objects should not change)
-    ModelInstance d(m);
+    ModelInstance *d = new ModelInstance(m);
     q_type idQ = Q_ID_QUAT;
     q_vec_type oldCtr;
     grp.getPosition(oldCtr);
-    d.setPosition(va);
-    a.getPosition(v2);
-    a.getOrientation(qtmp);
-    grp.addObject(&d);
-    a.getPosition(v3);
-    a.getOrientation(q3);
+    d->setPosition(va);
+    a->getPosition(v2);
+    a->getOrientation(qtmp);
+    grp.addObject(d);
+    a->getPosition(v3);
+    a->getOrientation(q3);
     // check net position/orientation of object already in group to ensure it didn't change
     if (!q_vec_equals(v2,v3)) {
         errors++;
@@ -872,12 +950,12 @@ inline int testObjectGroupActions() {
         qDebug() << "Group member changed orientation when new one added";
     }
     // check position/orientation of new object to see if it changed
-    d.getPosition(v2);
+    d->getPosition(v2);
     if (!q_vec_equals(v2,va)) {
         errors++;
         qDebug() << "Object changed position when added to group";
     }
-    d.getOrientation(qtmp);
+    d->getOrientation(qtmp);
     if (!q_equals(qtmp,idQ)) {
         errors++;
         qDebug() << "Object changed orientation when added to group";
@@ -900,15 +978,15 @@ inline int testObjectGroupActions() {
     grp.setOrientation(q1);
     q_vec_type vbtmp;
     q_type qbtmp;
-    a.getPosition(v2);
-    a.getOrientation(qtmp);
-    b.getPosition(vbtmp);
-    b.getOrientation(qbtmp);
+    a->getPosition(v2);
+    a->getOrientation(qtmp);
+    b->getPosition(vbtmp);
+    b->getOrientation(qbtmp);
     grp.getPosition(oldCtr);
-    grp.removeObject(&b);
+    grp.removeObject(b);
     // check net position/orientation of object still in group to ensure it didn't change
-    a.getPosition(v3);
-    a.getOrientation(q3);
+    a->getPosition(v3);
+    a->getOrientation(q3);
     if (!q_vec_equals(v2,v3)) {
         errors++;
         qDebug() << "Group member moved when new one added";
@@ -918,8 +996,8 @@ inline int testObjectGroupActions() {
         qDebug() << "Group member changed orientation when new one added";
     }
     // check net position/orientation of object removed to ensure it didn't change
-    b.getPosition(v3);
-    b.getOrientation(q3);
+    b->getPosition(v3);
+    b->getOrientation(q3);
     if (!q_vec_equals(v3,vbtmp)) {
         errors++;
         qDebug() << "Object position changed when removed from group";
@@ -942,7 +1020,39 @@ inline int testObjectGroupActions() {
         errors++;
         qDebug() << "Group orientation wrong after removal.";
     }
+    delete b; // object group deletes everything in it... the only one we need to worry about it b
     delete m;
+    return errors;
+}
+
+//#########################################################################
+inline int testObjectGroupSubGroup() {
+    ObjectGroup *g1 = new ObjectGroup(), *g2 = new ObjectGroup();
+    int errors = 0;
+    g1->addObject(g2);
+    g1->addObject(g1);
+    if (g1->getParent() != NULL) {
+        errors++;
+        qDebug() << "Object group can be its own parent";
+    }
+    if (g1->getSubObjects()->size() != 1) {
+        errors++;
+        qDebug() << "Object group has incorrect number of children";
+    }
+    if (g1->numInstances() != 0) {
+        errors++;
+        qDebug() << "Object group has instances when only empty group added";
+    }
+    g2->addObject(g1);
+    if (g1->getParent() != NULL) {
+        errors++;
+        qDebug() << "Object group can be its own grandparent";
+    }
+    if (g2->getSubObjects()->size() != 0) {
+        errors++;
+        qDebug() << "Object is in its child's children list";
+    }
+    delete g1;
     return errors;
 }
 
@@ -972,6 +1082,7 @@ int ObjectGroup::testObjectGroup() {
     errors += testNewObjectGroup();
     if (errors == 0) {
         errors += testObjectGroupActions();
+        errors += testObjectGroupSubGroup();
     }
     return errors;
 }

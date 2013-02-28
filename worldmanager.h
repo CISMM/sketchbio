@@ -33,7 +33,7 @@ class WorldManager
 {
 public:
     WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform);
-    ~WorldManager();
+    virtual ~WorldManager();
 
     /*******************************************************************
      *
