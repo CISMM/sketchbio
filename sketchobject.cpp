@@ -344,24 +344,20 @@ void ObjectGroup::addObject(SketchObject *obj) {
         // object gets position equal to group center, orientation is not messed with
         obj->setPosition(idV);
     } else { // if we already have some items in the list...
-        q_vec_type pos, nPos, oPos, delta;
-        q_type orient, idQ = Q_ID_QUAT;
+        q_vec_type pos, nPos, oPos;
+        q_type idQ = Q_ID_QUAT;
         getPosition(pos);
         obj->getPosition(oPos);
-        getOrientation(orient);
         q_vec_scale(nPos,children.length(),pos);
         q_vec_add(nPos,oPos,nPos);
         q_vec_scale(nPos,1.0/(children.length()+1),nPos);
         // calculate change and apply it to children
-        q_vec_subtract(delta,nPos,pos);
         for (int i = 0; i < children.length(); i++) {
             q_vec_type cPos;
             q_type cOrient;
             children[i]->getPosition(cPos);
             children[i]->getOrientation(cOrient);
-//            q_vec_add(cPos,delta,cPos);
             q_vec_subtract(cPos,cPos,nPos);
-            q_mult(cOrient,orient,cOrient);
             children[i]->setPosAndOrient(cPos,cOrient);
         }
         // set group's new position and orientation
@@ -379,20 +375,30 @@ void ObjectGroup::addObject(SketchObject *obj) {
 void ObjectGroup::removeObject(SketchObject *obj) {
     // todo
     q_vec_type pos, nPos, oPos;
-    q_type orient, oOrient, idQ = Q_ID_QUAT;
+    q_type oOrient, idQ = Q_ID_QUAT;
     // get inital positions/orientations
     getPosition(pos);
-    getOrientation(orient);
-    obj->getOrientation(oPos);
+    obj->getPosition(oPos);
     obj->getOrientation(oOrient);
     // compute new group position...
     q_vec_scale(nPos,children.length(),pos);
     q_vec_subtract(nPos,nPos,oPos);
-    q_vec_scale(nPos,1/(children.length()-1),pos);
+    q_vec_scale(nPos,1.0/(children.length()-1),nPos);
     // remove the item
     children.removeOne(obj);
-    obj->setPosAndOrient(oPos,oOrient);
     obj->setParent((SketchObject *)NULL);
+    obj->setPosAndOrient(oPos,oOrient);
+    // apply the change to the group's children
+    for (int i = 0; i < children.length(); i++) {
+        q_vec_type cPos;
+        q_type cOrient;
+        children[i]->getPosition(cPos);
+        children[i]->getOrientation(cOrient);
+        q_vec_subtract(cPos,cPos,nPos);
+        children[i]->setPosAndOrient(cPos,cOrient);
+    }
+    // reset the group's center and orientation
+    setPosAndOrient(nPos,idQ);
 }
 
 //#########################################################################
@@ -937,7 +943,7 @@ inline int testObjectGroupActions() {
     q_xform(v3,q2,v3); // transform the vector by the group's rotation
     q_vec_add(v3,v2,v3); // add the group position to get object's final location
     a->getPosition(v2); // get object's final location
-    if (!q_vec_equals(v2,v3)) { // check if same
+    if (!q_vec_equals(v2,v3)) { // check if they are the same
         errors++;
         qDebug() << "Group member not in right position after rotation/movement";
     }
@@ -1002,11 +1008,11 @@ inline int testObjectGroupActions() {
     a->getOrientation(q3);
     if (!q_vec_equals(v2,v3)) {
         errors++;
-        qDebug() << "Group member moved when new one added";
+        qDebug() << "Group member moved when one removed";
     }
     if (!q_equals(qtmp,q3)) {
         errors++;
-        qDebug() << "Group member changed orientation when new one added";
+        qDebug() << "Group member changed orientation when one removed";
     }
     // check net position/orientation of object removed to ensure it didn't change
     b->getPosition(v3);
@@ -1022,11 +1028,13 @@ inline int testObjectGroupActions() {
     // check group center and orientation after removal
     q_vec_scale(oldCtr,4,oldCtr);
     q_vec_subtract(oldCtr,oldCtr,v3);
-    q_vec_scale(oldCtr,3,oldCtr);
+    q_vec_scale(oldCtr,1/3.0,oldCtr);
     grp.getPosition(v3);
     if (!q_vec_equals(oldCtr,v3)) {
         errors++;
         qDebug() << "Group position wrong after removal.";
+        q_vec_print(oldCtr);
+        q_vec_print(v3);
     }
     grp.getOrientation(qtmp);
     if (!q_equals(qtmp,idQ)) {
