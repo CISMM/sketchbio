@@ -115,8 +115,6 @@ public:
     virtual void getAABoundingBox(double bb[]);
 protected:
     virtual void localTransformUpdated();
-public:
-    static int testModelInstance();
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
@@ -150,8 +148,6 @@ public:
     virtual void getAABoundingBox(double bb[]);
 protected:
     virtual void localTransformUpdated();
-public:
-    static int testObjectGroup();
 private:
     QList<SketchObject *> children;
 };

@@ -1,6 +1,7 @@
-
 #include <sketchioconstants.h>
 #include <projecttoxml.h>
+#include <sketchtests.h>
+
 #include <vtkRenderer.h>
 #include <vtkXMLUtilities.h>
 
@@ -50,29 +51,24 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
     o2->getOrientation(orient1);
     o2->getPosition(pos2);
     o2->getOrientation(orient2);
-    for (int i = 0; i < 3; i++) {
-        if (Q_ABS(pos1[i] - pos2[i]) > epsilon) {
-            numDifferences++;
-            if (printDiffs) {
-                cout << "positions wrong" << endl;
-                cout << "P1: ";
-                q_vec_print(pos1);
-                cout << "P2: ";
-                q_vec_print(pos2);
-            }
+    if (!q_vec_equals(pos1,pos2)) {
+        numDifferences++;
+        if (printDiffs) {
+            cout << "positions wrong" << endl;
+            cout << "P1: ";
+            q_vec_print(pos1);
+            cout << "P2: ";
+            q_vec_print(pos2);
         }
     }
-    for (int i = 0; i < 4; i++) {
-        if (Q_ABS(orient1[i] - orient2[i]) > epsilon) {
-            numDifferences++;
-            if (printDiffs) {
-                cout << "orientations wrong" << endl;
-                cout << "O1: ";
-                q_print(orient1);
-                cout << "O2: ";
-                q_print(orient2);
-                cout << "Difference in " << i << " of " << (orient1[i]-orient2[i]) << endl;
-            }
+    if (!q_equals(orient1,orient2)) {
+        numDifferences++;
+        if (printDiffs) {
+            cout << "orientations wrong" << endl;
+            cout << "O1: ";
+            q_print(orient1);
+            cout << "O2: ";
+            q_print(orient2);
         }
     }
 //    if (o1->doPhysics() != o2->doPhysics()) {
@@ -165,11 +161,9 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
             } else {
                 isp1->getObject1ConnectionPosition(pos1);
                 isp2->getObject2ConnectionPosition(pos2);
-                for (int i = 0; i < 3; i++) {
-                    if (Q_ABS(pos1[i]-pos2[i]) > Q_EPSILON) {
-                        diffs++;
-                        if (printDiffs) cout << "Object connection positions don't match" << endl;
-                    }
+                if (!q_vec_equals(pos1,pos2)) {
+                    diffs++;
+                    if (printDiffs) cout << "Object connection positions don't match" << endl;
                 }
                 v = 0;
                 compareObjects(isp1->getObject2(),isp2->getObject1(),v,printDiffs);
@@ -179,11 +173,9 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
                 } else {
                     isp1->getObject2ConnectionPosition(pos1);
                     isp2->getObject1ConnectionPosition(pos2);
-                    for (int i = 0; i < 3; i++) {
-                        if (Q_ABS(pos1[i]-pos2[i]) > Q_EPSILON) {
-                            diffs++;
-                            if (printDiffs) cout << "Object connection positions don't match" << endl;
-                        }
+                    if (!q_vec_equals(pos1,pos2)) {
+                        diffs++;
+                        if (printDiffs) cout << "Object connection positions don't match" << endl;
                     }
                 }
             }
@@ -194,11 +186,9 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
     } else { // the first objects match
         sp1->getObject1ConnectionPosition(pos1);
         sp2->getObject1ConnectionPosition(pos2);
-        for (int i = 0; i < 3; i++) {
-            if (Q_ABS(pos1[i]-pos2[i]) > Q_EPSILON) {
-                diffs++;
-                if (printDiffs) cout << "Object connection positions don't match" << endl;
-            }
+        if (!q_vec_equals(pos1,pos2)) {
+            diffs++;
+            if (printDiffs) cout << "Object connection positions don't match" << endl;
         }
         if (isp1 != NULL) { // if they are 2-obj springs
             v = 0;
@@ -209,13 +199,11 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
             } else { // if the second objects match
                 isp1->getObject2ConnectionPosition(pos1);
                 isp2->getObject2ConnectionPosition(pos2);
-                for (int i = 0; i < 3; i++) {
-                    if (Q_ABS(pos1[i]-pos2[i]) > Q_EPSILON) {
-                        diffs++;
-                        if (printDiffs) cout << "Object connection positions don't match" << endl;
-                    }
+                if (!q_vec_equals(pos1,pos2)) {
+                    diffs++;
+                    if (printDiffs) cout << "Object connection positions don't match" << endl;
                 }
-                if (diffs) {
+                if (diffs && printDiffs) {
                     q_vec_print(pos1);
                     q_vec_print(pos2);
                 }
@@ -224,11 +212,9 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
 
             sp1->getEnd2WorldPosition(pos1);
             sp2->getEnd2WorldPosition(pos2);
-            for (int i = 0; i < 3; i++) {
-                if (Q_ABS(pos1[i]-pos2[i]) > Q_EPSILON) {
-                    diffs++;
-                    if (printDiffs) cout << "World connection positions don't match" << endl;
-                }
+            if (!q_vec_equals(pos1,pos2)) {
+                diffs++;
+                if (printDiffs) cout << "World connection positions don't match" << endl;
             }
         }
     }

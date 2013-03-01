@@ -13,16 +13,6 @@ int main( int argc, char** argv )
   // QT Stuff
   QApplication app( argc, argv );
 
-  int errors = 0;
-  if ((errors = ModelInstance::testModelInstance()) != 0) {
-      qDebug() << "Found " << errors << " errors in ModelInstance.";
-      return 1;
-  }
-  if ((errors = ObjectGroup::testObjectGroup()) != 0) {
-      qDebug() << "Found " << errors << " errors in ObjectGroup.";
-      return 1;
-  }
-
   // Parse the non-Qt part of the command line.
   // Start with default values.
   bool  do_fibrin = true;

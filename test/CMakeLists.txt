@@ -25,6 +25,16 @@ SET(Test4Srcs testSaveToXML.cc "${CMAKE_SOURCE_DIR}/structurereplicator.cpp"
 ADD_EXECUTABLE( SaveTest ${Test4Srcs})
 TARGET_LINK_LIBRARIES( SaveTest QVTK ${QUATLIB_LIBRARIES} PQP )
 
+SET(Test5Srcs testObjectGroups.cc
+            "${CMAKE_SOURCE_DIR}/sketchobject.cpp"
+            "${CMAKE_SOURCE_DIR}/sketchmodel.cpp"
+            )
+ADD_EXECUTABLE( ObjectTest ${Test5Srcs})
+TARGET_LINK_LIBRARIES( ObjectTest QVTK ${QUATLIB_LIBRARIES} PQP )
+
 ADD_TEST(RotateAboutTrackerTransformTest    TransformTest "4")
 ADD_TEST(LeftTrackerTransformTest           TransformTest "6")
 ADD_TEST(RightTrackerTransformTest          TransformTest "7")
+ADD_TEST(ModelInstanceObjectGroupTest       ObjectTest)
+#ADD_TEST(SaveLoadTest                       SaveTest)  # breaks when run by CTest... maybe because it writes a file?
+                                                    # this works in GDB and Valgrind doesn't find anything...

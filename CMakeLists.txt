@@ -34,7 +34,7 @@ sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchpro
 SET(SimpleViewUI SimpleView.ui)
 SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h modelmanager.h
 sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
-projecttoxml.h)
+projecttoxml.h sketchtests.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )
