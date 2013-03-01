@@ -856,6 +856,11 @@ inline int testObjectGroupActions() {
         errors++;
         qDebug() << "Item in group in wrong position";
     }
+    a->getOrientation(q3);
+    if (!q_vec_equals(q3,q1)) {
+        errors++;
+        qDebug() << "Item in group changed orientation";
+    }
     b->getPosition(v2);
     if (!q_vec_equals(v2,vb)) {
         errors++;
@@ -882,6 +887,11 @@ inline int testObjectGroupActions() {
     if (!q_vec_equals(v2,va)) {
         errors++;
         qDebug() << "Item in group in wrong position";
+    }
+    a->getOrientation(q3);
+    if (!q_vec_equals(q3,q1)) {
+        errors++;
+        qDebug() << "Item in group changed orientation";
     }
     b->getPosition(v2);
     if (!q_vec_equals(v2,vb)) {
@@ -913,6 +923,7 @@ inline int testObjectGroupActions() {
         qDebug() << "Group member didn't move right";
     }
     // check orientation of members after rotation
+    a->getPosition(v3); // save object position before rotation
     grp.setOrientation(q2);
     q_mult(qtmp,q2,q1);
     a->getOrientation(q3);
@@ -921,10 +932,12 @@ inline int testObjectGroupActions() {
         qDebug() << "Group member didn't rotate right";
     }
     // check positions of group members after rotation
-    q_xform(v2,q2,va);
-    q_vec_add(v2,v2,v1);
-    a->getPosition(v3);
-    if (!q_vec_equals(v2,v3)) {
+    grp.getPosition(v2); // get group position
+    q_vec_subtract(v3,v3,v2); // get vector from group to object before rotation
+    q_xform(v3,q2,v3); // transform the vector by the group's rotation
+    q_vec_add(v3,v2,v3); // add the group position to get object's final location
+    a->getPosition(v2); // get object's final location
+    if (!q_vec_equals(v2,v3)) { // check if same
         errors++;
         qDebug() << "Group member not in right position after rotation/movement";
     }
