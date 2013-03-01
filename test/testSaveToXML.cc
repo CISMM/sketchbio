@@ -51,7 +51,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
     o2->getOrientation(orient1);
     o2->getPosition(pos2);
     o2->getOrientation(orient2);
-    if (!q_vec_equals(pos1,pos2)) {
+    if (!q_vec_equals(pos1,pos2,epsilon)) {
         numDifferences++;
         if (printDiffs) {
             cout << "positions wrong" << endl;
@@ -61,7 +61,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             q_vec_print(pos2);
         }
     }
-    if (!q_equals(orient1,orient2)) {
+    if (!q_equals(orient1,orient2,epsilon)) {
         numDifferences++;
         if (printDiffs) {
             cout << "orientations wrong" << endl;
