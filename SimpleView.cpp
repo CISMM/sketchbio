@@ -77,7 +77,7 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
     QFile f(file);
     if (f.exists()) {
         vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
-        xmlToProject(project,root);
+        ProjectToXML::xmlToProject(project,root);
         root->Delete();
     } else if (load_fibrin) {
         // eventually we will just load the example...
@@ -245,7 +245,7 @@ void SimpleView::saveProject() {
     }
     QDir dir(path);
     QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
-    vtkXMLDataElement *root = projectToXML(project);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(project);
     vtkIndent indent(0);
     vtkXMLUtilities::WriteElementToFile(root,file.toStdString().c_str(),&indent);
     root->Delete();
@@ -278,7 +278,7 @@ void SimpleView::loadProject() {
     // only load if xml file exists
     if (f.exists()) {
         vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
-        xmlToProject(project,root);
+        ProjectToXML::xmlToProject(project,root);
         root->Delete();
     }
 }

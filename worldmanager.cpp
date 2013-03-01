@@ -65,15 +65,9 @@ WorldManager::~WorldManager() {
 //##################################################################################################
 //##################################################################################################
 SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, const q_type orient) {
-    vtkSmartPointer<vtkActor> actor;
     SketchObject *newObject = new ModelInstance(model);
-    actor = newObject->getActor();
-    actor->SetUserTransform(worldEyeTransform);
     newObject->setPosAndOrient(pos,orient);
-    newObject->setPrimaryCollisionGroupNum(maxGroupNum++);
-    renderer->AddActor(actor);
-    objects.push_back(newObject);
-    return newObject;
+    return addObject(newObject);
 }
 
 //##################################################################################################
@@ -83,7 +77,9 @@ SketchObject *WorldManager::addObject(SketchObject *object) {
     if (object->getPrimaryCollisionGroupNum() == OBJECT_HAS_NO_GROUP) {
         object->setPrimaryCollisionGroupNum(maxGroupNum++);
     }
-    renderer->AddActor(object->getActor());
+    vtkSmartPointer<vtkActor> actor = object->getActor();
+    actor->SetUserTransform(worldEyeTransform);
+    renderer->AddActor(actor);
     return object;
 }
 

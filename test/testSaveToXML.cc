@@ -250,12 +250,12 @@ int testSave1() {
     q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
     SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
 
-    vtkXMLDataElement *root = projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2,root);
 
     compareNumbers(proj1,proj2,retVal);
     const SketchObject *o2 = proj2->getWorldManager()->getObjectIterator().next();
@@ -293,12 +293,12 @@ int testSave2() {
     q_mult(orient1,orient1,orient1);
     proj1->addObject(m1,pos1,orient1);
 
-    vtkXMLDataElement *root = projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2,root);
 
     compareNumbers(proj1,proj2,retVal);
     compareObjectLists(proj1,proj2,retVal);
@@ -336,12 +336,12 @@ int testSave3() {
     proj1->addReplication(o1,o2,12);
 
 
-    vtkXMLDataElement *root = projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2,root);
 
     compareNumbers(proj1,proj2,retVal);
     compareObjectLists(proj1,proj2,retVal);
@@ -386,12 +386,12 @@ int testSave4() {
     proj1->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),3.56*sqrt(11.0),p1,p2); // sqrt(2)
 
 
-    vtkXMLDataElement *root = projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2,root);
 
     compareNumbers(proj1,proj2,retVal);
     compareObjectLists(proj1,proj2,retVal);
@@ -420,7 +420,7 @@ int testSave5() {
 
     vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
 
-    if (xmlToProject(project,root) == XML_TO_DATA_SUCCESS) {
+    if (ProjectToXML::xmlToProject(project,root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
         cout << "Passed test 5" << endl;
     } else {
         cout << "Failed to load" << endl;
