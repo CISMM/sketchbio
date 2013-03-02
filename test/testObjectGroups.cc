@@ -402,9 +402,13 @@ inline int testObjectGroupActions() {
         errors++;
         qDebug() << "Group position wrong with one item";
     }
-    if (grp.numInstances() != -1) {
+    if (grp.numInstances() != 1) {
         errors++;
         qDebug() << "Group number instances wrong after add";
+    }
+    if (grp.getModel() != a->getModel()) {
+        errors++;
+        qDebug() << "If num instances is 1, must provide model";
     }
     if (a->getParent() != &grp) {
         errors++;
@@ -439,7 +443,7 @@ inline int testObjectGroupActions() {
     }
     grp.addObject(c);
     // test getting number of instances in group
-    if (grp.numInstances() != -3) {
+    if (grp.numInstances() != 3) {
         errors++;
         qDebug() << "Group number instances wrong after add";
     }

@@ -8,6 +8,9 @@
 #include <list>
 #include <sketchmodel.h>
 
+// forward declare the collision handler so it can be passed to collide
+class PhysicsStrategy;
+
 
 // used by getPrimaryCollisionGroupNum to indicate that the object has not been
 // assigned a group
@@ -34,6 +37,7 @@ public:
     virtual SketchObject *getParent();
     virtual void setParent(SketchObject *p);
     // model information - NULL by default since not all objects will have one model
+    // however, these must be implemented to return a valid SketchModel if numInstances returns 1
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
     // actor - NULL by default since not all objects will have one actor
@@ -131,6 +135,9 @@ public:
     virtual ~ObjectGroup();
     // specify this is not a leaf (returns -1 * number of objects)
     virtual int numInstances();
+    // if numInstances is 1, must provide model in both these cases...
+    virtual SketchModel *getModel();
+    virtual const SketchModel *getModel() const;
     // methods to add/remove objects
     // note: this method gives ObjectGroup ownership until the object is removed
     // so these objects are cleaned up in ObjectGroup's destructor

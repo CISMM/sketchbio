@@ -2,6 +2,7 @@
 #include <sketchtests.h>
 #include <vtkExtractEdges.h>
 
+//#########################################################################
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
     parent(NULL),
@@ -320,10 +321,27 @@ ObjectGroup::~ObjectGroup() {
 int ObjectGroup::numInstances() {
     int sum = 0;
     for (int i = 0; i < children.length(); i++) {
-        int num = children[i]->numInstances();
-        sum += (num <= 0) ? num : -1 * num;
+        sum += children[i]->numInstances();
     }
     return sum;
+}
+
+//#########################################################################
+SketchModel *ObjectGroup::getModel() {
+    if (children.length() == 1) {
+        return children[0]->getModel();
+    } else {
+        return NULL;
+    }
+}
+
+//#########################################################################
+const SketchModel *ObjectGroup::getModel() const {
+    if (children.length() == 1) {
+        return children[0]->getModel();
+    } else {
+        return NULL;
+    }
 }
 
 //#########################################################################
