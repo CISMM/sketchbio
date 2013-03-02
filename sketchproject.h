@@ -52,6 +52,7 @@ public:
     // for objects
     SketchObject *addObject(SketchModel *model, const q_vec_type pos, const q_type orient);
     SketchObject *addObject(QString filename);
+    SketchObject *addObject(SketchObject *obj);
     bool addObjects(QVector<QString> filenames);
     // for springs between objects (object-tracker springs managed internally)
     SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,

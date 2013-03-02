@@ -3,6 +3,7 @@
 #include <quat.h>
 #include <sketchobject.h>
 #include <springconnection.h>
+#include <modelmanager.h>  // for #define default mass and moment of inertia
 
 //######################################################################################
 //######################################################################################
@@ -136,16 +137,24 @@ static inline void euler(SketchObject *obj, double dt) {
     q_type spin, orient;
 //    if (obj->doPhysics()) {
         SketchModel *model = obj->getModel();
+        double iMass, iMoment;
+        if (model != NULL) {
+            iMass = model->getInverseMass();
+            iMoment = model->getInverseMomentOfInertia();
+        } else {
+            iMass = INVERSEMASS;
+            iMoment = INVERSEMOMENT;
+        }
         // get force & torque
         obj->getForce(force);
         obj->getTorque(torque);
         // new position
         obj->getPosition(pos);
-        q_vec_scale(deltaPos,dt*model->getInverseMass(),force);
+        q_vec_scale(deltaPos,dt*iMass,force);
         q_vec_add(pos,pos,deltaPos);
         // new orientation
         obj->getOrientation(orient);
-        q_vec_scale(angularVel,model->getInverseMomentOfInertia(),torque);
+        q_vec_scale(angularVel,iMoment,torque);
         // I'll summarize this next section like this:
         // quaternion integration is wierd
         spin[Q_W] = 0;

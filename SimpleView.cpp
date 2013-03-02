@@ -83,10 +83,33 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
         // eventually we will just load the example...
 
         // ???
-        SketchObject *object1 = project->addObject("./models/1m1j.obj");
-        SketchObject *object2 = project->addObject("./models/1m1j.obj");
+        SketchModel *model = project->addModelFromFile("./models/1m1j.obj",INVERSEMASS,INVERSEMOMENT,1);
+        q_vec_type position = {50,0,0};
+        q_type orientation;
+        q_from_axis_angle(orientation,1,0,0,Q_PI/3);
+        SketchObject *object1 = new ModelInstance(model);
+        object1->setPosAndOrient(position,orientation);
+        SketchObject *object2 = new ModelInstance(model);
+        q_vec_set(position,30,40,0);
+        q_from_axis_angle(orientation,0,1,0,Q_PI/2);
+        object2->setPosAndOrient(position,orientation);
+        SketchObject *object3 = new ModelInstance(model);
+        q_vec_set(position,60,-30,0);
+        q_from_axis_angle(orientation,0,0,1,-2*Q_PI/3);
+        object3->setPosAndOrient(position,orientation);
+        SketchObject *object4 = new ModelInstance(model);
+        q_vec_set(position,0,0,-300);
+        object4->setPosition(position);
 
-        if (fibrin_springs) {
+        ObjectGroup *group = new ObjectGroup();
+        group->addObject(object1);
+        group->addObject(object2);
+        group->addObject(object3);
+
+        project->addObject(group);
+        project->addObject(object4);
+
+        if (false && fibrin_springs) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
             project->addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
@@ -97,7 +120,7 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
         }
 
         // Replicate objects
-        if (do_replicate) {
+        if (false && do_replicate) {
             project->addReplication(object1,object2,NUM_EXTRA_FIBERS);
         }
 

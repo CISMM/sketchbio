@@ -212,6 +212,14 @@ SketchObject *SketchProject::addObject(QString filename) {
     }
 }
 
+SketchObject *SketchProject::addObject(SketchObject *object) {
+    int myIdx = world->getNumberOfObjects();
+    if (object->numInstances() == 1) {
+        object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+    }
+    return world->addObject(object);
+}
+
 bool SketchProject::addObjects(QVector<QString> filenames) {
 
     int i;
