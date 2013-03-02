@@ -53,7 +53,7 @@ public:
     virtual vtkActor *getActor() { return actor; }
     virtual void setWireFrame() {}
     virtual void setSolid() {}
-    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags) { return NULL;}
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
     virtual void getAABoundingBox(double bb[]) {}
 
 private:

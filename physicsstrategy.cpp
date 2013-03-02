@@ -431,7 +431,7 @@ static inline void applyEuler(QList<SketchObject *> &list, double dt, bool clear
 //         (non pose-mode)
 
 static inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &affectedGroups, double dt,
-                              bool respond, bool usePCAResponse = false) {
+                              bool respond, PhysicsStrategy *strategy) {
     int n = list.size();
     bool foundCollision = false;
     for (int i = 0; i < n; i++) {
@@ -445,22 +445,8 @@ static inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &aff
         if (needsTest) {
             for (int j = 0; j < n; j++) {
                 if (j != i) {
-                    PQP_CollideResult *cr = NULL;
-                    cr = list.at(i)->collide(list.at(j), respond ? PQP_ALL_CONTACTS : PQP_FIRST_CONTACT);
-                    if (cr->NumPairs() != 0) {
-                        if (respond) {
-                            if (usePCAResponse) {
-                                applyPCACollisionResponseForce(
-                                            list.at(i),list.at(j),cr,affectedGroups);
-                            } else {
-                                applyCollisionResponseForce(
-                                            list.at(i),list.at(j),cr,affectedGroups);
-                            }
-                        }
+                    if (list.at(i)->collide(list.at(j), strategy, respond ? PQP_ALL_CONTACTS : PQP_FIRST_CONTACT)) {
                         foundCollision = true;
-                    }
-                    if (cr != NULL) {
-                        delete cr;
                     }
                 }
             }
@@ -478,11 +464,11 @@ static inline bool collideAndRespond(QList<SketchObject *> &list, QSet<int> &aff
 //   If the collision response did not fix the collision, then the entire movement (including changes
 //   from before this) is undone.
 static inline void applyPoseModeCollisionResponse(QList<SketchObject *> &list, QSet<int> &affectedGroups,
-                                           double dt,bool usePCAResponse = false) {
+                                           double dt, PhysicsStrategy *strategy) {
     int n = list.size();
-    bool appliedResponse = collideAndRespond(list,affectedGroups,dt,true,usePCAResponse);
+    bool appliedResponse = collideAndRespond(list,affectedGroups,dt,true,strategy);
     if (appliedResponse) {
-        bool stillColliding = collideAndRespond(list,affectedGroups,dt,false);
+        bool stillColliding = collideAndRespond(list,affectedGroups,dt,false,strategy);
         if (stillColliding) {
             // if we couldn't fix collisions, undo the motion and return
             for (int i = 0; i < n; i++) {
@@ -519,11 +505,11 @@ static inline void divideForces(QList<SketchObject *> &list,double divisor) {
 // -assumes that applyEuler has NOT been called on the list, but the forces have been added to each
 //   object
 static inline void applyBinaryCollisionSearch(QList<SketchObject *> &list, QSet<int> &affectedGroups,
-                                       double dt, bool testCollisions) {
+                                       double dt, bool testCollisions, PhysicsStrategy *strategy) {
     applyEuler(list,dt,false);
     if (testCollisions) {
         int times = 1;
-        while (collideAndRespond(list,affectedGroups,dt,false) && times < 10) {
+        while (collideAndRespond(list,affectedGroups,dt,false,strategy) && times < 10) {
             for (int i = 0; i < list.size(); i++) {
                 list.at(i)->restoreToLastLocation();
             }
@@ -540,11 +526,11 @@ static inline void applyBinaryCollisionSearch(QList<SketchObject *> &list, QSet<
 
 //##################################################################################################
 static inline void binaryCollisionSearch(QList<SpringConnection *> &springs, QList<SketchObject *> &objs,
-                                  double dt, bool doCollisionCheck) {
+                                  double dt, bool doCollisionCheck, PhysicsStrategy *strategy) {
     QSet<int> affectedGroups;
     if (!springs.empty()) {
         springForcesFromList(springs,affectedGroups);
-        applyBinaryCollisionSearch(objs,affectedGroups,dt,doCollisionCheck);
+        applyBinaryCollisionSearch(objs,affectedGroups,dt,doCollisionCheck, strategy);
     }
 }
 
@@ -573,7 +559,7 @@ void SimplePhysicsStrategy::performPhysicsStepAndCollisionDetection(
     applyEuler(objects,dt);
     affectedGroups.clear(); // if passed an empty set, it does full collision checks
     if (doCollisionCheck)
-        collideAndRespond(objects,affectedGroups,dt,true); // calculates collision response
+        collideAndRespond(objects,affectedGroups,dt,true,this); // calculates collision response
     applyEuler(objects,dt);
 }
 //######################################################################################
@@ -613,7 +599,9 @@ void PoseModePhysicsStrategy::performPhysicsStepAndCollisionDetection(
 //######################################################################################
 void PoseModePhysicsStrategy::respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags)
 {
-    applyCollisionResponseForce(o1,o2,cr,affectedGroups);
+    if (pqp_flags == PQP_ALL_CONTACTS) {
+        applyCollisionResponseForce(o1,o2,cr,affectedGroups);
+    }
 }
 //##################################################################################################
 // -helper function applies the forces from the list of springs to the objects and does pose-mode
@@ -624,7 +612,7 @@ void PoseModePhysicsStrategy::poseModeForSprings(QList<SpringConnection *> &spri
         springForcesFromList(springs,affectedGroups);
         applyEuler(objs,dt);
         if (doCollisionCheck)
-            applyPoseModeCollisionResponse(objs,affectedGroups,dt);
+            applyPoseModeCollisionResponse(objs,affectedGroups,dt,this);
     }
 }
 
@@ -644,10 +632,10 @@ void BinaryCollisionSearchStrategy::performPhysicsStepAndCollisionDetection(
         QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
         QList<SketchObject *> &objects, double dt, bool doCollisionCheck)
 {
-    binaryCollisionSearch(rHand,objects,dt,doCollisionCheck);
-    binaryCollisionSearch(lHand,objects,dt,doCollisionCheck);
+    binaryCollisionSearch(rHand,objects,dt,doCollisionCheck,this);
+    binaryCollisionSearch(lHand,objects,dt,doCollisionCheck,this);
     if (doPhysicsSprings) {
-        binaryCollisionSearch(physicsSprings,objects,dt,doCollisionCheck);
+        binaryCollisionSearch(physicsSprings,objects,dt,doCollisionCheck,this);
     }
 }
 
@@ -688,7 +676,9 @@ void PoseModePCAPhysicsStrategy::performPhysicsStepAndCollisionDetection(
 //######################################################################################
 void PoseModePCAPhysicsStrategy::respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags)
 {
-    applyPCACollisionResponseForce(o1,o2,cr,affectedGroups);
+    if (pqp_flags == PQP_ALL_CONTACTS) {
+        applyPCACollisionResponseForce(o1,o2,cr,affectedGroups);
+    }
 }
 //##################################################################################################
 // -helper function applies the forces from the list of springs to the objects and does pose-mode
@@ -699,6 +689,6 @@ void PoseModePCAPhysicsStrategy::poseModePCAForSprings(QList<SpringConnection *>
         springForcesFromList(springs,affectedGroups);
         applyEuler(objs,dt);
         if (doCollisionCheck)
-            applyPoseModeCollisionResponse(objs,affectedGroups,dt,true);
+            applyPoseModeCollisionResponse(objs,affectedGroups,dt,this);
     }
 }

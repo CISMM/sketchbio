@@ -1,4 +1,5 @@
 #include "sketchobject.h"
+#include <physicsstrategy.h>
 #include <sketchtests.h>
 #include <vtkExtractEdges.h>
 
@@ -270,9 +271,9 @@ void ModelInstance::setWireFrame() {
 }
 
 //#########################################################################
-PQP_CollideResult *ModelInstance::collide(SketchObject *other, int pqp_flags) {
+bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) {
     if (other->numInstances() != 1 || other->getModel() == NULL) {
-        return other->collide(this);
+        return other->collide(this,physics,pqp_flags);
     } else {
         PQP_CollideResult *cr = new PQP_CollideResult();
         PQP_REAL r1[3][3], r2[3][3], t1[3], t2[3];
@@ -281,7 +282,10 @@ PQP_CollideResult *ModelInstance::collide(SketchObject *other, int pqp_flags) {
         other->getPosition(t2);
         other->getOrientation(r2);
         PQP_Collide(cr,r1,t1,model->getCollisionModel(),r2,t2,other->getModel()->getCollisionModel(),pqp_flags);
-        return cr;
+        if (cr->NumPairs() != 0) {
+            physics->respondToCollision(this,other,cr,pqp_flags);
+        }
+        return cr->NumPairs() != 0;
     }
 }
 
@@ -437,7 +441,14 @@ void ObjectGroup::setSolid() {
 }
 
 //#########################################################################
-PQP_CollideResult *ObjectGroup::collide(SketchObject *other, int pqp_flags) {
+bool ObjectGroup::collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) {
+    bool isCollision = false;
+    for (int i = 0; i < children.length(); i++) {
+        isCollision = isCollision || children[i]->collide(other,physics,pqp_flags);
+        if (isCollision && pqp_flags == PQP_FIRST_CONTACT) {
+            break;
+        }
+    }
     // todo
     return NULL;
 }

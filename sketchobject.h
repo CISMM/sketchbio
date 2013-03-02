@@ -71,8 +71,9 @@ public:
     // wireframe vs. solid
     virtual void setWireFrame() =0;
     virtual void setSolid() =0;
-    // collision with other... ?
-    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS) =0; // signature may change
+    // collision with other.  The physics strategy will get the data about the collision
+    // and decide how to respond. The bool return value is true iff there was a collision
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS) =0;
     // bounding box info for grab (have to stop using PQP_Distance)
     virtual void getAABoundingBox(double bb[6]) = 0;
 protected: // methods
@@ -115,7 +116,7 @@ public:
     virtual void setWireFrame();
     virtual void setSolid();
     // collision function that depend on data in this subclass
-    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS);
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
 protected:
     virtual void localTransformUpdated();
@@ -151,7 +152,7 @@ public:
     virtual void setWireFrame();
     virtual void setSolid();
     // collision function... have to change declaration
-    virtual PQP_CollideResult *collide(SketchObject *other, int pqp_flags = PQP_ALL_CONTACTS);
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
 protected:
     virtual void localTransformUpdated();
