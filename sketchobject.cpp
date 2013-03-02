@@ -146,11 +146,20 @@ void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_t
 }
 //#########################################################################
 void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
-    q_vec_add(forceAccum,forceAccum,force);
-    q_vec_type tmp, torque;
-    getWorldVectorInModelSpace(force,tmp);
-    q_vec_cross_product(torque,point,tmp);
-    q_vec_add(torqueAccum,torqueAccum,torque);
+    if (parent == NULL) {
+        q_vec_add(forceAccum,forceAccum,force);
+        q_vec_type tmp, torque;
+        getWorldVectorInModelSpace(force,tmp);
+        q_vec_cross_product(torque,point,tmp);
+        q_vec_add(torqueAccum,torqueAccum,torque);
+    } else { // if we have a parent, then we are not moving ourself, the parent
+                // should be doing the moving.  The object should be rigid relative
+                // to the parent.
+        q_vec_type tmp;
+        q_xform(tmp,orientation,point);
+        q_vec_add(tmp,position,tmp); // get point in parent coordinate system
+        parent->addForce(tmp,force);
+    }
 }
 
 //#########################################################################
@@ -449,8 +458,7 @@ bool ObjectGroup::collide(SketchObject *other, PhysicsStrategy *physics, int pqp
             break;
         }
     }
-    // todo
-    return NULL;
+    return isCollision;
 }
 
 //#########################################################################
@@ -470,7 +478,7 @@ void ObjectGroup::getAABoundingBox(double bb[]) {
             bb[5] = max(bb[5],cbb[5]);
         }
     }
-} // todo
+}
 
 //#########################################################################
 void ObjectGroup::localTransformUpdated() {
