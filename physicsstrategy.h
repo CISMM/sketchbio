@@ -78,6 +78,7 @@ private:
  * forces from different sources are applied or rejected separately.
  */
 class BinaryCollisionSearchStrategy : public PhysicsStrategy {
+public:
     BinaryCollisionSearchStrategy();
     virtual ~BinaryCollisionSearchStrategy();
 
