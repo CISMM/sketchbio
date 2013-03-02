@@ -79,9 +79,7 @@ SketchObject *WorldManager::addObject(SketchObject *object) {
     if (object->getPrimaryCollisionGroupNum() == OBJECT_HAS_NO_GROUP) {
         object->setPrimaryCollisionGroupNum(maxGroupNum++);
     }
-    vtkSmartPointer<vtkActor> actor = object->getActor();
-    actor->SetUserTransform(worldEyeTransform);
-    renderer->AddActor(actor);
+    insertActors(object);
     return object;
 }
 
@@ -91,7 +89,7 @@ void WorldManager::removeObject(SketchObject *object) {
     // if we are deleting an object, it should not have any springs...
     // TODO - fix this assumption later
     int index = objects.indexOf(object);
-    renderer->RemoveActor(object->getActor());
+    removeActors(object);
     objects.removeAt(index);
     delete object;
 }
@@ -356,4 +354,36 @@ void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> 
     vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
 //    springEndConnections->Update();
     spring->setCellId(cellId);
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::insertActors(SketchObject *obj) {
+    if (obj->numInstances() == 1) {
+        vtkSmartPointer<vtkActor> actor = obj->getActor();
+        actor->SetUserTransform(worldEyeTransform);
+        renderer->AddActor(actor);
+    } else {
+        QList<SketchObject *> *children = obj->getSubObjects();
+        if (children == NULL) return;
+        for (int i = 0; i < children->length(); i++) {
+            insertActors(children->at(i));
+        }
+    }
+}
+
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::removeActors(SketchObject *obj) {
+    if (obj->numInstances() == 1) {
+        vtkSmartPointer<vtkActor> actor = obj->getActor();
+        renderer->RemoveActor(actor);
+    } else {
+        QList<SketchObject *> *children = obj->getSubObjects();
+        if (children == NULL) return;
+        for (int i = 0; i < children->length(); i++) {
+            removeActors(children->at(i));
+        }
+    }
 }

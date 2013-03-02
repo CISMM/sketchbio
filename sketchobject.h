@@ -32,15 +32,19 @@ public:
     SketchObject();
     virtual ~SketchObject();
     // the number of instances controlled by this object (is single or group?)
-    virtual int numInstances() =0;
+    virtual int numInstances() const =0;
     // the parent "object"/group
     virtual SketchObject *getParent();
     virtual void setParent(SketchObject *p);
+    // get the list of child objects
+    virtual QList<SketchObject *> *getSubObjects();
+    virtual const QList<SketchObject *> *getSubObjects() const;
     // model information - NULL by default since not all objects will have one model
     // however, these must be implemented to return a valid SketchModel if numInstances returns 1
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    // actor - NULL by default since not all objects will have one actor
+    // actor - NULL by default since not all objects will have one actor, but must return a valid
+    // actor if numInstances is 1
     virtual vtkActor *getActor();
     // position and orientation
     virtual void getPosition(q_vec_type dest) const;
@@ -107,7 +111,7 @@ public:
     ModelInstance(SketchModel *m);
     virtual ~ModelInstance();
     // specify that this is a leaf by returning 1
-    virtual int numInstances();
+    virtual int numInstances() const;
     // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
@@ -135,10 +139,11 @@ public:
     // destructor
     virtual ~ObjectGroup();
     // specify this is not a leaf (returns -1 * number of objects)
-    virtual int numInstances();
-    // if numInstances is 1, must provide model in both these cases...
+    virtual int numInstances() const;
+    // if numInstances is 1, must provide model and actor, otherwise return null
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
+    virtual vtkActor *getActor();
     // methods to add/remove objects
     // note: this method gives ObjectGroup ownership until the object is removed
     // so these objects are cleaned up in ObjectGroup's destructor
@@ -146,8 +151,9 @@ public:
     // when the object is removed it is no longer owned by ObjectGroup, the remover is responsible
     // for ensuring it is deallocated
     void removeObject(SketchObject *obj);
-    // get the list of objects
-    const QList<SketchObject *> *getSubObjects() const;
+    // get the list of child objects
+    virtual QList<SketchObject *> *getSubObjects();
+    virtual const QList<SketchObject *> *getSubObjects() const;
     // recursive on group functions
     virtual void setWireFrame();
     virtual void setSolid();

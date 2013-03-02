@@ -307,7 +307,28 @@ private:
      *******************************************************************/
     void addSpring(SpringConnection *spring, QList<SpringConnection *> *list);
 
+    /*******************************************************************
+     *
+     * This method updates the spring endpoints and removes springs that
+     * have been deleted from the shown springs
+     *
+     *******************************************************************/
     void updateSprings();
+
+    /*******************************************************************
+     *
+     * This method recursively adds the actors for the given object to
+     * the renderer, handling both single objects and groups
+     *
+     *******************************************************************/
+    void insertActors(SketchObject *obj);
+    /*******************************************************************
+     *
+     * This method recursively removes the actors for the given object to
+     * the renderer, handling both single objects and groups
+     *
+     *******************************************************************/
+    void removeActors(SketchObject *obj);
 
     QList<SketchObject *> objects;
     QList<SpringConnection *> connections, lHand, rHand;

@@ -34,6 +34,16 @@ void SketchObject::setParent(SketchObject *p) {
 }
 
 //#########################################################################
+QList<SketchObject *> *SketchObject::getSubObjects() {
+    return NULL;
+}
+
+//#########################################################################
+const QList<SketchObject *> *SketchObject::getSubObjects() const {
+    return NULL;
+}
+
+//#########################################################################
 SketchModel *SketchObject::getModel() {
     return NULL;
 }
@@ -250,7 +260,7 @@ ModelInstance::ModelInstance(SketchModel *m) :
 ModelInstance::~ModelInstance() {}
 
 //#########################################################################
-int ModelInstance::numInstances() {
+int ModelInstance::numInstances() const {
     return 1;
 }
 
@@ -331,7 +341,7 @@ ObjectGroup::~ObjectGroup() {
 }
 
 //#########################################################################
-int ObjectGroup::numInstances() {
+int ObjectGroup::numInstances() const {
     int sum = 0;
     for (int i = 0; i < children.length(); i++) {
         sum += children[i]->numInstances();
@@ -341,20 +351,38 @@ int ObjectGroup::numInstances() {
 
 //#########################################################################
 SketchModel *ObjectGroup::getModel() {
-    if (children.length() == 1) {
-        return children[0]->getModel();
-    } else {
-        return NULL;
+    SketchModel *retVal = NULL;
+    if (numInstances() == 1) {
+        for (int i = 0; i < children.length(); i++) {
+            if (children[i]->numInstances() == 1)
+                retVal = children[i]->getModel();
+        }
     }
+    return retVal;
 }
 
 //#########################################################################
 const SketchModel *ObjectGroup::getModel() const {
-    if (children.length() == 1) {
-        return children[0]->getModel();
-    } else {
-        return NULL;
+    const SketchModel *retVal = NULL;
+    if (numInstances() == 1) {
+        for (int i = 0; i < children.length(); i++) {
+            if (children[i]->numInstances() == 1)
+                retVal = children[i]->getModel();
+        }
     }
+    return retVal;
+}
+
+//#########################################################################
+vtkActor *ObjectGroup::getActor() {
+    vtkActor *retVal = NULL;
+    if (numInstances() == 1) {
+        for (int i = 0; i < children.length(); i++) {
+            if (children[i]->numInstances() == 1)
+                retVal = children[i]->getActor();
+        }
+    }
+    return retVal;
 }
 
 //#########################################################################
@@ -428,6 +456,11 @@ void ObjectGroup::removeObject(SketchObject *obj) {
     }
     // reset the group's center and orientation
     setPosAndOrient(nPos,idQ);
+}
+
+//#########################################################################
+QList<SketchObject *> *ObjectGroup::getSubObjects() {
+    return &children;
 }
 
 //#########################################################################

@@ -49,7 +49,7 @@ public:
 
     }
 
-    virtual int numInstances() { return 0; }
+    virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
     virtual void setWireFrame() {}
     virtual void setSolid() {}
