@@ -463,9 +463,9 @@ void SimpleView::importPDBId()
 	    } while ( (linelength >= 0) && !full.contains("readytoquit"));
 
 	    // Waiting for the print to appear doesn't always fix the
-	    // problem.  We now wait some amount longer to let the write
-	    // hopefully finish.  Not sure how long to wait here.  It is
-	    // a race condition.
+	    // problem.  It looks like the ls() command causes things to
+	    // wait until the file is there.  Not sure why this works
+	    // when sync() does not, but what the heck.
 	    // XXX Wait here until the file shows up, rather than doing
 	    // a print and then waiting until the print shows up and then
 	    // some random time longer.
@@ -473,7 +473,9 @@ void SimpleView::importPDBId()
 	    // and get this race condition fixed.  Remove all of the hanky-
 	    // panky about reading and printing and waiting when it is
 	    // fixed.
-	    vrpn_SleepMsecs(5000);
+	    cmd = "ls\n";
+	    printf("... %s", cmd.toStdString().c_str());
+	    pymol.write(cmd.toStdString().c_str());
 
 	    cmd = "quit\n";
 	    printf("... %s", cmd.toStdString().c_str());

@@ -3,3 +3,7 @@ cmd.hide("all")
 cmd.show("surface")
 cmd.save("1m1j.obj")
 
+# Not sure why, but this seems to always wait until the file is
+# saved, avoiding the race condition before exit.
+cmd.ls()
+
