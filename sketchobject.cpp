@@ -133,10 +133,10 @@ void SketchObject::setPrimaryCollisionGroupNum(int num) {
 
 //#########################################################################
 bool SketchObject::isInCollisionGroup(int num) const {
-    if (parent != NULL && parent->isInCollisionGroup(num)) {
-        return true;
+    if (parent != NULL) {
+        return parent->isInCollisionGroup(num);
     }
-    return num == primaryCollisionGroup;
+    return (num != OBJECT_HAS_NO_GROUP) ? num == primaryCollisionGroup: false;
 }
 //#########################################################################
 vtkTransform *SketchObject::getLocalTransform() {

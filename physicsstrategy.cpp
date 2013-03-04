@@ -622,6 +622,7 @@ void PoseModePhysicsStrategy::poseModeForSprings(QList<SpringConnection *> &spri
         applyEuler(objs,dt);
         if (doCollisionCheck)
             applyPoseModeCollisionResponse(objs,affectedGroups,dt,this);
+        affectedGroups.clear();
     }
 }
 
@@ -699,5 +700,6 @@ void PoseModePCAPhysicsStrategy::poseModePCAForSprings(QList<SpringConnection *>
         applyEuler(objs,dt);
         if (doCollisionCheck)
             applyPoseModeCollisionResponse(objs,affectedGroups,dt,this);
+        affectedGroups.clear();
     }
 }
