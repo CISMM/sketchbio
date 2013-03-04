@@ -353,8 +353,9 @@ void SketchProject::handleInput() {
                     rObj->setSolid();
                 }
                 rObj = closest;
-                if (rDist < DISTANCE_THRESHOLD)
+                if (rDist < DISTANCE_THRESHOLD) {
                     rObj->setWireFrame();
+            }
             }
         }
     }

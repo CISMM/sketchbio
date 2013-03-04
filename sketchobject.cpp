@@ -241,7 +241,8 @@ ModelInstance::ModelInstance(SketchModel *m) :
     model(m),
     modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
-    wireframeMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
+    wireframeMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
+    isWireFrame(false)
 {
     modelTransformed->SetInputConnection(model->getModelData()->GetOutputPort());
     modelTransformed->SetTransform(getLocalTransform());
@@ -281,12 +282,18 @@ vtkActor *ModelInstance::getActor() {
 
 //#########################################################################
 void ModelInstance::setSolid() {
-    actor->SetMapper(solidMapper);
+    if (isWireFrame) {
+        actor->SetMapper(solidMapper);
+        isWireFrame = false;
+    }
 }
 
 //#########################################################################
 void ModelInstance::setWireFrame() {
-    actor->SetMapper(wireframeMapper);
+    if (!isWireFrame) {
+        actor->SetMapper(wireframeMapper);
+        isWireFrame = true;
+    }
 }
 
 //#########################################################################
@@ -445,6 +452,7 @@ void ObjectGroup::removeObject(SketchObject *obj) {
     children.removeOne(obj);
     obj->setParent((SketchObject *)NULL);
     obj->setPosAndOrient(oPos,oOrient);
+    obj->setSolid();
     // apply the change to the group's children
     for (int i = 0; i < children.length(); i++) {
         q_vec_type cPos;

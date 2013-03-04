@@ -130,6 +130,7 @@ private:
     vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
     vtkSmartPointer<vtkPolyDataMapper> solidMapper;
     vtkSmartPointer<vtkPolyDataMapper> wireframeMapper;
+    bool isWireFrame;
 };
 
 class ObjectGroup : public SketchObject {
