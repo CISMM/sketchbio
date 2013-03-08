@@ -53,7 +53,7 @@ using namespace ProjectToXML;
 inline void setPreciseVectorAttribute(vtkXMLDataElement *elem, const double *vect, int len, const char *attrName) {
     QString data;
     for (int i = 0; i < len; i++) {
-        int precision = (int) round(log(vect[i])-log(Q_EPSILON));
+        int precision = (int) floor(0.5+log(vect[i])-log(Q_EPSILON));
         data = data + QString::number(vect[i],'g',max(11,precision)) + " ";
     }
     elem->SetAttribute(attrName,data.trimmed().toStdString().c_str());
