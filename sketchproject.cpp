@@ -90,10 +90,12 @@ SketchProject::SketchProject(vtkRenderer *r,
     lDist = rDist = std::numeric_limits<double>::max();
     leftOutlinesActor->SetMapper(leftOutlinesMapper);
     leftOutlinesActor->SetUserTransform(transforms->getWorldToEyeTransform());
-    leftOutlinesActor->GetProperty()->SetColor(1.0,1.0,1.0);
+    leftOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
+    leftOutlinesActor->GetProperty()->SetLighting(false);
     rightOutlinesActor->SetMapper(rightOutlinesMapper);
     rightOutlinesActor->SetUserTransform(transforms->getWorldToEyeTransform());
-    rightOutlinesActor->GetProperty()->SetColor(1.0,1.0,1.0);
+    rightOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
+    rightOutlinesActor->GetProperty()->SetLighting(false);
 }
 
 SketchProject::~SketchProject() {
@@ -332,11 +334,9 @@ void SketchProject::handleInput() {
             if (lDist < DISTANCE_THRESHOLD) {
                 if (!oldShown) {
                     renderer->AddActor(leftOutlinesActor);
-                    qDebug() << "Adding wireframe for left hand";
                 }
             } else if (oldShown) {
                 renderer->RemoveActor(leftOutlinesActor);
-                qDebug() << "Removing wireframe for left hand";
             }
         }
 
@@ -352,11 +352,9 @@ void SketchProject::handleInput() {
             if (rDist < DISTANCE_THRESHOLD) {
                 if (!oldShown) {
                     renderer->AddActor(rightOutlinesActor);
-                    qDebug() << "Adding wireframe for right hand";
                 }
             } else if (oldShown) {
                 renderer->RemoveActor(rightOutlinesActor);
-                qDebug() << "Removing wireframe for right hand";
             }
         }
     }
