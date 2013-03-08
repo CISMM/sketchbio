@@ -2,6 +2,7 @@
 #define SKETCHOBJECT_H
 
 #include <vtkSmartPointer.h>
+#include <vtkAppendPolyData.h>
 #include <vtkTransform.h>
 #include <vtkActor.h>
 #include <quat.h>
@@ -72,14 +73,14 @@ public:
     virtual void getTorque(q_vec_type out) const;
     virtual void setForceAndTorque(const q_vec_type force, const q_vec_type torque);
     virtual void clearForces();
-    // wireframe vs. solid
-    virtual void setWireFrame() =0;
-    virtual void setSolid() =0;
     // collision with other.  The physics strategy will get the data about the collision
     // and decide how to respond. The bool return value is true iff there was a collision
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS) =0;
     // bounding box info for grab (have to stop using PQP_Distance)
-    virtual void getAABoundingBox(double bb[6]) = 0;
+    virtual void getAABoundingBox(double bb[6]) = 0; // TODO - may just get rid of this one
+    // this returns the box(es) that contain the lowest-level objects in whatever heirarchy
+    // group should do an AppendPolyData to combine these
+    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() = 0;
 protected: // methods
     // to deal with local transformation
     void recalculateLocalTransform();
@@ -116,21 +117,18 @@ public:
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
     virtual vtkActor *getActor();
-    // functions that the parent can't implement
-    virtual void setWireFrame();
-    virtual void setSolid();
     // collision function that depend on data in this subclass
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
+    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
 protected:
     virtual void localTransformUpdated();
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
     vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
+    vtkSmartPointer<vtkTransformPolyDataFilter> orientedBB;
     vtkSmartPointer<vtkPolyDataMapper> solidMapper;
-    vtkSmartPointer<vtkPolyDataMapper> wireframeMapper;
-    bool isWireFrame;
 };
 
 class ObjectGroup : public SketchObject {
@@ -155,16 +153,15 @@ public:
     // get the list of child objects
     virtual QList<SketchObject *> *getSubObjects();
     virtual const QList<SketchObject *> *getSubObjects() const;
-    // recursive on group functions
-    virtual void setWireFrame();
-    virtual void setSolid();
     // collision function... have to change declaration
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
+    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
 protected:
     virtual void localTransformUpdated();
 private:
     QList<SketchObject *> children;
+    vtkSmartPointer<vtkAppendPolyData> orientedBBs;
 };
 
 // helper function-- converts quaternion to a PQP rotation matrix

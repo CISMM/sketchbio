@@ -69,6 +69,7 @@ private:
     void updateTrackerObjectConnections();
 
     // fields
+    vtkSmartPointer<vtkRenderer> renderer;
     // managers
     ModelManager *models;
     TransformManager *transforms;
@@ -85,6 +86,11 @@ private:
     SketchObject *leftHand, *rightHand;
     double lDist, rDist;
     SketchObject *lObj, *rObj;
+    // outline actors are added to the renderer when the object is close enough to
+    // interact with.  The outline mappers are updated whenever the closest object
+    // changes (unless another one is currently grabbed).
+    vtkSmartPointer<vtkActor> leftOutlinesActor, rightOutlinesActor;
+    vtkSmartPointer<vtkPolyDataMapper> leftOutlinesMapper, rightOutlinesMapper;
 };
 
 inline const ModelManager *SketchProject::getModelManager() const {

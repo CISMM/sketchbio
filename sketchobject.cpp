@@ -2,6 +2,7 @@
 #include <physicsstrategy.h>
 #include <sketchtests.h>
 #include <vtkExtractEdges.h>
+#include <vtkCubeSource.h>
 
 //#########################################################################
 SketchObject::SketchObject() :
@@ -240,20 +241,23 @@ ModelInstance::ModelInstance(SketchModel *m) :
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
     modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
-    solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
-    wireframeMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
-    isWireFrame(false)
+    orientedBB(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
+    solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
 {
+    vtkSmartPointer<vtkCubeSource> cube = vtkSmartPointer<vtkCubeSource>::New();
+    cube->SetBounds(model->getModelData()->GetOutput()->GetBounds());
+    cube->Update();
+    vtkSmartPointer<vtkExtractEdges> cubeEdges = vtkSmartPointer<vtkExtractEdges>::New();
+    cubeEdges->SetInputConnection(cube->GetOutputPort());
+    cubeEdges->Update();
+    orientedBB->SetInputConnection(cubeEdges->GetOutputPort());
+    orientedBB->SetTransform(getLocalTransform());
+    orientedBB->Update();
     modelTransformed->SetInputConnection(model->getModelData()->GetOutputPort());
     modelTransformed->SetTransform(getLocalTransform());
     modelTransformed->Update();
     solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
     solidMapper->Update();
-    vtkSmartPointer<vtkExtractEdges> edges = vtkSmartPointer<vtkExtractEdges>::New();
-    edges->SetInputConnection(modelTransformed->GetOutputPort());
-    edges->Update();
-    wireframeMapper->SetInputConnection(edges->GetOutputPort());
-    wireframeMapper->Update();
     actor->SetMapper(solidMapper);
 }
 
@@ -281,22 +285,6 @@ vtkActor *ModelInstance::getActor() {
 }
 
 //#########################################################################
-void ModelInstance::setSolid() {
-    if (isWireFrame) {
-        actor->SetMapper(solidMapper);
-        isWireFrame = false;
-    }
-}
-
-//#########################################################################
-void ModelInstance::setWireFrame() {
-    if (!isWireFrame) {
-        actor->SetMapper(wireframeMapper);
-        isWireFrame = true;
-    }
-}
-
-//#########################################################################
 bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) {
     if (other->numInstances() != 1 || other->getModel() == NULL) {
         return other->collide(this,physics,pqp_flags);
@@ -321,6 +309,11 @@ void ModelInstance::getAABoundingBox(double bb[]) {
 }
 
 //#########################################################################
+vtkPolyDataAlgorithm *ModelInstance::getOrientedBoundingBoxes() {
+    return orientedBB;
+}
+
+//#########################################################################
 void ModelInstance::localTransformUpdated() {
     modelTransformed->Update();
 }
@@ -334,7 +327,12 @@ void ModelInstance::localTransformUpdated() {
 //#########################################################################
 
 //#########################################################################
-ObjectGroup::ObjectGroup() : SketchObject(), children() {}
+ObjectGroup::ObjectGroup() :
+    SketchObject(),
+    children(),
+    orientedBBs(vtkSmartPointer<vtkAppendPolyData>::New())
+{
+}
 
 //#########################################################################
 ObjectGroup::~ObjectGroup() {
@@ -434,6 +432,8 @@ void ObjectGroup::addObject(SketchObject *obj) {
     // set parent and child relation for new object
     obj->setParent(this);
     children.append(obj);
+    orientedBBs->AddInputConnection(0,obj->getOrientedBoundingBoxes()->GetOutputPort(0));
+    orientedBBs->Update();
 }
 
 //#########################################################################
@@ -452,7 +452,8 @@ void ObjectGroup::removeObject(SketchObject *obj) {
     children.removeOne(obj);
     obj->setParent((SketchObject *)NULL);
     obj->setPosAndOrient(oPos,oOrient);
-    obj->setSolid();
+    orientedBBs->RemoveInputConnection(0,obj->getOrientedBoundingBoxes()->GetOutputPort(0));
+    orientedBBs->Update();
     // apply the change to the group's children
     for (int i = 0; i < children.length(); i++) {
         q_vec_type cPos;
@@ -474,20 +475,6 @@ QList<SketchObject *> *ObjectGroup::getSubObjects() {
 //#########################################################################
 const QList<SketchObject *> *ObjectGroup::getSubObjects() const {
     return &children;
-}
-
-//#########################################################################
-void ObjectGroup::setWireFrame() {
-    for (int i = 0; i < children.size(); i++) {
-        children[i]->setWireFrame();
-    }
-}
-
-//#########################################################################
-void ObjectGroup::setSolid() {
-    for (int i = 0; i < children.size(); i++) {
-        children[i]->setSolid();
-    }
 }
 
 //#########################################################################
@@ -519,6 +506,11 @@ void ObjectGroup::getAABoundingBox(double bb[]) {
             bb[5] = max(bb[5],cbb[5]);
         }
     }
+}
+
+//#########################################################################
+vtkPolyDataAlgorithm *ObjectGroup::getOrientedBoundingBoxes() {
+    return orientedBBs;
 }
 
 //#########################################################################

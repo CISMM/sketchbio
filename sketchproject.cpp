@@ -51,10 +51,9 @@ public:
 
     virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
-    virtual void setWireFrame() {}
-    virtual void setSolid() {}
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
     virtual void getAABoundingBox(double bb[]) {}
+    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
 
 private:
     vtkSmartPointer<vtkActor> actor;
@@ -70,22 +69,31 @@ inline SketchObject *addTracker(vtkRenderer *r) {
 
 SketchProject::SketchProject(vtkRenderer *r,
                              const bool *buttonStates, const double *analogStates) :
+    renderer(r),
     models(new ModelManager()),
     transforms(new TransformManager()),
     world(new WorldManager(r,transforms->getWorldToEyeTransform())),
     replicas(),
     projectDir(NULL),
     buttonDown(buttonStates),
-    analog(analogStates)
+    analog(analogStates),
+    leftOutlinesActor(vtkSmartPointer<vtkActor>::New()),
+    rightOutlinesActor(vtkSmartPointer<vtkActor>::New()),
+    leftOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
+    rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
 {
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     grabbedWorld = WORLD_NOT_GRABBED;
     leftHand = addTracker(r);
-//    leftHand->setDoPhysics(false);
     rightHand = addTracker(r);
-//    rightHand->setDoPhysics(false);
     lObj = rObj = (SketchObject *) NULL;
     lDist = rDist = std::numeric_limits<double>::max();
+    leftOutlinesActor->SetMapper(leftOutlinesMapper);
+    leftOutlinesActor->SetUserTransform(transforms->getWorldToEyeTransform());
+    leftOutlinesActor->GetProperty()->SetColor(1.0,1.0,1.0);
+    rightOutlinesActor->SetMapper(rightOutlinesMapper);
+    rightOutlinesActor->SetUserTransform(transforms->getWorldToEyeTransform());
+    rightOutlinesActor->GetProperty()->SetColor(1.0,1.0,1.0);
 }
 
 SketchProject::~SketchProject() {
@@ -308,54 +316,47 @@ void SketchProject::handleInput() {
     updateTrackerObjectConnections();
 
     if (world->getNumberOfObjects() > 0) {
-        bool oldExists = false;
-        bool leftWired = false;
-        bool rightGrabbed = world->getRightSprings()->size() > 0;
+        bool oldShown = false;
 
         SketchObject *closest = NULL;
 
         if (world->getLeftSprings()->size() == 0 ) {
-            oldExists = lDist != std::numeric_limits<double>::max();
+            oldShown = lDist < DISTANCE_THRESHOLD;
             closest = world->getClosestObject(leftHand,&lDist);
-            if (lObj == closest) {
-                if (lDist < DISTANCE_THRESHOLD) {
-                    closest->setWireFrame();
-                    leftWired = true;
-                } else if (!rightGrabbed || closest != rObj) {
-                    closest->setSolid();
-                }
-            } else {
-                if (oldExists && (!rightGrabbed || lObj != rObj)) {
-                    lObj->setSolid();
-                }
+
+            if (lObj != closest) {
+                leftOutlinesMapper->SetInputConnection(closest->getOrientedBoundingBoxes()->GetOutputPort());
+                leftOutlinesMapper->Update();
                 lObj = closest;
-                if (lDist < DISTANCE_THRESHOLD) {
-                    lObj->setWireFrame();
-                    leftWired = true;
-                }
             }
-        } else {
-            leftWired = true;
+            if (lDist < DISTANCE_THRESHOLD) {
+                if (!oldShown) {
+                    renderer->AddActor(leftOutlinesActor);
+                    qDebug() << "Adding wireframe for left hand";
+                }
+            } else if (oldShown) {
+                renderer->RemoveActor(leftOutlinesActor);
+                qDebug() << "Removing wireframe for left hand";
+            }
         }
 
-        if (!rightGrabbed) {
-            oldExists = rDist != std::numeric_limits<double>::max();
+        if (world->getRightSprings()->size() == 0) {
+            oldShown = rDist < DISTANCE_THRESHOLD;
             closest = world->getClosestObject(rightHand,&rDist);
 
-            if (rObj == closest) {
-                if (rDist < DISTANCE_THRESHOLD) {
-                    closest->setWireFrame();
-                } else if (!leftWired || lObj != closest) {
-                    closest->setSolid();
-                }
-            } else {
-                if (oldExists && (!leftWired || lObj != rObj)) {
-                    rObj->setSolid();
-                }
+            if (rObj != closest) {
+                rightOutlinesMapper->SetInputConnection(closest->getOrientedBoundingBoxes()->GetOutputPort());
+                rightOutlinesMapper->Update();
                 rObj = closest;
-                if (rDist < DISTANCE_THRESHOLD) {
-                    rObj->setWireFrame();
             }
+            if (rDist < DISTANCE_THRESHOLD) {
+                if (!oldShown) {
+                    renderer->AddActor(rightOutlinesActor);
+                    qDebug() << "Adding wireframe for right hand";
+                }
+            } else if (oldShown) {
+                renderer->RemoveActor(rightOutlinesActor);
+                qDebug() << "Removing wireframe for right hand";
             }
         }
     }
@@ -487,20 +488,8 @@ void SketchProject::updateTrackerObjectConnections() {
             if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
                 // remove springs between model & tracker, set grabbed objects solid
                 if (i == 0) {
-                    SketchObject *obj = world->getLeftSprings()->first()->getObject1();
-                    if (obj != leftHand) {
-                        obj->setSolid();
-                    } else {
-                        (dynamic_cast<InterObjectSpring *>(world->getLeftSprings()->first()))->getObject2()->setSolid();
-                    }
                     world->clearLeftHandSprings();
                 } else if (i == 1) {
-                    SketchObject *obj = world->getRightSprings()->first()->getObject1();
-                    if (obj != rightHand) {
-                        obj->setSolid();
-                    } else {
-                        (dynamic_cast<InterObjectSpring *>(world->getRightSprings()->first()))->getObject2()->setSolid();
-                    }
                     world->clearRightHandSprings();
                 }
             }

@@ -317,21 +317,7 @@ inline int testModelInstanceActions(ModelInstance *obj) {
     int errors = testSketchObjectActions(obj);
     // test set wireframe / set solid... can only test if mapper changed easily, no testing
     // the vtk pipeline to see if it is actually wireframed
-    vtkMapper *m1 = obj->getActor()->GetMapper();
-    obj->setWireFrame();
-    vtkMapper *m2 = obj->getActor()->GetMapper();
-    obj->setSolid();
-    vtkMapper *m3 = obj->getActor()->GetMapper();
-    if (m2 == m3) {
-        errors++;
-        qDebug() << "set solid failed";
-    } else if (m1 != m3) {
-        errors++;
-        qDebug() << "initial mapper not solid";
-    } else if (m1 == m2) {
-        errors++;
-        qDebug() << "set wireframe failed";
-    }
+
     // test the bounding box .... assumes a radius 4 sphere
     double bb[6];
     q_vec_type pos;
