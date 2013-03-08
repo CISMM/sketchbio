@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QThread>
 #include <QTemporaryFile>
+#include <QSettings>
 
 #include <stdexcept>
 
@@ -23,7 +24,7 @@
 #include <projecttoxml.h>
 
 // default number extra fibers
-#define NUM_EXTRA_FIBERS 5
+#define NUM_EXTRA_FIBERS 14
 // fibrin default spring constant
 #define BOND_SPRING_CONSTANT .5
 // timestep
@@ -341,7 +342,12 @@ bool SimpleView::simplifyObjectByName(const QString name)
     py_file.write("bpy.ops.object.delete()\n");
     // Select the data object
     py_file.write("bpy.ops.object.select_all(action='DESELECT')\n");
-    py_file.write("myobject = bpy.data.objects['Mesh']\n");
+//    py_file.write("myobject = bpy.data.objects['Mesh']\n");
+    py_file.write("keys = bpy.data.objects.keys()\n");
+    py_file.write("for key in keys:\n");
+    py_file.write("\tif key != 'Camera' and key != 'Lamp':\n");
+    py_file.write("\t\tmyobject = bpy.data.objects[key]\n");
+    py_file.write("\t\tbreak\n");
     py_file.write("myobject.select = True\n");
     py_file.write("bpy.context.scene.objects.active = myobject\n");
     // Turn on edit mode and adjust the mesh to remove all non-manifold
@@ -371,7 +377,8 @@ bool SimpleView::simplifyObjectByName(const QString name)
     blender.setProcessChannelMode(QProcess::MergedChannels);
     // -P: Run the specified Python script
     // -b: Run in background
-    blender.start("blender", QStringList() << "-noaudio" << "-b" << "-P" << py_file.fileName());
+    blender.start(getSubprocessExecutablePath("blender"),
+                  QStringList() << "-noaudio" << "-b" << "-P" << py_file.fileName());
     if (!blender.waitForStarted()) {
       QMessageBox::warning(NULL, "Could not run Blender to simplify file ", name);
     }
@@ -435,7 +442,7 @@ void SimpleView::importPDBId()
 	  // Combine stderr with stdout and send back back together.
 	  pymol.setProcessChannelMode(QProcess::MergedChannels);
 	  // -c: Don't display graphics; -p: Read commands from stdin
-	  pymol.start("pymol", QStringList() << "-c" << "-p");
+          pymol.start(getSubprocessExecutablePath("pymol"), QStringList() << "-c" << "-p");
 	  if (!pymol.waitForStarted()) {
         QMessageBox::warning(NULL, "Could not run pymol to import molecule ", text);
 	  } else {
@@ -515,6 +522,47 @@ void SimpleView::importPDBId()
 
     }
   }
+}
+
+QString SimpleView::getSubprocessExecutablePath(QString executableName) {
+    QSettings settings; // default parameters specified to the QCoreApplication at startup
+    QString executablePath = settings.value("subprocesses/" + executableName + "/path",QString("")).toString();
+    if (executablePath.length() == 0 || ! QFile(executablePath).exists()) {
+#if defined(__APPLE__) && defined(__MACH__)
+        // test /Applications/appName and /usr/bin then ask
+        if (QFile("/Applications/" + executableName + ".app/Contents/MacOS/" + executableName).exists()) {
+            executablePath = "/Applications/" + executableName + ".app/Contents/MacOS/" + executableName;
+        } else if (QFile("/usr/bin/" + executableName).exists()) {
+            executablePath = "/usr/bin/" + executableName;
+        } else {
+            executablePath = QFileDialog::getOpenFileName(this,"Specify location of '" + executableName + "'","/Applications");
+            if (executablePath.endsWith(".app")) {
+                executablePath = executablePath + "/Contents/MacOS/" + executableName;
+            }
+        }
+#elif defined(__WINDOWS__)
+        // test default locations C:/Program Files and C:/Program Files(x86) then ask for a .exe file
+        if (QFile("C:/Program Files/" + executableName "/" + executableName + ".exe").exists()) {
+            executablePath = "C:/Program Files/" + executableName + "/" + executableName;
+        }
+#ifdef _WIN64
+        else if (QFile("C:/Program Files(x86)/" + executableName + "/" + executableName + ".exe").exists()) {
+            executablePath = "C:/Program Files(x86)/" + executableName + "/" + executableName;
+        }
+#endif
+        else {
+            executablePath = QFileDialog::getOpenFileName(this, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+#elif defined(__linux__)
+        // test /usr/bin then ask for the file
+        if (QFile("/usr/bin/" + executableName).exists()) {
+            executablePath = "/usr/bin/" + executableName;
+        } else {
+            executablePath = QFileDialog::getOpenFileName(this,"Specify location of '" + executableName + "'");
+        }
+#endif
+        settings.setValue("subprocesses/" + executableName + "/path",executablePath);
+    }
+    return executablePath;
 }
 
 //####################################################################################
