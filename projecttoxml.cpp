@@ -12,7 +12,7 @@ using namespace ProjectToXML;
 
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_STRING                          "version"
-#define SAVE_VERSION_NUM                        "1.0"
+#define SAVE_VERSION_NUM                        "1.01"
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
 
@@ -31,7 +31,7 @@ using namespace ProjectToXML;
 #define OBJECTLIST_ELEMENT_NAME                 "objectlist"
 #define OBJECT_ELEMENT_NAME                     "object"
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
-#define OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME   "physicsEnabled"
+#define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME     "numInstances"
 #define OBJECT_REPLICA_NUM_ATTRIBUTE_NAME       "replicaNum"
 
 #define REPLICATOR_LIST_ELEMENT_NAME            "replicatorList"
@@ -177,14 +177,20 @@ vtkXMLDataElement *ProjectToXML::transformManagerToXML(const TransformManager *t
 vtkXMLDataElement *ProjectToXML::objectListToXML(const WorldManager *world,
                               const QHash<const SketchModel *, QString> &modelIds,
                               QHash<const SketchObject *, QString> &objectIds) {
+    return objectListToXML(world->getObjects(),modelIds,objectIds);
+}
+
+vtkXMLDataElement *ProjectToXML::objectListToXML(const QList<SketchObject *> *objectList,
+                              const QHash<const SketchModel *, QString> &modelIds,
+                              QHash<const SketchObject *, QString> &objectIds) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECTLIST_ELEMENT_NAME);
-    for (QListIterator<SketchObject *> it = world->getObjectIterator(); it.hasNext();) {
+    for (QListIterator<SketchObject *> it(*objectList); it.hasNext();) {
         const SketchObject *obj = it.next();
         const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(obj);
         if (rObj == NULL) {
             QString idStr = QString("O%1").arg(objectIds.size());
-            vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,idStr);
+            vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,objectIds,idStr);
             element->AddNestedElement(child);
             child->Delete();
             objectIds.insert(obj,idStr);
@@ -194,17 +200,17 @@ vtkXMLDataElement *ProjectToXML::objectListToXML(const WorldManager *world,
 }
 
 vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
-                               const QHash<const SketchModel *,QString> &modelIds, const QString &id) {
+                               const QHash<const SketchModel *,QString> &modelIds,
+                               QHash<const SketchObject *, QString> &objectIds, const QString &id) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECT_ELEMENT_NAME);
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
+    element->SetIntAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,object->numInstances());
 
     vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
     QString modelId = "#" + modelIds.constFind(object->getModel()).value();
     child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
-//    child->SetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME,
-//                          QString(object->doPhysics()?"true":"false").toStdString().c_str());
 
     const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
     if (rObj != NULL) {
@@ -222,8 +228,16 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
     setPreciseVectorAttribute(child,orient,4,ROTATION_ATTRIBUTE_NAME);
 
     element->AddNestedElement(child);
+
+    if (object->numInstances() > 1) {
+        vtkXMLDataElement *list = ProjectToXML::objectListToXML(object->getSubObjects(),modelIds,objectIds);
+        element->AddNestedElement(list);
+        list->Delete();
+    }
+
     return element;
 }
+
 vtkXMLDataElement *ProjectToXML::replicatorListToXML(const QList<StructureReplicator *> *replicaList,
                                        const QHash<const SketchModel *, QString> &modelIds,
                                        QHash<const SketchObject *, QString> &objectIds) {
@@ -246,7 +260,7 @@ vtkXMLDataElement *ProjectToXML::replicatorListToXML(const QList<StructureReplic
         for (QListIterator<SketchObject *> tr = rep->getReplicaIterator(); tr.hasNext();) {
             const SketchObject *obj = tr.next();
             QString idStr = QString("O%1").arg(objectIds.size());
-            vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,idStr);
+            vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,objectIds,idStr);
             list->AddNestedElement(child);
             child->Delete();
             objectIds.insert(obj,idStr);

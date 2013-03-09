@@ -94,11 +94,19 @@ public:
 
     /*******************************************************************
      *
-     * Returns the number of SketchObjects that are stored in the
+     * Returns an iterator over the SketchObjects that are stored in the
      * WorldManager
      *
      *******************************************************************/
     QListIterator<SketchObject *> getObjectIterator() const;
+
+    /*******************************************************************
+     *
+     * Returns an the list of SketchObjects that are stored in the
+     * WorldManager
+     *
+     *******************************************************************/
+    const QList<SketchObject *> *getObjects() const;
 
     /*******************************************************************
      *
@@ -348,6 +356,10 @@ private:
 inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
                                const q_vec_type pos2, bool worldRelativePos, double k, double len) {
     return addSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
+}
+
+inline const QList<SketchObject *> *WorldManager::getObjects() const {
+    return &objects;
 }
 
 

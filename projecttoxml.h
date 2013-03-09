@@ -22,8 +22,12 @@ vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms);
 vtkXMLDataElement *objectListToXML(const WorldManager *world, const QHash<const SketchModel *, QString> &modelIds,
                               QHash<const SketchObject *, QString> &objectIds);
 
+vtkXMLDataElement *objectListToXML(const QList<SketchObject *> *objectList,
+                              const QHash<const SketchModel *, QString> &modelIds,
+                              QHash<const SketchObject *, QString> &objectIds);
+
 vtkXMLDataElement *objectToXML(const SketchObject *object, const QHash<const SketchModel *, QString> &modelIds,
-                               const QString &id);
+                               QHash<const SketchObject *, QString> &objectIds, const QString &id);
 
 vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *replicaList,
                                        const QHash<const SketchModel *, QString> &modelIds,
