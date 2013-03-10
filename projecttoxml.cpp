@@ -2,7 +2,6 @@
 #include <ios>
 #include <sketchtests.h>
 
-using namespace ProjectToXML;
 
 #define ID_ATTRIBUTE_NAME                       "id"
 #define POSITION_ATTRIBUTE_NAME                 "position"
@@ -11,8 +10,10 @@ using namespace ProjectToXML;
 #define TRANSFORM_ELEMENT_NAME                  "transform"
 
 #define ROOT_ELEMENT_NAME                       "sketchbio"
-#define VERSION_STRING                          "version"
-#define SAVE_VERSION_NUM                        "1.01"
+#define VERSION_ATTRIBUTE_NAME                          "version"
+#define SAVE_MAJOR_VERSION                      1
+#define SAVE_MINOR_VERSION                      1
+#define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + SAVE_MINOR_VERSION)
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
 
@@ -62,7 +63,7 @@ inline void setPreciseVectorAttribute(vtkXMLDataElement *elem, const double *vec
 vtkXMLDataElement *ProjectToXML::projectToXML(const SketchProject *project) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(ROOT_ELEMENT_NAME);
-    element->SetAttribute(VERSION_STRING,SAVE_VERSION_NUM);
+    element->SetAttribute(VERSION_ATTRIBUTE_NAME,SAVE_VERSION_NUM.toStdString().c_str());
 
     QHash<const SketchModel *, QString> modelIds;
     QHash<const SketchObject *, QString> objectIds;
@@ -87,7 +88,7 @@ vtkXMLDataElement *ProjectToXML::projectToXML(const SketchProject *project) {
 }
 
 vtkXMLDataElement *ProjectToXML::modelManagerToXML(const ModelManager *models, const QString &dir,
-                                     QHash<const SketchModel *, QString> &modelIds) {
+                                                   QHash<const SketchModel *, QString> &modelIds) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(MODEL_MANAGER_ELEMENT_NAME);
     modelIds.reserve(models->getNumberOfModels());
@@ -175,14 +176,14 @@ vtkXMLDataElement *ProjectToXML::transformManagerToXML(const TransformManager *t
 }
 
 vtkXMLDataElement *ProjectToXML::objectListToXML(const WorldManager *world,
-                              const QHash<const SketchModel *, QString> &modelIds,
-                              QHash<const SketchObject *, QString> &objectIds) {
+                                                 const QHash<const SketchModel *, QString> &modelIds,
+                                                 QHash<const SketchObject *, QString> &objectIds) {
     return objectListToXML(world->getObjects(),modelIds,objectIds);
 }
 
 vtkXMLDataElement *ProjectToXML::objectListToXML(const QList<SketchObject *> *objectList,
-                              const QHash<const SketchModel *, QString> &modelIds,
-                              QHash<const SketchObject *, QString> &objectIds) {
+                                                 const QHash<const SketchModel *, QString> &modelIds,
+                                                 QHash<const SketchObject *, QString> &objectIds) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECTLIST_ELEMENT_NAME);
     for (QListIterator<SketchObject *> it(*objectList); it.hasNext();) {
@@ -200,8 +201,8 @@ vtkXMLDataElement *ProjectToXML::objectListToXML(const QList<SketchObject *> *ob
 }
 
 vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
-                               const QHash<const SketchModel *,QString> &modelIds,
-                               QHash<const SketchObject *, QString> &objectIds, const QString &id) {
+                                             const QHash<const SketchModel *,QString> &modelIds,
+                                             QHash<const SketchObject *, QString> &objectIds, const QString &id) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECT_ELEMENT_NAME);
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
@@ -239,8 +240,8 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
 }
 
 vtkXMLDataElement *ProjectToXML::replicatorListToXML(const QList<StructureReplicator *> *replicaList,
-                                       const QHash<const SketchModel *, QString> &modelIds,
-                                       QHash<const SketchObject *, QString> &objectIds) {
+                                                     const QHash<const SketchModel *, QString> &modelIds,
+                                                     QHash<const SketchObject *, QString> &objectIds) {
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(REPLICATOR_LIST_ELEMENT_NAME);
     for (QListIterator<StructureReplicator *> it(*replicaList); it.hasNext();) {
@@ -329,8 +330,72 @@ vtkXMLDataElement *ProjectToXML::springToXML(const SpringConnection *spring, con
     return element;
 }
 
-XML_Read_Status ProjectToXML::xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
+ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrent(vtkXMLDataElement *root) {
+    if (QString(root->GetName()) == QString(ROOT_ELEMENT_NAME)) {
+        const char *fV = root->GetAttribute(VERSION_ATTRIBUTE_NAME);
+        QString fileVersion(fV);
+        QString readerVersion = SAVE_VERSION_NUM;
+        if (fileVersion != readerVersion) {
+            bool ok = false;
+            int fileMajor = fileVersion.left(fileVersion.indexOf(QString("."))).toInt(&ok);
+            if (!ok) {
+                // failed to parse file version
+                return XML_TO_DATA_FAILURE;
+            }
+            int readerMajor = SAVE_MAJOR_VERSION;
+            if (fileMajor != readerMajor) {
+                // if the major version changed, incompatible so give up
+                return XML_TO_DATA_FAILURE;
+            }
+            int fileMinor = fileVersion.mid(fileVersion.indexOf(QString("."))+1).toInt(&ok);
+            if (!ok) {
+                // failed to parse file version
+                return XML_TO_DATA_FAILURE;
+            }
+            int readerMinor = SAVE_MINOR_VERSION;
+            if (readerMinor < fileMinor) {
+                // old reader cannot read new file
+                return XML_TO_DATA_FAILURE;
+            } else if (readerMinor == fileMinor) {
+                // shouldn't get here, but check anyway.  No need to do extra parsing on files
+                // that are the right version
+                return XML_TO_DATA_SUCCESS;
+            } else {
+                // if the reader is newer than the save version, then convert the file to the current
+                // format (assuming default values for new variables)
+                return convertToCurrentVersion(root,fileMinor);
+            }
+        } else {
+            // versions match so we are ok
+            return XML_TO_DATA_SUCCESS;
+        }
+    } else {
+        // not valid xml, so can't do anything
+        return XML_TO_DATA_FAILURE;
+    }
+}
+
+ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataElement *root,int minorVersion) {
+    switch(minorVersion) {
+    case 0: // in 1 we added object groups... objects need numInstances parameter: default to 1
+        vtkXMLDataElement *objList = root->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
+        if (objList == NULL) {
+            return XML_TO_DATA_FAILURE;
+        }
+        for (int i = 0; i < objList->GetNumberOfNestedElements(); i++) {
+            vtkXMLDataElement *obj = objList->GetNestedElement(i);
+            obj->SetAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,"1");
+        }
+    }
+    return XML_TO_DATA_SUCCESS;
+}
+
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(SketchProject *proj, vtkXMLDataElement *elem) {
     if (QString(elem->GetName()) == QString(ROOT_ELEMENT_NAME)) {
+        if (convertToCurrent(elem) == XML_TO_DATA_FAILURE) {
+            // if failed to convert file to readable format version, exit we cannot do any more
+            return XML_TO_DATA_FAILURE;
+        }
         // TODO do something with version... test if newer... something like that
         vtkXMLDataElement *models = elem->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
         if (models == NULL) {
@@ -376,7 +441,7 @@ XML_Read_Status ProjectToXML::xmlToProject(SketchProject *proj, vtkXMLDataElemen
 }
 
 
-XML_Read_Status ProjectToXML::xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,SketchModel *> &modelIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,SketchModel *> &modelIds) {
     if (QString(elem->GetName()) != QString(MODEL_MANAGER_ELEMENT_NAME)) {
         return XML_TO_DATA_FAILURE;
     }
@@ -391,7 +456,7 @@ XML_Read_Status ProjectToXML::xmlToModelManager(SketchProject *proj, vtkXMLDataE
     return XML_TO_DATA_SUCCESS;
 }
 
-XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,SketchModel *> &modelIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,SketchModel *> &modelIds) {
     if (QString(elem->GetName()) != QString(MODEL_ELEMENT_NAME)) {
         return XML_TO_DATA_FAILURE;
     }
@@ -442,14 +507,14 @@ XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkXMLDataElement 
 }
 
 inline void matrixFromDoubleArray(vtkMatrix4x4 *mat, double *data) {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                mat->SetElement(i,j,data[i*4+j]);
-            }
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            mat->SetElement(i,j,data[i*4+j]);
         }
+    }
 }
 
-XML_Read_Status ProjectToXML::xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem) {
     if (QString(elem->GetName()) != TRANSFORM_MANAGER_ELEMENT_NAME) {
         return XML_TO_DATA_FAILURE;
     }
@@ -479,18 +544,20 @@ XML_Read_Status ProjectToXML::xmlToTransforms(SketchProject *proj, vtkXMLDataEle
     return XML_TO_DATA_SUCCESS;
 }
 
-XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
-                     QHash<QString, SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
+                                                            QHash<QString, SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds) {
     if (QString(elem->GetName()) != QString(OBJECTLIST_ELEMENT_NAME)) {
         return XML_TO_DATA_FAILURE;
     }
+    // this function processes whole list not single object
+    // need function that gets object and returns it for each object in list
+    // this function needs to be changed to return list of objects for caller to do something with
     for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
         vtkXMLDataElement *child = elem->GetNestedElement(i);
         if (QString(child->GetName()) == QString(OBJECT_ELEMENT_NAME)) {
             QString mId, oId;
             q_vec_type pos;
             q_type orient;
-//            bool physicsEnabled;
             oId = QString("#") + child->GetAttribute(ID_ATTRIBUTE_NAME);
             vtkXMLDataElement *props = child->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
             if (props == NULL) {
@@ -501,12 +568,6 @@ XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj, vtkXMLDataEle
                 return XML_TO_DATA_FAILURE;
             }
             mId = c;
-//            c = props->GetAttribute(OBJECT_PHYSICS_ENABLED_ATTRIBUTE_NAME);
-//            if (c != NULL) {
-//                physicsEnabled = (QString(c) == QString("false")) ? false : true;
-//            } else {
-//                return XML_TO_DATA_FAILURE;
-//            }
             vtkXMLDataElement *trans = child->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
             if (trans == NULL) {
                 return XML_TO_DATA_FAILURE;
@@ -518,15 +579,14 @@ XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj, vtkXMLDataEle
             }
             q_normalize(orient,orient);
             SketchObject *obj = proj->addObject(modelIds.value(mId),pos,orient);
-//            obj->setDoPhysics(physicsEnabled);
             objectIds.insert(oId,obj);
         }
     }
     return XML_TO_DATA_SUCCESS;
 }
 
-XML_Read_Status ProjectToXML::xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
-                         QHash<QString, SketchObject *> &objectIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
+                                                                QHash<QString, SketchObject *> &objectIds) {
     if (QString(elem->GetName()) != QString(REPLICATOR_LIST_ELEMENT_NAME)) {
         return XML_TO_DATA_FAILURE;
     }
@@ -556,8 +616,8 @@ XML_Read_Status ProjectToXML::xmlToReplicatorList(SketchProject *proj, vtkXMLDat
     return XML_TO_DATA_SUCCESS;
 }
 
-XML_Read_Status ProjectToXML::xmlToSpringList(SketchProject *proj, vtkXMLDataElement *elem,
-                     QHash<QString, SketchObject *> &objectIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpringList(SketchProject *proj, vtkXMLDataElement *elem,
+                                                            QHash<QString, SketchObject *> &objectIds) {
     if (QString(elem->GetName()) != QString(SPRING_LIST_ELEMENT_NAME)) {
         return XML_TO_DATA_FAILURE;
     }
@@ -572,8 +632,8 @@ XML_Read_Status ProjectToXML::xmlToSpringList(SketchProject *proj, vtkXMLDataEle
     return XML_TO_DATA_SUCCESS;
 }
 
-XML_Read_Status ProjectToXML::xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
-                 QHash<QString, SketchObject *> &objectIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
+                                                        QHash<QString, SketchObject *> &objectIds) {
     if (QString(elem->GetName()) != QString(SPRING_ELEMENT_NAME)) {
         return XML_TO_DATA_FAILURE;
     }
