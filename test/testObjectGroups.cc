@@ -83,6 +83,11 @@ inline int testNewSketchObject(SketchObject *obj) {
             }
         }
     }
+    vtkPolyDataAlgorithm *obb = obj->getOrientedBoundingBoxes();
+    if (obb == NULL) {
+        errors++;
+        qDebug() << "Oriented Bounding Box(es) is(/are) null";
+    }
     // collision group and calculate local transform are likely to be changed
     // in subclasses, so let subclasses handle those tests
     return errors;
@@ -107,6 +112,10 @@ inline int testNewModelInstance(ModelInstance *obj) {
     if (obj->getModel() == NULL) {
         errors++;
         qDebug() << "Model for object is null";
+    }
+    if (obj->getSubObjects() != NULL) {
+        errors++;
+        qDebug() << "List of sub-objects isn't null";
     }
     return errors;
 }
