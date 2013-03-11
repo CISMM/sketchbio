@@ -29,6 +29,11 @@ SketchObject *SketchObject::getParent() {
 }
 
 //#########################################################################
+const SketchObject *SketchObject::getParent() const {
+    return parent;
+}
+
+//#########################################################################
 void SketchObject::setParent(SketchObject *p) {
     parent = p;
     recalculateLocalTransform();

@@ -13,7 +13,7 @@
 #define VERSION_ATTRIBUTE_NAME                          "version"
 #define SAVE_MAJOR_VERSION                      1
 #define SAVE_MINOR_VERSION                      1
-#define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + SAVE_MINOR_VERSION)
+#define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
 
@@ -194,7 +194,6 @@ vtkXMLDataElement *ProjectToXML::objectListToXML(const QList<SketchObject *> *ob
             vtkSmartPointer<vtkXMLDataElement> child = objectToXML(obj,modelIds,objectIds,idStr);
             element->AddNestedElement(child);
             child->Delete();
-            objectIds.insert(obj,idStr);
         }
     }
     return element;
@@ -206,12 +205,16 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(OBJECT_ELEMENT_NAME);
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
+    objectIds.insert(object,id); // do this here now so object and its children don't have same id
+    bool isGroup = object->numInstances() != 1;
     element->SetIntAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,object->numInstances());
 
     vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
-    QString modelId = "#" + modelIds.constFind(object->getModel()).value();
-    child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
+    if (!isGroup) {
+        QString modelId = "#" + modelIds.constFind(object->getModel()).value();
+        child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
+    }
 
     const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
     if (rObj != NULL) {
@@ -544,9 +547,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransforms(SketchProject *proj,
     return XML_TO_DATA_SUCCESS;
 }
 
-ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
-                                                            QHash<QString, SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds) {
+ProjectToXML::XML_Read_Status ProjectToXML::readObjectList(QList<SketchObject *> &list,
+                                                            vtkXMLDataElement *elem,
+                                                            QHash<QString, SketchModel *> &modelIds,
+                                                            QHash<QString, SketchObject *> &objectIds) {
     if (QString(elem->GetName()) != QString(OBJECTLIST_ELEMENT_NAME)) {
+        return XML_TO_DATA_FAILURE;
+    }
+    if (!list.empty()) { // if the list is already populated, give up.
         return XML_TO_DATA_FAILURE;
     }
     // this function processes whole list not single object
@@ -554,33 +562,95 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj,
     // this function needs to be changed to return list of objects for caller to do something with
     for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
         vtkXMLDataElement *child = elem->GetNestedElement(i);
-        if (QString(child->GetName()) == QString(OBJECT_ELEMENT_NAME)) {
-            QString mId, oId;
-            q_vec_type pos;
-            q_type orient;
-            oId = QString("#") + child->GetAttribute(ID_ATTRIBUTE_NAME);
-            vtkXMLDataElement *props = child->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
-            if (props == NULL) {
-                return XML_TO_DATA_FAILURE;
+        SketchObject *object = readObject(child,modelIds,objectIds);
+        if (object == NULL) {
+            // if read failed, delete progress and return
+            for (int i = 0; i < list.size(); i++) {
+                delete list[i];
             }
+            list.clear();
+            return XML_TO_DATA_FAILURE;
+        }
+        list.append(object);
+    }
+    return XML_TO_DATA_SUCCESS;
+}
+
+SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
+                                       QHash<QString, SketchModel *> &modelIds,
+                                       QHash<QString, SketchObject *> &objectIds) {
+    if (QString(elem->GetName()) == QString(OBJECT_ELEMENT_NAME)) {
+        QString mId, oId;
+        q_vec_type pos;
+        q_type orient;
+        oId = QString("#") + elem->GetAttribute(ID_ATTRIBUTE_NAME);
+        int numInstances;
+        if (!elem->GetScalarAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,numInstances)) {
+            return NULL;
+        }
+        vtkXMLDataElement *props = elem->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+        if (props == NULL) {
+            return NULL;
+        }
+        if (numInstances == 1) {
             const char *c = props->GetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME);
             if (c == NULL) {
-                return XML_TO_DATA_FAILURE;
+                return NULL;
             }
             mId = c;
-            vtkXMLDataElement *trans = child->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
-            if (trans == NULL) {
-                return XML_TO_DATA_FAILURE;
-            }
-            int err = trans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
-            err = err + trans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
-            if (err != 7) {
-                return XML_TO_DATA_FAILURE;
-            }
-            q_normalize(orient,orient);
-            SketchObject *obj = proj->addObject(modelIds.value(mId),pos,orient);
-            objectIds.insert(oId,obj);
+        } else {
+            mId = "";
         }
+        vtkXMLDataElement *trans = elem->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
+        if (trans == NULL) {
+            return NULL;
+        }
+        int err = trans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
+        err = err + trans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
+        if (err != 7) {
+            return NULL;
+        }
+        q_normalize(orient,orient);
+        SketchObject *object;
+        if (numInstances == 1) {
+            // modelInstace
+            object = new ModelInstance(modelIds.value(mId));
+            object->setPosAndOrient(pos,orient);
+        } else {
+            // group
+            ObjectGroup *group = new ObjectGroup();
+            vtkXMLDataElement *childList = elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
+            if (childList == NULL) {
+                delete group;
+                return NULL;
+            }
+            QList<SketchObject *> childObjects;
+            if (readObjectList(childObjects,childList,modelIds,objectIds) == XML_TO_DATA_FAILURE) {
+                delete group;
+                return NULL;
+            }
+            for (int i = 0; i < childObjects.size(); i++) {
+                group->addObject(childObjects[i]);
+            }
+            object = group;
+            // since each object will be saved in its actual position and not its group relative position,
+            // we can simply let addObject's averaging take care of the group position/orientation
+        }
+        objectIds.insert(oId,object);
+        return object;
+    }
+    return NULL;
+}
+
+ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
+                                           QHash<QString,SketchModel *> &modelIds,
+                                           QHash<QString,SketchObject *> &objectIds) {
+    QList<SketchObject *> objects;
+    if (readObjectList(objects,elem,modelIds,objectIds) == XML_TO_DATA_FAILURE) {
+        return XML_TO_DATA_FAILURE;
+    }
+    for (int i = 0; i < objects.size(); i++) {
+        proj->addObject(objects[i]);
     }
     return XML_TO_DATA_SUCCESS;
 }

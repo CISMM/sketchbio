@@ -52,6 +52,18 @@ private: // no other code should call these (this is the reason for making this 
     static XML_Read_Status convertToCurrent(vtkXMLDataElement *root);
     static XML_Read_Status convertToCurrentVersion(vtkXMLDataElement *root,int minorVersion);
 
+    // these are for reading objects from the xml... need recursively defined functions for groups
+    // if there is an error, they will clean up any created objects as they fail
+    // this one returns the object or NULL on an error
+    static SketchObject *readObject(vtkXMLDataElement *elem,
+                                    QHash<QString, SketchModel *> &modelIds,
+                                    QHash<QString, SketchObject *> &objectIds);
+    // this one populates the passed in list with the objects it reads and returns an error code
+    // it assumes an empty list is passed in... and will fail without doing anything if this is not
+    // the case
+    static XML_Read_Status readObjectList(QList<SketchObject *> &list, vtkXMLDataElement *elem,
+                                           QHash<QString,SketchModel *> &modelIds,
+                                           QHash<QString,SketchObject *> &objectIds);
     // these all return an error code, XML_TO_DATA_SUCCESS for succeeded
     // and XML_TO_DATA_FAILURE for failed
 
@@ -63,8 +75,9 @@ private: // no other code should call these (this is the reason for making this 
 
     static XML_Read_Status xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem);
 
-    static XML_Read_Status xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem, QHash<QString,
-                                           SketchModel *> &modelIds, QHash<QString, SketchObject *> &objectIds);
+    static XML_Read_Status xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
+                                           QHash<QString,SketchModel *> &modelIds,
+                                           QHash<QString,SketchObject *> &objectIds);
 
     static XML_Read_Status xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,
                                                QHash<QString, SketchObject *> &objectIds);

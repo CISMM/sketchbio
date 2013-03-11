@@ -36,6 +36,7 @@ public:
     virtual int numInstances() const =0;
     // the parent "object"/group
     virtual SketchObject *getParent();
+    virtual const SketchObject *getParent() const;
     virtual void setParent(SketchObject *p);
     // get the list of child objects
     virtual QList<SketchObject *> *getSubObjects();
