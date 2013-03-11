@@ -20,18 +20,12 @@ int main( int argc, char** argv )
 
   // Parse the non-Qt part of the command line.
   // Start with default values.
-  bool  do_fibrin = true;
-  bool	do_fibrin_springs = true;
-  bool	do_fibrin_replicate = true;
+  bool  do_example = false;
   QVector<QString> object_names;
   int i = 0, real_params = 0;
   for (i = 1; i < argc; i++) {
-    if (!strcmp(argv[i], "-nofibrin")) {
-	do_fibrin = false;
-    } else if (!strcmp(argv[i], "-nofibrinsprings")) {
-	do_fibrin_springs = false;
-    } else if (!strcmp(argv[i], "-nofibrinreplicate")) {
-	do_fibrin_replicate = false;
+    if (!strcmp(argv[i], "-show_example")) {
+    do_example = true;
     } else if (argv[i][0] == '-') {
 	Usage(argv[0]);
     } else switch (++real_params) {
@@ -43,15 +37,13 @@ int main( int argc, char** argv )
   }
   if (object_names.size() > 0) {
 	// If we give it model names, we don't want the fibrin default.
-	do_fibrin = false;
-	do_fibrin_springs = false;
-	do_fibrin_replicate = false;
+    do_example = false;
   }
   QString projDir = QFileDialog::getExistingDirectory((QWidget *)NULL,
                                QString("Select Project Folder"),QString("./"));
   if (projDir.length() != 0) {
 
-    SimpleView mySimpleView(projDir,do_fibrin, do_fibrin_springs, do_fibrin_replicate);
+    SimpleView mySimpleView(projDir,do_example);
     mySimpleView.addObjects(object_names);
     mySimpleView.setWindowTitle("SketchBio");
     mySimpleView.show();
