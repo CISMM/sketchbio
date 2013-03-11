@@ -34,7 +34,7 @@
 
 
 // Constructor
-SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, bool do_replicate) :
+SimpleView::SimpleView(QString projDir, bool load_example) :
     tracker("Tracker0@localhost"),
     buttons("Tracker0@localhost"),
     analogRemote("Tracker0@localhost"),
@@ -80,10 +80,9 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
         vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
         ProjectToXML::xmlToProject(project,root);
         root->Delete();
-    } else if (load_fibrin) {
-        // eventually we will just load the example...
+    } else if (load_example) {
+        // eventually we will just load the example from a project directory...
 
-        // ???
         SketchModel *model = project->addModelFromFile("./models/1m1j.obj",INVERSEMASS,INVERSEMOMENT,1);
         q_vec_type position = {50,0,0};
         q_type orientation;
@@ -110,7 +109,7 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
         project->addObject(group);
         project->addObject(object4);
 
-        if (false && fibrin_springs) {
+        if (false) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
             project->addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
@@ -121,7 +120,7 @@ SimpleView::SimpleView(QString projDir, bool load_fibrin, bool fibrin_springs, b
         }
 
         // Replicate objects
-        if (false && do_replicate) {
+        if (false) {
             project->addReplication(object1,object2,NUM_EXTRA_FIBERS);
         }
 
