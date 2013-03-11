@@ -9,7 +9,8 @@ SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
     parent(NULL),
     primaryCollisionGroup(OBJECT_HAS_NO_GROUP),
-    localTransformPrecomputed(false)
+    localTransformPrecomputed(false),
+    observers()
 {
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
@@ -176,6 +177,7 @@ void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
         q_vec_add(tmp,position,tmp); // get point in parent coordinate system
         parent->addForce(tmp,force);
     }
+    notifyObservers();
 }
 
 //#########################################################################
@@ -190,12 +192,27 @@ void SketchObject::getTorque(q_vec_type out) const {
 void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque) {
     q_vec_copy(forceAccum,force);
     q_vec_copy(torqueAccum,torque);
+    notifyObservers();
 }
 
 //#########################################################################
 void SketchObject::clearForces() {
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
+}
+
+//#########################################################################
+void SketchObject::addForceObserver(ObjectForceObserver *obs) {
+    if (!observers.contains(obs)) {
+        observers.append(obs);
+    }
+}
+
+//#########################################################################
+void SketchObject::removeForceObserver(ObjectForceObserver *obs) {
+    if (observers.contains(obs)) {
+        observers.removeOne(obs);
+    }
 }
 
 //#########################################################################
@@ -232,6 +249,13 @@ void SketchObject::localTransformUpdated() {}
 //#########################################################################
 void SketchObject::localTransformUpdated(SketchObject *obj) {
     obj->localTransformUpdated();
+}
+
+//#########################################################################
+void SketchObject::notifyObservers() {
+    for (int i = 0; i < observers.size(); i++) {
+        observers[i]->objectPushed(this);
+    }
 }
 
 //#########################################################################

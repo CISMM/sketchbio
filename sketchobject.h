@@ -6,11 +6,13 @@
 #include <vtkTransform.h>
 #include <vtkActor.h>
 #include <quat.h>
-#include <list>
 #include <sketchmodel.h>
 
 // forward declare the collision handler so it can be passed to collide
 class PhysicsStrategy;
+// forward declare observer of objects moving so it each object can have a list of observers
+// (declared at the bottom of this file)
+class ObjectForceObserver;
 
 
 // used by getPrimaryCollisionGroupNum to indicate that the object has not been
@@ -82,6 +84,9 @@ public:
     // this returns the box(es) that contain the lowest-level objects in whatever heirarchy
     // group should do an AppendPolyData to combine these
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() = 0;
+    // to deal with force observers
+    void addForceObserver(ObjectForceObserver *obs);
+    void removeForceObserver(ObjectForceObserver *obs);
 protected: // methods
     // to deal with local transformation
     void recalculateLocalTransform();
@@ -93,6 +98,8 @@ protected: // methods
     static void localTransformUpdated(SketchObject *obj);
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
+private: // methods
+    void notifyObservers();
 private: // fields
     SketchObject *parent;
     q_vec_type forceAccum,torqueAccum;
@@ -100,6 +107,7 @@ private: // fields
     q_type orientation, lastOrientation;
     int primaryCollisionGroup;
     bool localTransformPrecomputed;
+    QList<ObjectForceObserver *> observers;
 };
 
 /*
@@ -163,6 +171,15 @@ protected:
 private:
     QList<SketchObject *> children;
     vtkSmartPointer<vtkAppendPolyData> orientedBBs;
+};
+
+/*
+ * This class is an observer that needs to be notified when the object has a force/torque applied to it
+ */
+class ObjectForceObserver {
+public:
+    virtual ~ObjectForceObserver() {}
+    virtual void objectPushed(SketchObject *obj) = 0;
 };
 
 // helper function-- converts quaternion to a PQP rotation matrix
