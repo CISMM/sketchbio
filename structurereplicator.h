@@ -21,8 +21,6 @@ public:
     ReplicatedObject(SketchModel *model,
                      SketchObject *original0, SketchObject *original1, int num);
     virtual void addForce(q_vec_type point, const q_vec_type force);
-    virtual void getPosition(q_vec_type dest) const;
-    virtual void getOrientation(q_type dest) const;
     virtual void setPrimaryCollisionGroupNum(int num);
     virtual int  getPrimaryCollisionGroupNum() const;
     virtual bool isInCollisionGroup(int num) const;
@@ -50,7 +48,7 @@ public:
      * mapper containing the model to use on the newly created actors, and the given renderer
      * as the renderer to register the copies with.
      */
-    StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w, vtkTransform *worldEyeTransform);
+    StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w);
 
     virtual ~StructureReplicator();
 
@@ -91,7 +89,6 @@ private:
     WorldManager *world;
     QList<SketchObject *> copies;
     vtkSmartPointer<vtkTransform> transform;
-    vtkSmartPointer<vtkTransform> worldEyeTransform;
 };
 
 inline QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {

@@ -5,7 +5,7 @@
 
 void Usage(const char *n)
 {
-  fprintf(stderr,"Usage: %s [-nofibrin] [-nofibrinsprings] [-nofibrinreplicate] [object_to_display]+\n",n);
+  fprintf(stderr,"Usage: %s [-show_example] [object_to_display]+\n",n);
 }
  
 int main( int argc, char** argv )

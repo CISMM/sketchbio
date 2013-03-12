@@ -16,38 +16,7 @@ ReplicatedObject::ReplicatedObject(SketchModel *model, SketchObject *original0, 
     obj1 = original1;
     replicaNum = num;
     setLocalTransformPrecomputed(true);
-}
-
-/*
- * Gets the updated position from the local transform instead of
- * getting the outdated variable from the parent class
- */
-void ReplicatedObject::getPosition(q_vec_type dest) const {
-    localTransform->GetPosition(dest);
-//    q_vec_type origin = Q_NULL_VECTOR;
-//    localTransform->TransformPoint(origin,dest);
-}
-
-/*
- * Uses the updated local transform to get the orientation instead of
- * using the outdated variable in the parent class
- */
-void ReplicatedObject::getOrientation(q_type dest) const {
-    double ori[4];
-    localTransform->GetOrientationWXYZ(ori);
-    double angle = ori[0] * Q_PI/180.0;
-    q_from_axis_angle(dest,ori[1],ori[2],ori[3],angle);
-//    q_vec_type xaxis = {1, 0, 0};
-//    q_vec_type yaxis = {0, 1, 0};
-//    q_vec_type xout,yout;
-//    localTransform->TransformVector(xaxis,xout);
-//    if (xout[0] == 1 && xout[1] == 0 && xout[2] == 0) {
-//        // localtransform shouldn't have scales, so if it is still the x_axis use y instead
-//        localTransform->TransformVector(yaxis,yout);
-//        q_from_two_vecs(dest,yaxis,yout); // if y is also the same, it is not rotated
-//    } else {
-//        q_from_two_vecs(dest,xaxis,xout);
-//    }
+    setLocalTransformDefiningPosition(true);
 }
 
 /*
@@ -80,8 +49,7 @@ bool ReplicatedObject::isInCollisionGroup(int num) const {
 //############################################################################################
 //############################################################################################
 
-StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w,
-                                         vtkTransform *worldEyeTransform) :
+StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w) :
     numShown(0),
     obj1(object1),
     obj2(object2),
@@ -94,7 +62,6 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     vtkSmartPointer<vtkTransform> other = obj1->getLocalTransform();
     transform->Concatenate(other->GetLinearInverse());
     transform->Concatenate(obj2->getLocalTransform());
-    this->worldEyeTransform = worldEyeTransform;
 }
 
 StructureReplicator::~StructureReplicator() {
@@ -121,9 +88,9 @@ void StructureReplicator::setNumShown(int num) {
             copies.append(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
+            tform->PostMultiply();
             tform->Concatenate(previous->getLocalTransform());
             tform->Concatenate(transform);
-//            next->setDoPhysics(false);
             previous = next;
         }
     } else {

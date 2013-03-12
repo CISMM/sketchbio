@@ -19,6 +19,7 @@
 #include "structurereplicator.h"
 #include "sketchioconstants.h"
 #include "sketchproject.h"
+#include "transformequals.h"
 
 #include <QMainWindow>
 #include <QActionGroup>
@@ -123,6 +124,7 @@ private:
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   SketchProject *project;
+  TransformEquals *eq;
 };
 
  

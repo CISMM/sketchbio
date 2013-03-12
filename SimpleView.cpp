@@ -22,6 +22,7 @@
 
 #include <vtkXMLUtilities.h>
 #include <projecttoxml.h>
+#include <transformequals.h>
 
 // default number extra fibers
 #define NUM_EXTRA_FIBERS 14
@@ -41,7 +42,8 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     timer(new QTimer()),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer(),buttonDown,analog))
+    project(new SketchProject(renderer.GetPointer(),buttonDown,analog)),
+    eq(NULL)
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
@@ -90,7 +92,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         SketchObject *object1 = new ModelInstance(model);
         object1->setPosAndOrient(position,orientation);
         SketchObject *object2 = new ModelInstance(model);
-        q_vec_set(position,30,40,0);
+        q_vec_set(position,30,400,0);
         q_from_axis_angle(orientation,0,1,0,Q_PI/2);
         object2->setPosAndOrient(position,orientation);
         SketchObject *object3 = new ModelInstance(model);
@@ -101,14 +103,12 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         q_vec_set(position,0,0,-300);
         object4->setPosition(position);
 
-        ObjectGroup *group = new ObjectGroup();
-        group->addObject(object1);
-        group->addObject(object2);
-        group->addObject(object3);
-
-        project->addObject(group);
+        project->addObject(object1);
+        project->addObject(object2);
+        project->addObject(object3);
         project->addObject(object4);
-
+        eq = new TransformEquals(object1,object2);
+        eq->addPair(object3,object4);
         if (false) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
@@ -152,6 +152,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
 }
 
 SimpleView::~SimpleView() {
+    delete eq;
     delete project;
     delete collisionModeGroup;
     delete timer;

@@ -10,6 +10,7 @@ SketchObject::SketchObject() :
     parent(NULL),
     primaryCollisionGroup(OBJECT_HAS_NO_GROUP),
     localTransformPrecomputed(false),
+    localTransformDefiningPosition(false),
     observers()
 {
     q_vec_set(forceAccum,0,0,0);
@@ -64,7 +65,7 @@ vtkActor *SketchObject::getActor() {
 }
 //#########################################################################
 void SketchObject::getPosition(q_vec_type dest) const {
-    if (parent != NULL) {
+    if (parent != NULL || localTransformDefiningPosition) {
         localTransform->GetPosition(dest);
     } else {
         q_vec_copy(dest,position);
@@ -72,7 +73,7 @@ void SketchObject::getPosition(q_vec_type dest) const {
 }
 //#########################################################################
 void SketchObject::getOrientation(q_type dest) const {
-    if (parent != NULL) {
+    if (parent != NULL || localTransformDefiningPosition) {
         double wxyz[4];
         localTransform->GetOrientationWXYZ(wxyz);
         q_from_axis_angle(dest,wxyz[1],wxyz[2],wxyz[3],wxyz[0]*Q_PI/180.0);
@@ -216,9 +217,34 @@ void SketchObject::removeForceObserver(ObjectForceObserver *obs) {
 }
 
 //#########################################################################
+void SketchObject::setLocalTransformPrecomputed(bool isComputed) {
+    localTransformPrecomputed = isComputed;
+    if (!isComputed) {
+        recalculateLocalTransform();
+    }
+}
+
+//#########################################################################
+bool SketchObject::isLocalTransformPrecomputed() {
+    return localTransformPrecomputed;
+}
+
+//#########################################################################
+void SketchObject::setLocalTransformDefiningPosition(bool isDefining) {
+    localTransformDefiningPosition = isDefining;
+}
+
+//#########################################################################
+bool SketchObject::isLocalTransformDefiningPosition() {
+    return localTransformDefiningPosition;
+}
+
+//#########################################################################
 void SketchObject::recalculateLocalTransform()  {
-    if (isLocalTransformPrecomputed())
+    if (isLocalTransformPrecomputed()) {
+        localTransformUpdated();
         return;
+    }
     double angle,x,y,z;
     q_to_axis_angle(&x,&y,&z,&angle,orientation);
     angle = angle * 180 / Q_PI; // convert to degrees
@@ -231,16 +257,6 @@ void SketchObject::recalculateLocalTransform()  {
     }
     localTransform->Update();
     localTransformUpdated();
-}
-
-//#########################################################################
-void SketchObject::setLocalTransformPrecomputed(bool isComputed) {
-    localTransformPrecomputed = isComputed;
-}
-
-//#########################################################################
-bool SketchObject::isLocalTransformPrecomputed() {
-    return localTransformPrecomputed;
 }
 
 //#########################################################################

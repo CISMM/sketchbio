@@ -51,12 +51,12 @@ public:
     // actor if numInstances is 1
     virtual vtkActor *getActor();
     // position and orientation
-    virtual void getPosition(q_vec_type dest) const;
-    virtual void getOrientation(q_type dest) const;
-    virtual void getOrientation(PQP_REAL matrix[3][3]) const;
-    virtual void setPosition(const q_vec_type newPosition);
-    virtual void setOrientation(const q_type newOrientation);
-    virtual void setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation);
+    void getPosition(q_vec_type dest) const;
+    void getOrientation(q_type dest) const;
+    void getOrientation(PQP_REAL matrix[3][3]) const;
+    void setPosition(const q_vec_type newPosition);
+    void setOrientation(const q_type newOrientation);
+    void setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation);
     // to do with setting undo position
     void getLastPosition(q_vec_type dest) const;
     void getLastOrientation(q_type dest) const;
@@ -87,15 +87,22 @@ public:
     // to deal with force observers
     void addForceObserver(ObjectForceObserver *obs);
     void removeForceObserver(ObjectForceObserver *obs);
-protected: // methods
-    // to deal with local transformation
-    void recalculateLocalTransform();
+    // to stop the object from updating its transform when its position/orientation are set
+    // used when an external source is defining the object's local transformation
     void setLocalTransformPrecomputed(bool isComputed);
     bool isLocalTransformPrecomputed();
-    // to be overridden as a template method if something needs to occur when the transform is updated
-    virtual void localTransformUpdated();
+    // to set whether or not this object's local transformation has more information about
+    // its position than the position vector
+    void setLocalTransformDefiningPosition(bool isDefining);
+    bool isLocalTransformDefiningPosition();
     // to allow localTransformUpdated to be called from subclasses on other SketchObjects...
     static void localTransformUpdated(SketchObject *obj);
+protected: // methods
+    // to deal with local transformation - recomputes from position and orientation unless
+    // isLocalTransformPrecomputed is true
+    void recalculateLocalTransform();
+    // to be overridden as a template method if something needs to occur when the transform is updated
+    virtual void localTransformUpdated();
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
 private: // methods
@@ -106,7 +113,7 @@ private: // fields
     q_vec_type position, lastPosition;
     q_type orientation, lastOrientation;
     int primaryCollisionGroup;
-    bool localTransformPrecomputed;
+    bool localTransformPrecomputed, localTransformDefiningPosition;
     QList<ObjectForceObserver *> observers;
 };
 

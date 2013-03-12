@@ -30,6 +30,7 @@ public:
         transform->Identity();
         actor->SetUserTransform(transform);
         setLocalTransformPrecomputed(true);
+        setLocalTransformDefiningPosition(false);
     }
 
     // I'm using disabling localTransform, so I need to reimplement these
@@ -254,7 +255,7 @@ SpringConnection *SketchProject::addSpring(SpringConnection *spring) {
 }
 
 StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObject *o2, int numCopies) {
-    StructureReplicator *rep = new StructureReplicator(o1,o2,world,transforms->getWorldToEyeTransform());
+    StructureReplicator *rep = new StructureReplicator(o1,o2,world);
     replicas.append(rep);
     rep->setNumShown(numCopies);
     return rep;
