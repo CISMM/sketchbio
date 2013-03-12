@@ -12,8 +12,8 @@ TransformEquals::TransformEquals(SketchObject *first, SketchObject *second) :
     masterPairIdx = 0;
     transform->Identity();
     transform->PostMultiply();
-    transform->Concatenate(first->getLocalTransform()->GetLinearInverse());
     transform->Concatenate(second->getLocalTransform());
+    transform->Concatenate(first->getLocalTransform()->GetLinearInverse());
 }
 
 void TransformEquals::addPair(SketchObject *first, SketchObject *second) {
@@ -24,8 +24,8 @@ void TransformEquals::addPair(SketchObject *first, SketchObject *second) {
         vtkSmartPointer<vtkTransform> tfrm = second->getLocalTransform();
         tfrm->Identity();
         tfrm->PostMultiply();
-        tfrm->Concatenate(first->getLocalTransform());
         tfrm->Concatenate(transform);
+        tfrm->Concatenate(first->getLocalTransform());
         second->setLocalTransformDefiningPosition(true);
         second->setLocalTransformPrecomputed(true);
     }
