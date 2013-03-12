@@ -31,6 +31,7 @@ public:
     virtual void objectPushed(SketchObject *obj);
 private:
     QList<ObjectPair> pairsList;
+    vtkSmartPointer<vtkTransform> transform;
     int masterPairIdx; // index in pairsList of the pair currently defining the transform
 };
 
