@@ -293,6 +293,8 @@ void SimpleView::loadProject() {
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
     project = new SketchProject(renderer,buttonDown,analog);
     project->setProjectDir(dirPath);
+    project->setCollisionTestsOn(this->ui->actionCollision_Tests_On->isChecked());
+    project->setWorldSpringsEnabled(this->ui->actionWorld_Springs_On->isChecked());
     this->ui->actionPose_Mode_1->setChecked(true);
     // load project into new one
     QDir dir(project->getProjectDir());
