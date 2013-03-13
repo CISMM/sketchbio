@@ -6,14 +6,11 @@ ObjectPair::ObjectPair(SketchObject *first, SketchObject *second) :
 
 TransformEquals::TransformEquals(SketchObject *first, SketchObject *second) :
     ObjectForceObserver(), pairsList(), transform(vtkSmartPointer<vtkTransform>::New()),
-    masterPairIdx(-1)
+    masterPairIdx(-1), mode(TransformEquals::POSITION_COPIES)
 {
     addPair(first,second);
     masterPairIdx = 0;
-    transform->Identity();
-    transform->PostMultiply();
-    transform->Concatenate(second->getLocalTransform());
-    transform->Concatenate(first->getLocalTransform()->GetLinearInverse());
+    setupTransform(0);
 }
 
 bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
@@ -23,9 +20,10 @@ bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
             return false;
     }
     ObjectPair o(first,second);
+    first->addForceObserver(this);
     second->addForceObserver(this);
     // make the new objects follow the master pair
-    if (masterPairIdx >= 0) {
+    if (!pairsList.empty()) {
         vtkSmartPointer<vtkTransform> tfrm = second->getLocalTransform();
         tfrm->Identity();
         tfrm->PostMultiply();
@@ -89,26 +87,56 @@ void TransformEquals::objectPushed(SketchObject *obj) {
     for (int i = 0; i < pairsList.size(); i++) {
         if (pairsList[i].o2 == obj) {
             // make the pushed object the source of the transform
-            if (i != masterPairIdx) {
-                // make the new master defined in terms of its own position instead of the old master
-                setObjectBackToNormal(pairsList[i].o2);
-                // redefine the transform in terms of the new master pair
-                transform->Identity();
-                transform->PostMultiply();
-                transform->Concatenate(pairsList[i].o2->getLocalTransform());
-                transform->Concatenate(pairsList[i].o1->getLocalTransform()->GetLinearInverse());
-                // redefine the old master in terms of the new master
-                vtkSmartPointer<vtkTransform> tfrm = pairsList[masterPairIdx].o2->getLocalTransform();
-                tfrm->Identity();
-                tfrm->PostMultiply();
-                tfrm->Concatenate(transform);
-                tfrm->Concatenate(pairsList[masterPairIdx].o1->getLocalTransform());
-                pairsList[masterPairIdx].o2->setLocalTransformDefiningPosition(true);
-                pairsList[masterPairIdx].o2->setLocalTransformPrecomputed(true);
-                // swap which pair is master
-                masterPairIdx = i;
+            if (i != masterPairIdx || mode == POSITION_COPIES) {
+                mode = EDIT_TRANSFORM;
+                setupTransform(i);
+            }
+            break;
+        } else if (pairsList[i].o1 == obj) {
+            if (mode != POSITION_COPIES) {
+                mode = POSITION_COPIES;
+                setupTransform(i);
             }
             break;
         }
+    }
+}
+
+void TransformEquals::setupTransform(int newMaster) {
+    // make the new master defined in terms of its own position instead of the old master
+    setObjectBackToNormal(pairsList[newMaster].o2);
+    // redefine the transform in terms of the new master pair
+    transform->Identity();
+    transform->PostMultiply();
+    transform->Concatenate(pairsList[newMaster].o2->getLocalTransform());
+    transform->Concatenate(pairsList[newMaster].o1->getLocalTransform()->GetLinearInverse());
+    if ( mode == POSITION_COPIES) {
+        // set the matrix as fixed in the transform
+        vtkMatrix4x4 *mat = transform->GetMatrix();
+        transform->Identity();
+        transform->SetMatrix(mat);
+        // reset the new master to be defined in terms of the matrix
+        vtkSmartPointer<vtkTransform> tfrm = pairsList[newMaster].o2->getLocalTransform();
+        tfrm->Identity();
+        tfrm->PostMultiply();
+        tfrm->Concatenate(transform);
+        tfrm->Concatenate(pairsList[newMaster].o1->getLocalTransform());
+        pairsList[newMaster].o2->setLocalTransformDefiningPosition(true);
+        pairsList[newMaster].o2->setLocalTransformPrecomputed(true);
+    }
+    if (masterPairIdx != -1) {
+        vtkSmartPointer<vtkTransform> tfrm = pairsList[masterPairIdx].o2->getLocalTransform();
+        tfrm->Identity();
+        tfrm->PostMultiply();
+        tfrm->Concatenate(transform);
+        tfrm->Concatenate(pairsList[masterPairIdx].o1->getLocalTransform());
+        pairsList[masterPairIdx].o2->setLocalTransformDefiningPosition(true);
+        pairsList[masterPairIdx].o2->setLocalTransformPrecomputed(true);
+    }
+    if (mode == EDIT_TRANSFORM) {
+        // swap which pair is master
+        masterPairIdx = newMaster;
+    } else {
+        masterPairIdx = -1;
     }
 }

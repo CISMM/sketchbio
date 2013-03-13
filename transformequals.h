@@ -42,9 +42,12 @@ public:
     // update transforms when force applied to an object in one of the pairs
     virtual void objectPushed(SketchObject *obj);
 private:
+    enum EditMode { POSITION_COPIES, EDIT_TRANSFORM };
+    void setupTransform(int newMaster);
     QList<ObjectPair> pairsList;
     vtkSmartPointer<vtkTransform> transform;
     int masterPairIdx; // index in pairsList of the pair currently defining the transform
+    EditMode mode;
 };
 
 #endif // TRANSFORMEQUALS_H
