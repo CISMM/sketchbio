@@ -17,6 +17,8 @@ ReplicatedObject::ReplicatedObject(SketchModel *model, SketchObject *original0, 
     replicaNum = num;
     setLocalTransformPrecomputed(true);
     setLocalTransformDefiningPosition(true);
+    setPrimaryCollisionGroupNum((replicaNum > 0 ? obj1 : obj0)->getPrimaryCollisionGroupNum());
+    addToCollisionGroup((replicaNum > 0 ? obj0 : obj1)->getPrimaryCollisionGroupNum());
 }
 
 /*
@@ -31,16 +33,6 @@ void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
     q_vec_scale(scaledForce, 1/divisor, scaledForce);
     original->getLocalTransform()->TransformVector(scaledForce,scaledForce);
     original->addForce(point,scaledForce);
-}
-
-void ReplicatedObject::setPrimaryCollisionGroupNum(int num) {} // does nothing, group num based on originals
-
-int ReplicatedObject::getPrimaryCollisionGroupNum() const {
-    return ((replicaNum > 0) ? obj1 : obj0)->getPrimaryCollisionGroupNum();
-}
-
-bool ReplicatedObject::isInCollisionGroup(int num) const {
-    return obj1->isInCollisionGroup(num) || obj0->isInCollisionGroup(num);
 }
 
 //############################################################################################

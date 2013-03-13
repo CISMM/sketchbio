@@ -13,7 +13,8 @@ SET(Test3Srcs testReplicatedObjects.cc "${CMAKE_SOURCE_DIR}/structurereplicator.
             "${CMAKE_SOURCE_DIR}/worldmanager.cpp" "${CMAKE_SOURCE_DIR}/sketchobject.cpp"
             "${CMAKE_SOURCE_DIR}/sketchmodel.cpp" "${CMAKE_SOURCE_DIR}/modelmanager.cpp"
             "${CMAKE_SOURCE_DIR}/springconnection.cpp" "${CMAKE_SOURCE_DIR}/sketchproject.cpp"
-            "${CMAKE_SOURCE_DIR}/transformmanager.cpp" "${CMAKE_SOURCE_DIR}/physicsstrategy.cpp")
+            "${CMAKE_SOURCE_DIR}/transformmanager.cpp" "${CMAKE_SOURCE_DIR}/physicsstrategy.cpp"
+            "${CMAKE_SOURCE_DIR}/transformequals.cpp")
 ADD_EXECUTABLE( ReplicatorTest ${Test3Srcs})
 TARGET_LINK_LIBRARIES( ReplicatorTest QVTK ${QUATLIB_LIBRARIES} PQP )
 
@@ -22,7 +23,7 @@ SET(Test4Srcs testSaveToXML.cc "${CMAKE_SOURCE_DIR}/structurereplicator.cpp"
             "${CMAKE_SOURCE_DIR}/sketchmodel.cpp" "${CMAKE_SOURCE_DIR}/modelmanager.cpp"
             "${CMAKE_SOURCE_DIR}/springconnection.cpp" "${CMAKE_SOURCE_DIR}/sketchproject.cpp"
             "${CMAKE_SOURCE_DIR}/transformmanager.cpp" "${CMAKE_SOURCE_DIR}/projecttoxml.cpp"
-            "${CMAKE_SOURCE_DIR}/physicsstrategy.cpp")
+            "${CMAKE_SOURCE_DIR}/physicsstrategy.cpp" "${CMAKE_SOURCE_DIR}/transformequals.cpp")
 ADD_EXECUTABLE( SaveTest ${Test4Srcs})
 TARGET_LINK_LIBRARIES( SaveTest QVTK ${QUATLIB_LIBRARIES} PQP )
 

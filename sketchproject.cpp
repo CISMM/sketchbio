@@ -75,6 +75,7 @@ SketchProject::SketchProject(vtkRenderer *r,
     transforms(new TransformManager()),
     world(new WorldManager(r,transforms->getWorldToEyeTransform())),
     replicas(),
+    transformOps(),
     projectDir(NULL),
     buttonDown(buttonStates),
     analog(analogStates),
@@ -103,6 +104,11 @@ SketchProject::~SketchProject() {
     for (QMutableListIterator<StructureReplicator *> it(replicas); it.hasNext();) {
         StructureReplicator *rep = it.next();
         it.setValue((StructureReplicator *) NULL);
+        delete rep;
+    }
+    for (QMutableListIterator<TransformEquals *> it(transformOps); it.hasNext();) {
+        TransformEquals *rep = it.next();
+        it.setValue((TransformEquals *) NULL);
         delete rep;
     }
     replicas.clear();
@@ -259,6 +265,12 @@ StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObjec
     replicas.append(rep);
     rep->setNumShown(numCopies);
     return rep;
+}
+
+TransformEquals *SketchProject::addTransformEquals(SketchObject *o1, SketchObject *o2) {
+    TransformEquals *trans = new TransformEquals(o1,o2,world);
+    transformOps.append(trans);
+    return trans;
 }
 
 void SketchProject::handleInput() {

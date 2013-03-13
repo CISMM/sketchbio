@@ -7,6 +7,7 @@
 #include <vtkActor.h>
 #include <quat.h>
 #include <sketchmodel.h>
+#include <QList>
 
 // forward declare the collision handler so it can be passed to collide
 class PhysicsStrategy;
@@ -62,10 +63,13 @@ public:
     void getLastOrientation(q_type dest) const;
     void setLastLocation();
     void restoreToLastLocation();
-    // to do with collision groups
-    virtual int  getPrimaryCollisionGroupNum();
-    virtual void setPrimaryCollisionGroupNum(int num);
-    virtual bool isInCollisionGroup(int num) const;
+    // to do with collision groups (see comments on the collisionGroups field for details of
+    // implmentation)
+    int  getPrimaryCollisionGroupNum();
+    void setPrimaryCollisionGroupNum(int num);
+    void addToCollisionGroup(int num);
+    bool isInCollisionGroup(int num) const;
+    void removeFromCollisionGroup(int num);
     // local transformation & transforming points/vectors
     vtkTransform *getLocalTransform();
     virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const;
@@ -112,7 +116,12 @@ private: // fields
     q_vec_type forceAccum,torqueAccum;
     q_vec_type position, lastPosition;
     q_type orientation, lastOrientation;
-    int primaryCollisionGroup;
+    // this list is the collision groups. If it is empty, then the object has no collision group and
+    // getPrimaryCollisionGroup will return OBJECT_HAS_NO_GROUP.  Else, the primary collision group
+    // is ther first element in the list.  setPrimaryCollisionGroup will move the given group to the
+    // start of the list (or add it if it is not there already).  addToCollisionGroup appends onto the
+    // list
+    QList<int> collisionGroups;
     bool localTransformPrecomputed, localTransformDefiningPosition;
     QList<ObjectForceObserver *> observers;
 };

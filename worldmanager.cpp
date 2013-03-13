@@ -66,6 +66,12 @@ WorldManager::~WorldManager() {
 
 //##################################################################################################
 //##################################################################################################
+int WorldManager::getNextGroupId() {
+    return ++maxGroupNum;
+}
+
+//##################################################################################################
+//##################################################################################################
 SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, const q_type orient) {
     SketchObject *newObject = new ModelInstance(model);
     newObject->setPosAndOrient(pos,orient);
@@ -77,7 +83,7 @@ SketchObject *WorldManager::addObject(SketchModel *model,const q_vec_type pos, c
 SketchObject *WorldManager::addObject(SketchObject *object) {
     objects.push_back(object);
     if (object->getPrimaryCollisionGroupNum() == OBJECT_HAS_NO_GROUP) {
-        object->setPrimaryCollisionGroupNum(maxGroupNum++);
+        object->setPrimaryCollisionGroupNum(getNextGroupId());
     }
     insertActors(object);
     return object;

@@ -21,9 +21,6 @@ public:
     ReplicatedObject(SketchModel *model,
                      SketchObject *original0, SketchObject *original1, int num);
     virtual void addForce(q_vec_type point, const q_vec_type force);
-    virtual void setPrimaryCollisionGroupNum(int num);
-    virtual int  getPrimaryCollisionGroupNum() const;
-    virtual bool isInCollisionGroup(int num) const;
     inline  int  getReplicaNum() const { return replicaNum; }
 private:
     // need original(s) here

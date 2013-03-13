@@ -4,9 +4,9 @@ ObjectPair::ObjectPair(SketchObject *first, SketchObject *second) :
     o1(first), o2(second)
 {}
 
-TransformEquals::TransformEquals(SketchObject *first, SketchObject *second) :
+TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen) :
     ObjectForceObserver(), pairsList(), transform(vtkSmartPointer<vtkTransform>::New()),
-    masterPairIdx(-1), mode(TransformEquals::POSITION_COPIES)
+    masterPairIdx(-1), transformEqualsGroupId(gen->getNextGroupId()), mode(TransformEquals::POSITION_COPIES)
 {
     addPair(first,second);
     masterPairIdx = 0;
@@ -22,6 +22,8 @@ bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
     ObjectPair o(first,second);
     first->addForceObserver(this);
     second->addForceObserver(this);
+    second->addToCollisionGroup(first->getPrimaryCollisionGroupNum());
+    second->setPrimaryCollisionGroupNum(transformEqualsGroupId);
     // make the new objects follow the master pair
     if (!pairsList.empty()) {
         vtkSmartPointer<vtkTransform> tfrm = second->getLocalTransform();

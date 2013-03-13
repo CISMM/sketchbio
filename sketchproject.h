@@ -11,7 +11,16 @@
 #include "transformmanager.h"
 #include "worldmanager.h"
 #include "structurereplicator.h"
+#include "transformequals.h"
 
+/*
+ *
+ * This class encapsulates all the data about what the user has done.  This allows these objects to be
+ * swapped out at runtime so that projects can be saved and loaded.  Also, all data that is saved as part
+ * of the project state must be in this class.  Each project has a directory where it copies all model
+ * files that are added to it.
+ *
+ */
 class SketchProject
 {
 public:
@@ -41,8 +50,14 @@ public:
     const TransformManager *getTransformManager() const;
     // get world manager
     const WorldManager *getWorldManager() const;
+    // get replicas
     const QList<StructureReplicator *> *getReplicas() const;
+    // get transform equals objects (or more things added later, not sure)
+    const QList<TransformEquals *> *getTransformOps() const;
+    // number of replicas
     int getNumberOfReplications() const;
+    // number of transform equals (or more stuff... see comment on getTransformOps())
+    int getNumberOfTransformOps() const;
     // gets the directory path for this project (absolute path)
     QString getProjectDir() const;
 
@@ -61,6 +76,8 @@ public:
     SpringConnection *addSpring(SpringConnection *spring);
     // for structure replication chains
     StructureReplicator *addReplication(SketchObject *o1, SketchObject *o2, int numCopies);
+    // for transform equals
+    TransformEquals *addTransformEquals(SketchObject *o1, SketchObject *o2);
 private:
     // helper functions
     // input related functions
@@ -75,6 +92,7 @@ private:
     TransformManager *transforms;
     WorldManager *world;
     QList<StructureReplicator *> replicas;
+    QList<TransformEquals *> transformOps;
 
     // project dir
     QDir *projectDir;
@@ -111,6 +129,14 @@ inline const QList<StructureReplicator *> *SketchProject::getReplicas() const {
 
 inline int SketchProject::getNumberOfReplications() const {
     return replicas.size();
+}
+
+inline const QList<TransformEquals *> *SketchProject::getTransformOps() const {
+    return &transformOps;
+}
+
+inline int SketchProject::getNumberOfTransformOps() const {
+    return transformOps.size();
 }
 
 #endif // SKETCHPROJECT_H

@@ -2,6 +2,7 @@
 #define TRANSFORMEQUALS_H
 
 #include <sketchobject.h>
+#include <groupidgenerator.h>
 #include <QList>
 
 /*
@@ -24,7 +25,7 @@ typedef struct ObjectPair {
 class TransformEquals : public ObjectForceObserver
 {
 public:
-    TransformEquals(SketchObject *first, SketchObject *second);
+    TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen);
     virtual ~TransformEquals() {}
     // have to check if there are multiple TransformEquals
     // affecting the object
@@ -47,6 +48,7 @@ private:
     QList<ObjectPair> pairsList;
     vtkSmartPointer<vtkTransform> transform;
     int masterPairIdx; // index in pairsList of the pair currently defining the transform
+    int transformEqualsGroupId;
     EditMode mode;
 };
 

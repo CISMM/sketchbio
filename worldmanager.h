@@ -6,6 +6,7 @@
 #include "sketchobject.h"
 #include "modelmanager.h"
 #include "springconnection.h"
+#include "groupidgenerator.h"
 #include <physicsstrategy.h>
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
@@ -44,11 +45,18 @@ namespace CollisionMode {
  * collision tests.
  */
 
-class WorldManager
+class WorldManager : public GroupIdGenerator
 {
 public:
     WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform);
     virtual ~WorldManager();
+
+    /*******************************************************************
+     *
+     * Gets the next collision group number
+     *
+     *******************************************************************/
+    virtual int getNextGroupId();
 
     /*******************************************************************
      *

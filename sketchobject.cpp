@@ -8,7 +8,7 @@
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
     parent(NULL),
-    primaryCollisionGroup(OBJECT_HAS_NO_GROUP),
+    collisionGroups(),
     localTransformPrecomputed(false),
     localTransformDefiningPosition(false),
     observers()
@@ -131,12 +131,25 @@ int SketchObject::getPrimaryCollisionGroupNum() {
     if (parent != NULL) {
         return parent->getPrimaryCollisionGroupNum();
     }
-    return primaryCollisionGroup;
+    if (collisionGroups.empty()) {
+        return OBJECT_HAS_NO_GROUP;
+    } else {
+        return collisionGroups[0];
+    }
 }
 
 //#########################################################################
 void SketchObject::setPrimaryCollisionGroupNum(int num) {
-    primaryCollisionGroup = num;
+    if (collisionGroups.contains(num)) {
+        collisionGroups.removeOne(num);
+    }
+    collisionGroups.prepend(num);
+}
+//#########################################################################
+void SketchObject::addToCollisionGroup(int num) {
+    if (collisionGroups.contains(num) || num == OBJECT_HAS_NO_GROUP)
+        return;
+    collisionGroups.append(num);
 }
 
 //#########################################################################
@@ -144,7 +157,11 @@ bool SketchObject::isInCollisionGroup(int num) const {
     if (parent != NULL) {
         return parent->isInCollisionGroup(num);
     }
-    return (num != OBJECT_HAS_NO_GROUP) ? num == primaryCollisionGroup: false;
+    return collisionGroups.contains(num);
+}
+//#########################################################################
+void SketchObject::removeFromCollisionGroup(int num) {
+    collisionGroups.removeAll(num);
 }
 //#########################################################################
 vtkTransform *SketchObject::getLocalTransform() {

@@ -35,7 +35,7 @@ physicsstrategy.cpp transformequals.cpp)
 SET(SimpleViewUI SimpleView.ui)
 SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h modelmanager.h
 sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
-projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h)
+projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )

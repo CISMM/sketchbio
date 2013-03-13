@@ -107,7 +107,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         project->addObject(object2);
         project->addObject(object3);
         project->addObject(object4);
-        eq = new TransformEquals(object1,object2);
+        eq = project->addTransformEquals(object1,object2);
         eq->addPair(object3,object4);
         if (false) {
             // creating springs
