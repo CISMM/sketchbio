@@ -26,8 +26,20 @@ class TransformEquals : public ObjectForceObserver
 public:
     TransformEquals(SketchObject *first, SketchObject *second);
     virtual ~TransformEquals() {}
-    void addPair(SketchObject *first, SketchObject *second); // have to check if there are multiple TransformEquals
-                                                                // affecting the object
+    // have to check if there are multiple TransformEquals
+    // affecting the object
+    // also, object should not be both first and second object in separate pairs of the transformequals...
+    // causes a circular dependency between transformations
+    // returns true if the objects were added, false if they failed the above test
+    bool addPair(SketchObject *first, SketchObject *second);
+    // remove pairs
+    void removePairAt(int i);
+    void removePair(SketchObject *first, SketchObject *second);
+    void removePairByFirst(SketchObject *first);
+    void removePairBySecond(SketchObject *second);
+    // get list of pairs
+    const QList<ObjectPair> *getPairsList() const;
+    // update transforms when force applied to an object in one of the pairs
     virtual void objectPushed(SketchObject *obj);
 private:
     QList<ObjectPair> pairsList;
