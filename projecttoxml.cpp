@@ -215,6 +215,8 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
         QString modelId = "#" + modelIds.constFind(object->getModel()).value();
         child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
     }
+    // Current thoughts: collision groups should be recreated from effects placed on objects being recreated.
+    //   There is no reason that they should need to be saved.
 
     const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
     if (rObj != NULL) {
