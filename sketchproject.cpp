@@ -101,17 +101,10 @@ SketchProject::SketchProject(vtkRenderer *r,
 }
 
 SketchProject::~SketchProject() {
-    for (QMutableListIterator<StructureReplicator *> it(replicas); it.hasNext();) {
-        StructureReplicator *rep = it.next();
-        it.setValue((StructureReplicator *) NULL);
-        delete rep;
-    }
-    for (QMutableListIterator<TransformEquals *> it(transformOps); it.hasNext();) {
-        TransformEquals *rep = it.next();
-        it.setValue((TransformEquals *) NULL);
-        delete rep;
-    }
+    qDeleteAll(replicas);
     replicas.clear();
+    qDeleteAll(transformOps);
+    transformOps.clear();
     delete leftHand;
     leftHand = NULL;
     delete rightHand;

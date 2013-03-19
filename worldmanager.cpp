@@ -48,20 +48,14 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
 //##################################################################################################
 //##################################################################################################
 WorldManager::~WorldManager() {
-    for (QMutableListIterator<SketchObject *> it(objects); it.hasNext();) {
-        SketchObject *obj = it.next();
-        it.setValue((SketchObject *)NULL);
-        delete obj;
-    }
-    for (QMutableListIterator<SpringConnection *> it(connections); it.hasNext();) {
-        SpringConnection *spring = it.next();
-        it.setValue((SpringConnection *)NULL);
-        delete spring;
-    }
-    clearLeftHandSprings();
-    clearRightHandSprings();
-    objects.clear();
+    qDeleteAll(connections);
+    qDeleteAll(lHand);
+    qDeleteAll(rHand);
+    qDeleteAll(objects);
     connections.clear();
+    lHand.clear();
+    rHand.clear();
+    objects.clear();
 }
 
 //##################################################################################################
