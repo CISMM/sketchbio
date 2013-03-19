@@ -2,6 +2,7 @@
 #include <sketchtests.h>
 
 #include <QDebug>
+#include <QScopedPointer>
 
 #include <vtkSphereSource.h>
 #include <vtkSmartPointer.h>
@@ -123,8 +124,8 @@ inline int testNewModelInstance(ModelInstance *obj) {
 //#########################################################################
 // tests if the ObjectGroup was properly initialized by the constructor
 inline int testNewObjectGroup() {
-    ObjectGroup *obj = new ObjectGroup();
-    int errors = testNewSketchObject(obj);
+    QScopedPointer<ObjectGroup> obj(new ObjectGroup());
+    int errors = testNewSketchObject(obj.data());
     if (obj->numInstances() != 0) {
         errors++;
         qDebug() << "Group does not have correct number of instances";
@@ -136,7 +137,6 @@ inline int testNewObjectGroup() {
         errors++;
         qDebug() << "Group already contains something.";
     }
-    delete obj;
     return errors;
 }
 
@@ -368,8 +368,8 @@ inline SketchModel *getSphereModel() {
 inline int testObjectGroupActions() {
     ObjectGroup grp, grp2;
     int errors = testSketchObjectActions(&grp2);
-    SketchModel *m = getSphereModel();
-    ModelInstance *a = new ModelInstance(m), *b = new ModelInstance(m), *c = new ModelInstance(m);
+    QScopedPointer<SketchModel> m(getSphereModel());
+    ModelInstance *a = new ModelInstance(m.data()), *b = new ModelInstance(m.data()), *c = new ModelInstance(m.data());
     q_vec_type va = {2,0,0}, vb = {0,4,0}, vc = {0,-1,-5};
     q_vec_type v1 = {0,0,1}, v2, v3;
     q_type q1, q2, q3, qtmp;
@@ -503,7 +503,7 @@ inline int testObjectGroupActions() {
     }
     // check combination of move, rotate, add (group orientation should reset, but net rotation of
     //         objects should not change)
-    ModelInstance *d = new ModelInstance(m);
+    ModelInstance *d = new ModelInstance(m.data());
     q_type idQ = Q_ID_QUAT;
     q_vec_type oldCtr;
     grp.getPosition(oldCtr);
@@ -597,7 +597,6 @@ inline int testObjectGroupActions() {
     }
     delete b; // object group deletes everything in it... the only one we need to worry about it b
                 // since we remove b to test the remove function
-    delete m;
     return errors;
 }
 
@@ -635,19 +634,17 @@ inline int testObjectGroupSubGroup() {
 //#########################################################################
 inline int testModelInstance() {
     // set up
-    SketchModel *model = getSphereModel();
-    ModelInstance *obj = new ModelInstance(model);
+    QScopedPointer<SketchModel> model(getSphereModel());
+    QScopedPointer<ModelInstance> obj(new ModelInstance(model.data()));
     int errors = 0;
 
     // test that a new ModelInstance is right
-    errors += testNewModelInstance(obj);
-    errors += testModelInstanceActions(obj);
+    errors += testNewModelInstance(obj.data());
+    errors += testModelInstanceActions(obj.data());
     // maybe
     // testCollisions(obj,obj2);
 
     // clean up
-    delete obj;
-    delete model;
     qDebug() << "Found " << errors << " errors in ModelInstance.";
 
     return errors;

@@ -257,8 +257,8 @@ int testSave1() {
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    SketchProject *proj1 = new SketchProject(r1,a,b);
-    SketchProject *proj2 = new SketchProject(r2,a,b);
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -269,14 +269,14 @@ int testSave1() {
     q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
     SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
 
-    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    ProjectToXML::xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2.data(),root);
 
-    compareNumbers(proj1,proj2,retVal);
+    compareNumbers(proj1.data(),proj2.data(),retVal);
     const SketchObject *o2 = proj2->getWorldManager()->getObjectIterator().next();
     compareObjects(o1,o2,retVal);
 
@@ -285,8 +285,6 @@ int testSave1() {
     }
 
     root->Delete();
-    delete proj1;
-    delete proj2;
     return retVal;
 }
 
@@ -297,8 +295,8 @@ int testSave2() {
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    SketchProject *proj1 = new SketchProject(r1,a,b);
-    SketchProject *proj2 = new SketchProject(r2,a,b);
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -312,23 +310,21 @@ int testSave2() {
     q_mult(orient1,orient1,orient1);
     proj1->addObject(m1,pos1,orient1);
 
-    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    ProjectToXML::xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2.data(),root);
 
-    compareNumbers(proj1,proj2,retVal);
-    compareWorldObjects(proj1,proj2,retVal);
+    compareNumbers(proj1.data(),proj2.data(),retVal);
+    compareWorldObjects(proj1.data(),proj2.data(),retVal);
 
     if (retVal == 0) {
         cout << "Passed test 2" << endl;
     }
 
     root->Delete();
-    delete proj1;
-    delete proj2;
     return retVal;
 }
 
@@ -338,8 +334,8 @@ int testSave3() {
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    SketchProject *proj1 = new SketchProject(r1,a,b);
-    SketchProject *proj2 = new SketchProject(r2,a,b);
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -355,15 +351,15 @@ int testSave3() {
     proj1->addReplication(o1,o2,12);
 
 
-    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    ProjectToXML::xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2.data(),root);
 
-    compareNumbers(proj1,proj2,retVal);
-    compareWorldObjects(proj1,proj2,retVal);
+    compareNumbers(proj1.data(),proj2.data(),retVal);
+    compareWorldObjects(proj1.data(),proj2.data(),retVal);
     compareReplications(proj1->getReplicas()->at(0),proj2->getReplicas()->at(0),retVal);
 
     if (retVal == 0) {
@@ -371,8 +367,6 @@ int testSave3() {
     }
 
     root->Delete();
-    delete proj1;
-    delete proj2;
     return retVal;
 }
 
@@ -382,8 +376,8 @@ int testSave4() {
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    SketchProject *proj1 = new SketchProject(r1,a,b);
-    SketchProject *proj2 = new SketchProject(r2,a,b);
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -405,15 +399,15 @@ int testSave4() {
     proj1->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),3.56*sqrt(11.0),p1,p2); // sqrt(2)
 
 
-    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    ProjectToXML::xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2.data(),root);
 
-    compareNumbers(proj1,proj2,retVal);
-    compareWorldObjects(proj1,proj2,retVal);
+    compareNumbers(proj1.data(),proj2.data(),retVal);
+    compareWorldObjects(proj1.data(),proj2.data(),retVal);
     compareReplications(proj1->getReplicas()->at(0),proj2->getReplicas()->at(0),retVal);
     compareSprings(proj1->getWorldManager()->getSpringsIterator().next(),
                    proj2->getWorldManager()->getSpringsIterator().next(),retVal,true);
@@ -423,8 +417,6 @@ int testSave4() {
     }
 
     root->Delete();
-    delete proj1;
-    delete proj2;
     return retVal;
 }
 
@@ -434,8 +426,8 @@ int testSave6() {
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    SketchProject *proj1 = new SketchProject(r1,a,b);
-    SketchProject *proj2 = new SketchProject(r2,a,b);
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -478,15 +470,15 @@ int testSave6() {
     proj1->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),3.56*sqrt(11.0),p1,p2); // sqrt(2)
 
 
-    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1);
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    ProjectToXML::xmlToProject(proj2,root);
+    ProjectToXML::xmlToProject(proj2.data(),root);
 
-    compareNumbers(proj1,proj2,retVal);
-    compareWorldObjects(proj1,proj2,retVal);
+    compareNumbers(proj1.data(),proj2.data(),retVal);
+    compareWorldObjects(proj1.data(),proj2.data(),retVal);
     compareReplications(proj1->getReplicas()->at(0),proj2->getReplicas()->at(0),retVal);
     compareSprings(proj1->getWorldManager()->getSpringsIterator().next(),
                    proj2->getWorldManager()->getSpringsIterator().next(),retVal,true);
@@ -496,8 +488,6 @@ int testSave6() {
     }
 
     root->Delete();
-    delete proj1;
-    delete proj2;
     return retVal;
 }
 
@@ -506,8 +496,9 @@ int testSave5() {
     bool a[NUM_HYDRA_BUTTONS];
     double b[NUM_HYDRA_ANALOGS];
     vtkSmartPointer<vtkRenderer> r = vtkSmartPointer<vtkRenderer>::New();
-    SketchProject *project = new SketchProject(r,a,b);
+    QScopedPointer<SketchProject> project(new SketchProject(r,a,b)), project2(new SketchProject(r,a,b));
     project->setProjectDir("test/test1");
+    project2->setProjectDir("test/test1");
 
     SketchModel *m1 = project->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
@@ -529,20 +520,19 @@ int testSave5() {
     QDir dir = project->getProjectDir();
     QString file = dir.absoluteFilePath("project.xml");
 
-    vtkXMLDataElement *b4 = ProjectToXML::projectToXML(project);
+    vtkXMLDataElement *b4 = ProjectToXML::projectToXML(project.data());
     vtkIndent indent(0);
     vtkXMLUtilities::WriteElementToFile(b4,file.toStdString().c_str(),&indent);
 
     vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
 
-    if (ProjectToXML::xmlToProject(project,root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
+    if (ProjectToXML::xmlToProject(project2.data(),root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
         cout << "Passed test 5" << endl;
     } else {
         return 1;
         cout << "Failed to load" << endl;
     }
     root->Delete();
-    delete project;
     return 0;
 }
 
