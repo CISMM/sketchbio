@@ -3,6 +3,9 @@
 ObjectPair::ObjectPair(SketchObject *first, SketchObject *second) :
     o1(first), o2(second)
 {}
+ObjectPair::ObjectPair() :
+    o1(NULL), o2(NULL)
+{}
 
 TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen) :
     ObjectForceObserver(), pairsList(), transform(vtkSmartPointer<vtkTransform>::New()),
@@ -51,14 +54,13 @@ inline void setObjectBackToNormal(SketchObject *obj) {
 
 void TransformEquals::removePairAt(int i) {
     setObjectBackToNormal(pairsList[i].o2);
-    pairsList.removeAt(i);
+    pairsList.remove(i);
 }
 
 void TransformEquals::removePair(SketchObject *first, SketchObject *second) {
     for (int i = 0; i < pairsList.size(); i++) {
         if (pairsList[i].o1 == first && pairsList[i].o2 == second) {
-            setObjectBackToNormal(pairsList[i].o2);
-            pairsList.removeAt(i);
+            removePairAt(i);
         }
     }
 }
@@ -66,8 +68,7 @@ void TransformEquals::removePair(SketchObject *first, SketchObject *second) {
 void TransformEquals::removePairByFirst(SketchObject *first) {
     for (int i = 0; i < pairsList.size(); i++) {
         if (pairsList[i].o1 == first) {
-            setObjectBackToNormal(pairsList[i].o2);
-            pairsList.removeAt(i);
+            removePairAt(i);
         }
     }
 }
@@ -75,13 +76,12 @@ void TransformEquals::removePairByFirst(SketchObject *first) {
 void TransformEquals::removePairBySecond(SketchObject *second) {
     for (int i = 0; i < pairsList.size(); i++) {
         if (pairsList[i].o2 == second) {
-            setObjectBackToNormal(pairsList[i].o2);
-            pairsList.removeAt(i);
+            removePairAt(i);
         }
     }
 }
 
-const QList<ObjectPair> *TransformEquals::getPairsList() const {
+const QVector<ObjectPair> *TransformEquals::getPairsList() const {
     return &pairsList;
 }
 

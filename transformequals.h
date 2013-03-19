@@ -3,7 +3,7 @@
 
 #include <sketchobject.h>
 #include <groupidgenerator.h>
-#include <QList>
+#include <QVector>
 
 /*
  * This is a simple structure to associate a pair of SketchObjects together for use with the TransformEquals class
@@ -12,6 +12,7 @@ typedef struct ObjectPair {
     SketchObject *o1;
     SketchObject *o2;
     ObjectPair(SketchObject *first, SketchObject *second);
+    ObjectPair();
 } ObjectPair;
 
 /*
@@ -39,13 +40,13 @@ public:
     void removePairByFirst(SketchObject *first);
     void removePairBySecond(SketchObject *second);
     // get list of pairs
-    const QList<ObjectPair> *getPairsList() const;
+    const QVector<ObjectPair> *getPairsList() const;
     // update transforms when force applied to an object in one of the pairs
     virtual void objectPushed(SketchObject *obj);
 private:
     enum EditMode { POSITION_COPIES, EDIT_TRANSFORM };
     void setupTransform(int newMaster);
-    QList<ObjectPair> pairsList;
+    QVector<ObjectPair> pairsList;
     vtkSmartPointer<vtkTransform> transform;
     int masterPairIdx; // index in pairsList of the pair currently defining the transform
     int transformEqualsGroupId;

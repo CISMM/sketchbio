@@ -3,6 +3,8 @@
 
 #include <map>
 #include <QList>
+#include <QVector>
+#include <QSharedPointer>
 #include "sketchobject.h"
 #include "modelmanager.h"
 #include "springconnection.h"
@@ -30,12 +32,16 @@ namespace CollisionMode {
      * should trigger them.
      *
      *******************************************************************/
-    inline void populateStrategies(QList<PhysicsStrategy *> &strategies) {
+    inline void populateStrategies(QVector<QSharedPointer<PhysicsStrategy> > &strategies) {
         strategies.clear();
-        strategies.append(new SimplePhysicsStrategy());
-        strategies.append(new PoseModePhysicsStrategy());
-        strategies.append(new BinaryCollisionSearchStrategy());
-        strategies.append(new PoseModePCAPhysicsStrategy());
+        QSharedPointer<PhysicsStrategy> s1(new SimplePhysicsStrategy());
+        strategies.append(s1);
+        QSharedPointer<PhysicsStrategy> s2(new PoseModePhysicsStrategy());
+        strategies.append(s2);
+        QSharedPointer<PhysicsStrategy> s3(new BinaryCollisionSearchStrategy());
+        strategies.append(s3);
+        QSharedPointer<PhysicsStrategy> s4(new PoseModePCAPhysicsStrategy());
+        strategies.append(s4);
     }
 }
 
@@ -348,7 +354,7 @@ private:
 
     QList<SketchObject *> objects;
     QList<SpringConnection *> connections, lHand, rHand;
-    QList<PhysicsStrategy *> strategies;
+    QVector<QSharedPointer<PhysicsStrategy> > strategies;
     int nextIdx;
     vtkSmartPointer<vtkRenderer> renderer;
     int lastCapacityUpdate;

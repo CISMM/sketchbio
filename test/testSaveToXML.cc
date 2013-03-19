@@ -524,6 +524,8 @@ int testSave5() {
     vtkIndent indent(0);
     vtkXMLUtilities::WriteElementToFile(b4,file.toStdString().c_str(),&indent);
 
+    b4->Delete();
+
     vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
 
     if (ProjectToXML::xmlToProject(project2.data(),root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
