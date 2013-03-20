@@ -42,8 +42,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     timer(new QTimer()),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer(),buttonDown,analog)),
-    eq(NULL)
+    project(new SketchProject(renderer.GetPointer(),buttonDown,analog))
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
@@ -107,8 +106,8 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         project->addObject(object2);
         project->addObject(object3);
         project->addObject(object4);
-        eq = project->addTransformEquals(object1,object2);
-        eq->addPair(object3,object4);
+        QWeakPointer<TransformEquals> eq = project->addTransformEquals(object1,object2);
+        eq.data()->addPair(object3,object4); // TODO -- hack don't do this
         if (false) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
@@ -152,7 +151,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
 }
 
 SimpleView::~SimpleView() {
-    delete eq;
     delete project;
     delete collisionModeGroup;
     delete timer;

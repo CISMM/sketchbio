@@ -103,9 +103,9 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
 
 void compareObjectLists(const QList<SketchObject *> *list1, const QList<SketchObject *> *list2,
                         int &retVal, bool printDiffs) {
-    bool *used = new bool[list2->size()];
+    QScopedPointer<bool, QScopedPointerArrayDeleter<bool> > used(new bool[list2->size()]);
     for (int i = 0; i < list2->size(); i++) {
-        used[i] = false;
+        used.data()[i] = false;
     }
     for (QListIterator<SketchObject *> it1(*list1); it1.hasNext();) {
         const SketchObject *n1 = it1.next();
@@ -113,11 +113,11 @@ void compareObjectLists(const QList<SketchObject *> *list1, const QList<SketchOb
         bool failed = true;
         for (QListIterator<SketchObject *> it2(*list2); it2.hasNext();i++) {
             const SketchObject *n2 = it2.next();
-            if (!used[i]) {
+            if (!used.data()[i]) {
                 int diffs = 0;
                 compareObjects(n1,n2,diffs,true);
                 if (diffs == 0) {
-                    used[i] = true;
+                    used.data()[i] = true;
                     failed = false;
                     break;
                 }
@@ -129,7 +129,38 @@ void compareObjectLists(const QList<SketchObject *> *list1, const QList<SketchOb
         }
     }
 
-    delete[] used;
+}
+
+void compareTransformOps(QSharedPointer<TransformEquals> t1, QSharedPointer<TransformEquals> t2,
+                         int &retVal, bool printDiffs) {
+    const QVector<ObjectPair> *l1 = t1->getPairsList(), *l2 = t2->getPairsList();
+    if (l1->size() != l2->size()) {
+        retVal++;
+        if (printDiffs) cout << "Different numbers of object pairs in transform equals." << endl;
+        return;
+    }
+    QScopedPointer<bool, QScopedPointerArrayDeleter<bool> > used(new bool[l2->size()]);
+    for (int i = 0; i < l2->size(); i++) {
+        used.data()[i] = false;
+    }
+    for (int i = 0; i < l1->size(); i++) {
+        bool failed = true;
+        for (int j = 0; j < l2->size(); j++) {
+            if (!used.data()[j]) {
+                int diffs = 0;
+                compareObjects(l1->at(i).o1,l2->at(j).o1,diffs,false);
+                compareObjects(l1->at(i).o2,l2->at(j).o2,diffs,false);
+                if (diffs == 0) {
+                    failed = false;
+                    used.data()[i] = true;
+                }
+            }
+        }
+        if (failed) {
+            retVal++;
+            if (printDiffs) cout << "Could not match object pair" << endl;
+        }
+    }
 }
 
 void compareWorldObjects(SketchProject *proj1, SketchProject *proj2, int &retVal) {
@@ -538,6 +569,68 @@ int testSave5() {
     return 0;
 }
 
+int testSave7() {
+    bool a[NUM_HYDRA_BUTTONS];
+    double b[NUM_HYDRA_ANALOGS];
+    int retVal = 0;
+    vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    proj1->setProjectDir("test/test1");
+    proj2->setProjectDir("test/test1");
+
+    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
+    q_vec_scale(pos1,sqrt(Q_PI),pos1);
+    q_type orient1;
+    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
+    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
+    pos1[Q_X] += 2 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
+    SketchObject *o3 = new ModelInstance(m1);
+    pos1[Q_Z] += 4 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    o3->setPosAndOrient(pos1,orient1);
+    proj1->addObject(o3);
+    SketchObject *o4 = new ModelInstance(m1);
+    pos1[Q_Z] += 4 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    o4->setPosAndOrient(pos1,orient1);
+    proj1->addObject(o4);
+    SketchObject *o5 = new ModelInstance(m1);
+    pos1[Q_Z] += 4 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    o5->setPosAndOrient(pos1,orient1);
+    proj1->addObject(o5);
+
+    QWeakPointer<TransformEquals> eq = proj1->addTransformEquals(o1,o2);
+    QSharedPointer<TransformEquals> sEq(eq);
+    sEq->addPair(o3,o4);
+
+
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
+
+//    vtkIndent indent(0);
+//    vtkXMLUtilities::FlattenElement(root,cout,&indent);
+
+    ProjectToXML::xmlToProject(proj2.data(),root);
+
+    compareNumbers(proj1.data(),proj2.data(),retVal);
+    compareWorldObjects(proj1.data(),proj2.data(),retVal);
+    compareTransformOps(proj1->getTransformOps()->first(),
+                        proj2->getTransformOps()->first(),retVal,true);
+
+    if (retVal == 0) {
+        cout << "Passed test 7" << endl;
+    }
+
+    root->Delete();
+    return retVal;
+}
+
+
 int main() {
-    return testSave1() + testSave2() + testSave3() + testSave4() + testSave5() + testSave6();
+    return testSave1() + testSave2() + testSave3() + testSave4() + testSave5() + testSave6() + testSave7();
 }

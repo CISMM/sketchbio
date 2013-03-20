@@ -47,6 +47,9 @@ private: // no other code should call these (this is the reason for making this 
     static vtkXMLDataElement *springToXML(const SpringConnection *spring,
                                           const QHash<const SketchObject *, QString> &objectIds);
 
+    static vtkXMLDataElement *transformOpListToXML(const QVector<QSharedPointer<TransformEquals> > *ops,
+                                                   const QHash<const SketchObject *, QString> &objectIds);
+
     // converts the older file to the current xml project format
     // returns success unless something goes wrong in conversion
     static XML_Read_Status convertToCurrent(vtkXMLDataElement *root);
@@ -87,6 +90,12 @@ private: // no other code should call these (this is the reason for making this 
 
     static XML_Read_Status xmlToSpring(SketchProject *proj, vtkXMLDataElement *elem,
                                        QHash<QString, SketchObject *> &objectIds);
+
+    static XML_Read_Status xmlToTransformOpList(SketchProject *proj, vtkXMLDataElement *elem,
+                                            QHash<QString, SketchObject *> &objectIds);
+
+    static XML_Read_Status xmlToTransformOp(SketchProject *proj, vtkXMLDataElement *elem,
+                                            QHash<QString, SketchObject *> &objectIds);
 };
 
 #endif // PROJECTTOXML_H

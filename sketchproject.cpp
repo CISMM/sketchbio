@@ -103,18 +103,10 @@ SketchProject::SketchProject(vtkRenderer *r,
 SketchProject::~SketchProject() {
     qDeleteAll(replicas);
     replicas.clear();
-    qDeleteAll(transformOps);
-    transformOps.clear();
     delete leftHand;
     leftHand = NULL;
     delete rightHand;
     rightHand = NULL;
-    delete world;
-    world = NULL;
-    delete transforms;
-    transforms = NULL;
-    delete models;
-    models = NULL;
     if (projectDir != NULL) {
         delete projectDir;
     }
@@ -254,16 +246,16 @@ SpringConnection *SketchProject::addSpring(SpringConnection *spring) {
 }
 
 StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObject *o2, int numCopies) {
-    StructureReplicator *rep = new StructureReplicator(o1,o2,world);
+    StructureReplicator *rep = new StructureReplicator(o1,o2,world.data());
     replicas.append(rep);
     rep->setNumShown(numCopies);
     return rep;
 }
 
-TransformEquals *SketchProject::addTransformEquals(SketchObject *o1, SketchObject *o2) {
-    TransformEquals *trans = new TransformEquals(o1,o2,world);
+QWeakPointer<TransformEquals> SketchProject::addTransformEquals(SketchObject *o1, SketchObject *o2) {
+    QSharedPointer<TransformEquals> trans(new TransformEquals(o1,o2,world.data()));
     transformOps.append(trans);
-    return trans;
+    return trans.toWeakRef();
 }
 
 void SketchProject::handleInput() {

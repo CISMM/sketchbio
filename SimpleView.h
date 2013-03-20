@@ -124,7 +124,6 @@ private:
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   SketchProject *project;
-  TransformEquals *eq;
 };
 
  

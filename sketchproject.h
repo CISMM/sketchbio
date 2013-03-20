@@ -3,6 +3,9 @@
 
 #include <vtkRenderer.h>
 #include <QVector>
+#include <QSharedPointer>
+#include <QScopedPointer>
+#include <QWeakPointer>
 #include <QList>
 #include <QString>
 #include <QDir>
@@ -53,7 +56,7 @@ public:
     // get replicas
     const QList<StructureReplicator *> *getReplicas() const;
     // get transform equals objects (or more things added later, not sure)
-    const QList<TransformEquals *> *getTransformOps() const;
+    const QVector<QSharedPointer<TransformEquals> > *getTransformOps() const;
     // number of replicas
     int getNumberOfReplications() const;
     // number of transform equals (or more stuff... see comment on getTransformOps())
@@ -77,7 +80,7 @@ public:
     // for structure replication chains
     StructureReplicator *addReplication(SketchObject *o1, SketchObject *o2, int numCopies);
     // for transform equals
-    TransformEquals *addTransformEquals(SketchObject *o1, SketchObject *o2);
+    QWeakPointer<TransformEquals> addTransformEquals(SketchObject *o1, SketchObject *o2);
 private:
     // helper functions
     // input related functions
@@ -87,23 +90,28 @@ private:
 
     // fields
     vtkSmartPointer<vtkRenderer> renderer;
-    // managers
-    ModelManager *models;
-    TransformManager *transforms;
-    WorldManager *world;
+    // managers -- these are owned by the project, raw pointers may be passed to other places, but
+    //              will be invalid once the project is deleted (if you're using these permanently outside
+    //              the project, we have bigger problems anyway)
+    QScopedPointer<ModelManager> models;
+    QScopedPointer<TransformManager> transforms;
+    QScopedPointer<WorldManager> world;
+    // operators on objects -- these are owned here... but not sure if I can do lists of ScopedPointers
     QList<StructureReplicator *> replicas;
-    QList<TransformEquals *> transformOps;
+    QVector<QSharedPointer<TransformEquals> > transformOps;
 
     // project dir
     QDir *projectDir;
 
-    // user interaction stuff
+    // vrpn button/analog data -- not owned here, so raw pointer ok
     const bool *buttonDown;
     const double *analog;
-    int grabbedWorld;
-    SketchObject *leftHand, *rightHand;
-    double lDist, rDist;
-    SketchObject *lObj, *rObj;
+    // other ui stuff
+    int grabbedWorld; // state of world grabbing
+    SketchObject *leftHand, *rightHand; // the objects for the left and right hand trackers
+    double lDist, rDist; // the distance to the closest object to the (left/right) hand
+    SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
+                                // and right hands respectively
     // outline actors are added to the renderer when the object is close enough to
     // interact with.  The outline mappers are updated whenever the closest object
     // changes (unless another one is currently grabbed).
@@ -112,15 +120,15 @@ private:
 };
 
 inline const ModelManager *SketchProject::getModelManager() const {
-    return models;
+    return models.data();
 }
 
 inline const TransformManager *SketchProject::getTransformManager() const {
-    return transforms;
+    return transforms.data();
 }
 
 inline const WorldManager *SketchProject::getWorldManager() const {
-    return world;
+    return world.data();
 }
 
 inline const QList<StructureReplicator *> *SketchProject::getReplicas() const {
@@ -131,7 +139,7 @@ inline int SketchProject::getNumberOfReplications() const {
     return replicas.size();
 }
 
-inline const QList<TransformEquals *> *SketchProject::getTransformOps() const {
+inline const QVector<QSharedPointer<TransformEquals> > *SketchProject::getTransformOps() const {
     return &transformOps;
 }
 
