@@ -27,7 +27,7 @@ class TransformEquals : public ObjectForceObserver
 {
 public:
     TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen);
-    virtual ~TransformEquals() {}
+    virtual ~TransformEquals();
     // have to check if there are multiple TransformEquals
     // affecting the object
     // also, object should not be both first and second object in separate pairs of the transformequals...

@@ -7,6 +7,17 @@ ObjectPair::ObjectPair() :
     o1(NULL), o2(NULL)
 {}
 
+// inline helper function, sets object back to using its own transform and internal vectors
+inline void setObjectBackToNormal(SketchObject *obj) {
+    q_vec_type pos;
+    q_type orient;
+    obj->getPosition(pos);
+    obj->getOrientation(orient);
+    obj->setLocalTransformDefiningPosition(false);
+    obj->setLocalTransformPrecomputed(false);
+    obj->setPosAndOrient(pos,orient); // transform should be updated now
+}
+
 TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen) :
     ObjectForceObserver(), pairsList(), transform(vtkSmartPointer<vtkTransform>::New()),
     masterPairIdx(-1), transformEqualsGroupId(gen->getNextGroupId()), mode(TransformEquals::POSITION_COPIES)
@@ -14,6 +25,12 @@ TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, Grou
     addPair(first,second);
     masterPairIdx = 0;
     setupTransform(0);
+}
+
+TransformEquals::~TransformEquals() {
+    for (int i = 0; i < pairsList.size(); i++) {
+        setObjectBackToNormal(pairsList[i].o2);
+    }
 }
 
 bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
@@ -39,17 +56,6 @@ bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
     }
     pairsList.append(o);
     return true;
-}
-
-// inline helper function, sets object back to using its own transform and internal vectors
-inline void setObjectBackToNormal(SketchObject *obj) {
-    q_vec_type pos;
-    q_type orient;
-    obj->getPosition(pos);
-    obj->getOrientation(orient);
-    obj->setLocalTransformDefiningPosition(false);
-    obj->setLocalTransformPrecomputed(false);
-    obj->setPosAndOrient(pos,orient); // transform should be updated now
 }
 
 void TransformEquals::removePairAt(int i) {

@@ -123,7 +123,8 @@ vtkXMLDataElement *ProjectToXML::modelToXML(const SketchModel *model, const QStr
     element->SetName(MODEL_ELEMENT_NAME);
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
 
-    // the source of the model TODO - fix filenames to relative, do something about vtk classes...
+    // the source of the model.  note that while it is possible to have models from vtk classes,
+    // they are not handled by the save/load code (at least not very well)
     vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(MODEL_SOURCE_ELEMENT_NAME);
     QString source = model->getDataSource();

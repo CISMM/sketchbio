@@ -2,6 +2,7 @@
 #include <sketchtests.h>
 #include <vtkCubeSource.h>
 #include <QScopedPointer>
+#include <QTime>
 
 #include <iostream>
 
@@ -163,13 +164,13 @@ int test2() {
     q_type idq, rX, rY, rZ, rrX, rrY, rrZ, t1, t2, t3;
     initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);
     QScopedPointer<SketchObject> o1(new ModelInstance(m.data())), o2(new ModelInstance(m.data()));
+    QScopedPointer<SketchObject> o3(new ModelInstance(m.data())), o4(new ModelInstance(m.data()));
     o1->setPosition(p1);
     o2->setPosition(p2);
-    QScopedPointer<GroupIdGenerator> g(new IdGen());
-    QScopedPointer<TransformEquals> eq(new TransformEquals(o1.data(),o2.data(),g.data()));
-    QScopedPointer<SketchObject> o3(new ModelInstance(m.data())), o4(new ModelInstance(m.data()));
     o3->setPosition(p3);
     o4->setPosition(p4);
+    QScopedPointer<GroupIdGenerator> g(new IdGen());
+    QScopedPointer<TransformEquals> eq(new TransformEquals(o1.data(),o2.data(),g.data()));
     // test positioning of second pair
     eq->addPair(o3.data(),o4.data());
     o4->getPosition(tv2);
@@ -259,6 +260,61 @@ int test2() {
     return errors;
 }
 
+int test3() {
+    int errors = 0;
+    QScopedPointer<SketchModel> m(getModel());
+    q_vec_type nv, p1, p2, p3, p4, p5, p6, tv1;
+    q_type idq, rX, rY, rZ, rrX, rrY, rrZ;
+    initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);
+    QScopedPointer<SketchObject> o1(new ModelInstance(m.data())), o2(new ModelInstance(m.data()));
+    QScopedPointer<SketchObject> o3(new ModelInstance(m.data())), o4(new ModelInstance(m.data()));
+    o1->setPosition(p1);
+    o2->setPosition(p2);
+    o3->setPosition(p3);
+    o4->setPosition(p4);
+    QScopedPointer<GroupIdGenerator> g(new IdGen());
+    QScopedPointer<TransformEquals> eq(new TransformEquals(o1.data(),o2.data(),g.data()));
+    eq->addPair(o3.data(),o4.data());
+
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+
+    int order[4];
+    for (int i = 0; i < 4; i++) {
+        order[i] = i;
+    }
+    for (int i = 0; i < 40000; i++) {
+        for (int j = 3; j >= 0; j--) {
+            int r = qrand() % (j+1);
+            int tmp = order[j];
+            order[j] = order[r];
+            order[r] = tmp;
+        }
+        for (int j = 0; j < 3; j++) {
+            SketchObject *obj = NULL;
+            switch(order[j]) {
+            case 0:
+                obj = o1.data();
+                break;
+            case 1:
+                obj = o2.data();
+                break;
+            case 2:
+                obj = o3.data();
+                break;
+            case 3:
+                obj = o4.data();
+                break;
+            }
+            if (obj != NULL) {
+                obj->addForce(p1,p2);
+                obj->getPosition(tv1);
+            }
+        }
+    }
+    return errors;
+}
+
 int main() {
-    return test1() + test2();
+    return test1() + test2() + test3();
 }

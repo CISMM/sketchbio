@@ -607,7 +607,9 @@ int testSave7() {
 
     QWeakPointer<TransformEquals> eq = proj1->addTransformEquals(o1,o2);
     QSharedPointer<TransformEquals> sEq(eq);
-    sEq->addPair(o3,o4);
+    if (sEq) {
+        sEq->addPair(o3,o4);
+    }
 
 
     vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());

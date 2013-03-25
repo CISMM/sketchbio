@@ -175,12 +175,11 @@ void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPo
 }
 //#########################################################################
 void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
-    localTransform->Inverse();
-    localTransform->TransformVector(worldVec,modelVecOut);
-    localTransform->Inverse();
+    localTransform->GetLinearInverse()->TransformVector(worldVec,modelVecOut);
 }
 //#########################################################################
 void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
+    notifyObservers();
     if (parent == NULL) {
         q_vec_add(forceAccum,forceAccum,force);
         q_vec_type tmp, torque;
@@ -195,7 +194,6 @@ void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
         q_vec_add(tmp,position,tmp); // get point in parent coordinate system
         parent->addForce(tmp,force);
     }
-    notifyObservers();
 }
 
 //#########################################################################

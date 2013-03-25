@@ -107,7 +107,10 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         project->addObject(object3);
         project->addObject(object4);
         QWeakPointer<TransformEquals> eq = project->addTransformEquals(object1,object2);
-        eq.data()->addPair(object3,object4); // TODO -- hack don't do this
+        QSharedPointer<TransformEquals> sEq(eq);
+        if (sEq) {
+            sEq->addPair(object3,object4);
+        }
         if (false) {
             // creating springs
             q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
