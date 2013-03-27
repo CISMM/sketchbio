@@ -398,7 +398,7 @@ bool SimpleView::simplifyObjectByName(const QString name)
     // see if we got what we expected.  We look for reports
     // that it saved the file and that it exited normally.
     // XXX This does not guarantee that it saved the file.
-    // can we check return codes in pymol and print an error?
+    // can we check return codes in blender and print an error?
     QByteArray result = blender.readAll();
     if ( !result.contains("OBJ Export time:") ) {
     QMessageBox::warning(NULL, "Error while simplifying", name);
