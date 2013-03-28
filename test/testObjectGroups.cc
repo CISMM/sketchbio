@@ -8,6 +8,7 @@
 #include <vtkSmartPointer.h>
 
 // declare these -- they are at the bottom of the file, but I wanted main at the top
+//                  where I can find it
 int testModelInstance();
 int testObjectGroup();
 
@@ -88,6 +89,18 @@ inline int testNewSketchObject(SketchObject *obj) {
     if (obb == NULL) {
         errors++;
         qDebug() << "Oriented Bounding Box(es) is(/are) null";
+    }
+    if (obj->hasKeyframes()) {
+        errors++;
+        qDebug() << "New object has keyframes";
+    }
+    if (obj->getNumKeyframes() != 0) {
+        errors++;
+        qDebug() << "New object already has "<< obj->getNumKeyframes() << " keyframes?!?";
+    }
+    if (obj->getKeyframes() != NULL) {
+        errors++;
+        qDebug() << "Keyframe map on new object not null";
     }
     // collision group and calculate local transform are likely to be changed
     // in subclasses, so let subclasses handle those tests
@@ -315,11 +328,60 @@ inline int testSketchObjectActions(SketchObject *obj) {
         errors++;
         qDebug() << "Clearing torques failed";
     }
+    // test keyframing
+    obj->addKeyframeForCurrentLocation(3.0);
+    if (!obj->hasKeyframes()) {
+        errors++;
+        qDebug() << "Has keyframes is false when there is a keyframe";
+    }
+    if (obj->getNumKeyframes() != 1) {
+        errors++;
+        qDebug() << "Num keyframes is wrong... 1";
+    }
+    Keyframe f = obj->getKeyframes()->value(3.0);
+    f.getPosition(v2);
+    if (!q_vec_equals(v2,v1)) {
+        errors++;
+        qDebug() << "Keyframe position is wrong";
+    }
+    f.getOrientation(q2);
+    if (!q_equals(q2,q1)) {
+        errors++;
+        qDebug() << "Keyframe orientation is wrong";
+    }
+    obj->setPosAndOrient(v3,q3);
+    obj->addKeyframeForCurrentLocation(5.0);
+    if (obj->getNumKeyframes() != 2) {
+        errors++;
+        qDebug() << "Num keyframes is wrong... 2";
+    }
+    f = obj->getKeyframes()->value(3.0);
+    f.getPosition(v2);
+    if (!q_vec_equals(v2,v1)) {
+        errors++;
+        qDebug() << "Keyframe position is wrong";
+    }
+    f.getOrientation(q2);
+    if (!q_equals(q2,q1)) {
+        errors++;
+        qDebug() << "Keyframe orientation is wrong";
+    }
+    f = obj->getKeyframes()->value(5.0);
+    f.getPosition(v2);
+    if (!q_vec_equals(v2,v3)) {
+        errors++;
+        qDebug() << "Keyframe position is wrong";
+    }
+    f.getOrientation(q2);
+    if (!q_equals(q2,q3)) {
+        errors++;
+        qDebug() << "Keyframe orientation is wrong";
+    }
     return errors;
 }
 
 //#########################################################################
-// tests if the behavioral methods of a ModelInstance are working  this includes
+// tests if the behavioral methods of a ModelInstance are working. this includes
 // get/set methods.  Assumes a newly constructed ModelInstance with no modifications
 // made to it yet.
 inline int testModelInstanceActions(ModelInstance *obj) {

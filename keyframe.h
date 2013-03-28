@@ -11,6 +11,7 @@
 class Keyframe
 {
 public:
+    Keyframe(); // creates a keyframe with all default values
     Keyframe(const q_vec_type pos, const q_type orient, bool visible = true);
     void getPosition(q_vec_type pos) const;
     void getOrientation(q_type orient) const;

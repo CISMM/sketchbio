@@ -106,7 +106,7 @@ public:
     static void localTransformUpdated(SketchObject *obj);
     // methods for accessing and modifying keyframes
     bool hasKeyframes() const;
-    int  numKeyframes() const;
+    int  getNumKeyframes() const;
     const QMap< double, Keyframe > *getKeyframes();
     void addKeyframeForCurrentLocation(double t);
     void removeKeyframeForTime(double t);

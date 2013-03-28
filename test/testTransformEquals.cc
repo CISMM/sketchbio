@@ -283,7 +283,7 @@ int test3() {
     for (int i = 0; i < 4; i++) {
         order[i] = i;
     }
-    for (int i = 0; i < 40000; i++) {
+    for (int i = 0; i < 400; i++) {
         for (int j = 3; j >= 0; j--) {
             int r = qrand() % (j+1);
             int tmp = order[j];

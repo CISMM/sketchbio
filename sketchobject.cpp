@@ -257,11 +257,11 @@ bool SketchObject::isLocalTransformDefiningPosition() {
 
 //#########################################################################
 bool SketchObject::hasKeyframes() const {
-    return keyframes.isNull() || keyframes->empty();
+    return !(keyframes.isNull() || keyframes->empty());
 }
 
 //#########################################################################
-int SketchObject::numKeyframes() const {
+int SketchObject::getNumKeyframes() const {
     if (keyframes.isNull()) {
         return 0;
     } else {
