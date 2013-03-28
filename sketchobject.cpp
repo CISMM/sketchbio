@@ -11,7 +11,8 @@ SketchObject::SketchObject() :
     collisionGroups(),
     localTransformPrecomputed(false),
     localTransformDefiningPosition(false),
-    observers()
+    observers(),
+    keyframes(NULL)
 {
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
@@ -252,6 +253,41 @@ void SketchObject::setLocalTransformDefiningPosition(bool isDefining) {
 //#########################################################################
 bool SketchObject::isLocalTransformDefiningPosition() {
     return localTransformDefiningPosition;
+}
+
+//#########################################################################
+bool SketchObject::hasKeyframes() const {
+    return keyframes.isNull() || keyframes->empty();
+}
+
+//#########################################################################
+int SketchObject::numKeyframes() const {
+    if (keyframes.isNull()) {
+        return 0;
+    } else {
+        return keyframes->size();
+    }
+}
+
+//#########################################################################
+const QMap< double, Keyframe > *SketchObject::getKeyframes() {
+    return keyframes.data();
+}
+
+//#########################################################################
+void SketchObject::addKeyframeForCurrentLocation(double t) {
+    Keyframe frame(position, orientation);
+    if (keyframes.isNull()) {
+        keyframes.reset(new QMap< double, Keyframe >());
+    }
+    keyframes->insert(t,frame);
+}
+
+//#########################################################################
+void SketchObject::removeKeyframeForTime(double t) {
+    if (keyframes->contains(t)) {
+        keyframes->remove(t);
+    }
 }
 
 //#########################################################################

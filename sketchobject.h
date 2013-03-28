@@ -8,6 +8,9 @@
 #include <quat.h>
 #include <sketchmodel.h>
 #include <QList>
+#include <QScopedPointer>
+#include <QMap>
+#include <keyframe.h>
 
 // forward declare the collision handler so it can be passed to collide
 class PhysicsStrategy;
@@ -101,6 +104,12 @@ public:
     bool isLocalTransformDefiningPosition();
     // to allow localTransformUpdated to be called from subclasses on other SketchObjects...
     static void localTransformUpdated(SketchObject *obj);
+    // methods for accessing and modifying keyframes
+    bool hasKeyframes() const;
+    int  numKeyframes() const;
+    const QMap< double, Keyframe > *getKeyframes();
+    void addKeyframeForCurrentLocation(double t);
+    void removeKeyframeForTime(double t);
 protected: // methods
     // to deal with local transformation - recomputes from position and orientation unless
     // isLocalTransformPrecomputed is true
@@ -124,6 +133,10 @@ private: // fields
     QList<int> collisionGroups;
     bool localTransformPrecomputed, localTransformDefiningPosition;
     QList<ObjectForceObserver *> observers;
+    // this smart pointer contains the keyframes of the object.  If the pointer it contains is null, then
+    // there are no keyframes.  Otherwise, the map it points to is a mapping from time to frame where frame
+    // contains all the information about what happens at that time (position, orientation, visibility, etc.)
+    QScopedPointer< QMap< double, Keyframe > > keyframes;
 };
 
 /*
