@@ -276,6 +276,9 @@ const QMap< double, Keyframe > *SketchObject::getKeyframes() {
 
 //#########################################################################
 void SketchObject::addKeyframeForCurrentLocation(double t) {
+    if (t < 0) { // no negative times allowed
+        return;
+    }
     Keyframe frame(position, orientation);
     if (keyframes.isNull()) {
         keyframes.reset(new QMap< double, Keyframe >());
@@ -288,6 +291,44 @@ void SketchObject::removeKeyframeForTime(double t) {
     if (keyframes->contains(t)) {
         keyframes->remove(t);
     }
+}
+
+void SketchObject::setPositionByAnimationTime(double t) {
+    if (t < 0 || !hasKeyframes()) {
+        return;
+    }
+    QMapIterator< double, Keyframe > it(*keyframes.data());
+    double last = it.peekNext().key();
+    while (it.peekNext().key() < t && it.hasNext()) {
+        last = it.next().key();
+    }
+    if (!it.hasNext()) {
+        Keyframe f = keyframes->value(last);
+        f.getPosition(position);
+        f.getOrientation(orientation);
+    } else if (it.peekNext().key() == t) {
+        Keyframe f = it.next().value();
+        f.getPosition(position);
+        f.getOrientation(orientation);
+    } else {
+        double next = it.peekNext().key();
+        Keyframe f1 = keyframes->value(last), f2 = it.next().value();
+        double diff1 = next - last;
+        double diff2 = t - last;
+        double ratio = diff2 / diff1;
+        // TODO - being lazy and just linearly interpolating... really should use a spline for pos
+        q_vec_type pos1, pos2;
+        q_type or1, or2;
+        f1.getPosition(pos1);
+        f1.getOrientation(or1);
+        f2.getPosition(pos2);
+        f2.getOrientation(or2);
+        q_vec_subtract(pos2,pos2,pos1);
+        q_vec_scale(pos2,ratio,pos2);
+        q_vec_add(position,pos1,pos2); // set position to linearly interpolated location between points
+        q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
+    }
+    recalculateLocalTransform();
 }
 
 //#########################################################################

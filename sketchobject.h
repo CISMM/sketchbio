@@ -110,6 +110,7 @@ public:
     const QMap< double, Keyframe > *getKeyframes();
     void addKeyframeForCurrentLocation(double t);
     void removeKeyframeForTime(double t);
+    void setPositionByAnimationTime(double t);
 protected: // methods
     // to deal with local transformation - recomputes from position and orientation unless
     // isLocalTransformPrecomputed is true
