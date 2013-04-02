@@ -1,0 +1,48 @@
+# Qt DLLs
+
+SET( QT_DLLS
+  "${QT_LIBRARY_DIR}/../bin/QtCore4.dll"
+  "${QT_LIBRARY_DIR}/../bin/QtGui4.dll"
+  "${QT_LIBRARY_DIR}/../bin/QtNetwork4.dll"
+  "${QT_LIBRARY_DIR}/../bin/QtSql4.dll"
+  "${QT_LIBRARY_DIR}/../bin/QtWebKit4.dll"
+  "${QT_LIBRARY_DIR}/../bin/QtXmlPatterns4.dll"
+  "${QT_LIBRARY_DIR}/../bin/phonon4.dll"
+  "${VTK_DIR}/bin/Release/QVTK.dll"
+  )
+
+FOREACH ( QT_LIB ${QT_DLLS} )
+  IF ( EXISTS ${QT_LIB} )
+    INSTALL( FILES ${QT_LIB} DESTINATION bin )
+  ENDIF ( EXISTS ${QT_LIB} )
+ENDFOREACH ( QT_LIB )
+
+# This should work, but seems to prevent other files from being written 
+# into the bin directory in the installation tree.
+#SET(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${VTK_BINARY_DIR};VTK;ALL;/")
+
+# VTK DLLs
+FILE( GLOB VTK_DLLS "${VTK_DIR}/bin/Release/vtk*.dll" )
+INSTALL( FILES ${VTK_DLLS} DESTINATION bin )
+FILE( GLOB LS_DYNA_DLL "${VTK_DIR}/bin/Release/LSDyna.dll" )
+INSTALL( FILES ${LS_DYNA_DLL} DESTINATION bin )
+
+# libxml2 DLL
+
+# First, find which one VTK was built with
+FILE( READ "${VTK_DIR}/CMakeCache.txt" VTK_CMAKE_CACHE )
+STRING( REGEX REPLACE ".*LIBXML2_LIBRARIES:FILEPATH=([^\n]+).*" "\\1" LIBXML2_DLL ${VTK_CMAKE_CACHE} )
+STRING( REPLACE ".lib" ".dll" LIBXML2_DLL ${LIBXML2_DLL} )
+INSTALL( FILES "${LIBXML2_DLL}" DESTINATION bin )
+
+# Save time by just using the NSIS generator
+SET( CPACK_GENERATOR "NSIS" )
+
+# Installer-specific things
+SET( CPACK_NSIS_URL_INFO_ABOUT "http://www.sketchbio.org" )
+SET( CPACK_NSIS_CONTACT "swaldon@cs.unc.edu" )
+
+# Both of these need to be set or neither of them is set.
+SET( CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/installer/Win32/SketchBio.ico" )
+SET( CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/installer/Win32/ModernUninstallFull.ico" )
+SET( CPACK_NSIS_INSTALLED_ICON_NAME "BIN\\\\SketchBio.exe" )
