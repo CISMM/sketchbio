@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 2.8)
  
 PROJECT(SketchBio)
+
+# Copied from Microscope Simulator... needed for bundling code
+SET(SketchBio_MAJOR_NUMBER 0)
+SET(SketchBio_MINOR_NUMBER 0)
+SET(SketchBio_REVISION_NUMBER 1)
+SET(SketchBio_VERSION_STRING "${SketchBio_MAJOR_NUMBER}.${SketchBio_MINOR_NUMBER}.${SketchBio_REVISION_NUMBER}")
+
 list(APPEND CMAKE_MODULE_PATH ${SketchBio_SOURCE_DIR}/cmake)
  
 FIND_PACKAGE(VRPN REQUIRED)
@@ -33,12 +40,13 @@ SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplica
 sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchproject.cpp projecttoxml.cpp
 physicsstrategy.cpp transformequals.cpp)
 SET(SimpleViewUI SimpleView.ui)
-SET(SimpleViewHeaders SimpleView.h transformmanager.h structurereplicator.h modelmanager.h
+SET(Headers_Needing_QT_WRAP SimpleView.h)
+SET(Headers_Not_Needing_QT_WRAP transformmanager.h structurereplicator.h modelmanager.h
 sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
 projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
-QT4_WRAP_CPP(MOCSrcs ${SimpleViewHeaders} )
+QT4_WRAP_CPP(MOCSrcs ${Headers_Needing_QT_WRAP} )
  
 SOURCE_GROUP("Resources" FILES
   ${SimpleViewUI}
@@ -51,7 +59,7 @@ SOURCE_GROUP("Generated" FILES
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
-ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${UISrcs} ${MOCSrcs})
+ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${Headers_Not_Needing_QT_WRAP} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( SketchBio
 	QVTK ${VRPN_LIBRARIES} ${QUATLIB_LIBRARIES} PQP
 )
@@ -59,3 +67,26 @@ TARGET_LINK_LIBRARIES( SketchBio
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test)
 
+
+# Copied from Microscope Simulator.  Used for creating the installer.
+SET( CPACK_PACKAGE_NAME "SketchBio" )
+SET( CPACK_PACKAGE_VENDOR "CISMM" )
+SET( CPACK_PACKAGE_EXECUTABLES "SketchBio;SketchBio ${SketchBio_VERSION_STRING}" )
+SET( CPACK_PACKAGE_DESCRIPTION_SUMMARY "SketchBio" )
+SET( CPACK_PACKAGE_VERSION "${SketchBio_VERSION_STRING}" )
+SET( CPACK_PACKAGE_VERSION_MAJOR "${SketchBio_MAJOR_NUMBER}" )
+SET( CPACK_PACKAGE_VERSION_MINOR "${SketchBio_MINOR_NUMBER}" )
+SET( CPACK_PACKAGE_VERSION_PATCH "${SketchBio_REVISION_NUMBER}" )
+SET( CPACK_PACKAGE_INSTALL_DIRECTORY "SketchBio ${SketchBio_VERSION_STRING}" )
+SET( CPACK_PACKAGE_INSTALL_REGISTRY_KEY "SketchBio ${SketchBio_VERSION_STRING}" )
+SET( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/installer/licenses/SketchBio_license.txt" )
+SET( CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/installer/licenses/README.txt" )
+
+INCLUDE( installer/CMakeLists.txt )
+
+INSTALL(TARGETS SketchBio
+    RUNTIME DESTINATION bin
+)
+
+# This must always be last (according to Cory's code in MicroscopeSimulator)
+INCLUDE( CPack )

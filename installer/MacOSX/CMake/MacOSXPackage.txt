@@ -1,0 +1,77 @@
+# Install all dependencies and stuff.  Mostly copied from Microscope Simulator as
+# Cory said that that was a good example to look at for this.
+#
+# Shawn Waldon
+#
+
+# Get QT frameworks
+FILE ( GLOB QT_FRAMEWORKS "${QT_LIBRARY_DIR}/Qt*.framework" )
+
+# Qt uses phonon and phonon is not selected by the above regex, so add it
+SET( QT_FRAMEWORKS
+    ${QT_FRAMEWORKS}
+    phonon.framework
+)
+
+# Install each QT framework
+##MESSAGE(STATUS "QT_LIBRARY_DIR = ${QT_LIBRARY_DIR}")
+FOREACH( FRAMEWORK ${QT_FRAMEWORKS} )
+    GET_FILENAME_COMPONENT( FRAMEWORK ${FRAMEWORK} NAME_WE )
+    INSTALL( FILES
+            "${QT_LIBRARY_DIR}/${FRAMEWORK}.framework/Versions/4/${FRAMEWORK}"
+            DESTINATION ../Frameworks/${FRAMEWORK}.framework/Versions/4/
+    )
+##    MESSAGE(STATUS "Adding installer for framework: ${FRAMEWORK}")
+ENDFOREACH( FRAMEWORK )
+
+#install miscellaeneous qt resources
+INSTALL( DIRECTORY
+        "${QT_LIBRARY_DIR}/QtGui.framework/Resources/qt_menu.nib"
+        DESTINATION ../Frameworks/QtGui.framework/Resources/
+)
+##MESSAGE(STATUS "Adding installer for qt_menu.nib")
+
+# install imageformat plugins from Qt... not sure I need this, copying it for now
+FILE( GLOB QT_IMAGEFORMAT_PLUGINS "/Developer/Applications/Qt/plugins/imageformats/*.dylib" )
+FOREACH( PLUGIN ${QT_IMAGEFORMAT_PLUGINS} )
+    INSTALL( FILES
+        "${PLUGIN}"
+        DESTINATION ../PlugIns/imageformats
+    )
+##    MESSAGE(STATUS "Adding installer for Qt plugin: ${PLUGIN}")
+ENDFOREACH( PLUGIN )
+
+# install qt.conf file...
+INSTALL( FILES
+    "${CMAKE_SOURCE_DIR}/installer/MacOSX/qt.conf"
+    DESTINATION ./
+)
+##MESSAGE(STATUS "Adding installer for qt.conf")
+
+# include all dynamic libraries from vtk
+##MESSAGE( STATUS "VTK_DIR=${VTK_DIR}" )
+FILE( GLOB VTK_LIBRARIES "${VTK_DIR}/*.dylib")
+##MESSAGE( STATUS "VTK_LIBRARIES=${VTK_LIBRARIES}")
+FOREACH( LIBRARY ${VTK_LIBRARIES} )
+    INSTALL( FILES
+        "${LIBRARY}"
+        DESTINATION lib
+    )
+##    MESSAGE(STATUS "Adding installer for VTK library: ${LIBRARY}")
+ENDFOREACH( LIBRARY )
+
+# skip ITK section, SketchBio doesn't use ITK
+
+# Skip user guide... for now
+
+# Set up cpack arguments
+SET( CPACK_GENERATOR "Bundle" )
+SET( CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/installer/MacOSX/Info.plist") 
+SET( SketchBio_PROGRAM_NAME_WITH_VERSION "SketchBio ${SketchBio_VERSION_STRING}" )
+CONFIGURE_FILE( "${CMAKE_SOURCE_DIR}/installer/MacOSX/Info.plist" "${CPACK_BUNDLE_PLIST}" ) # not sure what this does
+SET( CPACK_BUNDLE_STARTUP_COMMAND  "SketchBio" )
+SET( CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/installer/MacOSX/SketchBio.icns" ) 
+SET( CPACK_BUNDLE_STARTUP_COMMAND "${CMAKE_SOURCE_DIR}/installer/MacOSX/startup.sh" ) 
+SET( CPACK_BUNDLE_NAME "SketchBio ${SketchBio_VERSION_STRING}" )
+
+SET( CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/installer/MacOSX/SketchBio.icns" )
