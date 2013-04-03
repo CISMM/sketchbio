@@ -327,6 +327,7 @@ void SketchObject::setPositionByAnimationTime(double t) {
         q_vec_scale(pos2,ratio,pos2);
         q_vec_add(position,pos1,pos2); // set position to linearly interpolated location between points
         q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
+        // TODO -- set visibility stuff here
     }
     recalculateLocalTransform();
 }

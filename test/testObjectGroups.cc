@@ -377,6 +377,20 @@ inline int testSketchObjectActions(SketchObject *obj) {
         errors++;
         qDebug() << "Keyframe orientation is wrong";
     }
+    obj->setPositionByAnimationTime(4.0);
+    obj->getPosition(v2);
+    q_vec_add(v1,v3,v1);
+    q_vec_scale(v1,.5,v1);
+    if (!q_vec_equals(v1,v2)) {
+        errors++;
+        qDebug() << "Interpolation wrong between 2 keyframes position"; // TODO may change test later
+    }
+    q_slerp(q1,q1,q3,.5);
+    obj->getOrientation(q2);
+    if (!q_equals(q1,q2)) {
+        errors++;
+        qDebug() << "Interpolation wrong between 2 keyframes orientation";
+    }
     return errors;
 }
 
