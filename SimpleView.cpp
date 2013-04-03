@@ -20,6 +20,7 @@
 #include <vtkVRMLExporter.h>
 #include <limits>
 
+#include <sketchioconstants.h>
 #include <vtkXMLUtilities.h>
 #include <projecttoxml.h>
 #include <transformequals.h>
@@ -31,14 +32,12 @@
 // timestep
 #define TIMESTEP (16/1000.0)
 
-#define PROJECT_XML_FILENAME "project.xml"
-
 
 // Constructor
 SimpleView::SimpleView(QString projDir, bool load_example) :
-    tracker("Tracker0@localhost"),
-    buttons("Tracker0@localhost"),
-    analogRemote("Tracker0@localhost"),
+    tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
+    buttons(VRPN_RAZER_HYDRA_DEVICE_STRING),
+    analogRemote(VRPN_RAZER_HYDRA_DEVICE_STRING),
     timer(new QTimer()),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),

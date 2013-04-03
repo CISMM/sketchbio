@@ -24,14 +24,23 @@
 #define HYDRA_LEFT_TRIGGER 2
 #define HYDRA_RIGHT_TRIGGER 5
 
-// magic constants to take out later:
-// debuggin flag
+// debugging flag -- if false does not start vrpn clients
 #define VRPN_ON true
+// change this to false to use an external vrpn server
+#define VRPN_USE_INTERNAL_SERVER true
+
+// the device name used on the server -- must change the line below when this is changed
+#define VRPN_RAZER_HYDRA_DEVICE_NAME "razer"
+// the device name and location used by the client -- must update when the device name above updates
+#define VRPN_RAZER_HYDRA_DEVICE_STRING "razer@localhost"
 
 // transform manager's tracker to workspace scale factor
 #define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE (.0625 )
 
 // scale between world and camera (also used to determine tracker size)
 #define SCALE_DOWN_FACTOR (.03125)
+
+// the name of the project's save file in the project directory
+#define PROJECT_XML_FILENAME "project.xml"
 
 #endif // SKETCHIOCONSTANTS_H

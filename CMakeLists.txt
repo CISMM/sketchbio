@@ -38,9 +38,9 @@ endif (WIN32)
 # Set your files and resources here
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
 sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchproject.cpp projecttoxml.cpp
-physicsstrategy.cpp transformequals.cpp)
+physicsstrategy.cpp transformequals.cpp vrpnserver.cpp)
 SET(SimpleViewUI SimpleView.ui)
-SET(Headers_Needing_QT_WRAP SimpleView.h)
+SET(Headers_Needing_QT_WRAP SimpleView.h vrpnserver.h)
 SET(Headers_Not_Needing_QT_WRAP transformmanager.h structurereplicator.h modelmanager.h
 sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
 projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h)
@@ -61,8 +61,20 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
 ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${Headers_Not_Needing_QT_WRAP} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( SketchBio
-	QVTK ${VRPN_LIBRARIES} ${QUATLIB_LIBRARIES} PQP
+    QVTK
+    ${VTK_LIBRARIES}
+    ${VRPN_LIBRARIES}
+    ${VRPN_SERVER_LIBRARIES}
+    ${QUATLIB_LIBRARIES}
+    PQP
 )
+
+IF(APPLE)
+    TARGET_LINK_LIBRARIES( SketchBio
+        "-framework IOKit"
+        "-framework CoreFoundation"
+    )
+ENDIF(APPLE)
 
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test)

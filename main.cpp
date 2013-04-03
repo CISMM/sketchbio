@@ -2,6 +2,8 @@
 #include <QFileDialog>
 #include "SimpleView.h"
 #include <QDebug>
+#include <vrpnserver.h>
+#include <sketchioconstants.h>
 
 void Usage(const char *n)
 {
@@ -12,6 +14,12 @@ int main( int argc, char** argv )
 {
   // QT Stuff
   QApplication app( argc, argv );
+  vrpnServer server;
+
+  // start internal vrpn?
+  if (VRPN_USE_INTERNAL_SERVER) {
+    server.Start();
+  }
 
   // set required fields to use QSettings API (these specify the location of the settings)
   app.setApplicationName("Sketchbio");
@@ -41,6 +49,7 @@ int main( int argc, char** argv )
   }
   QString projDir = QFileDialog::getExistingDirectory((QWidget *)NULL,
                                QString("Select Project Folder"),QString("./"));
+  int retVal = 0;
   if (projDir.length() != 0) {
 
     SimpleView mySimpleView(projDir,do_example);
@@ -48,6 +57,10 @@ int main( int argc, char** argv )
     mySimpleView.setWindowTitle("SketchBio");
     mySimpleView.show();
  
-    return app.exec();
+    retVal = app.exec();
   }
+  if (VRPN_USE_INTERNAL_SERVER) {
+    server.Stop();
+  }
+  return retVal;
 }
