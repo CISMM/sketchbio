@@ -107,7 +107,7 @@ public:
     // methods for accessing and modifying keyframes
     bool hasKeyframes() const;
     int  getNumKeyframes() const;
-    const QMap< double, Keyframe > *getKeyframes();
+    const QMap< double, Keyframe > *getKeyframes() const;
     void addKeyframeForCurrentLocation(double t);
     void removeKeyframeForTime(double t);
     void setPositionByAnimationTime(double t);

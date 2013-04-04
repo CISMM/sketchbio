@@ -270,7 +270,7 @@ int SketchObject::getNumKeyframes() const {
 }
 
 //#########################################################################
-const QMap< double, Keyframe > *SketchObject::getKeyframes() {
+const QMap< double, Keyframe > *SketchObject::getKeyframes() const {
     return keyframes.data();
 }
 

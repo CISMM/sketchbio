@@ -55,6 +55,9 @@ private: // no other code should call these (this is the reason for making this 
     static XML_Read_Status convertToCurrent(vtkXMLDataElement *root);
     static XML_Read_Status convertToCurrentVersion(vtkXMLDataElement *root,int minorVersion);
 
+    // this is used by readObject to read in each keyframe to the object.  Note that any state that
+    // is set in the object to create the keyframe is also restored by the end of the function
+    static XML_Read_Status readKeyframe(SketchObject *object, vtkXMLDataElement *frame);
     // these are for reading objects from the xml... need recursively defined functions for groups
     // if there is an error, they will clean up any created objects as they fail
     // this one returns the object or NULL on an error

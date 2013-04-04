@@ -1,6 +1,7 @@
 #include "projecttoxml.h"
 #include <ios>
 #include <sketchtests.h>
+#include <QScopedPointer>
 
 
 #define ID_ATTRIBUTE_NAME                       "id"
@@ -10,7 +11,7 @@
 #define TRANSFORM_ELEMENT_NAME                  "transform"
 
 #define ROOT_ELEMENT_NAME                       "sketchbio"
-#define VERSION_ATTRIBUTE_NAME                          "version"
+#define VERSION_ATTRIBUTE_NAME                  "version"
 #define SAVE_MAJOR_VERSION                      1
 #define SAVE_MINOR_VERSION                      2
 #define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
@@ -34,6 +35,12 @@
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
 #define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME     "numInstances"
 #define OBJECT_REPLICA_NUM_ATTRIBUTE_NAME       "replicaNum"
+#define OBJECT_KEYFRAME_LIST_ELEMENT_NAME       "keyframeList"
+#define OBJECT_KEYFRAME_ELEMENT_NAME            "keyframe"
+#define OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME     "time"
+#define OBJECT_KEYFRAME_VIS_ELEMENT_NAME        "visibility"
+#define OBJECT_KEYFRAME_VIS_B4_ATTR_NAME        "visibility_before"
+#define OBJECT_KEYFRAME_VIS_AF_ATTR_NAME        "visibility_after"
 
 #define REPLICATOR_LIST_ELEMENT_NAME            "replicatorList"
 #define REPLICATOR_ELEMENT_NAME                 "replicator"
@@ -244,6 +251,36 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
     setPreciseVectorAttribute(child,orient,4,ROTATION_ATTRIBUTE_NAME);
 
     element->AddNestedElement(child);
+
+    if (object->getNumKeyframes() > 0) {
+        // object has keyframes, save them
+        child = vtkSmartPointer<vtkXMLDataElement>::New();
+        child->SetName(OBJECT_KEYFRAME_LIST_ELEMENT_NAME);
+        const QMap<double, Keyframe> *keyframeMap = object->getKeyframes();
+        QMapIterator<double, Keyframe> it(*keyframeMap);
+        while (it.hasNext()) {
+            double time = it.peekNext().key();
+            const Keyframe &frame = it.next().value();
+            q_vec_type p;
+            q_type o;
+            frame.getPosition(p);
+            frame.getOrientation(o);
+            vtkSmartPointer<vtkXMLDataElement> frameElement = vtkSmartPointer<vtkXMLDataElement>::New();
+            frameElement->SetName(OBJECT_KEYFRAME_ELEMENT_NAME);
+            frameElement->SetDoubleAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME,time);
+            vtkSmartPointer<vtkXMLDataElement> tfrm = vtkSmartPointer<vtkXMLDataElement>::New();
+            tfrm->SetName(TRANSFORM_ELEMENT_NAME);
+            setPreciseVectorAttribute(tfrm,p,3,POSITION_ATTRIBUTE_NAME);
+            setPreciseVectorAttribute(tfrm,o,4,ROTATION_ATTRIBUTE_NAME);
+            frameElement->AddNestedElement(tfrm);
+            vtkSmartPointer<vtkXMLDataElement> visibility = vtkSmartPointer<vtkXMLDataElement>::New();
+            visibility->SetName(OBJECT_KEYFRAME_VIS_ELEMENT_NAME);
+            visibility->SetAttribute(OBJECT_KEYFRAME_VIS_B4_ATTR_NAME,(frame.isVisibleBefore()?"true":"false"));
+            visibility->SetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME,(frame.isVisibleAfter()?"true":"false"));
+            frameElement->AddNestedElement(visibility);
+            child->AddNestedElement(frameElement);
+        }
+    }
 
     if (object->numInstances() > 1) {
         vtkXMLDataElement *list = ProjectToXML::objectListToXML(object->getSubObjects(),modelIds,objectIds);
@@ -628,6 +665,49 @@ ProjectToXML::XML_Read_Status ProjectToXML::readObjectList(QList<SketchObject *>
     return XML_TO_DATA_SUCCESS;
 }
 
+ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, vtkXMLDataElement *frame) {
+    if (QString(OBJECT_KEYFRAME_ELEMENT_NAME) != QString(frame->GetName())) {
+        return XML_TO_DATA_FAILURE;
+    }
+    q_vec_type pos;
+    q_type orient;
+    bool visB, visA;
+    double time;
+    int numRead = 0;
+    numRead = frame->GetScalarAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME,time);
+    if (numRead != 1) return XML_TO_DATA_FAILURE;// if frame has no time, then don't know what to do with it
+    vtkXMLDataElement *kTrans = frame->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
+    if (kTrans == NULL) return XML_TO_DATA_FAILURE;// if no transform, fail
+    numRead = kTrans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME,3,pos);
+    if (numRead != 3) return XML_TO_DATA_FAILURE;// position wrong length.. fail
+    numRead = kTrans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
+    if (numRead != 4)  return XML_TO_DATA_FAILURE;// orientation wrong length... fail
+    vtkXMLDataElement *kVisibility = frame->FindNestedElementWithName(OBJECT_KEYFRAME_VIS_ELEMENT_NAME);
+    if (kVisibility == NULL) return XML_TO_DATA_FAILURE; // if no visiblitly status.. fail
+    // TODO ... once there in an interface for it on object, do something with visibility
+    QString strB(kVisibility->GetAttribute(OBJECT_KEYFRAME_VIS_B4_ATTR_NAME));
+    if (strB.toLower() == QString("true")) {
+        visB = true;
+    } else if (strB.toLower() == QString("false")) {
+        visB = false;
+    } else {
+        return XML_TO_DATA_FAILURE;
+    }
+    QString strA(kVisibility->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME));
+    if (strA.toLower() == QString("true")) {
+        visA = true;
+    } else if (strA.toLower() == QString("false")) {
+        visA = false;
+    } else {
+        return XML_TO_DATA_FAILURE;
+    }
+    object->setLastLocation(); // so we don't change the object's position
+    object->setPosAndOrient(pos,orient);
+    object->addKeyframeForCurrentLocation(time); // TODO -- once visibility is done, set it too.
+    object->restoreToLastLocation(); // restore the object's position
+    return XML_TO_DATA_SUCCESS;
+}
+
 SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
                                        QHash<QString, SketchModel *> &modelIds,
                                        QHash<QString, SketchObject *> &objectIds) {
@@ -663,33 +743,44 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
             return NULL;
         }
         q_normalize(orient,orient);
-        SketchObject *object;
+        QScopedPointer<SketchObject> object(NULL);
         if (numInstances == 1) {
             // modelInstace
-            object = new ModelInstance(modelIds.value(mId));
+            object.reset(new ModelInstance(modelIds.value(mId)));
             object->setPosAndOrient(pos,orient);
         } else {
             // group
-            ObjectGroup *group = new ObjectGroup();
+            QScopedPointer<ObjectGroup> group(new ObjectGroup());
             vtkXMLDataElement *childList = elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
             if (childList == NULL) {
-                delete group;
                 return NULL;
             }
             QList<SketchObject *> childObjects;
             if (readObjectList(childObjects,childList,modelIds,objectIds) == XML_TO_DATA_FAILURE) {
-                delete group;
                 return NULL;
             }
             for (int i = 0; i < childObjects.size(); i++) {
                 group->addObject(childObjects[i]);
             }
-            object = group;
+            object.reset( group.take() );
             // since each object will be saved in its actual position and not its group relative position,
             // we can simply let addObject's averaging take care of the group position/orientation
         }
-        objectIds.insert(oId,object);
-        return object;
+        vtkXMLDataElement *keyframes = elem->FindNestedElementWithName(OBJECT_KEYFRAME_LIST_ELEMENT_NAME);
+        // keyframes list will only exist on objects that have keyframes so this being NULL simply
+        // means that the object has no keyframes
+        if (keyframes != NULL) { // if we have keyframes... read them in
+            for (int i = 0; i < keyframes->GetNumberOfNestedElements(); i++) {
+                vtkXMLDataElement *frame = keyframes->GetNestedElement(i);
+                if (QString(OBJECT_KEYFRAME_ELEMENT_NAME) == QString(frame->GetName())) {
+                    if (readKeyframe(object.data(),frame) == XML_TO_DATA_FAILURE) {
+                        return NULL;
+                    }
+                } // in xml: ignore extra stuff
+            }
+        } // end if we have keyframes... not having keyframes is fine too, so don't fail in this case
+        objectIds.insert(oId,object.data());
+        return object.take();
     }
     return NULL;
 }
