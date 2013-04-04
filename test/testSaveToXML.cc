@@ -99,6 +99,39 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
     } else { // test group specific stuff
         compareObjectLists(o1->getSubObjects(),o2->getSubObjects(),numDifferences,printDiffs);
     }
+    if (o1->getNumKeyframes() != o2->getNumKeyframes()) {
+        numDifferences++;
+        if (printDiffs) {
+            cout << "Different numbers of keyframes." << endl;
+            cout << "Object 1 has: " << o1->getNumKeyframes() << endl;
+            cout << "Object 2 has: " << o2->getNumKeyframes() << endl;
+        }
+    } else if (o1->getNumKeyframes() > 0) {
+        QMapIterator<double,Keyframe> it(*o1->getKeyframes());
+        while (it.hasNext()) {
+            double time = it.peekNext().key();
+            const Keyframe &frame1 = it.next().value();
+            if (!o2->getKeyframes()->contains(time)) {
+                numDifferences++;
+                if (printDiffs) cout << "Keyframe for time " << time << " missing in object 2." << endl;
+            }
+            const Keyframe &frame2 = o2->getKeyframes()->value(time);
+            q_vec_type p1, p2;
+            q_type o1, o2;
+            frame1.getPosition(p1);
+            frame2.getPosition(p2);
+            frame1.getOrientation(o1);
+            frame2.getOrientation(o2);
+            if (!q_vec_equals(p1,p2,epsilon)) {
+                numDifferences++;
+                if (printDiffs) cout << "Keyframe positions are different at time " << time << endl;
+            }
+            if (!q_equals(o1,o2,epsilon)) {
+                numDifferences++;
+                if (printDiffs) cout << "Keyframe orientations are different at time " << time << endl;
+            }
+        }
+    }
 }
 
 void compareObjectLists(const QList<SketchObject *> *list1, const QList<SketchObject *> *list2,
@@ -540,6 +573,7 @@ int testSave5() {
     pos1[Q_X] += 2 * Q_PI;
     q_mult(orient1,orient1,orient1);
     SketchObject *o2 = project->addObject(m1,pos1,orient1);
+    o2->addKeyframeForCurrentLocation(0.0);
     project->addReplication(o1,o2,12);
     q_vec_type p1, p2;
     q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
@@ -632,7 +666,63 @@ int testSave7() {
     return retVal;
 }
 
+int testSave8() {
+    bool a[NUM_HYDRA_BUTTONS];
+    double b[NUM_HYDRA_ANALOGS];
+    int retVal = 0;
+    vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    proj1->setProjectDir("test/test1");
+    proj2->setProjectDir("test/test1");
+
+    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
+    q_vec_scale(pos1,sqrt(Q_PI),pos1);
+    q_type orient1;
+    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
+    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
+    pos1[Q_X] += 2 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
+    SketchObject *o3 = new ModelInstance(m1);
+    pos1[Q_Z] += 4 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    o3->setPosAndOrient(pos1,orient1);
+    proj1->addObject(o3);
+    o3->addKeyframeForCurrentLocation(0.4);
+    pos1[Q_Z] += 4 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    o3->setPosAndOrient(pos1,orient1);
+    o3->addKeyframeForCurrentLocation(4.332);
+    pos1[Q_Z] += 4 * Q_PI;
+    q_mult(orient1,orient1,orient1);
+    o3->setPosAndOrient(pos1,orient1);
+    o3->addKeyframeForCurrentLocation(10.5);
+    pos1[Q_Z] = 3.14;
+    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
+    o3->setPosAndOrient(pos1,orient1);
+
+    vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
+
+//    vtkIndent indent(0);
+//    vtkXMLUtilities::FlattenElement(root,cout,&indent);
+
+    ProjectToXML::xmlToProject(proj2.data(),root);
+
+    compareNumbers(proj1.data(),proj2.data(),retVal);
+    compareWorldObjects(proj1.data(),proj2.data(),retVal);
+
+    if (retVal == 0) {
+        cout << "Passed test 8" << endl;
+    }
+
+    root->Delete();
+    return retVal;
+}
 
 int main() {
-    return testSave1() + testSave2() + testSave3() + testSave4() + testSave5() + testSave6() + testSave7();
+    return testSave1() + testSave2() + testSave3() + testSave4() + testSave5() +
+            testSave6() + testSave7() + testSave8();
 }

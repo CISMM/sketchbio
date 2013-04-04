@@ -280,6 +280,7 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
             frameElement->AddNestedElement(visibility);
             child->AddNestedElement(frameElement);
         }
+        element->AddNestedElement(child);
     }
 
     if (object->numInstances() > 1) {
