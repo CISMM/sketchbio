@@ -166,17 +166,14 @@ void SketchProject::startAnimation() {
     renderer->RemoveActor(rightHand->getActor());
     if (renderer->HasViewProp(leftOutlinesActor)) {
         renderer->RemoveActor(leftOutlinesActor);
-        qDebug() << "Removing left outline";
     }
     if (renderer->HasViewProp(rightOutlinesActor)) {
         renderer->RemoveActor(rightOutlinesActor);
-        qDebug() << "Removing right outline";
     }
     lDist = rDist = std::numeric_limits<double>::max();
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
     grabbedWorld = WORLD_NOT_GRABBED;
-    qDebug() << "Starting animation.";
 }
 
 void SketchProject::stopAnimation() {
@@ -185,7 +182,6 @@ void SketchProject::stopAnimation() {
     renderer->AddActor(rightHand->getActor());
     // distances and outlines actors will refresh themselves
     // handed springs and world grab should refresh themselves too
-    qDebug() << "Stopping animation.";
 }
 
 void SketchProject::timestep(double dt) {
