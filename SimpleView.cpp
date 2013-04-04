@@ -76,55 +76,35 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     QDir pd(project->getProjectDir());
     QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
     QFile f(file);
+    object = NULL;
+    t = 0;
     if (f.exists()) {
         vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
         ProjectToXML::xmlToProject(project,root);
         root->Delete();
     } else if (load_example) {
         // eventually we will just load the example from a project directory...
+        // example of keyframes this time
 
         SketchModel *model = project->addModelFromFile("./models/1m1j.obj",INVERSEMASS,INVERSEMOMENT,1);
-        q_vec_type position = {50,0,0};
+        q_vec_type position = {200,0,0};
         q_type orientation;
-        q_from_axis_angle(orientation,1,0,0,Q_PI/3);
+        q_from_axis_angle(orientation,0,1,0,0);
         SketchObject *object1 = new ModelInstance(model);
         object1->setPosAndOrient(position,orientation);
-        SketchObject *object2 = new ModelInstance(model);
-        q_vec_set(position,30,400,0);
-        q_from_axis_angle(orientation,0,1,0,Q_PI/2);
-        object2->setPosAndOrient(position,orientation);
-        SketchObject *object3 = new ModelInstance(model);
-        q_vec_set(position,60,-30,0);
-        q_from_axis_angle(orientation,0,0,1,-2*Q_PI/3);
-        object3->setPosAndOrient(position,orientation);
-        SketchObject *object4 = new ModelInstance(model);
-        q_vec_set(position,0,0,-300);
-        object4->setPosition(position);
+        object1->addKeyframeForCurrentLocation(0.0);
 
+        q_vec_set(position,-200,0,0);
+        q_from_axis_angle(orientation,0,1,0,Q_PI);
+        object1->setPosAndOrient(position,orientation);
+        object1->addKeyframeForCurrentLocation(10.0);
+
+        q_vec_set(position,200,0,0);
+        q_from_axis_angle(orientation,0,1,0,0);
+        object1->setPosAndOrient(position,orientation);
+        object1->addKeyframeForCurrentLocation(20.0);
         project->addObject(object1);
-        project->addObject(object2);
-        project->addObject(object3);
-        project->addObject(object4);
-        QWeakPointer<TransformEquals> eq = project->addTransformEquals(object1,object2);
-        QSharedPointer<TransformEquals> sEq(eq);
-        if (sEq) {
-            sEq->addPair(object3,object4);
-        }
-        if (false) {
-            // creating springs
-            q_vec_type p1 = {200,-30,0}, p2 = {0,-30,0};
-            project->addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
-
-            q_vec_set(p1,0,-30,0);
-            q_vec_set(p2,200,-30,0);
-            project->addSpring(object1,object2,0,0,BOND_SPRING_CONSTANT,p1,p2);
-        }
-
-        // Replicate objects
-        if (false) {
-            project->addReplication(object1,object2,NUM_EXTRA_FIBERS);
-        }
-
+        object = object1;
     }
 
     // camera setup
@@ -177,6 +157,11 @@ void SimpleView::slot_frameLoop() {
     handleInput();
 
     project->timestep(TIMESTEP);
+    if (object != NULL) {
+        t = fmod(t,20.0);
+        object->setPositionByAnimationTime(t);
+        t += TIMESTEP;
+    }
 
     // render
     this->ui->qvtkWidget->GetRenderWindow()->Render();

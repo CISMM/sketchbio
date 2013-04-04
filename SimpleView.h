@@ -124,6 +124,8 @@ private:
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   SketchProject *project;
+  SketchObject *object;
+  double t;
 };
 
  
