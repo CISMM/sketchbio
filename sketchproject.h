@@ -43,8 +43,11 @@ public:
     // toggle settings in the physics
     void setCollisionTestsOn(bool on);
     void setWorldSpringsEnabled(bool enabled);
+    // animation
+    void startAnimation();
+    void stopAnimation();
 
-    // physics related functions
+    // physics/time related functions - timestep either updates physics or moves the animation one time frame
     void timestep(double dt);
 
     // get model manager
@@ -117,6 +120,9 @@ private:
     // changes (unless another one is currently grabbed).
     vtkSmartPointer<vtkActor> leftOutlinesActor, rightOutlinesActor;
     vtkSmartPointer<vtkPolyDataMapper> leftOutlinesMapper, rightOutlinesMapper;
+    // animation stuff
+    bool isDoingAnimation; // true if the animation is happenning
+    double timeInAnimation; // the animation time starting at 0
 };
 
 inline const ModelManager *SketchProject::getModelManager() const {

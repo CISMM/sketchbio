@@ -16,11 +16,6 @@ int main( int argc, char** argv )
   QApplication app( argc, argv );
   vrpnServer server;
 
-  // start internal vrpn?
-  if (VRPN_USE_INTERNAL_SERVER) {
-    server.Start();
-  }
-
   // set required fields to use QSettings API (these specify the location of the settings)
   app.setApplicationName("Sketchbio");
   app.setOrganizationName("UNC Computer Science");
@@ -34,8 +29,9 @@ int main( int argc, char** argv )
   for (i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-show_example")) {
     do_example = true;
-    } else if (argv[i][0] == '-') {
-	Usage(argv[0]);
+    } else if (argv[i][0] == '-' || !strcmp(argv[i], "-h")) {
+    Usage(argv[0]);
+    exit(0);
     } else switch (++real_params) {
       case 1:
       case 2:
@@ -46,6 +42,10 @@ int main( int argc, char** argv )
   if (object_names.size() > 0) {
 	// If we give it model names, we don't want the fibrin default.
     do_example = false;
+  }
+  // start internal vrpn?
+  if (VRPN_USE_INTERNAL_SERVER) {
+    server.Start();
   }
   QString projDir = QFileDialog::getExistingDirectory((QWidget *)NULL,
                                QString("Select Project Folder"),QString("./"));

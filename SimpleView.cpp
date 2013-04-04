@@ -76,8 +76,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     QDir pd(project->getProjectDir());
     QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
     QFile f(file);
-    object = NULL;
-    t = 0;
     if (f.exists()) {
         vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
         ProjectToXML::xmlToProject(project,root);
@@ -104,7 +102,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         object1->setPosAndOrient(position,orientation);
         object1->addKeyframeForCurrentLocation(20.0);
         project->addObject(object1);
-        object = object1;
     }
 
     // camera setup
@@ -157,11 +154,6 @@ void SimpleView::slot_frameLoop() {
     handleInput();
 
     project->timestep(TIMESTEP);
-    if (object != NULL) {
-        t = fmod(t,20.0);
-        object->setPositionByAnimationTime(t);
-        t += TIMESTEP;
-    }
 
     // render
     this->ui->qvtkWidget->GetRenderWindow()->Render();

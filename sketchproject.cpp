@@ -159,10 +159,47 @@ QString SketchProject::getProjectDir() const {
     return projectDir->absolutePath();
 }
 
+void SketchProject::startAnimation() {
+    isDoingAnimation = true;
+    timeInAnimation = 0.0;
+    renderer->RemoveActor(leftHand->getActor());
+    renderer->RemoveActor(rightHand->getActor());
+    if (renderer->HasViewProp(leftOutlinesActor)) {
+        renderer->RemoveActor(leftOutlinesActor);
+        qDebug() << "Removing left outline";
+    }
+    if (renderer->HasViewProp(rightOutlinesActor)) {
+        renderer->RemoveActor(rightOutlinesActor);
+        qDebug() << "Removing right outline";
+    }
+    lDist = rDist = std::numeric_limits<double>::max();
+    world->clearLeftHandSprings();
+    world->clearRightHandSprings();
+    grabbedWorld = WORLD_NOT_GRABBED;
+    qDebug() << "Starting animation.";
+}
+
+void SketchProject::stopAnimation() {
+    isDoingAnimation = false;
+    renderer->AddActor(leftHand->getActor());
+    renderer->AddActor(rightHand->getActor());
+    // distances and outlines actors will refresh themselves
+    // handed springs and world grab should refresh themselves too
+    qDebug() << "Stopping animation.";
+}
+
 void SketchProject::timestep(double dt) {
-    handleInput();
-    world->stepPhysics(dt);
-    transforms->copyCurrentHandTransformsToOld();
+    if (!isDoingAnimation) {
+        handleInput();
+        world->stepPhysics(dt);
+        transforms->copyCurrentHandTransformsToOld();
+    } else {
+        if (world->setAnimationTime(timeInAnimation)) {
+            // if setAnimationTime returns true, then we are done
+            stopAnimation();
+        }
+        timeInAnimation += dt;
+    }
 }
 
 SketchModel *SketchProject::addModelFromFile(QString fileName, double iMass, double iMoment, double scale) {
@@ -315,13 +352,14 @@ void SketchProject::handleInput() {
     // move fibers
     updateTrackerObjectConnections();
 
-    if (world->getNumberOfObjects() > 0) {
+    // we don't want to show bounding boxes during animation
+    if (world->getNumberOfObjects() > 0 && !isDoingAnimation) {
         bool oldShown = false;
 
         SketchObject *closest = NULL;
 
         if (world->getLeftSprings()->size() == 0 ) {
-            oldShown = lDist < DISTANCE_THRESHOLD;
+            oldShown = renderer->HasViewProp(leftOutlinesActor);
             closest = world->getClosestObject(leftHand,&lDist);
 
             if (lObj != closest) {
@@ -338,8 +376,8 @@ void SketchProject::handleInput() {
             }
         }
 
-        if (world->getRightSprings()->size() == 0) {
-            oldShown = rDist < DISTANCE_THRESHOLD;
+        if (world->getRightSprings()->size() == 0 ) {
+            oldShown = renderer->HasViewProp(rightOutlinesActor);
             closest = world->getClosestObject(rightHand,&rDist);
 
             if (rObj != closest) {
@@ -359,6 +397,10 @@ void SketchProject::handleInput() {
 
     // set tracker locations
     updateTrackerPositions();
+    // animation button
+    if (buttonDown[0]) {
+        startAnimation();
+    }
 }
 
 /*

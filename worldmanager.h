@@ -259,6 +259,14 @@ public:
     void stepPhysics(double dt);
     /*******************************************************************
      *
+     * Sets the positions of the objects to their positions at the given
+     * time (found from their keyframes).
+     * Returns true if all keyframes are at times less than t
+     *
+     *******************************************************************/
+    bool setAnimationTime(double t);
+    /*******************************************************************
+     *
      * Turns on or off the non-user related spring forces.
      *
      *******************************************************************/

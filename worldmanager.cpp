@@ -193,6 +193,22 @@ void WorldManager::stepPhysics(double dt) {
 
 //##################################################################################################
 //##################################################################################################
+bool WorldManager::setAnimationTime(double t) {
+    bool isDone = true;
+    for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *obj = it.next();
+        obj->setPositionByAnimationTime(t);
+        if (obj->hasKeyframes()) {
+            if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
+                isDone = false;
+            }
+        }
+    }
+    return isDone;
+}
+
+//##################################################################################################
+//##################################################################################################
 void WorldManager::setPhysicsSpringsOn(bool on) {
     doPhysicsSprings = on;
 }
