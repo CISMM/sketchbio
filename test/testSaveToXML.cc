@@ -682,10 +682,10 @@ int testSave8() {
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
     q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
+    proj1->addObject(m1,pos1,orient1);
     pos1[Q_X] += 2 * Q_PI;
     q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
+    proj1->addObject(m1,pos1,orient1);
     SketchObject *o3 = new ModelInstance(m1);
     pos1[Q_Z] += 4 * Q_PI;
     q_mult(orient1,orient1,orient1);

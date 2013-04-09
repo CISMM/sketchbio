@@ -277,6 +277,9 @@ void WorldManager::updateSprings() {
 // if outside the bounding box returns an approximate distance to it
 // else returns negative how far into the box the point as a fraction of the way through (.5 for halfway through)
 inline double distOutsideAABB(q_vec_type point, double bb[6]) {
+    if (bb[0] == bb[1] || bb[2] == bb[3] || bb[4] == bb[5]) {
+        qDebug() << "Error: Bounding box has no volume...";
+    }
     double xD, yD, zD, dist;
     bool inX = false, inY = false, inZ = false;
     if (point[Q_X] > bb[0] && point[Q_X] < bb[1]) {
