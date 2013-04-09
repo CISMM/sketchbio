@@ -94,11 +94,9 @@ SketchProject::SketchProject(vtkRenderer *r,
     lObj = rObj = (SketchObject *) NULL;
     lDist = rDist = std::numeric_limits<double>::max();
     leftOutlinesActor->SetMapper(leftOutlinesMapper);
-//    leftOutlinesActor->SetUserTransform(transforms->getWorldToEyeTransform());
     leftOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
     leftOutlinesActor->GetProperty()->SetLighting(false);
     rightOutlinesActor->SetMapper(rightOutlinesMapper);
-//    rightOutlinesActor->SetUserTransform(transforms->getWorldToEyeTransform());
     rightOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
     rightOutlinesActor->GetProperty()->SetLighting(false);
 }
@@ -350,10 +348,10 @@ void SketchProject::handleInput() {
     }
     // move fibers
     updateTrackerObjectConnections();
-//    if (buttonDown[8]) {
-        transforms->updateCameraForFrame();
-        renderer->SetActiveCamera(transforms->getGlobalCamera());
-//    }
+
+    // update the camera
+    transforms->updateCameraForFrame();
+    renderer->SetActiveCamera(transforms->getGlobalCamera());
 
     // we don't want to show bounding boxes during animation
     if (world->getNumberOfObjects() > 0 && !isDoingAnimation) {

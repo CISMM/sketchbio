@@ -36,11 +36,6 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     mapper->SetInputConnection(tubeFilter->GetOutputPort());
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
-    vtkSmartPointer<vtkTransform> trans = vtkSmartPointer<vtkTransform>::New();
-    trans->PostMultiply();
-    trans->Identity();
-    trans->Concatenate(worldEyeTransform);
-//    actor->SetUserTransform(trans);
     renderer->AddActor(actor);
     this->worldEyeTransform = worldEyeTransform;
 }
@@ -380,7 +375,6 @@ void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> 
 void WorldManager::insertActors(SketchObject *obj) {
     if (obj->numInstances() == 1) {
         vtkSmartPointer<vtkActor> actor = obj->getActor();
-//        actor->SetUserTransform(worldEyeTransform);
         renderer->AddActor(actor);
     } else {
         QList<SketchObject *> *children = obj->getSubObjects();

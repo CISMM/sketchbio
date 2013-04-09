@@ -72,7 +72,6 @@ void TransformManager::getLeftTrackerTransformInEyeCoords(vtkTransform *trans) {
     trans->Translate(trackerBaseToLeftHand.xyz);
     trans->Concatenate(trackerBaseToRoom);
     trans->Concatenate(roomToWorld);
-//    trans->Concatenate(roomToEyes);
 }
 
 void TransformManager::getLeftTrackerPosInWorldCoords(q_vec_type dest_vec) {
@@ -96,7 +95,6 @@ void TransformManager::getRightTrackerTransformInEyeCoords(vtkTransform *trans) 
     trans->Translate(trackerBaseToRightHand.xyz);
     trans->Concatenate(trackerBaseToRoom);
     trans->Concatenate(roomToWorld);
-//    trans->Concatenate(roomToEyes);
 }
 
 void TransformManager::getRightTrackerPosInWorldCoords(q_vec_type dest_vec) {
@@ -270,14 +268,6 @@ void TransformManager::updateCameraForFrame() {
     pos[2] = invMat->GetElement(2,3);
     q_vec_scale(fPoint,STARTING_CAMERA_POSITION*scale,forward);
     q_vec_add(fPoint,fPoint,pos);
-//    std::cout << "\nUp: ";
-//    q_vec_print(up);
-//    std::cout << "Forward: ";
-//    q_vec_print(forward);
-//    std::cout << "Pos: ";
-//    q_vec_print(pos);
-//    std::cout << "Focal Point: ";
-//    q_vec_print(fPoint);
     globalCamera->SetPosition(pos);
     globalCamera->SetFocalPoint(fPoint);
     globalCamera->SetViewUp(up);

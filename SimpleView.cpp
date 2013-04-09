@@ -50,17 +50,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     collisionModeGroup->addAction(this->ui->actionBinary_Collision_Search);
     collisionModeGroup->addAction(this->ui->actionPose_Mode_PCA);
     this->ui->actionPose_Mode_1->setChecked(true);
-    if (!VRPN_ON) {
-        q_xyz_quat_type pos;
-        q_type ident = Q_ID_QUAT;
-        q_vec_set(pos.xyz,.5,0,.5);
-        q_vec_scale(pos.xyz,.5,pos.xyz);
-        q_copy(pos.quat,ident);
-//        transforms.setLeftHandTransform(&pos);
-        q_vec_set(pos.xyz,0,0,1);
-        q_vec_scale(pos.xyz,.5,pos.xyz);
-//        transforms.setRightHandTransform(&pos);
-    }
 
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
     buttons.register_change_handler((void *) this, handle_button);
@@ -103,20 +92,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         object1->addKeyframeForCurrentLocation(20.0);
         project->addObject(object1);
     }
-
-    // camera setup
-    vtkSmartPointer<vtkCamera> camera =
-            vtkSmartPointer<vtkCamera>::New();
-    camera->SetPosition(0, 0, 50);
-    camera->SetFocalPoint(0, 0, 30);
-
-
-    // set up tracker objects
-    handleInput();
-
-
-    // VTK Renderer
-    renderer->SetActiveCamera(camera);
 
     // VTK/Qt wedded
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
@@ -261,11 +236,6 @@ void SimpleView::loadProject() {
     this->ui->qvtkWidget->GetRenderWindow()->RemoveRenderer(renderer);
     renderer = vtkSmartPointer<vtkRenderer>::New();
 
-    vtkSmartPointer<vtkCamera> camera =
-            vtkSmartPointer<vtkCamera>::New();
-    camera->SetPosition(0, 0, 50);
-    camera->SetFocalPoint(0, 0, 30);
-    renderer->SetActiveCamera(camera);
     delete project;
     // create new one
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
