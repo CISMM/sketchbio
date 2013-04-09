@@ -4,6 +4,7 @@
 #include <quat.h>
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
+#include <vtkCamera.h>
 #include <vtkLinearTransform.h>
 
 /*
@@ -197,6 +198,16 @@ public:
      */
     void rotateWorldRelativeToRoomAboutRightTracker(const q_type quat);
 
+    /*
+     * Sets the position, focal point, and up vector of the global camera
+     */
+    void updateCameraForFrame();
+
+    /*
+     * Get the global camera
+     */
+    vtkCamera *getGlobalCamera();
+
 private:
 
     vtkSmartPointer<vtkTransform> worldToRoom;
@@ -205,6 +216,8 @@ private:
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     vtkSmartPointer<vtkTransform> roomToTrackerBase;
     vtkSmartPointer<vtkLinearTransform> trackerBaseToRoom;
+
+    vtkSmartPointer<vtkCamera> globalCamera;
 
     double worldToRoomScale;
 
@@ -217,6 +230,10 @@ private:
 inline void q_xyz_quat_copy(q_xyz_quat_struct *dest, const q_xyz_quat_struct *src) {
     q_copy(dest->quat,src->quat);
     q_vec_copy(dest->xyz,src->xyz);
+}
+
+inline vtkCamera *TransformManager::getGlobalCamera() {
+    return globalCamera;
 }
 
 #endif // TRANSFORMMANAGER_H

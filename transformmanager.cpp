@@ -8,12 +8,14 @@ TransformManager::TransformManager() {
     worldToRoomScale = 1;
     roomToWorld = worldToRoom->GetLinearInverse();
     roomToEyes = vtkSmartPointer<vtkTransform>::New();
+    roomToEyes->Identity();
+    roomToEyes->RotateWXYZ(180,0,1,0);
+    roomToEyes->Translate(0,0,-STARTING_CAMERA_POSITION);
     worldEyeTransform = vtkSmartPointer<vtkTransform>::New();
     worldEyeTransform->Identity();
     worldEyeTransform->PostMultiply();
     worldEyeTransform->Concatenate(worldToRoom);
     worldEyeTransform->Concatenate(roomToEyes);
-    roomToEyes->Identity();
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
     roomToTrackerBase->Translate(0,0,0); // TBD
     roomToTrackerBase->Scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
@@ -27,6 +29,8 @@ TransformManager::TransformManager() {
     q_xyz_quat_copy(&trackerBaseToRightHand,&trackerBaseToLeftHand);
     q_xyz_quat_copy(&trackerBaseToLeftHandOld,&trackerBaseToLeftHand);
     q_xyz_quat_copy(&trackerBaseToRightHandOld,&trackerBaseToLeftHand);
+    globalCamera = vtkSmartPointer<vtkCamera>::New();
+    globalCamera->SetClippingRange(100,3000);
 }
 
 vtkTransform * TransformManager::getWorldToEyeTransform() {
@@ -67,7 +71,8 @@ void TransformManager::getLeftTrackerTransformInEyeCoords(vtkTransform *trans) {
     trans->RotateWXYZ(angle * 180 / Q_PI,x,y,z);
     trans->Translate(trackerBaseToLeftHand.xyz);
     trans->Concatenate(trackerBaseToRoom);
-    trans->Concatenate(roomToEyes);
+    trans->Concatenate(roomToWorld);
+//    trans->Concatenate(roomToEyes);
 }
 
 void TransformManager::getLeftTrackerPosInWorldCoords(q_vec_type dest_vec) {
@@ -90,7 +95,8 @@ void TransformManager::getRightTrackerTransformInEyeCoords(vtkTransform *trans) 
     trans->RotateWXYZ(angle * 180 / Q_PI,x,y,z);
     trans->Translate(trackerBaseToRightHand.xyz);
     trans->Concatenate(trackerBaseToRoom);
-    trans->Concatenate(roomToEyes);
+    trans->Concatenate(roomToWorld);
+//    trans->Concatenate(roomToEyes);
 }
 
 void TransformManager::getRightTrackerPosInWorldCoords(q_vec_type dest_vec) {
@@ -243,4 +249,36 @@ void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(const q_type q
     rotateWorldRelativeToRoom(quat);
     q_vec_invert(right,right);
     translateWorldRelativeToRoom(right);
+}
+
+void TransformManager::updateCameraForFrame() {
+    vtkLinearTransform *inv = worldEyeTransform->GetLinearInverse();
+    vtkMatrix4x4 *invMat = inv->GetMatrix();
+    q_vec_type up, forward, pos, fPoint;
+    double scale;
+    up[0] = invMat->GetElement(0,1);
+    up[1] = invMat->GetElement(1,1);
+    up[2] = invMat->GetElement(2,1);
+    scale = q_vec_magnitude(up);
+    q_vec_normalize(up,up);
+    forward[0] = invMat->GetElement(0,2);
+    forward[1] = invMat->GetElement(1,2);
+    forward[2] = invMat->GetElement(2,2);
+    q_vec_normalize(forward,forward);
+    pos[0] = invMat->GetElement(0,3);
+    pos[1] = invMat->GetElement(1,3);
+    pos[2] = invMat->GetElement(2,3);
+    q_vec_scale(fPoint,STARTING_CAMERA_POSITION*scale,forward);
+    q_vec_add(fPoint,fPoint,pos);
+//    std::cout << "\nUp: ";
+//    q_vec_print(up);
+//    std::cout << "Forward: ";
+//    q_vec_print(forward);
+//    std::cout << "Pos: ";
+//    q_vec_print(pos);
+//    std::cout << "Focal Point: ";
+//    q_vec_print(fPoint);
+    globalCamera->SetPosition(pos);
+    globalCamera->SetFocalPoint(fPoint);
+    globalCamera->SetViewUp(up);
 }

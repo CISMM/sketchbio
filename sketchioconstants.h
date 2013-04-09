@@ -39,6 +39,7 @@
 
 // scale between world and camera (also used to determine tracker size)
 #define SCALE_DOWN_FACTOR (.03125)
+#define STARTING_CAMERA_POSITION (50.0)
 
 // the name of the project's save file in the project directory
 #define PROJECT_XML_FILENAME "project.xml"
