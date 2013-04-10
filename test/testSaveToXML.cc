@@ -16,6 +16,9 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
 
 
 void compareNumbers(SketchProject *proj1, SketchProject *proj2, int &retVal) {
+    // make sure both have camera models created (easier than making sure neither has it)
+    proj1->getCameraModel();
+    proj2->getCameraModel();
     if (proj2->getModelManager()->getNumberOfModels() != proj1->getModelManager()->getNumberOfModels()) {
         retVal++;
         cout << "Number of models different" << endl;
@@ -31,6 +34,14 @@ void compareNumbers(SketchProject *proj1, SketchProject *proj2, int &retVal) {
     if (proj1->getNumberOfReplications() != proj2->getNumberOfReplications()) {
         retVal++;
         cout << "Number of replications is different" << endl;
+    }
+    if (proj1->getTransformOps()->size() != proj2->getTransformOps()->size()) {
+        retVal++;
+        cout << "Number of transform ops is different" << endl;
+    }
+    if (proj1->getCameras()->size() != proj2->getCameras()->size() ) {
+        retVal++;
+        cout << "Number of cameras is different" << endl;
     }
 }
 
@@ -162,6 +173,29 @@ void compareObjectLists(const QList<SketchObject *> *list1, const QList<SketchOb
         }
     }
 
+}
+
+void compareCameras(SketchProject *proj1, SketchProject *proj2, int &retVal) {
+    const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *cameras1 = proj1->getCameras();
+    const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *cameras2 = proj2->getCameras();
+    for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it (*cameras1);
+         it.hasNext(); ) {
+        SketchObject *obj1 = it.next().key();
+        bool match = false;
+        for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it2 (*cameras2);
+             it2.hasNext(); ) {
+            SketchObject *obj2 = it2.next().key();
+            int numDiffs = 0;
+            compareObjects(obj1,obj2,numDiffs,true);
+            if (numDiffs == 0) {
+                match = true;
+            }
+        }
+        if (match == false) {
+            retVal++;
+            cout << "Could not match camera." << endl;
+        }
+    }
 }
 
 void compareTransformOps(QSharedPointer<TransformEquals> t1, QSharedPointer<TransformEquals> t2,
@@ -373,6 +407,7 @@ int testSave2() {
     pos1[Q_X] += 2 * Q_PI;
     q_mult(orient1,orient1,orient1);
     proj1->addObject(m1,pos1,orient1);
+    proj1->addCamera(pos1,orient1);
 
     vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
@@ -383,6 +418,7 @@ int testSave2() {
 
     compareNumbers(proj1.data(),proj2.data(),retVal);
     compareWorldObjects(proj1.data(),proj2.data(),retVal);
+    compareCameras(proj1.data(), proj2.data(), retVal);
 
     if (retVal == 0) {
         cout << "Passed test 2" << endl;

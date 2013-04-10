@@ -60,6 +60,8 @@ public:
     const QList<StructureReplicator *> *getReplicas() const;
     // get transform equals objects (or more things added later, not sure)
     const QVector<QSharedPointer<TransformEquals> > *getTransformOps() const;
+    // get cameras hash
+    const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *getCameras() const;
     // number of replicas
     int getNumberOfReplications() const;
     // number of transform equals (or more stuff... see comment on getTransformOps())
@@ -160,6 +162,9 @@ inline int SketchProject::getNumberOfTransformOps() const {
 
 inline SketchModel *SketchProject::getCameraModel() {
     return models->getCameraModel();
+}
+inline const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *SketchProject::getCameras() const {
+    return &cameras;
 }
 
 #endif // SKETCHPROJECT_H
