@@ -82,7 +82,9 @@ SketchProject::SketchProject(vtkRenderer *r,
     leftOutlinesActor(vtkSmartPointer<vtkActor>::New()),
     rightOutlinesActor(vtkSmartPointer<vtkActor>::New()),
     leftOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
-    rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
+    rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
+    isDoingAnimation(false),
+    timeInAnimation(0.0)
 {
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     grabbedWorld = WORLD_NOT_GRABBED;
