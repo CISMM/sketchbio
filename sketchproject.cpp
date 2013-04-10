@@ -349,9 +349,8 @@ void SketchProject::handleInput() {
     // move fibers
     updateTrackerObjectConnections();
 
-    // update the camera
+    // update the main camera
     transforms->updateCameraForFrame();
-    renderer->SetActiveCamera(transforms->getGlobalCamera());
 
     // we don't want to show bounding boxes during animation
     if (world->getNumberOfObjects() > 0 && !isDoingAnimation) {

@@ -249,26 +249,39 @@ void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(const q_type q
     translateWorldRelativeToRoom(right);
 }
 
+// this updates the camera based on the current world to eye matrix using the
+// algorithm described here:
+// http://vtk.1045678.n5.nabble.com/Question-on-manual-configuration-of-VTK-camera-td5059478.html
 void TransformManager::updateCameraForFrame() {
+    // get the inverse of the world to eye matrix
     vtkLinearTransform *inv = worldEyeTransform->GetLinearInverse();
     vtkMatrix4x4 *invMat = inv->GetMatrix();
     q_vec_type up, forward, pos, fPoint;
     double scale;
+    // the first column is the 'right' vector ... unused
+    // the second column of that matrix is the up vector
     up[0] = invMat->GetElement(0,1);
     up[1] = invMat->GetElement(1,1);
     up[2] = invMat->GetElement(2,1);
+    // note that the matrix may have a scale, take it into account
     scale = q_vec_magnitude(up);
     q_vec_normalize(up,up);
+    // the third column is the front vector
     forward[0] = invMat->GetElement(0,2);
     forward[1] = invMat->GetElement(1,2);
     forward[2] = invMat->GetElement(2,2);
     q_vec_normalize(forward,forward);
+    // the fourth column of the matrix is the position of the camera as a point
     pos[0] = invMat->GetElement(0,3);
     pos[1] = invMat->GetElement(1,3);
     pos[2] = invMat->GetElement(2,3);
+    // compute the focal point from the position and the front vector
     q_vec_scale(fPoint,STARTING_CAMERA_POSITION*scale,forward);
     q_vec_add(fPoint,fPoint,pos);
+    // set the camera parameters
     globalCamera->SetPosition(pos);
     globalCamera->SetFocalPoint(fPoint);
     globalCamera->SetViewUp(up);
+    // to keep things from going outside the focal planes so much (may need fine-tuning)
+    globalCamera->SetClippingRange(scale * SCALE_DOWN_FACTOR * 100, sqrt(scale *SCALE_DOWN_FACTOR) * 3000);
 }
