@@ -177,6 +177,9 @@ void SketchProject::startAnimation() {
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
     grabbedWorld = WORLD_NOT_GRABBED;
+    for (QSetIterator<SketchObject *> it(cameras); it.hasNext(); ) {
+        renderer->RemoveActor(it.next()->getActor());
+    }
 }
 
 void SketchProject::stopAnimation() {
@@ -185,6 +188,10 @@ void SketchProject::stopAnimation() {
     renderer->AddActor(rightHand->getActor());
     // distances and outlines actors will refresh themselves
     // handed springs and world grab should refresh themselves too
+    for (QSetIterator<SketchObject *> it(cameras); it.hasNext(); ) {
+        renderer->AddActor(it.next()->getActor());
+    }
+    renderer->SetActiveCamera(transforms->getGlobalCamera());
 }
 
 void SketchProject::timestep(double dt) {
@@ -255,7 +262,13 @@ SketchObject *SketchProject::addObject(SketchObject *object) {
     if (object->numInstances() == 1) {
         object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
     }
-    return world->addObject(object);
+    world->addObject(object);
+    // this is for when the object is read in from a file, this method is called
+    // with the objects instead of addCamera.  So this needs to recognize cameras
+    if (object->getModel() == models->getCameraModel()) {
+        cameras.insert(object);
+    }
+    return object;
 }
 
 bool SketchProject::addObjects(QVector<QString> filenames) {

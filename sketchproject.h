@@ -66,6 +66,8 @@ public:
     int getNumberOfTransformOps() const;
     // gets the directory path for this project (absolute path)
     QString getProjectDir() const;
+    // gets the camera model
+    SketchModel *getCameraModel();
 
     // adding things functions
     // for models
@@ -153,6 +155,10 @@ inline const QVector<QSharedPointer<TransformEquals> > *SketchProject::getTransf
 
 inline int SketchProject::getNumberOfTransformOps() const {
     return transformOps.size();
+}
+
+inline SketchModel *SketchProject::getCameraModel() {
+    return models->getCameraModel();
 }
 
 #endif // SKETCHPROJECT_H

@@ -585,7 +585,9 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
     }
     SketchModel *model = NULL;
     QString src = source;
-    if (!src.startsWith("VTK")) {
+    if (src == QString(CAMERA_MODEL_KEY)) { // load in the camera model
+        model = proj->getCameraModel();
+    } else if (!src.startsWith("VTK")) {
         // trans not used right now
         model = proj->addModelFromFile(proj->getProjectDir() + "/" + source,invMass,invMoment,scale);
     } else {
