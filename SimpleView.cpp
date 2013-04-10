@@ -91,6 +91,10 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         object1->setPosAndOrient(position,orientation);
         object1->addKeyframeForCurrentLocation(20.0);
         project->addObject(object1);
+
+        q_vec_set(position,0,100,0);
+        q_from_axis_angle(orientation,1,0,0,0);
+        project->addCamera(position,orientation);
     }
 
     // VTK/Qt wedded

@@ -6,9 +6,10 @@
  * This class was originally written for a homework assignment in Physically Based Modeling (COMP768)
  * Author: Shawn Waldon
  *
- * PolyMananger is a class to deal with keeping models in memory at any given time.  Each model is
- * stored as an index into an internal collection and the model data can be gotten out via this index.
- * The collision detection model for each model can also be accessed by this same index.
+ * This class stores all the models that are currently read in/created in a hash so that they can be
+ * reused easily without having the user keep track of indices.  The hash key is a QString which is
+ * the filename for models read from a file and for vtk-source based models it gives some indication
+ * of what the source is.
  *
  */
 
@@ -27,11 +28,26 @@
 #define INVERSEMASS 1.0
 #define INVERSEMOMENT (1.0/25000)
 
+#define CAMERA_MODEL_KEY "CAMERA"
+
 class ModelManager
 {
 public:
     ModelManager();
     virtual ~ModelManager();
+
+    /*****************************************************************************
+      *
+      * This method returns the model that is currently being used for the camera
+      * objects that the user can place and move.  This will probably be something
+      * created from vtk sources, although that is not necessary.  This model is
+      * guaranteed to have the key CAMERA_MODEL_KEY in the models hash.
+      *
+      * Notes: cameras are defined as being located at the object's origin and pointing
+      * in the object's internal +z direction
+      *
+      ****************************************************************************/
+    SketchModel *getCameraModel();
 
     /*****************************************************************************
       *

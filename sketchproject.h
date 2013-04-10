@@ -74,6 +74,7 @@ public:
     SketchObject *addObject(SketchModel *model, const q_vec_type pos, const q_type orient);
     SketchObject *addObject(QString filename);
     SketchObject *addObject(SketchObject *obj);
+    SketchObject *addCamera(const q_vec_type pos, const q_type orient);
     bool addObjects(QVector<QString> filenames);
     // for springs between objects (object-tracker springs managed internally)
     SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
@@ -101,6 +102,7 @@ private:
     QScopedPointer<WorldManager> world;
     // operators on objects -- these are owned here... but not sure if I can do lists of ScopedPointers
     QList<StructureReplicator *> replicas;
+    QSet<SketchObject *> cameras;
     QVector<QSharedPointer<TransformEquals> > transformOps;
 
     // project dir

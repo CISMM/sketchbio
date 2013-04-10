@@ -11,6 +11,7 @@
 #include <vtkTransform.h>
 #include <vtkCellArray.h>
 #include <vtkOBJReader.h>
+#include <vtkConeSource.h>
 
 #include <QDebug>
 
@@ -30,6 +31,48 @@ ModelManager::~ModelManager() {
          delete model;
      }
      models.clear();
+}
+
+/*****************************************************************************
+  *
+  * This method returns the model that is currently being used for the camera
+  * objects that the user can place and move.  This will probably be something
+  * created from vtk sources, although that is not necessary.  This model is
+  * guaranteed to have the key CAMERA_MODEL_KEY in the models hash.
+  *
+  ****************************************************************************/
+SketchModel *ModelManager::getCameraModel() {
+    QString cameraKey(CAMERA_MODEL_KEY);
+    if (models.contains(cameraKey)) {
+        return models.value(cameraKey);
+    } else {
+        // create the "camera"
+        vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
+        cone->SetDirection(0,0,1);
+        cone->SetRadius(30);
+        cone->SetHeight(30);
+        cone->SetResolution(4);
+        cone->CappingOff();
+        cone->Update();
+        vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
+                vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+        transformPD->SetInputConnection(cone->GetOutputPort());
+        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        transform->Identity();
+        transformPD->SetTransform(transform);
+        transformPD->Update();
+        // initialize the model data
+        SketchModel *sModel = new SketchModel(cameraKey,transformPD,INVERSEMASS,INVERSEMOMENT);
+        // initialize the collision model
+        makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput())
+#ifndef PQP_UPDATE_EPSILON
+                      , sModel->getTriIdToTriIndexHash()
+#endif
+                      );
+        // insert into the has and return the new model
+        models.insert(cameraKey,sModel);
+        return sModel;
+    }
 }
 
 /*****************************************************************************

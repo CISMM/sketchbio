@@ -75,6 +75,7 @@ SketchProject::SketchProject(vtkRenderer *r,
     transforms(new TransformManager()),
     world(new WorldManager(r,transforms->getWorldToEyeTransform())),
     replicas(),
+    cameras(),
     transformOps(),
     projectDir(NULL),
     buttonDown(buttonStates),
@@ -102,6 +103,7 @@ SketchProject::SketchProject(vtkRenderer *r,
 }
 
 SketchProject::~SketchProject() {
+    cameras.clear();
     qDeleteAll(replicas);
     replicas.clear();
     delete leftHand;
@@ -268,6 +270,13 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
     }
 
     return true;
+}
+
+SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient) {
+    SketchModel *model = models->getCameraModel();
+    SketchObject *obj = addObject(model,pos,orient);
+    cameras.insert(obj);
+    return obj;
 }
 
 SpringConnection *SketchProject::addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
