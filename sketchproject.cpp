@@ -177,8 +177,8 @@ void SketchProject::startAnimation() {
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
     grabbedWorld = WORLD_NOT_GRABBED;
-    for (QSetIterator<SketchObject *> it(cameras); it.hasNext(); ) {
-        renderer->RemoveActor(it.next()->getActor());
+    for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
+        renderer->RemoveActor(it.next().key()->getActor());
     }
 }
 
@@ -188,8 +188,8 @@ void SketchProject::stopAnimation() {
     renderer->AddActor(rightHand->getActor());
     // distances and outlines actors will refresh themselves
     // handed springs and world grab should refresh themselves too
-    for (QSetIterator<SketchObject *> it(cameras); it.hasNext(); ) {
-        renderer->AddActor(it.next()->getActor());
+    for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
+        renderer->AddActor(it.next().key()->getActor());
     }
     renderer->SetActiveCamera(transforms->getGlobalCamera());
 }
@@ -203,6 +203,13 @@ void SketchProject::timestep(double dt) {
         if (world->setAnimationTime(timeInAnimation)) {
             // if setAnimationTime returns true, then we are done
             stopAnimation();
+        } else {
+            for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
+                SketchObject *cam = it.peekNext().key();
+                vtkSmartPointer<vtkCamera> vCam = it.next().value();
+                setUpVtkCamera(cam,vCam);
+                renderer->SetActiveCamera(vCam);
+            }
         }
         timeInAnimation += dt;
     }
@@ -266,7 +273,7 @@ SketchObject *SketchProject::addObject(SketchObject *object) {
     // this is for when the object is read in from a file, this method is called
     // with the objects instead of addCamera.  So this needs to recognize cameras
     if (object->getModel() == models->getCameraModel()) {
-        cameras.insert(object);
+        cameras.insert(object,vtkSmartPointer<vtkCamera>::New());
     }
     return object;
 }
@@ -288,7 +295,7 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
 SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient) {
     SketchModel *model = models->getCameraModel();
     SketchObject *obj = addObject(model,pos,orient);
-    cameras.insert(obj);
+    cameras.insert(obj,vtkSmartPointer<vtkCamera>::New());
     return obj;
 }
 
@@ -574,4 +581,33 @@ void SketchProject::updateTrackerPositions() {
     transforms->getRightTrackerOrientInWorldCoords(orient);
     rightHand->setPosAndOrient(pos,orient);
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
+}
+
+void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
+    vtkSmartPointer<vtkTransform> trans = cam->getLocalTransform();
+    vtkSmartPointer<vtkLinearTransform> invTrans = trans->GetLinearInverse();
+    vtkSmartPointer<vtkMatrix4x4> invMat = trans->GetMatrix();
+    // note that the object's localTransform should not be scaled
+    q_vec_type up, forward, pos, fPoint;
+    // the first column is the 'right' vector ... unused
+    // the second column of that matrix is the up vector
+    up[0] = invMat->GetElement(0,1);
+    up[1] = invMat->GetElement(1,1);
+    up[2] = invMat->GetElement(2,1);
+    // the third column is the front vector
+    forward[0] = invMat->GetElement(0,2);
+    forward[1] = invMat->GetElement(1,2);
+    forward[2] = invMat->GetElement(2,2);
+    q_vec_normalize(forward,forward);
+    // the fourth column of the matrix is the position of the camera as a point
+    pos[0] = invMat->GetElement(0,3);
+    pos[1] = invMat->GetElement(1,3);
+    pos[2] = invMat->GetElement(2,3);
+    // compute the focal point from the position and the front vector
+    q_vec_scale(fPoint,40,forward);
+    q_vec_add(fPoint,fPoint,pos);
+    // set camera parameters
+    vCam->SetPosition(pos);
+    vCam->SetFocalPoint(fPoint);
+    vCam->SetViewUp(up);
 }

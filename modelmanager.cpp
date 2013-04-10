@@ -48,7 +48,7 @@ SketchModel *ModelManager::getCameraModel() {
     } else {
         // create the "camera"
         vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
-        cone->SetDirection(0,0,1);
+        cone->SetDirection(0,0,-1);
         cone->SetRadius(30);
         cone->SetHeight(30);
         cone->SetResolution(4);

@@ -93,6 +93,7 @@ private:
     void handleInput();
     void updateTrackerPositions();
     void updateTrackerObjectConnections();
+    static void setUpVtkCamera(SketchObject *cam, vtkCamera *vCam);
 
     // fields
     vtkSmartPointer<vtkRenderer> renderer;
@@ -104,7 +105,7 @@ private:
     QScopedPointer<WorldManager> world;
     // operators on objects -- these are owned here... but not sure if I can do lists of ScopedPointers
     QList<StructureReplicator *> replicas;
-    QSet<SketchObject *> cameras;
+    QHash<SketchObject *,vtkSmartPointer<vtkCamera> > cameras;
     QVector<QSharedPointer<TransformEquals> > transformOps;
 
     // project dir
