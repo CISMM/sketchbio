@@ -8,6 +8,7 @@
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
     parent(NULL),
+    visible(true),
     collisionGroups(),
     localTransformPrecomputed(false),
     localTransformDefiningPosition(false),
@@ -279,7 +280,7 @@ void SketchObject::addKeyframeForCurrentLocation(double t) {
     if (t < 0) { // no negative times allowed
         return;
     }
-    Keyframe frame(position, orientation);
+    Keyframe frame(position, orientation,visible);
     if (keyframes.isNull()) {
         keyframes.reset(new QMap< double, Keyframe >());
     }
@@ -293,30 +294,43 @@ void SketchObject::removeKeyframeForTime(double t) {
     }
 }
 
+//#########################################################################
 void SketchObject::setPositionByAnimationTime(double t) {
+    // we don't support negative times and if the object has no keyframes, then
+    // no need to do anything
     if (t < 0 || !hasKeyframes()) {
         return;
     }
     QMapIterator< double, Keyframe > it(*keyframes.data());
+    // last is the last keyframe we passed
     double last = it.peekNext().key();
+    // go until the next one is greater than the time (the last one
+    // will be less than the time unless the time is less than the first
+    // time in the keyframes list
     while (it.peekNext().key() < t && it.hasNext()) {
         last = it.next().key();
     }
+    // if we are after the end of the last keyframe defined
     if (!it.hasNext()) {
         Keyframe f = keyframes->value(last);
         f.getPosition(position);
         f.getOrientation(orientation);
+    // if we happenned to land on a keyframe
     } else if (it.peekNext().key() == t) {
         Keyframe f = it.next().value();
         f.getPosition(position);
         f.getOrientation(orientation);
     } else {
+        // if we have a next keyframe that is greater than the time
         double next = it.peekNext().key();
+        // note, if the first keyframe is after the time given, these will
+        // be the same and the state will be set to the state at that keyframe
         Keyframe f1 = keyframes->value(last), f2 = it.next().value();
         double diff1 = next - last;
         double diff2 = t - last;
         double ratio = diff2 / diff1;
-        // TODO - being lazy and just linearly interpolating... really should use a spline for pos
+        // - being lazy and just linearly interpolating... really should use a spline for pos
+        //   but too much effort until we are asked for it
         q_vec_type pos1, pos2;
         q_type or1, or2;
         f1.getPosition(pos1);
@@ -328,6 +342,7 @@ void SketchObject::setPositionByAnimationTime(double t) {
         q_vec_add(position,pos1,pos2); // set position to linearly interpolated location between points
         q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
         // TODO -- set visibility stuff here
+        setIsVisible(f1.isVisibleAfter());
     }
     recalculateLocalTransform();
 }
@@ -365,6 +380,16 @@ void SketchObject::notifyObservers() {
     for (int i = 0; i < observers.size(); i++) {
         observers[i]->objectPushed(this);
     }
+}
+
+//#########################################################################
+void SketchObject::setIsVisible(bool isVisible) {
+    visible = isVisible;
+}
+
+//#########################################################################
+bool SketchObject::isVisible() const {
+    return visible;
 }
 
 //#########################################################################
@@ -658,3 +683,10 @@ void ObjectGroup::localTransformUpdated() {
     }
 }
 
+//#########################################################################
+void ObjectGroup::setIsVisible(bool isVisible) {
+    SketchObject::setIsVisible(isVisible);
+    for (int i = 0; i < children.size(); i++) {
+        children[i]->setIsVisible(isVisible);
+    }
+}

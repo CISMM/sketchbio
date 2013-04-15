@@ -1,5 +1,6 @@
 #include "projecttoxml.h"
 #include <ios>
+#include <sketchioconstants.h>
 #include <sketchtests.h>
 #include <QScopedPointer>
 
@@ -13,7 +14,7 @@
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_ATTRIBUTE_NAME                  "version"
 #define SAVE_MAJOR_VERSION                      1
-#define SAVE_MINOR_VERSION                      2
+#define SAVE_MINOR_VERSION                      3
 #define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
@@ -34,12 +35,12 @@
 #define OBJECT_ELEMENT_NAME                     "object"
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
 #define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME     "numInstances"
+#define OBJECT_VISIBILITY_ATTRIBUTE_NAME        "visibility"
 #define OBJECT_REPLICA_NUM_ATTRIBUTE_NAME       "replicaNum"
 #define OBJECT_KEYFRAME_LIST_ELEMENT_NAME       "keyframeList"
 #define OBJECT_KEYFRAME_ELEMENT_NAME            "keyframe"
 #define OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME     "time"
 #define OBJECT_KEYFRAME_VIS_ELEMENT_NAME        "visibility"
-#define OBJECT_KEYFRAME_VIS_B4_ATTR_NAME        "visibility_before"
 #define OBJECT_KEYFRAME_VIS_AF_ATTR_NAME        "visibility_after"
 
 #define REPLICATOR_LIST_ELEMENT_NAME            "replicatorList"
@@ -234,6 +235,7 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
     }
     // Current thoughts: collision groups should be recreated from effects placed on objects being recreated.
     //   There is no reason that they should need to be saved.
+    child->SetAttribute(OBJECT_VISIBILITY_ATTRIBUTE_NAME,object->isVisible() ? "true" : "false");
 
     const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
     if (rObj != NULL) {
@@ -275,7 +277,6 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
             frameElement->AddNestedElement(tfrm);
             vtkSmartPointer<vtkXMLDataElement> visibility = vtkSmartPointer<vtkXMLDataElement>::New();
             visibility->SetName(OBJECT_KEYFRAME_VIS_ELEMENT_NAME);
-            visibility->SetAttribute(OBJECT_KEYFRAME_VIS_B4_ATTR_NAME,(frame.isVisibleBefore()?"true":"false"));
             visibility->SetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME,(frame.isVisibleAfter()?"true":"false"));
             frameElement->AddNestedElement(visibility);
             child->AddNestedElement(frameElement);
@@ -472,6 +473,24 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataEl
         vtkSmartPointer<vtkXMLDataElement> transOpList = vtkSmartPointer<vtkXMLDataElement>::New();
         transOpList->SetName(TRANSFORM_OP_LIST_ELEMENT_NAME);
         root->AddNestedElement(transOpList);
+    }
+    case 2: // in 3 we changed how the camera works and must update the transformation matrices that are saved
+        // notably the room to eye matrix
+    {
+        vtkXMLDataElement *transforms = root->FindNestedElementWithName(TRANSFORM_MANAGER_ELEMENT_NAME);
+        if (transforms == NULL) return XML_TO_DATA_FAILURE;
+        vtkXMLDataElement *roomToEye = transforms->FindNestedElementWithName(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME);
+        if (roomToEye == NULL) return XML_TO_DATA_FAILURE;
+        transforms->RemoveNestedElement(roomToEye);  // This takes care of deleting it, no need to do it explicitly
+        roomToEye = NULL; // just delete the old one
+        vtkSmartPointer<vtkTransform> trans = vtkSmartPointer<vtkTransform>::New();
+        trans->Identity();
+        trans->RotateWXYZ(180,0,1,0);
+        trans->Translate(0,0,-STARTING_CAMERA_POSITION);
+        roomToEye = matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,trans->GetMatrix());
+        // create a new one with the correct room to eye matrix and add it
+        transforms->AddNestedElement(roomToEye);
+        roomToEye->Delete();
     }
     }
     return XML_TO_DATA_SUCCESS;
@@ -674,7 +693,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     }
     q_vec_type pos;
     q_type orient;
-    bool visB, visA;
+    bool visA;
     double time;
     int numRead = 0;
     numRead = frame->GetScalarAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME,time);
@@ -688,14 +707,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     vtkXMLDataElement *kVisibility = frame->FindNestedElementWithName(OBJECT_KEYFRAME_VIS_ELEMENT_NAME);
     if (kVisibility == NULL) return XML_TO_DATA_FAILURE; // if no visiblitly status.. fail
     // TODO ... once there in an interface for it on object, do something with visibility
-    QString strB(kVisibility->GetAttribute(OBJECT_KEYFRAME_VIS_B4_ATTR_NAME));
-    if (strB.toLower() == QString("true")) {
-        visB = true;
-    } else if (strB.toLower() == QString("false")) {
-        visB = false;
-    } else {
-        return XML_TO_DATA_FAILURE;
-    }
     QString strA(kVisibility->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME));
     if (strA.toLower() == QString("true")) {
         visA = true;
@@ -706,6 +717,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     }
     object->setLastLocation(); // so we don't change the object's position
     object->setPosAndOrient(pos,orient);
+    object->setIsVisible(visA);
     object->addKeyframeForCurrentLocation(time); // TODO -- once visibility is done, set it too.
     object->restoreToLastLocation(); // restore the object's position
     return XML_TO_DATA_SUCCESS;
@@ -718,6 +730,7 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
         QString mId, oId;
         q_vec_type pos;
         q_type orient;
+        bool visibility;
         oId = QString("#") + elem->GetAttribute(ID_ATTRIBUTE_NAME);
         int numInstances;
         if (!elem->GetScalarAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,numInstances)) {
@@ -735,6 +748,14 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
             mId = c;
         } else {
             mId = "";
+        }
+        const char *c = props->GetAttribute(OBJECT_VISIBILITY_ATTRIBUTE_NAME);
+        if (!c) {
+            visibility = true; // default to visible
+        } else if (QString(c) == QString("true")) {
+            visibility = true;
+        } else {
+            visibility = false;
         }
         vtkXMLDataElement *trans = elem->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
         if (trans == NULL) {
@@ -783,6 +804,7 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
             }
         } // end if we have keyframes... not having keyframes is fine too, so don't fail in this case
         objectIds.insert(oId,object.data());
+        object->setIsVisible(visibility); // set visibility after keyframes so frames can store visibility state
         return object.take();
     }
     return NULL;

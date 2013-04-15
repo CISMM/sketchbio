@@ -267,6 +267,20 @@ public:
     bool setAnimationTime(double t);
     /*******************************************************************
      *
+     * Shows all the invisible objects (for edit mode where you should be
+     * able to position invisible things like cameras)
+     *
+     *******************************************************************/
+    void showInvisibleObjects();
+    /*******************************************************************
+     *
+     * Hides all the invisible objects (like cameras) for previewing
+     * animations
+     *
+     *******************************************************************/
+    void hideInvisibleObjects();
+    /*******************************************************************
+     *
      * Turns on or off the non-user related spring forces.
      *
      *******************************************************************/
@@ -371,7 +385,7 @@ private:
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     vtkSmartPointer<vtkTransform> worldEyeTransform;
     int maxGroupNum;
-    bool doPhysicsSprings, doCollisionCheck;
+    bool doPhysicsSprings, doCollisionCheck, showInvisible;
     CollisionMode::Type collisionResponseMode;
 };
 

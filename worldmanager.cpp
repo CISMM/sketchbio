@@ -20,6 +20,7 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     renderer = r;
     doPhysicsSprings = true;
     doCollisionCheck = true;
+    showInvisible = true;
     collisionResponseMode = CollisionMode::POSE_MODE_TRY_ONE;
     nextIdx = 0;
     lastCapacityUpdate = 1000;
@@ -74,7 +75,9 @@ SketchObject *WorldManager::addObject(SketchObject *object) {
     if (object->getPrimaryCollisionGroupNum() == OBJECT_HAS_NO_GROUP) {
         object->setPrimaryCollisionGroupNum(getNextGroupId());
     }
-    insertActors(object);
+    if (object->isVisible() || showInvisible) {
+        insertActors(object);
+    }
     return object;
 }
 
@@ -193,13 +196,41 @@ bool WorldManager::setAnimationTime(double t) {
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
         obj->setPositionByAnimationTime(t);
+        bool wasVisible = obj->isVisible();
         if (obj->hasKeyframes()) {
             if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
                 isDone = false;
             }
         }
+        if (obj->isVisible() && !wasVisible) {
+            insertActors(obj);
+        } else if (!obj->isVisible() && wasVisible) {
+            removeActors(obj);
+        }
     }
     return isDone;
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::showInvisibleObjects() {
+    showInvisible = true;
+    for (int i = 0; i < objects.length(); i++) {
+        if (!objects[i]->isVisible()) {
+            insertActors(objects[i]);
+        }
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::hideInvisibleObjects() {
+    showInvisible = false;
+    for (int i = 0; i < objects.length(); i++) {
+        if (!objects[i]->isVisible()) {
+            removeActors(objects[i]);
+        }
+    }
 }
 
 //##################################################################################################

@@ -176,10 +176,8 @@ void SketchProject::startAnimation() {
     lDist = rDist = std::numeric_limits<double>::max();
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
+    world->hideInvisibleObjects();
     grabbedWorld = WORLD_NOT_GRABBED;
-    for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
-        renderer->RemoveActor(it.next().key()->getActor());
-    }
 }
 
 void SketchProject::stopAnimation() {
@@ -188,9 +186,7 @@ void SketchProject::stopAnimation() {
     renderer->AddActor(rightHand->getActor());
     // distances and outlines actors will refresh themselves
     // handed springs and world grab should refresh themselves too
-    for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
-        renderer->AddActor(it.next().key()->getActor());
-    }
+    world->showInvisibleObjects();
     renderer->SetActiveCamera(transforms->getGlobalCamera());
 }
 
@@ -274,6 +270,10 @@ SketchObject *SketchProject::addObject(SketchObject *object) {
     // with the objects instead of addCamera.  So this needs to recognize cameras
     if (object->getModel() == models->getCameraModel()) {
         cameras.insert(object,vtkSmartPointer<vtkCamera>::New());
+        // cameras are not visible! make sure they are not.
+        if (object->isVisible()) {
+            object->setIsVisible(false);
+        }
     }
     return object;
 }
@@ -295,6 +295,8 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
 SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient) {
     SketchModel *model = models->getCameraModel();
     SketchObject *obj = addObject(model,pos,orient);
+    // cameras are invisible (from the animation's standpoint)
+    obj->setIsVisible(false);
     cameras.insert(obj,vtkSmartPointer<vtkCamera>::New());
     return obj;
 }

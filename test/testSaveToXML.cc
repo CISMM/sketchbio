@@ -591,6 +591,29 @@ int testSave6() {
     return retVal;
 }
 
+int testSave9() {
+    bool a[NUM_HYDRA_BUTTONS];
+    double b[NUM_HYDRA_ANALOGS];
+    vtkSmartPointer<vtkRenderer> r = vtkSmartPointer<vtkRenderer>::New();
+    QScopedPointer<SketchProject> project(new SketchProject(r,a,b));
+    project->setProjectDir("test/test2");
+
+    QDir dir = project->getProjectDir();
+    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
+
+    vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
+
+    if (ProjectToXML::xmlToProject(project.data(),root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
+        cout << "Passed test 9" << endl;
+    } else {
+        cout << "Failed to load" << endl;
+        root->Delete();
+        return 1;
+    }
+    root->Delete();
+    return 0;
+}
+
 
 int testSave5() {
     bool a[NUM_HYDRA_BUTTONS];
@@ -619,7 +642,7 @@ int testSave5() {
     project->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),3.56*sqrt(11.0),p1,p2); // sqrt(2)
 
     QDir dir = project->getProjectDir();
-    QString file = dir.absoluteFilePath("project.xml");
+    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
 
     vtkXMLDataElement *b4 = ProjectToXML::projectToXML(project.data());
     vtkIndent indent(0);
@@ -632,8 +655,9 @@ int testSave5() {
     if (ProjectToXML::xmlToProject(project2.data(),root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
         cout << "Passed test 5" << endl;
     } else {
-        return 1;
         cout << "Failed to load" << endl;
+        root->Delete();
+        return 1;
     }
     root->Delete();
     return 0;
@@ -760,5 +784,5 @@ int testSave8() {
 
 int main() {
     return testSave1() + testSave2() + testSave3() + testSave4() + testSave5() +
-            testSave6() + testSave7() + testSave8();
+            testSave6() + testSave7() + testSave8() + testSave9();
 }
