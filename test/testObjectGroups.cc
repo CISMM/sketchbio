@@ -357,7 +357,25 @@ inline int testSketchObjectActions(SketchObject *obj) {
         errors++;
         qDebug() << "Keyframe orientation is wrong";
     }
+    if (!f.isVisibleAfter()) {
+        errors++;
+        qDebug() << "Keyframe visibility is wrong";
+    }
+    if (f.isActive()) {
+        errors++;
+        qDebug() << "Keyframe active status is wrong";
+    }
     obj->setPosAndOrient(v3,q3);
+    obj->setIsVisible(false);
+    if (obj->isVisible()) {
+        errors++;
+        qDebug() << "Object is not invisible when set invisible";
+    }
+    obj->setActive(true);
+    if (!obj->isActive()) {
+        errors++;
+        qDebug() << "Object is not active when set active";
+    }
     obj->addKeyframeForCurrentLocation(5.0);
     if (obj->getNumKeyframes() != 2) {
         errors++;
@@ -385,19 +403,98 @@ inline int testSketchObjectActions(SketchObject *obj) {
         errors++;
         qDebug() << "Keyframe orientation is wrong";
     }
+    if (!f.isActive()) {
+        errors++;
+        qDebug() << "Keyframe is not set active when object was.";
+    }
+    if (f.isVisibleAfter()) {
+        errors++;
+        qDebug() << "Keyframe is visible when object was not.";
+    }
+    // test interpolation between keyframes
     obj->setPositionByAnimationTime(4.0);
     obj->getPosition(v2);
-    q_vec_add(v1,v3,v1);
-    q_vec_scale(v1,.5,v1);
-    if (!q_vec_equals(v1,v2)) {
+    q_vec_type vtmp;
+    q_type qtmp;
+    q_vec_add(vtmp,v3,v1);
+    q_vec_scale(vtmp,.5,vtmp);
+    if (!q_vec_equals(vtmp,v2)) {
         errors++;
         qDebug() << "Interpolation wrong between 2 keyframes position"; // TODO may change test later
     }
-    q_slerp(q1,q1,q3,.5);
+    q_slerp(qtmp,q1,q3,.5);
     obj->getOrientation(q2);
-    if (!q_equals(q1,q2)) {
+    if (!q_equals(qtmp,q2)) {
         errors++;
         qDebug() << "Interpolation wrong between 2 keyframes orientation";
+    }
+    if (!obj->isVisible()) {
+        errors++;
+        qDebug() << "Keyframe set did not update object visibility status";
+    }
+    if (obj->isActive()) {
+        errors++;
+        qDebug() << "Keyframe set did not update object active status";
+    }
+    // test corner case: go to time after last keyframe
+    obj->setPositionByAnimationTime(6.0);
+    obj->getPosition(v2);
+    obj->getOrientation(q2);
+    if (!q_vec_equals(v2,v3)) {
+        errors++;
+        qDebug() << "Incorrect handling of go to position after last keyframe.";
+    }
+    if (!q_equals(q2,q3)) {
+        errors++;
+        qDebug() << "Incorrect handling of go to orientation after last keyframe.";
+    }
+    if (obj->isVisible()) {
+        errors++;
+        qDebug() << "Incorrect handing of visibility after last keyframe.";
+    }
+    if (!obj->isActive()) {
+        errors++;
+        qDebug() << "Incorrect handling of active status after last keyframe.";
+    }
+    // test corner case: go to time before first keyframe
+    obj->setPositionByAnimationTime(0.5);
+    obj->getPosition(v2);
+    obj->getOrientation(q2);
+    if (!q_vec_equals(v2,v1)) {
+        errors++;
+        qDebug() << "Incorrect handling of go to position before first keyframe.";
+    }
+    if (!q_equals(q2,q1)) {
+        errors++;
+        qDebug() << "Incorrect handling of go to orientation before first keyframe.";
+    }
+    if (!obj->isVisible()) {
+        errors++;
+        qDebug() << "Incorrect handing of visibility before first keyframe.";
+    }
+    if (obj->isActive()) {
+        errors++;
+        qDebug() << "Incorrect handling of active status before first keyframe.";
+    }
+    // test corner case: go to time of keyframe exactly
+    obj->setPositionByAnimationTime(5.0);
+    obj->getPosition(v2);
+    obj->getOrientation(q2);
+    if (!q_vec_equals(v2,v3)) {
+        errors++;
+        qDebug() << "Incorrect handling of go to position when landing on keyframe.";
+    }
+    if (!q_equals(q2,q3)) {
+        errors++;
+        qDebug() << "Incorrect handling of go to orientation when landing on keyframe.";
+    }
+    if (obj->isVisible()) {
+        errors++;
+        qDebug() << "Incorrect handing of visibility when landing on keyframe.";
+    }
+    if (!obj->isActive()) {
+        errors++;
+        qDebug() << "Incorrect handling of active status when landing on keyframe.";
     }
     return errors;
 }
