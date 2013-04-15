@@ -70,6 +70,14 @@ inline int testNewSketchObject(SketchObject *obj) {
         errors++;
         qDebug() << "Local transform not created";
     }
+    if (!obj->isVisible()) {
+        errors++;
+        qDebug() << "Object is invisible, should be visible by default.";
+    }
+    if (obj->isActive()) {
+        errors++;
+        qDebug() << "Object is active, they should never be active by default.";
+    }
     vtkMatrix4x4 *tm = t->GetMatrix();
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
