@@ -36,12 +36,13 @@
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
 #define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME     "numInstances"
 #define OBJECT_VISIBILITY_ATTRIBUTE_NAME        "visibility"
+#define OBJECT_ACTIVE_ATTRIBUTE_NAME            "active"
 #define OBJECT_REPLICA_NUM_ATTRIBUTE_NAME       "replicaNum"
 #define OBJECT_KEYFRAME_LIST_ELEMENT_NAME       "keyframeList"
 #define OBJECT_KEYFRAME_ELEMENT_NAME            "keyframe"
 #define OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME     "time"
-#define OBJECT_KEYFRAME_VIS_ELEMENT_NAME        "visibility"
-#define OBJECT_KEYFRAME_VIS_AF_ATTR_NAME        "visibility_after"
+#define OBJECT_KEYFRAME_VIS_AF_ATTR_NAME        "visibility"
+#define OBJECT_KEYFRAME_ACTIVE_ATTR_NAME        "active"
 
 #define REPLICATOR_LIST_ELEMENT_NAME            "replicatorList"
 #define REPLICATOR_ELEMENT_NAME                 "replicator"
@@ -236,6 +237,7 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
     // Current thoughts: collision groups should be recreated from effects placed on objects being recreated.
     //   There is no reason that they should need to be saved.
     child->SetAttribute(OBJECT_VISIBILITY_ATTRIBUTE_NAME,object->isVisible() ? "true" : "false");
+    child->SetAttribute(OBJECT_ACTIVE_ATTRIBUTE_NAME, object->isActive() ? "true" : "false");
 
     const ReplicatedObject *rObj = dynamic_cast<const ReplicatedObject *>(object);
     if (rObj != NULL) {
@@ -276,8 +278,9 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
             setPreciseVectorAttribute(tfrm,o,4,ROTATION_ATTRIBUTE_NAME);
             frameElement->AddNestedElement(tfrm);
             vtkSmartPointer<vtkXMLDataElement> visibility = vtkSmartPointer<vtkXMLDataElement>::New();
-            visibility->SetName(OBJECT_KEYFRAME_VIS_ELEMENT_NAME);
+            visibility->SetName(PROPERTIES_ELEMENT_NAME);
             visibility->SetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME,(frame.isVisibleAfter()?"true":"false"));
+            visibility->SetAttribute(OBJECT_KEYFRAME_ACTIVE_ATTR_NAME,(frame.isActive() ? "true" : "false"));
             frameElement->AddNestedElement(visibility);
             child->AddNestedElement(frameElement);
         }
@@ -693,7 +696,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     }
     q_vec_type pos;
     q_type orient;
-    bool visA;
+    bool visA, active;
     double time;
     int numRead = 0;
     numRead = frame->GetScalarAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME,time);
@@ -704,20 +707,37 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     if (numRead != 3) return XML_TO_DATA_FAILURE;// position wrong length.. fail
     numRead = kTrans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME,4,orient);
     if (numRead != 4)  return XML_TO_DATA_FAILURE;// orientation wrong length... fail
-    vtkXMLDataElement *kVisibility = frame->FindNestedElementWithName(OBJECT_KEYFRAME_VIS_ELEMENT_NAME);
-    if (kVisibility == NULL) return XML_TO_DATA_FAILURE; // if no visiblitly status.. fail
+    vtkXMLDataElement *properties = frame->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+    if (properties == NULL) return XML_TO_DATA_FAILURE; // if no visiblitly status.. fail
     // TODO ... once there in an interface for it on object, do something with visibility
-    QString strA(kVisibility->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME));
-    if (strA.toLower() == QString("true")) {
-        visA = true;
-    } else if (strA.toLower() == QString("false")) {
-        visA = false;
+    const char *c = properties->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME);
+    if (c != NULL) {
+        QString strA(c);
+        if (strA.toLower() == QString("true")) {
+            visA = true;
+        } else if (strA.toLower() == QString("false")) {
+            visA = false;
+        } else {
+            return XML_TO_DATA_FAILURE;
+        }
+    } else {
+        return XML_TO_DATA_FAILURE;
+    }
+    c = properties->GetAttribute(OBJECT_KEYFRAME_ACTIVE_ATTR_NAME);
+    if (c != NULL) {
+        QString strA(c);
+        if (strA.toLower() == QString("true")) {
+            active = true;
+        } else {
+            active = false;
+        }
     } else {
         return XML_TO_DATA_FAILURE;
     }
     object->setLastLocation(); // so we don't change the object's position
     object->setPosAndOrient(pos,orient);
     object->setIsVisible(visA);
+    object->setActive(active);
     object->addKeyframeForCurrentLocation(time); // TODO -- once visibility is done, set it too.
     object->restoreToLastLocation(); // restore the object's position
     return XML_TO_DATA_SUCCESS;
@@ -730,7 +750,7 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
         QString mId, oId;
         q_vec_type pos;
         q_type orient;
-        bool visibility;
+        bool visibility, active;
         oId = QString("#") + elem->GetAttribute(ID_ATTRIBUTE_NAME);
         int numInstances;
         if (!elem->GetScalarAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,numInstances)) {
@@ -756,6 +776,14 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
             visibility = true;
         } else {
             visibility = false;
+        }
+        c = props->GetAttribute(OBJECT_ACTIVE_ATTRIBUTE_NAME);
+        if (!c) {
+            active = false;
+        } else if (QString(c) == QString("true")) {
+            active = true;
+        } else {
+            active = false;
         }
         vtkXMLDataElement *trans = elem->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
         if (trans == NULL) {
@@ -805,6 +833,7 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
         } // end if we have keyframes... not having keyframes is fine too, so don't fail in this case
         objectIds.insert(oId,object.data());
         object->setIsVisible(visibility); // set visibility after keyframes so frames can store visibility state
+        object->setActive(active); // similar to reason above
         return object.take();
     }
     return NULL;

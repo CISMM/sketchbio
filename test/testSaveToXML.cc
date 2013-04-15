@@ -88,6 +88,14 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             q_vec_print(pos2);
         }
     }
+    if (o1->isVisible() != o2->isVisible()) {
+        numDifferences++;
+        if (printDiffs) cout << "Visibility state of objects is different." << endl;
+    }
+    if (o1->isActive() != o2->isActive()) {
+        numDifferences++;
+        if (printDiffs) cout << "Active state of objects is different." << endl;
+    }
     if (o1->numInstances() == 1) { // test single instance things... orientation of a group is tested by
                                     // position of group memebers in recursion
         if (!q_equals(orient1,orient2,epsilon)) {
@@ -125,21 +133,30 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             if (!o2->getKeyframes()->contains(time)) {
                 numDifferences++;
                 if (printDiffs) cout << "Keyframe for time " << time << " missing in object 2." << endl;
-            }
-            const Keyframe &frame2 = o2->getKeyframes()->value(time);
-            q_vec_type p1, p2;
-            q_type o1, o2;
-            frame1.getPosition(p1);
-            frame2.getPosition(p2);
-            frame1.getOrientation(o1);
-            frame2.getOrientation(o2);
-            if (!q_vec_equals(p1,p2,epsilon)) {
-                numDifferences++;
-                if (printDiffs) cout << "Keyframe positions are different at time " << time << endl;
-            }
-            if (!q_equals(o1,o2,epsilon)) {
-                numDifferences++;
-                if (printDiffs) cout << "Keyframe orientations are different at time " << time << endl;
+            } else {
+                const Keyframe &frame2 = o2->getKeyframes()->value(time);
+                q_vec_type p1, p2;
+                q_type o1, o2;
+                frame1.getPosition(p1);
+                frame2.getPosition(p2);
+                frame1.getOrientation(o1);
+                frame2.getOrientation(o2);
+                if (!q_vec_equals(p1,p2,epsilon)) {
+                    numDifferences++;
+                    if (printDiffs) cout << "Keyframe positions are different at time " << time << endl;
+                }
+                if (!q_equals(o1,o2,epsilon)) {
+                    numDifferences++;
+                    if (printDiffs) cout << "Keyframe orientations are different at time " << time << endl;
+                }
+                if (frame1.isVisibleAfter() != frame2.isVisibleAfter()) {
+                    numDifferences++;
+                    if (printDiffs) cout << "Keyframe visibility is different at time " << time << endl;
+                }
+                if (frame1.isActive() != frame2.isActive()) {
+                    numDifferences++;
+                    if (printDiffs) cout << "Keyframe active state is different at time " << time << endl;
+                }
             }
         }
     }

@@ -202,9 +202,11 @@ void SketchProject::timestep(double dt) {
         } else {
             for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
                 SketchObject *cam = it.peekNext().key();
-                vtkSmartPointer<vtkCamera> vCam = it.next().value();
-                setUpVtkCamera(cam,vCam);
-                renderer->SetActiveCamera(vCam);
+                if (cam->isActive()) {
+                    vtkSmartPointer<vtkCamera> vCam = it.next().value();
+                    setUpVtkCamera(cam,vCam);
+                    renderer->SetActiveCamera(vCam);
+                }
             }
         }
         timeInAnimation += dt;
@@ -297,6 +299,10 @@ SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient
     SketchObject *obj = addObject(model,pos,orient);
     // cameras are invisible (from the animation's standpoint)
     obj->setIsVisible(false);
+    // if this is the first camera added, make it active
+    if (cameras.empty()) {
+        obj->setActive(true);
+    }
     cameras.insert(obj,vtkSmartPointer<vtkCamera>::New());
     return obj;
 }

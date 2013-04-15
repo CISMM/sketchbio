@@ -12,14 +12,16 @@ class Keyframe
 {
 public:
     Keyframe(); // creates a keyframe with all default values
-    Keyframe(const q_vec_type pos, const q_type orient, bool visibleA);
+    Keyframe(const q_vec_type pos, const q_type orient, bool visibleA, bool isActive);
     void getPosition(q_vec_type pos) const;
     void getOrientation(q_type orient) const;
     bool isVisibleAfter() const;
+    bool isActive() const;
 private:
     q_vec_type position;
     q_type orientation;
     bool visibleAfter;
+    bool active;
 };
 
 inline void Keyframe::getPosition(q_vec_type pos) const {
@@ -30,6 +32,9 @@ inline void Keyframe::getOrientation(q_type orient) const {
 }
 inline bool Keyframe::isVisibleAfter() const {
     return visibleAfter;
+}
+inline bool Keyframe::isActive() const {
+    return active;
 }
 
 #endif // KEYFRAME_H

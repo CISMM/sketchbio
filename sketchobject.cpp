@@ -9,6 +9,7 @@ SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
     parent(NULL),
     visible(true),
+    active(false),
     collisionGroups(),
     localTransformPrecomputed(false),
     localTransformDefiningPosition(false),
@@ -280,7 +281,7 @@ void SketchObject::addKeyframeForCurrentLocation(double t) {
     if (t < 0) { // no negative times allowed
         return;
     }
-    Keyframe frame(position, orientation,visible);
+    Keyframe frame(position, orientation,visible,active);
     if (keyframes.isNull()) {
         keyframes.reset(new QMap< double, Keyframe >());
     }
@@ -315,11 +316,15 @@ void SketchObject::setPositionByAnimationTime(double t) {
         Keyframe f = keyframes->value(last);
         f.getPosition(position);
         f.getOrientation(orientation);
+        setIsVisible(f.isVisibleAfter());
+        setActive(f.isActive());
     // if we happenned to land on a keyframe
     } else if (it.peekNext().key() == t) {
         Keyframe f = it.next().value();
         f.getPosition(position);
         f.getOrientation(orientation);
+        setIsVisible(f.isVisibleAfter());
+        setActive(f.isActive());
     } else {
         // if we have a next keyframe that is greater than the time
         double next = it.peekNext().key();
@@ -343,6 +348,7 @@ void SketchObject::setPositionByAnimationTime(double t) {
         q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
         // TODO -- set visibility stuff here
         setIsVisible(f1.isVisibleAfter());
+        setActive(f1.isActive());
     }
     recalculateLocalTransform();
 }
@@ -390,6 +396,16 @@ void SketchObject::setIsVisible(bool isVisible) {
 //#########################################################################
 bool SketchObject::isVisible() const {
     return visible;
+}
+
+//#########################################################################
+void SketchObject::setActive(bool isActive) {
+    active = isActive;
+}
+
+//#########################################################################
+bool SketchObject::isActive() const {
+    return active;
 }
 
 //#########################################################################

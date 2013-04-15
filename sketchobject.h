@@ -114,6 +114,9 @@ public:
     // visibility methods
     virtual void setIsVisible(bool isVisible);
     bool isVisible() const;
+    // set/get active status (only has meaning on cameras)
+    void setActive(bool isActive);
+    bool isActive() const;
 protected: // methods
     // to deal with local transformation - recomputes from position and orientation unless
     // isLocalTransformPrecomputed is true
@@ -130,7 +133,7 @@ private: // fields
     q_vec_type position, lastPosition;
     q_type orientation, lastOrientation;
     // visibility for animations:
-    bool visible;
+    bool visible, active;
     // this list is the collision groups. If it is empty, then the object has no collision group and
     // getPrimaryCollisionGroup will return OBJECT_HAS_NO_GROUP.  Else, the primary collision group
     // is ther first element in the list.  setPrimaryCollisionGroup will move the given group to the
