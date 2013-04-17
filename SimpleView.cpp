@@ -23,6 +23,7 @@
 #include <sketchioconstants.h>
 #include <vtkXMLUtilities.h>
 #include <projecttoxml.h>
+#include <projecttoblenderanimation.h>
 #include <transformequals.h>
 
 // default number extra fibers
@@ -477,6 +478,21 @@ void SimpleView::importPDBId()
 
     }
   }
+}
+
+void SimpleView::exportBlenderAnimation() {
+    QFile f("test.py");
+    if (! f.open(QIODevice::WriteOnly) ) {
+        qDebug() << "Could not open file.";
+        return;
+    }
+    bool writeSucceeded = ProjectToBlenderAnimation::writeProjectBlenderFile(f, project);
+    f.close();
+    if (writeSucceeded) {
+        qDebug() << "Wrote temporary file.";
+    } else {
+        qDebug() << f.errorString();
+    }
 }
 
 QString SimpleView::getSubprocessExecutablePath(QString executableName) {

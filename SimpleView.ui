@@ -52,8 +52,15 @@
      </property>
      <addaction name="actionSimplify_2"/>
     </widget>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="actionBlender_Animation"/>
+    </widget>
     <addaction name="menuOpen"/>
     <addaction name="menuImport"/>
+    <addaction name="menuExport"/>
     <addaction name="menuFilter"/>
     <addaction name="actionSave_Project"/>
     <addaction name="actionLoad_Project"/>
@@ -210,6 +217,11 @@
    </property>
    <property name="text">
     <string>Collision Tests On</string>
+   </property>
+  </action>
+  <action name="actionBlender_Animation">
+   <property name="text">
+    <string>Blender Animation</string>
    </property>
   </action>
  </widget>
@@ -398,6 +410,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionBlender_Animation</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>exportBlenderAnimation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -412,5 +440,6 @@
   <slot>poseModePCA()</slot>
   <slot>setWorldSpringsEnabled(bool)</slot>
   <slot>setCollisionTestsOn(bool)</slot>
+  <slot>exportBlenderAnimation()</slot>
  </slots>
 </ui>

@@ -64,6 +64,10 @@ public slots:
   // Put the resulting model in the models/ directory.
   void importPDBId();
 
+  // Export an animation to blender
+  // currently writes the test file so I can see if it is correct
+  void exportBlenderAnimation();
+
   // Throw a dialog box to browse for an OBJ file to
   // simplify.  Produce multiple simplifications, with smaller
   // fractional polygon counts.
