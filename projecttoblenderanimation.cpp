@@ -62,9 +62,13 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
         file.write("myObjects.append(bpy.context.active_object)\n");
         objectIdxs.insert(obj,objectsLen++);
         q_vec_type pos;
-        q_type orient;
+        q_type orient, tmp;
         obj->getPosition(pos);
         obj->getOrientation(orient);
+        q_from_axis_angle(tmp,0,1,0,Q_PI);
+        if (model->getDataSource() == CAMERA_MODEL_KEY) {
+            q_mult(orient,orient,tmp);
+        }
         sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
                 pos[Q_X], pos[Q_Y], pos[Q_Z]);
         file.write(buf.data());
@@ -73,8 +77,15 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
                 "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
                 orient[Q_Y], orient[Q_Z]);
         file.write(buf.data());
+        // not sure if this needs modification to do something different for cameras
         if (!obj->isVisible()) {
+            // hide it in the main view?
             file.write("bpy.context.active_object.hide = True\n");
+            // hide it during rendering
+            file.write("bpy.context.active_object.hide_render = True\n");
+        }
+        if (obj->isActive()) {
+            file.write("bpy.context.scene.camera = bpy.context.active_object\n");
         }
     }
     return file.error() == QFile::NoError;
