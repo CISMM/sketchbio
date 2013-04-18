@@ -3,6 +3,9 @@
 #include <QFile>
 #include <QScopedPointer>
 
+unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, int frameRate) {
+    return floor(time * frameRate + 0.5);
+}
 
 bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const SketchProject *proj) {
     // python imports... math and bpy
@@ -17,6 +20,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const Sketc
     QHash<SketchObject *, int> objectIdxs;
     success &= writeCreateModels(file,modelIdxs,proj->getModelManager());
     success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj->getWorldManager());
+    file.write("bpy.ops.render.render(animation=True)\n");
     return success && file.error() == QFile::NoError;
 }
 
@@ -50,6 +54,7 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
     int objectsLen = 0;
+    unsigned maxFrame = 0;
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     QListIterator<SketchObject *> it = world->getObjectIterator();
     while (it.hasNext()) {
@@ -86,8 +91,40 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
         }
         if (obj->isActive()) {
             file.write("bpy.context.scene.camera = bpy.context.active_object\n");
+            // set the far plane out enough to see all the objects (we hope)
+            file.write("bpy.context.scene.camera.data.clip_end = 2000\n");
+        }
+        if (obj->hasKeyframes()) {
+            QMapIterator<double, Keyframe> it(*obj->getKeyframes());
+            while (it.hasNext()) {
+                double t = it.peekNext().key();
+                const Keyframe &f = it.next().value();
+                unsigned frame = timeToBlenderFrameNum(t);
+                if (frame > maxFrame) {
+                    maxFrame = frame;
+                }
+                sprintf(buf.data(), "bpy.context.scene.frame_set(%u)\n", frame);
+                file.write(buf.data());
+                f.getPosition(pos);
+                f.getOrientation(orient);
+                if (model->getDataSource() == CAMERA_MODEL_KEY) {
+                    q_mult(orient,orient,tmp);
+                }
+                sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
+                        pos[Q_X], pos[Q_Y], pos[Q_Z]);
+                file.write(buf.data());
+                file.write("bpy.context.active_object.keyframe_insert(data_path='location')\n");
+                sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
+                        "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
+                        orient[Q_Y], orient[Q_Z]);
+                file.write(buf.data());
+                file.write("bpy.context.active_object.keyframe_insert(data_path='rotation_quaternion')\n");
+            }
         }
     }
+    sprintf(buf.data(),"bpy.data.scenes[\"Scene\"].frame_end = %u", maxFrame);
+    file.write(buf.data());
+    file.write("\n\n");
     return file.error() == QFile::NoError;
 }
 

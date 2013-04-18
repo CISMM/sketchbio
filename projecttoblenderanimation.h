@@ -18,6 +18,9 @@ class ProjectToBlenderAnimation
 public:
     // returns true for success, false for failure
     static bool writeProjectBlenderFile(QFile &file, const SketchProject *proj);
+    // converts time in seconds to a blender frame number (what Blender puts keyframes on)
+    // using the frame rate.  The default for frame rate is Blender's default frame rate.
+    static unsigned timeToBlenderFrameNum(double time, int frameRate = 24);
 private:
     // Writes some python helper function definitions to the file
     static bool writeHelperFunctions(QFile &file);
