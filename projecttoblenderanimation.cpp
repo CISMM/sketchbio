@@ -3,7 +3,7 @@
 #include <QFile>
 #include <QScopedPointer>
 
-unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, int frameRate) {
+unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, unsigned frameRate) {
     return floor(time * frameRate + 0.5);
 }
 
@@ -20,6 +20,10 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const Sketc
     QHash<SketchObject *, int> objectIdxs;
     success &= writeCreateModels(file,modelIdxs,proj->getModelManager());
     success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj->getWorldManager());
+    QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
+    sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
+    file.write(buf.data());
+    file.write("bpy.context.scene.render.fps_base = 1\n");
     file.write("bpy.ops.render.render(animation=True)\n");
     return success && file.error() == QFile::NoError;
 }
@@ -71,8 +75,10 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
         obj->getPosition(pos);
         obj->getOrientation(orient);
         q_from_axis_angle(tmp,0,1,0,Q_PI);
+        bool isCamera = false;
         if (model->getDataSource() == CAMERA_MODEL_KEY) {
             q_mult(orient,orient,tmp);
+            isCamera = true;
         }
         sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
                 pos[Q_X], pos[Q_Y], pos[Q_Z]);
@@ -82,6 +88,25 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
                 "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
                 orient[Q_Y], orient[Q_Z]);
         file.write(buf.data());
+        if (isCamera) {
+            // set the far plane out enough to see all the objects (we hope)
+            file.write("bpy.context.active_object.data.clip_end = 2000\n");
+            // give the camera a light that will follow it around
+            file.write("cam = bpy.context.active_object\n");
+            file.write("bpy.ops.object.lamp_add(type='HEMI')\n");
+            sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
+                    pos[Q_X], pos[Q_Y], pos[Q_Z]);
+            file.write(buf.data());
+            file.write("bpy.context.active_object.rotation_mode = 'QUATERNION'\n");
+            sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
+                    "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
+                    orient[Q_Y], orient[Q_Z]);
+            file.write(buf.data());
+            file.write("lamp = bpy.context.active_object\n");
+            file.write("select_object(cam)\n");
+            file.write("lamp.select = True\n");
+            file.write("bpy.ops.object.parent_set()\n");
+        }
         // not sure if this needs modification to do something different for cameras
         if (!obj->isVisible()) {
             // hide it in the main view?
@@ -91,8 +116,6 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
         }
         if (obj->isActive()) {
             file.write("bpy.context.scene.camera = bpy.context.active_object\n");
-            // set the far plane out enough to see all the objects (we hope)
-            file.write("bpy.context.scene.camera.data.clip_end = 2000\n");
         }
         if (obj->hasKeyframes()) {
             QMapIterator<double, Keyframe> it(*obj->getKeyframes());

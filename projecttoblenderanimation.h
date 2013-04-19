@@ -10,6 +10,8 @@ class ModelManager;
 class SketchObject;
 class WorldManager;
 
+#define BLENDER_RENDERER_FRAMERATE 30
+
 /*
  * This class handles writing a python file to export the project to blender
  */
@@ -20,7 +22,7 @@ public:
     static bool writeProjectBlenderFile(QFile &file, const SketchProject *proj);
     // converts time in seconds to a blender frame number (what Blender puts keyframes on)
     // using the frame rate.  The default for frame rate is Blender's default frame rate.
-    static unsigned timeToBlenderFrameNum(double time, int frameRate = 24);
+    static unsigned timeToBlenderFrameNum(double time, unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
 private:
     // Writes some python helper function definitions to the file
     static bool writeHelperFunctions(QFile &file);
