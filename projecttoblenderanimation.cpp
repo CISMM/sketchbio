@@ -25,6 +25,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const Sketc
     file.write(buf.data());
     file.write("bpy.context.scene.render.fps_base = 1\n");
     file.write("bpy.ops.render.render(animation=True)\n");
+    file.write("bpy.ops.wm.quit_blender()\n");
     return success && file.error() == QFile::NoError;
 }
 

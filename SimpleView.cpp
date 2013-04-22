@@ -4,6 +4,7 @@
 #include <QInputDialog>
 #include <QFileDialog>
 #include <QProcess>
+#include <QProgressDialog>
 #include <QMessageBox>
 #include <QThread>
 #include <QTemporaryFile>
@@ -481,18 +482,57 @@ void SimpleView::importPDBId()
 }
 
 void SimpleView::exportBlenderAnimation() {
-    QFile f("test.py");
-    if (! f.open(QIODevice::WriteOnly) ) {
-        qDebug() << "Could not open file.";
+    QFile py_file("test.py");
+    if (! py_file.open(QIODevice::WriteOnly) ) {
+        qDebug() << "Could not open py_fileile.";
         return;
     }
-    bool writeSucceeded = ProjectToBlenderAnimation::writeProjectBlenderFile(f, project);
-    f.close();
+    bool writeSucceeded = ProjectToBlenderAnimation::writeProjectBlenderFile(py_file, project);
+    py_file.close();
     if (writeSucceeded) {
-        qDebug() << "Wrote temporary file.";
+        qDebug() << "Wrote temporary py_fileile.";
     } else {
-        qDebug() << f.errorString();
+        qDebug() << py_file.errorString();
     }
+
+    QDir dir = QDir(QDir::currentPath());
+    QDir dir2 = dir.absoluteFilePath("anim");
+
+    if (!dir2.exists()) {
+        if (!dir.mkdir("dir2")) {
+            QMessageBox::warning(NULL, "Could not create animation frames directory.", QString(""));
+            return;
+        }
+    }
+
+    //----------------------------------------------------------------
+    // Start the Blender process and then write the commands to it
+    // that will cause it to load the OBJ file, simplify it,
+    // and then save the file.
+    QProcess blender;
+    // Combine stderr with stdout and send back back together.
+    blender.setProcessChannelMode(QProcess::MergedChannels);
+    // -P: Run the specified Python script
+    // -b: Run in background
+    blender.start(getSubprocessExecutablePath("blender"),
+                  QStringList() << "-noaudio" << "-b" << "-F" << "PNG" << "-x" << "1" << "-o" <<
+                  "anim/#####.png" <<"-P" << py_file.fileName());
+    if (!blender.waitForStarted()) {
+      QMessageBox::warning(NULL, "Could not run Blender to animate.", QString(""));
+    }
+    QProgressDialog progress("Animating Frames...","Cancel",0,0,this);
+    progress.setWindowModality(Qt::WindowModal);
+    //----------------------------------------------------------------
+    // Time out after 2 minutes if the process does not exit
+    // on its own by then.
+    while (!blender.waitForFinished()) {
+        if (progress.wasCanceled()) {
+            blender.kill();
+            break;
+        }
+    }
+    // read output & test it (TODO)
+    QByteArray result = blender.readAll();
 }
 
 QString SimpleView::getSubprocessExecutablePath(QString executableName) {
