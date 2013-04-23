@@ -14,6 +14,8 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const Sketc
     bool success = writeHelperFunctions(file);
     file.write("select_named('Cube')\n");
     file.write("bpy.ops.object.delete()\n");
+    file.write("select_named('Lamp')\n");
+    file.write("bpy.ops.object.delete()\n");
     file.write("modelObjects = list()\n");
     file.write("myObjects = list()\n");
     QHash<SketchModel *, int> modelIdxs;

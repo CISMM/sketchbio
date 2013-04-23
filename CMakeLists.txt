@@ -68,6 +68,7 @@ TARGET_LINK_LIBRARIES( SketchBio
     ${VRPN_SERVER_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     PQP
+    SketchSubprocess
 )
 
 IF(APPLE)
@@ -79,6 +80,7 @@ ENDIF(APPLE)
 
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test)
+ADD_SUBDIRECTORY(subprocesses)
 
 
 # Copied from Microscope Simulator.  Used for creating the installer.

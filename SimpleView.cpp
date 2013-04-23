@@ -24,8 +24,9 @@
 #include <sketchioconstants.h>
 #include <vtkXMLUtilities.h>
 #include <projecttoxml.h>
-#include <projecttoblenderanimation.h>
 #include <transformequals.h>
+
+#include "subprocesses/blenderanimationrunner.h"
 
 // default number extra fibers
 #define NUM_EXTRA_FIBERS 14
@@ -482,57 +483,18 @@ void SimpleView::importPDBId()
 }
 
 void SimpleView::exportBlenderAnimation() {
-    QFile py_file("test.py");
-    if (! py_file.open(QIODevice::WriteOnly) ) {
-        qDebug() << "Could not open py_fileile.";
-        return;
-    }
-    bool writeSucceeded = ProjectToBlenderAnimation::writeProjectBlenderFile(py_file, project);
-    py_file.close();
-    if (writeSucceeded) {
-        qDebug() << "Wrote temporary py_fileile.";
-    } else {
-        qDebug() << py_file.errorString();
-    }
-
-    QDir dir = QDir(QDir::currentPath());
-    QDir dir2 = dir.absoluteFilePath("anim");
-
-    if (!dir2.exists()) {
-        if (!dir.mkdir("dir2")) {
-            QMessageBox::warning(NULL, "Could not create animation frames directory.", QString(""));
-            return;
-        }
-    }
-
-    //----------------------------------------------------------------
-    // Start the Blender process and then write the commands to it
-    // that will cause it to load the OBJ file, simplify it,
-    // and then save the file.
-    QProcess blender;
-    // Combine stderr with stdout and send back back together.
-    blender.setProcessChannelMode(QProcess::MergedChannels);
-    // -P: Run the specified Python script
-    // -b: Run in background
-    blender.start(getSubprocessExecutablePath("blender"),
-                  QStringList() << "-noaudio" << "-b" << "-F" << "PNG" << "-x" << "1" << "-o" <<
-                  "anim/#####.png" <<"-P" << py_file.fileName());
-    if (!blender.waitForStarted()) {
-      QMessageBox::warning(NULL, "Could not run Blender to animate.", QString(""));
-    }
-    QProgressDialog progress("Animating Frames...","Cancel",0,0,this);
-    progress.setWindowModality(Qt::WindowModal);
-    //----------------------------------------------------------------
-    // Time out after 2 minutes if the process does not exit
-    // on its own by then.
-    while (!blender.waitForFinished()) {
-        if (progress.wasCanceled()) {
-            blender.kill();
-            break;
-        }
-    }
-    // read output & test it (TODO)
-    QByteArray result = blender.readAll();
+    QString fn = QFileDialog::getSaveFileName(this,
+                                              tr("Select Save Location"),
+                                              "./",
+                                              tr("AVI Files (*.avi)"));
+    BlenderAnimationRunner *r = BlenderAnimationRunner::createAnimationFor(project,fn);
+    MyDialog *dialog = new MyDialog("Rendering animation...","Cancel",0,0,this);
+    connect(r, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
+    connect(r, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
+    connect(dialog, SIGNAL(canceled()), r, SLOT(canceled()));
+    connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
+    connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
+    dialog->setValue(1);
 }
 
 QString SimpleView::getSubprocessExecutablePath(QString executableName) {
@@ -545,6 +507,8 @@ QString SimpleView::getSubprocessExecutablePath(QString executableName) {
             executablePath = "/Applications/" + executableName + ".app/Contents/MacOS/" + executableName;
         } else if (QFile("/usr/bin/" + executableName).exists()) {
             executablePath = "/usr/bin/" + executableName;
+        } else if (QFile("/usr/local/bin/" + executableName).exists()) {
+            executablePath = "/usr/local/bin/" + executableName;
         } else {
             executablePath = QFileDialog::getOpenFileName(this,"Specify location of '" + executableName + "'","/Applications");
             if (executablePath.endsWith(".app")) {

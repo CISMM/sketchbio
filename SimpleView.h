@@ -22,9 +22,11 @@
 #include "transformequals.h"
 
 #include <QMainWindow>
+#include <QProgressDialog>
 #include <QActionGroup>
 #include <QTimer>
 #include <QString>
+#include <QDebug>
 #include <QVector>
  
 // Forward Qt class declarations
@@ -130,5 +132,25 @@ private:
   SketchProject *project;
 };
 
- 
+
+class MyDialog : public QProgressDialog {
+    Q_OBJECT
+public:
+    explicit MyDialog(const QString &a, const QString &b, int min, int max, QWidget *parent = 0) :
+        QProgressDialog(a,b,min,max,parent)
+    {
+        setModal(true);
+    }
+    virtual ~MyDialog() {
+        qDebug() << "Deleting dialog";
+    }
+public slots:
+    void resetAndSignal() {
+        QProgressDialog::reset();
+        emit deleteMe();
+    }
+signals:
+    void deleteMe();
+};
+
 #endif // SimpleViewUI_H
