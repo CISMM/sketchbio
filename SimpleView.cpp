@@ -483,6 +483,7 @@ void SimpleView::importPDBId()
 }
 
 void SimpleView::exportBlenderAnimation() {
+    timer->stop();
     QString fn = QFileDialog::getSaveFileName(this,
                                               tr("Select Save Location"),
                                               "./",
@@ -491,6 +492,7 @@ void SimpleView::exportBlenderAnimation() {
     MyDialog *dialog = new MyDialog("Rendering animation...","Cancel",0,0,this);
     connect(r, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
     connect(r, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
+    connect(r, SIGNAL(finished(bool)), timer, SLOT(start()));
     connect(dialog, SIGNAL(canceled()), r, SLOT(canceled()));
     connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
     connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
