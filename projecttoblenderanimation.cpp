@@ -7,7 +7,7 @@ unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, unsigned 
     return floor(time * frameRate + 0.5);
 }
 
-bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const SketchProject *proj) {
+bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProject *proj) {
     // python imports... math and bpy
     file.write("import bpy\n");
     file.write("import math\n");
@@ -22,6 +22,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, const Sketc
     QHash<SketchObject *, int> objectIdxs;
     success &= writeCreateModels(file,modelIdxs,proj->getModelManager());
     success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj->getWorldManager());
+    success &= writeObjectKeyframes(file,objectIdxs, proj);
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
     file.write(buf.data());
@@ -61,11 +62,27 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
     int objectsLen = 0;
-    unsigned maxFrame = 0;
+//    unsigned maxFrame = 0;
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     QListIterator<SketchObject *> it = world->getObjectIterator();
     while (it.hasNext()) {
-        SketchObject *obj = it.next();
+        writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, it.next());
+    }
+    file.write("\n\n");
+    return file.error() == QFile::NoError;
+}
+
+void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+                                                  QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
+                                                  SketchObject *obj)
+{
+    if (obj->numInstances() != 1) {
+        QListIterator<SketchObject *> it(*obj->getSubObjects());
+        while (it.hasNext()) {
+            writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, it.next());
+        }
+    } else {
+        QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
         SketchModel *model  = obj->getModel();
         int idx = modelIdxs.value(model);
         sprintf(buf.data(),"select_object(modelObjects[%u])\n",idx);
@@ -120,35 +137,47 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
         if (obj->isActive()) {
             file.write("bpy.context.scene.camera = bpy.context.active_object\n");
         }
-        if (obj->hasKeyframes()) {
-            QMapIterator<double, Keyframe> it(*obj->getKeyframes());
-            while (it.hasNext()) {
-                double t = it.peekNext().key();
-                const Keyframe &f = it.next().value();
-                unsigned frame = timeToBlenderFrameNum(t);
-                if (frame > maxFrame) {
-                    maxFrame = frame;
-                }
-                sprintf(buf.data(), "bpy.context.scene.frame_set(%u)\n", frame);
-                file.write(buf.data());
-                f.getPosition(pos);
-                f.getOrientation(orient);
-                if (model->getDataSource() == CAMERA_MODEL_KEY) {
-                    q_mult(orient,orient,tmp);
-                }
-                sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
-                        pos[Q_X], pos[Q_Y], pos[Q_Z]);
-                file.write(buf.data());
-                file.write("bpy.context.active_object.keyframe_insert(data_path='location')\n");
-                sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
-                        "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
-                        orient[Q_Y], orient[Q_Z]);
-                file.write(buf.data());
-                file.write("bpy.context.active_object.keyframe_insert(data_path='rotation_quaternion')\n");
-            }
-        }
     }
-    sprintf(buf.data(),"bpy.data.scenes[\"Scene\"].frame_end = %u", maxFrame);
+}
+
+bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchObject *, int> &objectIdxs,
+                                                     SketchProject *proj, unsigned frameRate)
+{
+    QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
+    unsigned frame = 0;
+    double time = static_cast<double>(frame) / static_cast<double>(frameRate);
+    while (!proj->goToAnimationTime(time)) {
+        q_vec_type pos;
+        q_type orient;
+        sprintf(buf.data(), "\nbpy.context.scene.frame_set(%u)\n", frame);
+        file.write(buf.data());
+        for (QHashIterator<SketchObject *, int> it(objectIdxs); it.hasNext();) {
+            SketchObject * obj = it.peekNext().key();
+            int idx = it.next().value();
+            sprintf(buf.data(), "select_object(myObjects[%d])\n", idx);
+            file.write(buf.data());
+            obj->getPosition(pos);
+            obj->getOrientation(orient);
+            if (obj->getModel()->getDataSource() == CAMERA_MODEL_KEY) {
+                q_type tmp;
+                q_from_axis_angle(tmp,0,1,0,Q_PI);
+                q_mult(orient,orient,tmp);
+            }
+            sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
+                    pos[Q_X], pos[Q_Y], pos[Q_Z]);
+            file.write(buf.data());
+            file.write("bpy.context.active_object.keyframe_insert(data_path='location')\n");
+            sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
+                    "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
+                    orient[Q_Y], orient[Q_Z]);
+            file.write(buf.data());
+            file.write("bpy.context.active_object.keyframe_insert(data_path='rotation_quaternion')\n");
+            // TODO - visibility and active camera stuff
+        }
+        frame++;
+        time = static_cast<double>(frame) / static_cast<double>(frameRate);
+    }
+    sprintf(buf.data(), "bpy.data.scenes[\"Scene\"].frame_end = %u\n", frame);
     file.write(buf.data());
     file.write("\n\n");
     return file.error() == QFile::NoError;

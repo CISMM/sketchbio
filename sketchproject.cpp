@@ -190,6 +190,14 @@ void SketchProject::stopAnimation() {
     renderer->SetActiveCamera(transforms->getGlobalCamera());
 }
 
+bool SketchProject::goToAnimationTime(double time) {
+    if (!isDoingAnimation) {
+        startAnimation();
+    }
+    timeInAnimation = time;
+    return world->setAnimationTime(time);
+}
+
 void SketchProject::timestep(double dt) {
     if (!isDoingAnimation) {
         handleInput();

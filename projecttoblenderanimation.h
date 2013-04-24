@@ -19,7 +19,7 @@ class ProjectToBlenderAnimation
 {
 public:
     // returns true for success, false for failure
-    static bool writeProjectBlenderFile(QFile &file, const SketchProject *proj);
+    static bool writeProjectBlenderFile(QFile &file, SketchProject *proj);
     // converts time in seconds to a blender frame number (what Blender puts keyframes on)
     // using the frame rate.  The default for frame rate is Blender's default frame rate.
     static unsigned timeToBlenderFrameNum(double time, unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
@@ -34,6 +34,13 @@ private:
     // stores the index of each object in the myObjects list in the objectIdxs QHash
     static bool writeCreateObjects(QFile &file, QHash<SketchModel *, int> &modelIdxs,
                                    QHash<SketchObject *, int> &objectIdxs, const WorldManager *world);
+    // Writes code to create a single object and recurse on groups (only objects with the an individual model
+    // are keyframed, groups are ignored and each object within them is added)
+    static void writeCreateObject(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+                                  QHash<SketchObject *, int> &objectIdxs, int &objectsLen, SketchObject *obj);
+    // Writes a keyframe for each object at each frame with its position at that time from SketchBio
+    static bool writeObjectKeyframes(QFile &file, QHash<SketchObject *, int> &objectIdxs, SketchProject *proj,
+                                     unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
 };
 
 #endif // PROJECTTOBLENDERANIMATION_H

@@ -9,7 +9,7 @@
 #include <QSettings>
 #include <QFileDialog>
 
-BlenderAnimationRunner::BlenderAnimationRunner(const SketchProject *proj, QString &animationFile, QObject *parent) :
+BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, QString &animationFile, QObject *parent) :
     QObject(parent),
     blender(NULL),
     ffmpeg(NULL),
@@ -40,13 +40,23 @@ BlenderAnimationRunner::BlenderAnimationRunner(const SketchProject *proj, QStrin
         {
             valid = false;
         }
+    } else {
+        dir2.setFilter(QDir::Files | QDir::NoDotAndDotDot);
+        QStringList files = dir2.entryList();
+        for (int idx = 0; idx < files.length(); idx++) {
+            QFile f(dir2.absoluteFilePath(files[idx]));
+            if (!f.remove()) {
+                qDebug() << "Could not remove " << files[idx];
+                valid = false;
+            }
+        }
     }
     // create the process as a child of this object
     blender = new QProcess(this);
     blender->setProcessChannelMode(QProcess::MergedChannels);
 
     // set up signals
-    connect(blender, SIGNAL(finished(int)), this, SLOT(firstStageDone()));
+    connect(blender, SIGNAL(finished(int)), this, SLOT(firstStageDone(int)));
 
 }
 
@@ -69,7 +79,7 @@ bool BlenderAnimationRunner::isValid()
     return valid;
 }
 
-BlenderAnimationRunner * BlenderAnimationRunner::createAnimationFor(const SketchProject *proj, QString &animationFile)
+BlenderAnimationRunner * BlenderAnimationRunner::createAnimationFor(SketchProject *proj, QString &animationFile)
 {
     if (!animationFile.endsWith(".avi", Qt::CaseInsensitive))
     {
@@ -89,10 +99,10 @@ BlenderAnimationRunner * BlenderAnimationRunner::createAnimationFor(const Sketch
     return runner;
 }
 
-void BlenderAnimationRunner::firstStageDone()
+void BlenderAnimationRunner::firstStageDone(int exitCode)
 {
     // blender has finished rendering frames
-    if (blender->exitStatus() == QProcess::CrashExit) {
+    if ((blender->exitStatus() == QProcess::CrashExit) || (exitCode != 0)) {
         qDebug() << "Blender animation failed";
         qDebug() << blender->readAll();
         emit finished(false);
@@ -102,21 +112,23 @@ void BlenderAnimationRunner::firstStageDone()
         ffmpeg = new QProcess(this);
         ffmpeg->setReadChannelMode(QProcess::MergedChannels);
 
-        connect(ffmpeg, SIGNAL(finished(int)), this, SLOT(secondStageDone()));
+        connect(ffmpeg, SIGNAL(finished(int)), this, SLOT(secondStageDone(int)));
 
-        ffmpeg->start(getSubprocessExecutablePath("ffmpeg"),QStringList() << "-r" <<
-                      QString(BLENDER_RENDERER_FRAMERATE) << "-i" << "anim/%05d.png"
-                      << "-vcodec" << "huffyuv" << animationFile->fileName());
+        QStringList list;
+        list << "-r" << QString::number(BLENDER_RENDERER_FRAMERATE) << "-i" << "anim/%05d.png";
+        list << "-vcodec" << "huffyuv" << animationFile->fileName();
+//        qDebug() << list;
+        ffmpeg->start(getSubprocessExecutablePath("ffmpeg"),list);
         qDebug() << "Starting ffmpeg.";
         emit statusChanged("Converting frames into video.");
     }
 }
 
-void BlenderAnimationRunner::secondStageDone()
+void BlenderAnimationRunner::secondStageDone(int exitCode)
 {
-    if (ffmpeg->exitStatus() == QProcess::CrashExit)
+    if ((ffmpeg->exitStatus() == QProcess::CrashExit) || (exitCode != 0))
     {
-        qDebug() << "ffmpeg crashed";
+        qDebug() << "Failed to create video.";
         qDebug() << ffmpeg->readAll();
         emit finished(false);
         deleteLater();

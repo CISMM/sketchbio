@@ -133,6 +133,8 @@ private:
 };
 
 
+// A dialog that sends signals correctly so that I can delete it after the animation is
+// finished/cancelled.
 class MyDialog : public QProgressDialog {
     Q_OBJECT
 public:

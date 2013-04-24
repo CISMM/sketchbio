@@ -46,6 +46,10 @@ public:
     // animation
     void startAnimation();
     void stopAnimation();
+    // an accessor for world->setAnimationTime.  Sets the project state correctly
+    // if it is not set yet
+    // Returns true if the animation is done by the time given
+    bool goToAnimationTime(double time);
 
     // physics/time related functions - timestep either updates physics or moves the animation one time frame
     void timestep(double dt);

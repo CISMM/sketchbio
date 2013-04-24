@@ -23,9 +23,9 @@ public:
     // project to generate the animation from.
     // If this function returns NULL then the temporary files/directories could not be created and
     // creating the subprocesses failed.
-    static BlenderAnimationRunner *createAnimationFor(const SketchProject *project, QString &animationFile);
+    static BlenderAnimationRunner *createAnimationFor(SketchProject *project, QString &animationFile);
 private:
-    explicit BlenderAnimationRunner(const SketchProject *proj, QString &animationFile, QObject *parent = 0);
+    explicit BlenderAnimationRunner(SketchProject *proj, QString &animationFile, QObject *parent = 0);
     virtual ~BlenderAnimationRunner();
 
     void start();
@@ -40,8 +40,8 @@ signals:
     void finished(bool success);
 private slots:
     // internal slots used as callbacks from the processes
-    void firstStageDone();
-    void secondStageDone();
+    void firstStageDone(int exitCode);
+    void secondStageDone(int exitCode);
 public slots:
     // call to cancel the animation and kill subprocesses
     void canceled();

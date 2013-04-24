@@ -489,14 +489,19 @@ void SimpleView::exportBlenderAnimation() {
                                               "./",
                                               tr("AVI Files (*.avi)"));
     BlenderAnimationRunner *r = BlenderAnimationRunner::createAnimationFor(project,fn);
-    MyDialog *dialog = new MyDialog("Rendering animation...","Cancel",0,0,this);
-    connect(r, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
-    connect(r, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
-    connect(r, SIGNAL(finished(bool)), timer, SLOT(start()));
-    connect(dialog, SIGNAL(canceled()), r, SLOT(canceled()));
-    connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
-    connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
-    dialog->setValue(1);
+    if (r == NULL) {
+        QMessageBox::warning(NULL, "Error while setting up animation", "See log for details");
+        timer->start();
+    } else {
+        MyDialog *dialog = new MyDialog("Rendering animation...","Cancel",0,0,this);
+        connect(r, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
+        connect(r, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
+        connect(r, SIGNAL(finished(bool)), timer, SLOT(start()));
+        connect(dialog, SIGNAL(canceled()), r, SLOT(canceled()));
+        connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
+        connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
+        dialog->setValue(1);
+    }
 }
 
 QString SimpleView::getSubprocessExecutablePath(QString executableName) {

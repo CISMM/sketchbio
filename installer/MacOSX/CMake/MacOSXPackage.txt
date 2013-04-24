@@ -51,6 +51,13 @@ INSTALL( FILES
 # include all dynamic libraries from vtk
 ##MESSAGE( STATUS "VTK_DIR=${VTK_DIR}" )
 FILE( GLOB VTK_LIBRARIES "${VTK_DIR}/*.dylib")
+
+# exclude those only having to do with the python interface, we don't need those
+FILE( GLOB VTK_PYTHON_LIBRARIES "${VTK_DIR}/*Python*.dylib")
+FOREACH ( PLIBRARY ${VTK_PYTHON_LIBRARIES} )
+    LIST( REMOVE_ITEM VTK_LIBRARIES ${PLIBRARY})
+ENDFOREACH( PLIBRARY )
+
 ##MESSAGE( STATUS "VTK_LIBRARIES=${VTK_LIBRARIES}")
 FOREACH( LIBRARY ${VTK_LIBRARIES} )
     INSTALL( FILES
