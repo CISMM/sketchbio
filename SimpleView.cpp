@@ -521,9 +521,9 @@ QString SimpleView::getSubprocessExecutablePath(QString executableName) {
                 executablePath = executablePath + "/Contents/MacOS/" + executableName;
             }
         }
-#elif defined(__WINDOWS__)
+#elif defined(_WIN32)
         // test default locations C:/Program Files and C:/Program Files(x86) then ask for a .exe file
-        if (QFile("C:/Program Files/" + executableName "/" + executableName + ".exe").exists()) {
+        if (QFile("C:/Program Files/" + executableName + "/" + executableName + ".exe").exists()) {
             executablePath = "C:/Program Files/" + executableName + "/" + executableName;
         }
 #ifdef _WIN64
@@ -532,7 +532,7 @@ QString SimpleView::getSubprocessExecutablePath(QString executableName) {
         }
 #endif
         else {
-            executablePath = QFileDialog::getOpenFileName(this, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+            executablePath = QFileDialog::getOpenFileName(this, "Specify location of '" + executableName + "'","C:/Program Files","", &QString(".exe"));
         }
 #elif defined(__linux__)
         // test /usr/bin then ask for the file
