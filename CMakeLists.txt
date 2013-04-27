@@ -24,6 +24,11 @@ INCLUDE(${QT_USE_FILE})  # include UseQt4.cmake
 FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
 
+###
+# Libusb1
+###
+find_package(Libusb1 REQUIRED)
+
 # support for out-of-source build
 INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_BINARY_DIR} #this is where ui_SimpleView.h is generated
@@ -68,6 +73,11 @@ TARGET_LINK_LIBRARIES( SketchBio
     ${QUATLIB_LIBRARIES}
     PQP
 )
+IF(UNIX)
+TARGET_LINK_LIBRARIES( SketchBio
+    ${LIBUSB1_LIBRARIES}
+)
+ENDIF(UNIX)
 
 IF(APPLE)
     TARGET_LINK_LIBRARIES( SketchBio
