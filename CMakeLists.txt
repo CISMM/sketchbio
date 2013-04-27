@@ -27,7 +27,9 @@ INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
 ###
 # Libusb1
 ###
-find_package(Libusb1 REQUIRED)
+IF(NOT WIN32)
+	find_package(Libusb1 REQUIRED)
+ENDIF(NOT WIN32)
 
 # support for out-of-source build
 INCLUDE_DIRECTORIES(
@@ -74,9 +76,7 @@ TARGET_LINK_LIBRARIES( SketchBio
     PQP
 )
 IF(UNIX)
-TARGET_LINK_LIBRARIES( SketchBio
-    ${LIBUSB1_LIBRARIES}
-)
+	TARGET_LINK_LIBRARIES( SketchBio ${LIBUSB1_LIBRARIES} )
 ENDIF(UNIX)
 
 IF(APPLE)

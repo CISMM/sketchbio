@@ -29,9 +29,9 @@
      <height>22</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFIle">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>FIle</string>
+     <string>File</string>
     </property>
     <widget class="QMenu" name="menuOpen">
      <property name="title">
@@ -76,7 +76,7 @@
     <addaction name="actionWorld_Springs_On"/>
     <addaction name="actionCollision_Tests_On"/>
    </widget>
-   <addaction name="menuFIle"/>
+   <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
   </widget>
   <widget class="QToolBar" name="toolBar">

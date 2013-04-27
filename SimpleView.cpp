@@ -533,6 +533,7 @@ QString SimpleView::getSubprocessExecutablePath(QString executableName) {
 #endif
         else {
             executablePath = QFileDialog::getOpenFileName(this, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+        }
 #elif defined(__linux__)
         // test /usr/bin then ask for the file
         if (QFile("/usr/bin/" + executableName).exists()) {
