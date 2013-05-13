@@ -22,6 +22,7 @@ public:
                      SketchObject *original0, SketchObject *original1, int num);
     virtual void addForce(q_vec_type point, const q_vec_type force);
     inline  int  getReplicaNum() const { return replicaNum; }
+    virtual void addKeyframeForCurrentLocation(double t);
 private:
     // need original(s) here
     SketchObject *obj0; // first original

@@ -109,7 +109,7 @@ public:
     bool hasKeyframes() const;
     int  getNumKeyframes() const;
     const QMap< double, Keyframe > *getKeyframes() const;
-    void addKeyframeForCurrentLocation(double t);
+    virtual void addKeyframeForCurrentLocation(double t);
     void removeKeyframeForTime(double t);
     void setPositionByAnimationTime(double t);
     // visibility methods

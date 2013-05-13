@@ -35,6 +35,11 @@ void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
     original->addForce(point,scaledForce);
 }
 
+void ReplicatedObject::addKeyframeForCurrentLocation(double t) {
+    obj0->addKeyframeForCurrentLocation(t);
+    obj1->addKeyframeForCurrentLocation(t);
+}
+
 //############################################################################################
 //############################################################################################
 // StructureReplicator class methods
