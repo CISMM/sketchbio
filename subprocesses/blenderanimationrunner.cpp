@@ -144,16 +144,16 @@ void BlenderAnimationRunner::canceled()
 {
     qDebug() << "Animation canceled.";
     if (blender != NULL && blender->state() == QProcess::Running)
-    {
+
+        disconnect(blender, SIGNAL(finished(int)), this, SLOT(firstStageDone(int)));
+        connect(blender, SIGNAL(finished(int)), this, SLOT(deleteLater()));{
         blender->kill();
-        disconnect(blender, SIGNAL(finished(int)), this, SLOT(firstStageDone()));
-        connect(blender, SIGNAL(finished(int)), this, SLOT(deleteLater()));
     }
     if (ffmpeg != NULL && ffmpeg->state() == QProcess::Running)
     {
-        ffmpeg->kill();
-        disconnect(ffmpeg, SIGNAL(finished(int)), this, SLOT(secondStageDone()));
+        disconnect(ffmpeg, SIGNAL(finished(int)), this, SLOT(secondStageDone(int)));
         connect(ffmpeg, SIGNAL(finished(int)), this, SLOT(deleteLater()));
+        ffmpeg->kill();
     }
 }
 
