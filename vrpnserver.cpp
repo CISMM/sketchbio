@@ -1,4 +1,4 @@
-#include "vrpnServer.h"
+#include "vrpnserver.h"
 #include <iostream>
 #include <vrpn_Connection.h>
 #include <vrpn_Tracker_RazerHydra.h>
