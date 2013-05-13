@@ -95,12 +95,18 @@ void SketchObject::getOrientation(PQP_REAL matrix[3][3]) const {
 void SketchObject::setPosition(const q_vec_type newPosition) {
     q_vec_copy(position,newPosition);
     recalculateLocalTransform();
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+        it.next()->objectMoved(this);
+    }
 }
 
 //#########################################################################
 void SketchObject::setOrientation(const q_type newOrientation) {
     q_copy(orientation,newOrientation);
     recalculateLocalTransform();
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+        it.next()->objectMoved(this);
+    }
 }
 
 //#########################################################################
@@ -108,6 +114,9 @@ void SketchObject::setPosAndOrient(const q_vec_type newPosition, const q_type ne
     q_vec_copy(position,newPosition);
     q_copy(orientation,newOrientation);
     recalculateLocalTransform();
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+        it.next()->objectMoved(this);
+    }
 }
 
 //#########################################################################
@@ -181,8 +190,11 @@ void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_t
     localTransform->GetLinearInverse()->TransformVector(worldVec,modelVecOut);
 }
 //#########################################################################
+void SketchObject::getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const {
+    localTransform->TransformVector(modelVec,worldVecOut);
+}
+//#########################################################################
 void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
-    notifyObservers();
     if (parent == NULL) {
         q_vec_add(forceAccum,forceAccum,force);
         q_vec_type tmp, torque;
@@ -197,6 +209,7 @@ void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
         q_vec_add(tmp,position,tmp); // get point in parent coordinate system
         parent->addForce(tmp,force);
     }
+    notifyForceObservers();
 }
 
 //#########################################################################
@@ -211,27 +224,13 @@ void SketchObject::getTorque(q_vec_type out) const {
 void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque) {
     q_vec_copy(forceAccum,force);
     q_vec_copy(torqueAccum,torque);
-    notifyObservers();
+    notifyForceObservers();
 }
 
 //#########################################################################
 void SketchObject::clearForces() {
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
-}
-
-//#########################################################################
-void SketchObject::addForceObserver(ObjectForceObserver *obs) {
-    if (!observers.contains(obs)) {
-        observers.append(obs);
-    }
-}
-
-//#########################################################################
-void SketchObject::removeForceObserver(ObjectForceObserver *obs) {
-    if (observers.contains(obs)) {
-        observers.removeOne(obs);
-    }
 }
 
 //#########################################################################
@@ -286,6 +285,9 @@ void SketchObject::addKeyframeForCurrentLocation(double t) {
         keyframes.reset(new QMap< double, Keyframe >());
     }
     keyframes->insert(t,frame);
+    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext();) {
+        it.next()->objectKeyframed(this,t);
+    }
 }
 
 //#########################################################################
@@ -354,6 +356,16 @@ void SketchObject::setPositionByAnimationTime(double t) {
 }
 
 //#########################################################################
+void SketchObject::addObserver(ObjectChangeObserver *obs) {
+        observers.insert(obs);
+}
+
+//#########################################################################
+void SketchObject::removeObserver(ObjectChangeObserver *obs) {
+    observers.remove(obs);
+}
+
+//#########################################################################
 void SketchObject::recalculateLocalTransform()  {
     if (isLocalTransformPrecomputed()) {
         localTransformUpdated();
@@ -382,9 +394,9 @@ void SketchObject::localTransformUpdated(SketchObject *obj) {
 }
 
 //#########################################################################
-void SketchObject::notifyObservers() {
-    for (int i = 0; i < observers.size(); i++) {
-        observers[i]->objectPushed(this);
+void SketchObject::notifyForceObservers() {
+    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext(); ) {
+        it.next()->objectPushed(this);
     }
 }
 

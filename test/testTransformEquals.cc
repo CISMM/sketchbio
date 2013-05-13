@@ -195,7 +195,6 @@ int test2() {
         std::cout << "Object 4 rotated wrong when 3 rotated." << std::endl;
     }
     o3->setOrientation(idq); // undo this so as not to confuse things utterly
-    o2->addForce(nv,nv); // set 2 as source object
     o2->setPosition(p6);
     q_vec_subtract(tv1,p6,p1);
     o4->getPosition(tv2);
@@ -214,40 +213,14 @@ int test2() {
         errors++;
         std::cout << "Object 3 moved when object 2 updated." << std::endl;
     }
-    o4->addForce(nv,nv); // set 4 as the source object
-    o4->setPosition(p5);
-    q_vec_subtract(tv3,p5,p3);
-    o2->getPosition(tv2);
-    q_vec_subtract(tv1,tv2,p1);
-    if (!q_vec_equals(tv3,tv1)) {
-        errors++;
-        std::cout << "Object 2 moved wrong when 4 moved." << std::endl;
-    }
-    o1->getPosition(tv1);
-    if (!q_vec_equals(tv1,p1)) {
-        errors++;
-        std::cout << "Object 1 moved when object 4 updated." << std::endl;
-    }
-    o3->getPosition(tv3);
-    if (!q_vec_equals(tv3,p3)) {
-        errors++;
-        std::cout << "Object 3 moved when object 4 updated." << std::endl;
-    }
-    o2->addForce(nv,nv);
     o2->setOrientation(rrX);
     o4->getOrientation(t2);
     if (!q_equals(t2,rrX)) {
         errors++;
         std::cout << "Object 4 rotated wrong when object 2 rotated." << std::endl;
     }
-    o4->addForce(nv,nv); // set 4 as source
-    o4->setOrientation(rY);
-    o2->getOrientation(t3);
-    if (!q_equals(t3,rY)) {
-        errors++;
-        std::cout << "Object 2 rotated wrong when object 4 rotated." << std::endl;
-    }
     o1->addForce(nv,nv);
+    o2->setOrientation(rY);
     o1->setOrientation(rY);
     o2->getOrientation(t3);
     if (!q_equals(t3,rrY)) {
@@ -312,9 +285,68 @@ int test3() {
             }
         }
     }
+    std::cout << "Passed test 3" << std::endl;
+    return errors;
+}
+
+int test4() {
+    int errors = 0;
+    QScopedPointer<SketchModel> m(getModel());
+    q_vec_type nv, p1, p2, p3, p4, p5, p6, tv1, tv2, tv3;
+    q_type idq, rX, rY, rZ, rrX, rrY, rrZ, tq1;
+    initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);
+    QScopedPointer<SketchObject> o1(new ModelInstance(m.data())), o2(new ModelInstance(m.data()));
+    QScopedPointer<SketchObject> o3(new ModelInstance(m.data())), o4(new ModelInstance(m.data()));
+    o1->setPosition(p1);
+    o2->setPosition(p2);
+    o3->setPosition(p3);
+    o4->setPosition(p4);
+    QScopedPointer<GroupIdGenerator> g(new IdGen());
+    QScopedPointer<TransformEquals> eq(new TransformEquals(o1.data(),o2.data(),g.data()));
+    eq->addPair(o3.data(),o4.data());
+
+    o3->setOrientation(rZ);
+
+    q_vec_set(tv1,0,0,1);
+    q_vec_add(tv1,tv1,p4);
+    o4->addForce(tv1,p5);
+
+    o4->getForce(tv2);
+    if (!q_vec_equals(tv2,nv)) {
+        errors++;
+        q_vec_print(tv2);
+        std::cout << "Force on 4 not cleared" << std::endl;
+    }
+    o4->getTorque(tv2);
+    if (!q_vec_equals(tv2,nv)) {
+        errors++;
+        q_vec_print(tv2);
+        std::cout << "Torque on 4 not cleared" << std::endl;
+    }
+
+    o2->getForce(tv2);
+    q_invert(tq1,rZ);
+    q_xform(tv3,tq1,p5);
+    if (!q_vec_equals(tv3,tv2)) {
+        errors++;
+        q_vec_print(tv2);
+        std::cout << "Force on 2 incorrect" << std::endl;
+    }
+
+    o2->getTorque(tv2);
+    q_vec_set(tv1,0,0,1);
+    o4->getWorldVectorInModelSpace(p5,tv3);
+    q_vec_cross_product(tv3,tv1,tv3);
+    if (!q_vec_equals(tv3,tv2)) {
+        errors++;
+        q_vec_print(tv2);
+        std::cout << "Torque on 2 incorrect" << std::endl;
+    }
+
+    std::cout << "Passed test 4" << std::endl;
     return errors;
 }
 
 int main() {
-    return test1() + test2() + test3();
+    return test1() + test2() + test3() + test4();
 }

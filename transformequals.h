@@ -23,7 +23,7 @@ typedef struct ObjectPair {
  * forces on the second object, the first can be used freely to position the pair, the moving the second object
  * in the pair changes the relation for all pairs of objects in this operator.
  */
-class TransformEquals : public ObjectForceObserver
+class TransformEquals : public ObjectChangeObserver
 {
 public:
     TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen);
@@ -43,14 +43,15 @@ public:
     const QVector<ObjectPair> *getPairsList() const;
     // update transforms when force applied to an object in one of the pairs
     virtual void objectPushed(SketchObject *obj);
+    // when one of the objects is keyframed, apply keyframes to objects that generate its position
+    virtual void objectKeyframed(SketchObject *obj, double time);
+    // when one of the first two objects is moved, update the other or the transform between them
+    virtual void objectMoved(SketchObject *obj);
 private:
-    enum EditMode { POSITION_COPIES, EDIT_TRANSFORM };
-    void setupTransform(int newMaster);
     QVector<ObjectPair> pairsList;
     vtkSmartPointer<vtkTransform> transform;
-    int masterPairIdx; // index in pairsList of the pair currently defining the transform
     int transformEqualsGroupId;
-    EditMode mode;
+    bool isMovingBase;
 };
 
 #endif // TRANSFORMEQUALS_H

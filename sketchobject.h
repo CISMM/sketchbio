@@ -10,14 +10,14 @@
 #include <QList>
 #include <QScopedPointer>
 #include <QMap>
+#include <QSet>
 #include <keyframe.h>
 
 // forward declare the collision handler so it can be passed to collide
 class PhysicsStrategy;
-// forward declare observer of objects moving so it each object can have a list of observers
+// forward declare observers of object's state change so that object can have a list of observers
 // (declared at the bottom of this file)
-class ObjectForceObserver;
-
+class ObjectChangeObserver;
 
 // used by getPrimaryCollisionGroupNum to indicate that the object has not been
 // assigned a group
@@ -77,6 +77,7 @@ public:
     vtkTransform *getLocalTransform();
     virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const;
     virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const;
+    virtual void getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const;
     // add, get, set and clear forces and torques on the object
     virtual void addForce(const q_vec_type point, const q_vec_type force);
     virtual void getForce(q_vec_type out) const;
@@ -91,9 +92,9 @@ public:
     // this returns the box(es) that contain the lowest-level objects in whatever heirarchy
     // group should do an AppendPolyData to combine these
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() = 0;
-    // to deal with force observers
-    void addForceObserver(ObjectForceObserver *obs);
-    void removeForceObserver(ObjectForceObserver *obs);
+    // to deal with keyframe observers
+    void addObserver(ObjectChangeObserver *obs);
+    void removeObserver(ObjectChangeObserver *obs);
     // to stop the object from updating its transform when its position/orientation are set
     // used when an external source is defining the object's local transformation
     void setLocalTransformPrecomputed(bool isComputed);
@@ -126,7 +127,7 @@ protected: // methods
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
 private: // methods
-    void notifyObservers();
+    void notifyForceObservers();
 private: // fields
     SketchObject *parent;
     q_vec_type forceAccum,torqueAccum;
@@ -141,7 +142,7 @@ private: // fields
     // list
     QList<int> collisionGroups;
     bool localTransformPrecomputed, localTransformDefiningPosition;
-    QList<ObjectForceObserver *> observers;
+    QSet<ObjectChangeObserver *> observers;
     // this smart pointer contains the keyframes of the object.  If the pointer it contains is null, then
     // there are no keyframes.  Otherwise, the map it points to is a mapping from time to frame where frame
     // contains all the information about what happens at that time (position, orientation, visibility, etc.)
@@ -213,12 +214,15 @@ private:
 };
 
 /*
- * This class is an observer that needs to be notified when the object has a force/torque applied to it
+ * This class is an observer that needs to be notified when the object's state changes...
+ * such as a force/torque applied, a keyframe added, or the object's position/orientation changing
  */
-class ObjectForceObserver {
+class ObjectChangeObserver {
 public:
-    virtual ~ObjectForceObserver() {}
-    virtual void objectPushed(SketchObject *obj) = 0;
+    virtual ~ObjectChangeObserver() {}
+    virtual void objectPushed(SketchObject *obj) {}
+    virtual void objectKeyframed(SketchObject *obj, double time) {}
+    virtual void objectMoved(SketchObject *obj) {}
 };
 
 // helper function-- converts quaternion to a PQP rotation matrix

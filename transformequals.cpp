@@ -19,12 +19,14 @@ inline void setObjectBackToNormal(SketchObject *obj) {
 }
 
 TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, GroupIdGenerator *gen) :
-    ObjectForceObserver(), pairsList(), transform(vtkSmartPointer<vtkTransform>::New()),
-    masterPairIdx(-1), transformEqualsGroupId(gen->getNextGroupId()), mode(TransformEquals::POSITION_COPIES)
+    ObjectChangeObserver(), pairsList(), transform(vtkSmartPointer<vtkTransform>::New()),
+    transformEqualsGroupId(gen->getNextGroupId()), isMovingBase(false)
 {
     addPair(first,second);
-    masterPairIdx = 0;
-    setupTransform(0);
+    transform->Identity();
+    transform->PostMultiply();
+    transform->Concatenate(pairsList[0].o2->getLocalTransform());
+    transform->Concatenate(pairsList[0].o1->getLocalTransform()->GetLinearInverse());
 }
 
 TransformEquals::~TransformEquals() {
@@ -40,8 +42,10 @@ bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
             return false;
     }
     ObjectPair o(first,second);
-    first->addForceObserver(this);
-    second->addForceObserver(this);
+    second->addObserver(this);
+    if (pairsList.empty()) {
+        first->addObserver(this);
+    }
     second->addToCollisionGroup(first->getPrimaryCollisionGroupNum());
     second->setPrimaryCollisionGroupNum(transformEqualsGroupId);
     // make the new objects follow the master pair
@@ -59,7 +63,11 @@ bool TransformEquals::addPair(SketchObject *first, SketchObject *second) {
 }
 
 void TransformEquals::removePairAt(int i) {
+    // TODO - if the master pair is removed, currently this clears keyframes...
+    // may not want this
     setObjectBackToNormal(pairsList[i].o2);
+    pairsList[i].o1->removeObserver(this);
+    pairsList[i].o2->removeObserver(this);
     pairsList.remove(i);
 }
 
@@ -92,59 +100,80 @@ const QVector<ObjectPair> *TransformEquals::getPairsList() const {
 }
 
 void TransformEquals::objectPushed(SketchObject *obj) {
-    for (int i = 0; i < pairsList.size(); i++) {
+    if (obj == pairsList[0].o1) {
+        isMovingBase = true;
+        vtkSmartPointer< vtkMatrix4x4 > mat = transform->GetMatrix();
+        transform->SetMatrix(mat);
+        return;
+    }
+    for (int i = 1; i < pairsList.size(); i++) {
         if (pairsList[i].o2 == obj) {
-            // make the pushed object the source of the transform
-            if (i != masterPairIdx || mode == POSITION_COPIES) {
-                mode = EDIT_TRANSFORM;
-                setupTransform(i);
-            }
-            break;
-        } else if (pairsList[i].o1 == obj) {
-            if (mode != POSITION_COPIES) {
-                mode = POSITION_COPIES;
-                setupTransform(i);
-            }
+            // convert the force on the pushed object to force on the
+            // master pair of objects that will cause the same result
+            q_vec_type force, torque;
+            pairsList[0].o2->getForce(force);
+            pairsList[0].o2->getTorque(torque);
+            // get the force and torque added
+            q_vec_type newForce, newTorque;
+            obj->getForce(newForce);
+            obj->getTorque(newTorque);
+            // convert them to the new coordinates
+            obj->getWorldVectorInModelSpace(newForce,newForce);
+            pairsList[0].o2->getModelVectorInWorldSpace(newForce,newForce);
+            // add them in
+            q_vec_add(force,force,newForce);
+            q_vec_add(torque,torque,newTorque);
+            pairsList[0].o2->setForceAndTorque(force,torque);
+            // clear the force and torque on the 'copy'
+            obj->clearForces();
             break;
         }
     }
 }
 
-void TransformEquals::setupTransform(int newMaster) {
-    // make the new master defined in terms of its own position instead of the old master
-    setObjectBackToNormal(pairsList[newMaster].o2);
-    // redefine the transform in terms of the new master pair
-    transform->Identity();
-    transform->PostMultiply();
-    transform->Concatenate(pairsList[newMaster].o2->getLocalTransform());
-    transform->Concatenate(pairsList[newMaster].o1->getLocalTransform()->GetLinearInverse());
-    if ( mode == POSITION_COPIES) {
-        // set the matrix as fixed in the transform
-        vtkMatrix4x4 *mat = transform->GetMatrix();
+void TransformEquals::objectKeyframed(SketchObject *obj, double time) {
+    for (int i = 1; i < pairsList.size(); i++) {
+        // add a keyframe for that time to the master pair of objects
+        if (pairsList[i].o1 == obj) {
+            // remove the keyframe from the object it was given to
+            obj->removeKeyframeForTime(time);
+            pairsList[0].o1->addKeyframeForCurrentLocation(time);
+            break;
+        } else if (pairsList[i].o2 == obj) {
+            // remove the keyframe from the object it was given to
+            obj->removeKeyframeForTime(time);
+            pairsList[0].o2->addKeyframeForCurrentLocation(time);
+            break;
+        }
+    }
+}
+
+void TransformEquals::objectMoved(SketchObject *obj) {
+    if ( isMovingBase && obj == pairsList[0].o1) {
+        isMovingBase = false;
+        vtkSmartPointer< vtkTransform > tfrm = vtkSmartPointer< vtkTransform >::New();
+        tfrm->Identity();
+        tfrm->PostMultiply();
+        tfrm->Concatenate(transform);
+        tfrm->Concatenate(pairsList[0].o1->getLocalTransform());
+        q_vec_type pos;
+        q_type orient;
+        double wxyz[4];
+        tfrm->GetPosition(pos);
+        tfrm->GetOrientationWXYZ(wxyz);
+        wxyz[0] = wxyz[0] * Q_PI / 180.0; // convert to radians
+        q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],wxyz[0]);
+        pairsList[0].o2->setPosAndOrient(pos,orient);
         transform->Identity();
+        transform->PostMultiply();
+        transform->Concatenate(pairsList[0].o2->getLocalTransform());
+        transform->Concatenate(pairsList[0].o1->getLocalTransform()->GetLinearInverse());
+    } else if (isMovingBase && obj == pairsList[0].o2) {
+        transform->Identity();
+        transform->PostMultiply();
+        transform->Concatenate(pairsList[0].o2->getLocalTransform());
+        transform->Concatenate(pairsList[0].o1->getLocalTransform()->GetLinearInverse());
+        vtkSmartPointer< vtkMatrix4x4 > mat = transform->GetMatrix();
         transform->SetMatrix(mat);
-        // reset the new master to be defined in terms of the matrix
-        vtkSmartPointer<vtkTransform> tfrm = pairsList[newMaster].o2->getLocalTransform();
-        tfrm->Identity();
-        tfrm->PostMultiply();
-        tfrm->Concatenate(transform);
-        tfrm->Concatenate(pairsList[newMaster].o1->getLocalTransform());
-        pairsList[newMaster].o2->setLocalTransformDefiningPosition(true);
-        pairsList[newMaster].o2->setLocalTransformPrecomputed(true);
-    }
-    if (masterPairIdx != -1) {
-        vtkSmartPointer<vtkTransform> tfrm = pairsList[masterPairIdx].o2->getLocalTransform();
-        tfrm->Identity();
-        tfrm->PostMultiply();
-        tfrm->Concatenate(transform);
-        tfrm->Concatenate(pairsList[masterPairIdx].o1->getLocalTransform());
-        pairsList[masterPairIdx].o2->setLocalTransformDefiningPosition(true);
-        pairsList[masterPairIdx].o2->setLocalTransformPrecomputed(true);
-    }
-    if (mode == EDIT_TRANSFORM) {
-        // swap which pair is master
-        masterPairIdx = newMaster;
-    } else {
-        masterPairIdx = -1;
     }
 }
