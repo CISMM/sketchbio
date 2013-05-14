@@ -9,8 +9,9 @@
 #include "sketchioconstants.h"
 #include "sketchproject.h"
 
-class HydraInputManager
+class HydraInputManager : public QObject
 {
+    Q_OBJECT
 public:
     HydraInputManager(SketchProject *proj);
     virtual ~HydraInputManager();
@@ -24,6 +25,8 @@ public:
     void setButtonState(int buttonNum, bool buttonPressed);
     void setAnalogStates(const double state[]);
 
+signals:
+    void toggleWorldSpringsEnabled();
 private:
 
     // VRPN callback functions
@@ -42,6 +45,9 @@ private:
     double lDist, rDist; // the distance to the closest object to the (left/right) hand
     SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
                                 // and right hands respectively
+    bool rightHandDominant;
+    QVector<SketchObject *> objectsSelected;
+    QVector<double> positionsSelected; // have to put in coords... can't have a vector of arrays
 };
 
 #endif // HYDRAINPUTMANAGER_H

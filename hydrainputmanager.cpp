@@ -1,5 +1,6 @@
 #include "hydrainputmanager.h"
 #include <QDebug>
+#include <QSettings>
 
 HydraInputManager::HydraInputManager(SketchProject *proj) :
     project(proj),
@@ -10,7 +11,10 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     lDist(std::numeric_limits<double>::max()),
     rDist(std::numeric_limits<double>::max()),
     lObj(NULL),
-    rObj(NULL)
+    rObj(NULL),
+    rightHandDominant(true),
+    objectsSelected(),
+    positionsSelected()
 {
     for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
         buttonsDown[i] = false;
@@ -22,6 +26,9 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
     buttons.register_change_handler((void *) this, handle_button);
     analogRemote.register_change_handler((void *) this, handle_analogs);
+
+    QSettings settings;
+    rightHandDominant = settings.value(QString("handedness"),QString("right")).toString() == QString("right");
 }
 
 HydraInputManager::~HydraInputManager() {}
@@ -62,19 +69,15 @@ void HydraInputManager::handleCurrentInput() {
     transforms->getLeftTrackerOrientInWorldCoords(afterLOr);
     transforms->getRightTrackerOrientInWorldCoords(afterROr);
 
-    /* These are not part of the new input scheme.
-    // possibly scale the world
-    if (buttonsDown[SCALE_BUTTON]) {
-        transforms->scaleWithLeftTrackerFixed(delta);
+    if (buttonsDown[HydraButtonMapping::scale_button_idx(rightHandDominant)]) {
+        if (rightHandDominant) {
+            transforms->scaleWithLeftTrackerFixed(delta);
+        } else {
+            transforms->scaleWithRightTrackerFixed(delta);
+        }
     }
-    // possibly rotate the world
-    if (buttonsDown[ROTATE_BUTTON]) {
-        q_type rotation;
-        q_normalize(afterDVect,afterDVect);
-        q_normalize(beforeDVect,beforeDVect);
-        q_from_two_vecs(rotation,beforeDVect,afterDVect);
-        transforms->rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    }*/
+
+
     // if the world is grabbed, translate/rotate it
     if (grabbedWorld == LEFT_GRABBED_WORLD) {
         // translate
@@ -174,14 +177,14 @@ void HydraInputManager::updateTrackerObjectConnections() {
         double dist;
         // select left or right
         if (i == 0) {
-            buttonIdx = HYDRA_LEFT_BUMPER_BUTTON_IDX;
+            buttonIdx = BUTTON_LEFT(BUMPER_BUTTON_IDX);
             worldGrabConstant = LEFT_GRABBED_WORLD;
             tracker = project->getLeftHandObject();
             springs = world->getLeftSprings();
             objectToGrab = lObj;
             dist = lDist;
         } else if (i == 1) {
-            buttonIdx = HYDRA_RIGHT_BUMPER_BUTTON_IDX;
+            buttonIdx = BUTTON_RIGHT(BUMPER_BUTTON_IDX);
             worldGrabConstant = RIGHT_GRABBED_WORLD;
             tracker = project->getRightHandObject();
             springs = world->getRightSprings();
@@ -229,6 +232,12 @@ void HydraInputManager::setRightPos(q_xyz_quat_type *newPos) {
 }
 
 void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
+    if (buttonPressed) {
+        // events on press
+        if (buttonNum == HydraButtonMapping::spring_disable_button_idx(rightHandDominant)) {
+            emit toggleWorldSpringsEnabled();
+        }
+    }
     buttonsDown[buttonNum] = buttonPressed;
 }
 

@@ -93,6 +93,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
 
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
+    connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()), this, SLOT(toggleWorldSpringsEnabled()));
 
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -145,6 +146,12 @@ void SimpleView::poseModePCA() {
 
 void SimpleView::setWorldSpringsEnabled(bool enabled) {
     project->setWorldSpringsEnabled(enabled);
+}
+
+void SimpleView::toggleWorldSpringsEnabled() {
+    bool enabled = this->ui->actionWorld_Springs_On->isChecked();
+    this->ui->actionWorld_Springs_On->setChecked(!enabled);
+    project->setWorldSpringsEnabled(!enabled);
 }
 
 void SimpleView::setCollisionTestsOn(bool on) {

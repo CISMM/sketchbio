@@ -18,14 +18,45 @@
 #define NUM_HYDRA_ANALOGS 6
 
 // input constants
-#define SCALE_BUTTON 5
-#define ROTATE_BUTTON 13
-#define PAUSE_PHYSICS_BUTTON 2
 #define HYDRA_SCALE_FACTOR 8.0f
-#define HYDRA_LEFT_TRIGGER_ANALOG_IDX 2
-#define HYDRA_RIGHT_TRIGGER_ANALOG_IDX 5
-#define HYDRA_LEFT_BUMPER_BUTTON_IDX (5)
-#define HYDRA_RIGHT_BUMPER_BUTTON_IDX (13)
+
+#define BUTTON_LEFT(x) (x+0)
+#define BUTTON_RIGHT(x) (x+8)
+
+#define OBLONG_BUTTON_IDX   (0)
+#define ONE_BUTTON_IDX      (1)
+#define TWO_BUTTON_IDX      (2)
+#define THREE_BUTTON_IDX    (3)
+#define FOUR_BUTTON_IDX     (4)
+#define BUMPER_BUTTON_IDX   (5)
+
+#define ANALOG_LEFT(x) (x+0)
+#define ANALOG_RIGHT(x) (x+3)
+
+namespace HydraButtonMapping {
+
+inline int scale_button_idx(bool rightDominant) {
+    return rightDominant? BUTTON_LEFT(FOUR_BUTTON_IDX) : BUTTON_RIGHT(FOUR_BUTTON_IDX);
+}
+inline int spring_disable_button_idx(bool rightDominant) {
+    return rightDominant? BUTTON_LEFT(THREE_BUTTON_IDX) : BUTTON_RIGHT(THREE_BUTTON_IDX);
+}
+inline int spring_add_button_idx(bool rightDominant) {
+    return rightDominant? BUTTON_RIGHT(THREE_BUTTON_IDX) : BUTTON_LEFT(THREE_BUTTON_IDX);
+}
+inline int transform_equals_add_button_idx(bool rightDominant) {
+    return rightDominant? BUTTON_RIGHT(TWO_BUTTON_IDX) : BUTTON_LEFT(TWO_BUTTON_IDX);
+}
+inline int replicate_object_button(bool rightDominant) {
+    return rightDominant? BUTTON_RIGHT(ONE_BUTTON_IDX) : BUTTON_LEFT(ONE_BUTTON_IDX);
+}
+inline int duplicate_object_button(bool rightDominant) {
+    return rightDominant? BUTTON_RIGHT(FOUR_BUTTON_IDX) : BUTTON_LEFT(FOUR_BUTTON_IDX);
+}
+
+}
+
+#define TRIGGER_ANALOG_IDX 2
 
 // debugging flag -- if false does not start vrpn clients
 #define VRPN_ON true

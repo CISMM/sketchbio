@@ -81,6 +81,7 @@ public slots:
 
   // Physics settings
   void setWorldSpringsEnabled(bool enabled);
+  void toggleWorldSpringsEnabled();
   void setCollisionTestsOn(bool on);
 
   // Load a project
