@@ -253,6 +253,18 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 project->addReplication(obj,nObj,nCopies);
             }
             objectsSelected.clear();
+        } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)) {
+            SketchObject *obj = rightHandDominant ? rObj : lObj;
+            if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
+                q_vec_type pos;
+                double bb[6];
+                obj->getPosition(pos);
+                obj->getAABoundingBox(bb);
+                pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
+                SketchObject *nObj = obj->deepCopy();
+                nObj->setPosition(pos);
+                project->addObject(nObj);
+            }
         }
     }
     buttonsDown[buttonNum] = buttonPressed;
