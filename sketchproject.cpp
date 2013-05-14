@@ -55,6 +55,7 @@ public:
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
     virtual void getAABoundingBox(double bb[]) {}
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
+    virtual SketchObject *deepCopy() { return NULL; }
 
 private:
     vtkSmartPointer<vtkActor> actor;

@@ -237,6 +237,23 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
         if (buttonNum == HydraButtonMapping::spring_disable_button_idx(rightHandDominant)) {
             emit toggleWorldSpringsEnabled();
         }
+    } else {
+        if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)) {
+            SketchObject *obj = rightHandDominant ? rObj : lObj;
+            if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
+                q_vec_type pos;
+                double bb[6];
+                obj->getPosition(pos);
+                obj->getAABoundingBox(bb);
+                pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
+                SketchObject *nObj = obj->deepCopy();
+                nObj->setPosition(pos);
+                project->addObject(nObj);
+                int nCopies = floor(100 * analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
+                project->addReplication(obj,nObj,nCopies);
+            }
+            objectsSelected.clear();
+        }
     }
     buttonsDown[buttonNum] = buttonPressed;
 }

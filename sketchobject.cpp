@@ -510,6 +510,18 @@ void ModelInstance::localTransformUpdated() {
 }
 
 //#########################################################################
+SketchObject *ModelInstance::deepCopy() {
+    SketchObject *nObj = new ModelInstance(model);
+    q_vec_type pos;
+    q_type orient;
+    getPosition(pos);
+    getOrientation(orient);
+    nObj->setPosAndOrient(pos,orient);
+    // TODO -- keyframes, etc...
+    return nObj;
+}
+
+//#########################################################################
 //#########################################################################
 //#########################################################################
 // Object Group class
@@ -717,4 +729,14 @@ void ObjectGroup::setIsVisible(bool isVisible) {
     for (int i = 0; i < children.size(); i++) {
         children[i]->setIsVisible(isVisible);
     }
+}
+
+//#########################################################################
+SketchObject *ObjectGroup::deepCopy() {
+    ObjectGroup *nObj = new ObjectGroup();
+    for (int i = 0; i < children.length(); i++) {
+        nObj->addObject(children[i]->deepCopy());
+    }
+    // TODO - keyframes, etc.
+    return nObj;
 }

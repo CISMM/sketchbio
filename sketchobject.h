@@ -118,6 +118,8 @@ public:
     // set/get active status (only has meaning on cameras)
     void setActive(bool isActive);
     bool isActive() const;
+    // copy the object and its sub-objects
+    virtual SketchObject *deepCopy() = 0;
 protected: // methods
     // to deal with local transformation - recomputes from position and orientation unless
     // isLocalTransformPrecomputed is true
@@ -169,6 +171,7 @@ public:
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
     virtual void getAABoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
+    virtual SketchObject *deepCopy();
 protected:
     virtual void localTransformUpdated();
 private:
@@ -206,6 +209,7 @@ public:
     virtual void getAABoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual void setIsVisible(bool isVisible);
+    virtual SketchObject *deepCopy();
 protected:
     virtual void localTransformUpdated();
 private:
