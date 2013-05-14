@@ -46,6 +46,7 @@ private:
     SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
                                 // and right hands respectively
     bool rightHandDominant;
+    int operationState;
     QVector<SketchObject *> objectsSelected;
     QVector<double> positionsSelected; // have to put in coords... can't have a vector of arrays
 };

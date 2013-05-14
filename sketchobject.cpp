@@ -182,8 +182,13 @@ vtkTransform *SketchObject::getLocalTransform() {
 
 //#########################################################################
 void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint,
-                                                                q_vec_type worldCoordsOut) const {
+                                                        q_vec_type worldCoordsOut) const {
     localTransform->TransformPoint(modelPoint,worldCoordsOut);
+}
+//#########################################################################
+void SketchObject::getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint,
+                                                        q_vec_type modelCoordsOut) const {
+    localTransform->GetLinearInverse()->TransformPoint(worldPoint, modelCoordsOut);
 }
 //#########################################################################
 void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {

@@ -76,6 +76,7 @@ public:
     // local transformation & transforming points/vectors
     vtkTransform *getLocalTransform();
     virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const;
+    virtual void getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint, q_vec_type modelCoordsOut) const;
     virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const;
     virtual void getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const;
     // add, get, set and clear forces and torques on the object

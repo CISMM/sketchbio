@@ -2,6 +2,12 @@
 #include <QDebug>
 #include <QSettings>
 
+#define NO_OPERATION                    0
+#define DUPLICATE_OBJECT_PENDING        1
+#define REPLICATE_OBJECT_PENDING        2
+#define ADD_SPRING_PENDING              3
+#define ADD_TRANSFORM_EQUALS_PENDING    4
+
 HydraInputManager::HydraInputManager(SketchProject *proj) :
     project(proj),
     tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
@@ -13,6 +19,7 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     lObj(NULL),
     rObj(NULL),
     rightHandDominant(true),
+    operationState(NO_OPERATION),
     objectsSelected(),
     positionsSelected()
 {
@@ -232,13 +239,37 @@ void HydraInputManager::setRightPos(q_xyz_quat_type *newPos) {
 }
 
 void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
-    if (buttonPressed) {
+    if (buttonPressed && operationState == NO_OPERATION) {
         // events on press
         if (buttonNum == HydraButtonMapping::spring_disable_button_idx(rightHandDominant)) {
             emit toggleWorldSpringsEnabled();
+        } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)) {
+            operationState = DUPLICATE_OBJECT_PENDING;
+        } else if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)) {
+            operationState = REPLICATE_OBJECT_PENDING;
+        } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)) {
+            operationState = ADD_SPRING_PENDING;
+            SketchObject *obj = NULL;
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
+                obj = rightHandDominant ? rObj : lObj;
+                objectsSelected.append(obj);
+            }
+            q_vec_type pos;
+            TransformManager *transforms = project->getTransformManager();
+            if (rightHandDominant) {
+                transforms->getRightTrackerPosInWorldCoords(pos);
+            } else {
+                transforms->getLeftTrackerPosInWorldCoords(pos);
+            }
+            positionsSelected.append(pos[0]);
+            positionsSelected.append(pos[1]);
+            positionsSelected.append(pos[2]);
+        } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)) {
+            operationState = ADD_TRANSFORM_EQUALS_PENDING;
         }
-    } else {
-        if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)) {
+    } else if (!buttonPressed) {
+        if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)
+                && operationState == REPLICATE_OBJECT_PENDING ) {
             SketchObject *obj = rightHandDominant ? rObj : lObj;
             if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
                 q_vec_type pos;
@@ -252,8 +283,9 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 int nCopies = floor(100 * analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
                 project->addReplication(obj,nObj,nCopies);
             }
-            objectsSelected.clear();
-        } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)) {
+            operationState = NO_OPERATION;
+        } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)
+                   && operationState == DUPLICATE_OBJECT_PENDING ) {
             SketchObject *obj = rightHandDominant ? rObj : lObj;
             if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
                 q_vec_type pos;
@@ -265,6 +297,47 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 nObj->setPosition(pos);
                 project->addObject(nObj);
             }
+            operationState = NO_OPERATION;
+        } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)
+                   && operationState == ADD_SPRING_PENDING ) {
+            SketchObject *obj1 = NULL, *obj2 = NULL;
+            q_vec_type p1, p2;
+            if (objectsSelected.size() > 0) {
+                obj1 = objectsSelected[0];
+            }
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
+                obj2 = rightHandDominant ? rObj : lObj;
+            }
+            if (positionsSelected.size() >= 3) {
+                // get points... both in world coordinates
+                p1[0] = positionsSelected[0];
+                p1[1] = positionsSelected[1];
+                p1[2] = positionsSelected[2];
+                TransformManager *transforms = project->getTransformManager();
+                if (rightHandDominant) {
+                    transforms->getRightTrackerPosInWorldCoords(p2);
+                } else {
+                    transforms->getLeftTrackerPosInWorldCoords(p2);
+                }
+                double k = 2 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
+                                                              : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
+                if (obj1 != NULL) {
+                    if (obj2 != NULL) {
+                        project->getWorldManager()->addSpring(obj1,obj2,p1,p2,true,k,0);
+                    } else {
+                        obj1->getWorldSpacePointInModelCoordinates(p1,p1);
+                        SpringConnection *conn = new ObjectPointSpring(obj1,0,0,k,p1,p2);
+                        project->addSpring(conn);
+                    }
+                } else if (obj2 != NULL) {
+                    obj2->getWorldSpacePointInModelCoordinates(p2,p2);
+                    SpringConnection *conn = new ObjectPointSpring(obj2,0,0,k,p2,p1);
+                    project->addSpring(conn);
+                }
+            }
+            objectsSelected.clear();
+            positionsSelected.clear();
+            operationState = NO_OPERATION;
         }
     }
     buttonsDown[buttonNum] = buttonPressed;
