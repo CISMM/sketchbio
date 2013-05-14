@@ -6,6 +6,7 @@
 #define DISTANCE_THRESHOLD 0
 #define OBJECT_SIDE_LEN 200
 #define TRACKER_SIDE_LEN 200
+#define OBJECT_GRAB_SPRING_CONST 2
 
 // constants for grabbing the world code
 #define WORLD_NOT_GRABBED 0
@@ -21,8 +22,10 @@
 #define ROTATE_BUTTON 13
 #define PAUSE_PHYSICS_BUTTON 2
 #define HYDRA_SCALE_FACTOR 8.0f
-#define HYDRA_LEFT_TRIGGER 2
-#define HYDRA_RIGHT_TRIGGER 5
+#define HYDRA_LEFT_TRIGGER_ANALOG_IDX 2
+#define HYDRA_RIGHT_TRIGGER_ANALOG_IDX 5
+#define HYDRA_LEFT_BUMPER_BUTTON_IDX (5)
+#define HYDRA_RIGHT_BUMPER_BUTTON_IDX (13)
 
 // debugging flag -- if false does not start vrpn clients
 #define VRPN_ON true

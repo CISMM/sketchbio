@@ -156,35 +156,17 @@ void HydraInputManager::handleCurrentInput() {
     }
 }
 
-/*
- * This function takes a q_vec_type and returns the index of
- * the component with the minimum magnitude.
- */
-inline int getMinIdx(const q_vec_type vec) {
-    if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Y])) {
-        if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Z])) {
-            return Q_X;
-        } else {
-            return Q_Z;
-        }
-    } else {
-        if (Q_ABS(vec[Q_Y]) < Q_ABS(vec[Q_Z])) {
-            return Q_Y;
-        } else {
-            return Q_Z;
-        }
-    }
-}
 
 /*
- * This method updates the springs connecting the trackers and the objects in the world->..
+ * This method updates the springs connecting the trackers and the objects and the
+ * status variable that determines if the world is grabbed
  */
 void HydraInputManager::updateTrackerObjectConnections() {
     WorldManager *world = project->getWorldManager();
     if (world->getNumberOfObjects() == 0)
         return;
     for (int i = 0; i < 2; i++) {
-        int analogIdx;
+        int buttonIdx;
         int worldGrabConstant;
         SketchObject *objectToGrab;
         SketchObject *tracker;
@@ -192,14 +174,14 @@ void HydraInputManager::updateTrackerObjectConnections() {
         double dist;
         // select left or right
         if (i == 0) {
-            analogIdx = HYDRA_LEFT_TRIGGER;
+            buttonIdx = HYDRA_LEFT_BUMPER_BUTTON_IDX;
             worldGrabConstant = LEFT_GRABBED_WORLD;
             tracker = project->getLeftHandObject();
             springs = world->getLeftSprings();
             objectToGrab = lObj;
             dist = lDist;
         } else if (i == 1) {
-            analogIdx = HYDRA_RIGHT_TRIGGER;
+            buttonIdx = HYDRA_RIGHT_BUMPER_BUTTON_IDX;
             worldGrabConstant = RIGHT_GRABBED_WORLD;
             tracker = project->getRightHandObject();
             springs = world->getRightSprings();
@@ -207,7 +189,7 @@ void HydraInputManager::updateTrackerObjectConnections() {
             dist = rDist;
         }
         // if they are gripping the trigger
-        if (analogStatus[analogIdx] > .1) {
+        if (buttonsDown[buttonIdx]) {
             // if we do not have springs yet add them
             if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
                 if (dist > DISTANCE_THRESHOLD) {
@@ -217,63 +199,8 @@ void HydraInputManager::updateTrackerObjectConnections() {
                     // allow grabbing world & moving something with other hand...
                     // discouraged, but allowed -> the results are not guaranteed.
                 } else {
-                    q_vec_type oPos, tPos, vec;
-                    objectToGrab->getPosition(oPos);
-                    tracker->getPosition(tPos);
-                    q_vec_subtract(vec,tPos,oPos);
-                    q_vec_normalize(vec,vec);
-                    q_vec_type axis = Q_NULL_VECTOR;
-                    axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
-                                        // parallel to vec
-                    q_vec_type per1, per2; // create two perpendicular unit vectors
-                    q_vec_cross_product(per1,axis,vec);
-                    q_vec_normalize(per1,per1);
-                    q_vec_cross_product(per2,per1,vec); // should already be length 1
-                    // create scaled perpendicular vectors
-                    q_vec_type tPer1, tPer2;
-                    q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
-                    q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
-                    q_vec_type /*wPos1,*/ wPos2;
-                    // create springs and add them
-                    // first spring --defined along the "x" axis (per1)
-                    SpringConnection *spring;
-                    q_vec_add(wPos2,tPos,tPer1);
-                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                                           analogStatus[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    if (i == 0) {
-                        world->addLeftHandSpring(spring);
-                    } else if (i == 1) {
-                        world->addRightHandSpring(spring);
-                    }
-                    // second spring --defined as rotated 120 degrees about "z" axis.
-                    // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
-                    q_vec_scale(tPer1,-.5,tPer1);
-                    q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
-                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                    q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                                           analogStatus[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    if (i == 0) {
-                        world->addLeftHandSpring(spring);
-                    } else if (i == 1) {
-                        world->addRightHandSpring(spring);
-                    }
-                    // third spring --defined as rotated 240 degrees about "z" axis.
-                    // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
-                    q_vec_invert(tPer2,tPer2);
-                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                    q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                                           analogStatus[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    if (i == 0) {
-                        world->addLeftHandSpring(spring);
-                    } else if (i == 1) {
-                        world->addRightHandSpring(spring);
-                    }
-                }
-            } else { // update springs stiffness if they are already there
-                for (QListIterator<SpringConnection *> it(*springs); it.hasNext();) {
-                    it.next()->setStiffness(analogStatus[analogIdx]);
+                    bool left = i == 0;
+                    project->grabObject(left ? lObj : rObj, left);
                 }
             }
         } else {
@@ -344,7 +271,7 @@ void VRPN_CALLBACK HydraInputManager::handle_button(void *userdata, const vrpn_B
 void VRPN_CALLBACK HydraInputManager::handle_analogs(void *userdata, const vrpn_ANALOGCB a) {
     HydraInputManager *mgr = (HydraInputManager *) userdata;
     if (a.num_channel != NUM_HYDRA_ANALOGS) {
-        qDebug() << "We have problems!";
+        qDebug() << "Wrong number of analogs!";
     }
     mgr->setAnalogStates(a.channel);
 }

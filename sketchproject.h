@@ -92,6 +92,13 @@ public:
     bool isLeftOutlinesVisible();
     bool isRightOutlinesVisible();
 
+    // causes the given object to be connected to one of the tracker objects with springs to allow
+    // the user to manipulate its position and orientation.
+    // the first parameter is the object to attach
+    // the second parameter should be true if the object should be attached to the left tracker
+    //          and false if the object should be attached to the right tracker
+    void grabObject(SketchObject *objectToGrab, bool grabWithLeft);
+
     // adding things functions
     // for models
     SketchModel *addModelFromFile(QString fileName, double iMass, double iMoment, double scale);

@@ -369,6 +369,89 @@ void SketchProject::setRightOutlinesVisible(bool visible) {
         renderer->RemoveActor(rightOutlinesActor);
 }
 
+/*
+ * This function takes a q_vec_type and returns the index of
+ * the component with the minimum magnitude.
+ */
+inline int getMinIdx(const q_vec_type vec) {
+    if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Y])) {
+        if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Z])) {
+            return Q_X;
+        } else {
+            return Q_Z;
+        }
+    } else {
+        if (Q_ABS(vec[Q_Y]) < Q_ABS(vec[Q_Z])) {
+            return Q_Y;
+        } else {
+            return Q_Z;
+        }
+    }
+}
+
+void SketchProject::grabObject(SketchObject *objectToGrab, bool grabWithLeft) {
+    SketchObject *tracker = NULL;
+    if (grabWithLeft) {
+        tracker = leftHand;
+    } else {
+        tracker = rightHand;
+    }
+
+    q_vec_type oPos, tPos, vec;
+    objectToGrab->getPosition(oPos);
+    tracker->getPosition(tPos);
+    q_vec_subtract(vec,tPos,oPos);
+    q_vec_normalize(vec,vec);
+    q_vec_type axis = Q_NULL_VECTOR;
+    axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
+                        // parallel to vec
+    q_vec_type per1, per2; // create two perpendicular unit vectors
+    q_vec_cross_product(per1,axis,vec);
+    q_vec_normalize(per1,per1);
+    q_vec_cross_product(per2,per1,vec); // should already be length 1
+    // create scaled perpendicular vectors
+    q_vec_type tPer1, tPer2;
+    q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
+    q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
+    q_vec_type /*wPos1,*/ wPos2;
+    // create springs and add them
+    // first spring --defined along the "x" axis (per1)
+    SpringConnection *spring;
+    q_vec_add(wPos2,tPos,tPer1);
+    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                           OBJECT_GRAB_SPRING_CONST,abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+    if (grabWithLeft) {
+        world->addLeftHandSpring(spring);
+    } else {
+        world->addRightHandSpring(spring);
+    }
+    // second spring --defined as rotated 120 degrees about "z" axis.
+    // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
+    q_vec_scale(tPer1,-.5,tPer1);
+    q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
+    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
+    q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
+    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                           OBJECT_GRAB_SPRING_CONST,abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+    if (grabWithLeft) {
+        world->addLeftHandSpring(spring);
+    } else {
+        world->addRightHandSpring(spring);
+    }
+    // third spring --defined as rotated 240 degrees about "z" axis.
+    // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
+    q_vec_invert(tPer2,tPer2);
+    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
+    q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
+    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                           OBJECT_GRAB_SPRING_CONST,abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+    if (grabWithLeft) {
+        world->addLeftHandSpring(spring);
+    } else {
+        world->addRightHandSpring(spring);
+    }
+}
+
 void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
     vtkSmartPointer<vtkTransform> trans = cam->getLocalTransform();
     // not actually the inverse... I guess I goofed up... but it works, so leaving it for now.
