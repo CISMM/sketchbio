@@ -26,15 +26,7 @@ void handle_segfault(int num) {
 
 int main() {
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    bool b[NUM_HYDRA_BUTTONS];
-    for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
-        b[i] = false;
-    }
-    double a[NUM_HYDRA_ANALOGS];
-    for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
-        a[i] = 0.0;
-    }
-    QScopedPointer<SketchProject> project(new SketchProject(renderer,b,a));
+    QScopedPointer<SketchProject> project(new SketchProject(renderer));
     project->setProjectDir("test/testModels/replicatorTest");
 
     SketchObject *o1 = project->addObject("models/1m1j.obj");

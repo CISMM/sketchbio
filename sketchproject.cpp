@@ -68,8 +68,7 @@ inline SketchObject *addTracker(vtkRenderer *r) {
     return tracker;
 }
 
-SketchProject::SketchProject(vtkRenderer *r,
-                             const bool *buttonStates, const double *analogStates) :
+SketchProject::SketchProject(vtkRenderer *r) :
     renderer(r),
     models(new ModelManager()),
     transforms(new TransformManager()),
@@ -78,8 +77,6 @@ SketchProject::SketchProject(vtkRenderer *r,
     cameras(),
     transformOps(),
     projectDir(NULL),
-    buttonDown(buttonStates),
-    analog(analogStates),
     leftOutlinesActor(vtkSmartPointer<vtkActor>::New()),
     rightOutlinesActor(vtkSmartPointer<vtkActor>::New()),
     leftOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
@@ -89,11 +86,8 @@ SketchProject::SketchProject(vtkRenderer *r,
 {
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     renderer->SetActiveCamera(transforms->getGlobalCamera());
-    grabbedWorld = WORLD_NOT_GRABBED;
     leftHand = addTracker(r);
     rightHand = addTracker(r);
-    lObj = rObj = (SketchObject *) NULL;
-    lDist = rDist = std::numeric_limits<double>::max();
     leftOutlinesActor->SetMapper(leftOutlinesMapper);
     leftOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
     leftOutlinesActor->GetProperty()->SetLighting(false);
@@ -173,11 +167,9 @@ void SketchProject::startAnimation() {
     if (renderer->HasViewProp(rightOutlinesActor)) {
         renderer->RemoveActor(rightOutlinesActor);
     }
-    lDist = rDist = std::numeric_limits<double>::max();
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
     world->hideInvisibleObjects();
-    grabbedWorld = WORLD_NOT_GRABBED;
 }
 
 void SketchProject::stopAnimation() {
@@ -200,7 +192,7 @@ bool SketchProject::goToAnimationTime(double time) {
 
 void SketchProject::timestep(double dt) {
     if (!isDoingAnimation) {
-        handleInput();
+        //handleInput();
         world->stepPhysics(dt);
         transforms->copyCurrentHandTransformsToOld();
     } else {
@@ -337,252 +329,6 @@ QWeakPointer<TransformEquals> SketchProject::addTransformEquals(SketchObject *o1
     return trans.toWeakRef();
 }
 
-void SketchProject::handleInput() {
-    q_vec_type beforeDVect, afterDVect, beforeLPos, beforeRPos, afterLPos, afterRPos;
-    q_type beforeLOr, afterLOr, beforeROr, afterROr;
-
-    // get former measurements
-    double dist = transforms->getOldWorldDistanceBetweenHands();
-    transforms->getOldLeftTrackerPosInWorldCoords(beforeLPos);
-    transforms->getOldRightTrackerPosInWorldCoords(beforeRPos);
-    transforms->getOldLeftTrackerOrientInWorldCoords(beforeLOr);
-    transforms->getOldRightTrackerOrientInWorldCoords(beforeROr);
-    transforms->getOldLeftToRightHandWorldVector(beforeDVect);
-
-    // get current measurements
-    double delta = transforms->getWorldDistanceBetweenHands() / dist;
-    transforms->getLeftToRightHandWorldVector(afterDVect);
-    transforms->getLeftTrackerPosInWorldCoords(afterLPos);
-    transforms->getRightTrackerPosInWorldCoords(afterRPos);
-    transforms->getLeftTrackerOrientInWorldCoords(afterLOr);
-    transforms->getRightTrackerOrientInWorldCoords(afterROr);
-
-    // possibly scale the world
-    if (buttonDown[SCALE_BUTTON]) {
-        transforms->scaleWithLeftTrackerFixed(delta);
-    }
-    // possibly rotate the world
-    if (buttonDown[ROTATE_BUTTON]) {
-        q_type rotation;
-        q_normalize(afterDVect,afterDVect);
-        q_normalize(beforeDVect,beforeDVect);
-        q_from_two_vecs(rotation,beforeDVect,afterDVect);
-        transforms->rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    }
-    // if the world is grabbed, translate/rotate it
-    if (grabbedWorld == LEFT_GRABBED_WORLD) {
-        // translate
-        q_vec_type delta;
-        q_vec_subtract(delta,afterLPos,beforeLPos);
-        transforms->translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv,beforeLOr);
-        q_mult(rotation,afterLOr,inv);
-        transforms->rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    } else if (grabbedWorld == RIGHT_GRABBED_WORLD) {
-        // translate
-        q_vec_type delta;
-        q_vec_subtract(delta,afterRPos,beforeRPos);
-        transforms->translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv,beforeROr);
-        q_mult(rotation,afterROr,inv);
-        transforms->rotateWorldRelativeToRoomAboutRightTracker(rotation);
-    }
-    // move fibers
-    updateTrackerObjectConnections();
-
-    // update the main camera
-    transforms->updateCameraForFrame();
-
-    // we don't want to show bounding boxes during animation
-    if (world->getNumberOfObjects() > 0 && !isDoingAnimation) {
-        bool oldShown = false;
-
-        SketchObject *closest = NULL;
-
-        if (world->getLeftSprings()->size() == 0 ) {
-            oldShown = renderer->HasViewProp(leftOutlinesActor);
-            closest = world->getClosestObject(leftHand,&lDist);
-
-            if (lObj != closest) {
-                leftOutlinesMapper->SetInputConnection(closest->getOrientedBoundingBoxes()->GetOutputPort());
-                leftOutlinesMapper->Update();
-                lObj = closest;
-            }
-            if (lDist < DISTANCE_THRESHOLD) {
-                if (!oldShown) {
-                    renderer->AddActor(leftOutlinesActor);
-                }
-            } else if (oldShown) {
-                renderer->RemoveActor(leftOutlinesActor);
-            }
-        }
-
-        if (world->getRightSprings()->size() == 0 ) {
-            oldShown = renderer->HasViewProp(rightOutlinesActor);
-            closest = world->getClosestObject(rightHand,&rDist);
-
-            if (rObj != closest) {
-                rightOutlinesMapper->SetInputConnection(closest->getOrientedBoundingBoxes()->GetOutputPort());
-                rightOutlinesMapper->Update();
-                rObj = closest;
-            }
-            if (rDist < DISTANCE_THRESHOLD) {
-                if (!oldShown) {
-                    renderer->AddActor(rightOutlinesActor);
-                }
-            } else if (oldShown) {
-                renderer->RemoveActor(rightOutlinesActor);
-            }
-        }
-    }
-
-    // set tracker locations
-    updateTrackerPositions();
-    // animation button
-    if (buttonDown[0]) {
-        startAnimation();
-    }
-}
-
-/*
- * This function takes a q_vec_type and returns the index of
- * the component with the minimum magnitude.
- */
-inline int getMinIdx(const q_vec_type vec) {
-    if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Y])) {
-        if (Q_ABS(vec[Q_X]) < Q_ABS(vec[Q_Z])) {
-            return Q_X;
-        } else {
-            return Q_Z;
-        }
-    } else {
-        if (Q_ABS(vec[Q_Y]) < Q_ABS(vec[Q_Z])) {
-            return Q_Y;
-        } else {
-            return Q_Z;
-        }
-    }
-}
-
-/*
- * This method updates the springs connecting the trackers and the objects in the world->..
- */
-void SketchProject::updateTrackerObjectConnections() {
-    if (world->getNumberOfObjects() == 0)
-        return;
-    for (int i = 0; i < 2; i++) {
-        int analogIdx;
-        int worldGrabConstant;
-        SketchObject *objectToGrab;
-        SketchObject *tracker;
-        QList<SpringConnection *> *springs;
-        double dist;
-        // select left or right
-        if (i == 0) {
-            analogIdx = HYDRA_LEFT_TRIGGER;
-            worldGrabConstant = LEFT_GRABBED_WORLD;
-            tracker = leftHand;
-            springs = world->getLeftSprings();
-            objectToGrab = lObj;
-            dist = lDist;
-        } else if (i == 1) {
-            analogIdx = HYDRA_RIGHT_TRIGGER;
-            worldGrabConstant = RIGHT_GRABBED_WORLD;
-            tracker = rightHand;
-            springs = world->getRightSprings();
-            objectToGrab = rObj;
-            dist = rDist;
-        }
-        // if they are gripping the trigger
-        if (analog[analogIdx] > .1) {
-            // if we do not have springs yet add them
-            if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
-                if (dist > DISTANCE_THRESHOLD) {
-                    if (grabbedWorld == WORLD_NOT_GRABBED) {
-                        grabbedWorld = worldGrabConstant;
-                    }
-                    // allow grabbing world & moving something with other hand...
-                    // discouraged, but allowed -> the results are not guaranteed.
-                } else {
-                    q_vec_type oPos, tPos, vec;
-                    objectToGrab->getPosition(oPos);
-                    tracker->getPosition(tPos);
-                    q_vec_subtract(vec,tPos,oPos);
-                    q_vec_normalize(vec,vec);
-                    q_vec_type axis = Q_NULL_VECTOR;
-                    axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
-                                        // parallel to vec
-                    q_vec_type per1, per2; // create two perpendicular unit vectors
-                    q_vec_cross_product(per1,axis,vec);
-                    q_vec_normalize(per1,per1);
-                    q_vec_cross_product(per2,per1,vec); // should already be length 1
-                    // create scaled perpendicular vectors
-                    q_vec_type tPer1, tPer2;
-                    q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
-                    q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
-                    q_vec_type /*wPos1,*/ wPos2;
-                    // create springs and add them
-                    // first spring --defined along the "x" axis (per1)
-                    SpringConnection *spring;
-                    q_vec_add(wPos2,tPos,tPer1);
-                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                                           analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    if (i == 0) {
-                        world->addLeftHandSpring(spring);
-                    } else if (i == 1) {
-                        world->addRightHandSpring(spring);
-                    }
-                    // second spring --defined as rotated 120 degrees about "z" axis.
-                    // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
-                    q_vec_scale(tPer1,-.5,tPer1);
-                    q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
-                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                    q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                                           analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    if (i == 0) {
-                        world->addLeftHandSpring(spring);
-                    } else if (i == 1) {
-                        world->addRightHandSpring(spring);
-                    }
-                    // third spring --defined as rotated 240 degrees about "z" axis.
-                    // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
-                    q_vec_invert(tPer2,tPer2);
-                    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-                    q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-                    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                                           analog[analogIdx],abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
-                    if (i == 0) {
-                        world->addLeftHandSpring(spring);
-                    } else if (i == 1) {
-                        world->addRightHandSpring(spring);
-                    }
-                }
-            } else { // update springs stiffness if they are already there
-                for (QListIterator<SpringConnection *> it(*springs); it.hasNext();) {
-                    it.next()->setStiffness(analog[analogIdx]);
-                }
-            }
-        } else {
-            if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
-                // remove springs between model & tracker, set grabbed objects solid
-                if (i == 0) {
-                    world->clearLeftHandSprings();
-                } else if (i == 1) {
-                    world->clearRightHandSprings();
-                }
-            }
-            if (grabbedWorld == worldGrabConstant) {
-                grabbedWorld = WORLD_NOT_GRABBED;
-            }
-        }
-    }
-}
-
 /*
  * Updates the positions and transformations of the tracker objects.
  */
@@ -599,9 +345,33 @@ void SketchProject::updateTrackerPositions() {
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
 }
 
+void SketchProject::setLeftOutlineObject(SketchObject *obj) {
+    leftOutlinesMapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
+    leftOutlinesMapper->Update();
+}
+
+void SketchProject::setRightOutlineObject(SketchObject *obj) {
+    rightOutlinesMapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
+    rightOutlinesMapper->Update();
+}
+
+void SketchProject::setLeftOutlinesVisible(bool visible) {
+    if (visible)
+        renderer->AddActor(leftOutlinesActor);
+    else
+        renderer->RemoveActor(leftOutlinesActor);
+}
+
+void SketchProject::setRightOutlinesVisible(bool visible) {
+    if (visible)
+        renderer->AddActor(rightOutlinesActor);
+    else
+        renderer->RemoveActor(rightOutlinesActor);
+}
+
 void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
     vtkSmartPointer<vtkTransform> trans = cam->getLocalTransform();
-    vtkSmartPointer<vtkLinearTransform> invTrans = trans->GetLinearInverse();
+    // not actually the inverse... I guess I goofed up... but it works, so leaving it for now.
     vtkSmartPointer<vtkMatrix4x4> invMat = trans->GetMatrix();
     // note that the object's localTransform should not be scaled
     q_vec_type up, forward, pos, fPoint;

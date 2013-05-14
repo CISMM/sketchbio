@@ -38,13 +38,11 @@
 
 // Constructor
 SimpleView::SimpleView(QString projDir, bool load_example) :
-    tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
-    buttons(VRPN_RAZER_HYDRA_DEVICE_STRING),
-    analogRemote(VRPN_RAZER_HYDRA_DEVICE_STRING),
     timer(new QTimer()),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer(),buttonDown,analog))
+    project(new SketchProject(renderer.GetPointer())),
+    inputManager(new HydraInputManager(project))
 {
     this->ui = new Ui_SimpleView;
     this->ui->setupUi(this);
@@ -54,16 +52,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     collisionModeGroup->addAction(this->ui->actionPose_Mode_PCA);
     this->ui->actionPose_Mode_1->setChecked(true);
 
-    tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
-    buttons.register_change_handler((void *) this, handle_button);
-    analogRemote.register_change_handler((void *) this, handle_analogs);
-
-    for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
-        buttonDown[i] = false;
-    }
-    for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
-        analog[i] = 0.0;
-    }
     project->setProjectDir(projDir);
     QDir pd(project->getProjectDir());
     QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
@@ -112,6 +100,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
 }
 
 SimpleView::~SimpleView() {
+    delete inputManager;
     delete project;
     delete collisionModeGroup;
     delete timer;
@@ -122,18 +111,15 @@ void SimpleView::slotExit()
     qApp->exit();
 }
 
-void SimpleView::handleInput() {
-    tracker.mainloop();
-    buttons.mainloop();
-    analogRemote.mainloop();
-}
 
 /*
  * The method called once per frame to update things and redraw
  */
 void SimpleView::slot_frameLoop() {
     // input
-    handleInput();
+    // TODO - redo with new class
+    //handleInput();
+    inputManager->handleCurrentInput();
 
     project->timestep(TIMESTEP);
 
@@ -163,24 +149,6 @@ void SimpleView::setWorldSpringsEnabled(bool enabled) {
 
 void SimpleView::setCollisionTestsOn(bool on) {
     project->setCollisionTestsOn(on);
-}
-
-void SimpleView::setLeftPos(q_xyz_quat_type *newPos) {
-    project->setLeftHandPos(newPos);
-}
-
-void SimpleView::setRightPos(q_xyz_quat_type *newPos) {
-    project->setRightHandPos(newPos);
-}
-
-void SimpleView::setButtonState(int buttonNum, bool buttonPressed) {
-    buttonDown[buttonNum] = buttonPressed;
-}
-
-void SimpleView::setAnalogStates(const double state[]) {
-    for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
-        analog[i] = state[i];
-    }
 }
 
 SketchObject *SimpleView::addObject(QString name)
@@ -246,7 +214,8 @@ void SimpleView::loadProject() {
     delete project;
     // create new one
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
-    project = new SketchProject(renderer,buttonDown,analog);
+    project = new SketchProject(renderer);
+    inputManager->setProject(project);
     project->setProjectDir(dirPath);
     project->setCollisionTestsOn(this->ui->actionCollision_Tests_On->isChecked());
     project->setWorldSpringsEnabled(this->ui->actionWorld_Springs_On->isChecked());
@@ -547,42 +516,4 @@ QString SimpleView::getSubprocessExecutablePath(QString executableName) {
         settings.setValue("subprocesses/" + executableName + "/path",executablePath);
     }
     return executablePath;
-}
-
-//####################################################################################
-// VRPN callback functions
-//####################################################################################
-
-
-void VRPN_CALLBACK SimpleView::handle_tracker_pos_quat (void *userdata, const vrpn_TRACKERCB t)
-{
-    SimpleView *view = (SimpleView *) userdata;
-    q_xyz_quat_type data;
-    // changes coordinates to OpenGL coords, switching y & z and negating y
-    data.xyz[Q_X] = t.pos[Q_X];
-    data.xyz[Q_Y] = -t.pos[Q_Z];
-    data.xyz[Q_Z] = t.pos[Q_Y];
-    data.quat[Q_X] = t.quat[Q_X];
-    data.quat[Q_Y] = -t.quat[Q_Z];
-    data.quat[Q_Z] = t.quat[Q_Y];
-    data.quat[Q_W] = t.quat[Q_W];
-    // set the correct hand's position
-    if (t.sensor == 0) {
-        view->setLeftPos(&data);
-    } else {
-        view->setRightPos(&data);
-    }
-}
-
-void VRPN_CALLBACK SimpleView::handle_button(void *userdata, const vrpn_BUTTONCB b) {
-    SimpleView *view = (SimpleView *) userdata;
-    view->setButtonState(b.button,b.state);
-}
-
-void VRPN_CALLBACK SimpleView::handle_analogs(void *userdata, const vrpn_ANALOGCB a) {
-    SimpleView *view = (SimpleView *) userdata;
-    if (a.num_channel != NUM_HYDRA_ANALOGS) {
-        qDebug() << "We have problems!";
-    }
-    view->setAnalogStates(a.channel);
 }

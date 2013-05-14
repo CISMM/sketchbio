@@ -27,7 +27,7 @@
 class SketchProject
 {
 public:
-    SketchProject(vtkRenderer *r, const bool *buttonStates, const double *analogStates);
+    SketchProject(vtkRenderer *r);
     ~SketchProject();
     // setters
     // sets the directory path for this project (should be an absolute path)
@@ -58,8 +58,13 @@ public:
     const ModelManager *getModelManager() const;
     // get transform manager
     const TransformManager *getTransformManager() const;
+    TransformManager *getTransformManager();
     // get world manager
     const WorldManager *getWorldManager() const;
+    WorldManager *getWorldManager();
+    // get objects representing trackers ('hands')
+    SketchObject *getLeftHandObject();
+    SketchObject *getRightHandObject();
     // get replicas
     const QList<StructureReplicator *> *getReplicas() const;
     // get transform equals objects (or more things added later, not sure)
@@ -74,6 +79,18 @@ public:
     QString getProjectDir() const;
     // gets the camera model
     SketchModel *getCameraModel();
+
+    // update locations of tracker objects
+    void updateTrackerPositions();
+    // update the object used for the outlines
+    void setLeftOutlineObject(SketchObject *obj);
+    void setRightOutlineObject(SketchObject *obj);
+    // show/hide the outlines of objects
+    void setLeftOutlinesVisible(bool visible);
+    void setRightOutlinesVisible(bool visible);
+    // tell if the outlines for a particular side are visible
+    bool isLeftOutlinesVisible();
+    bool isRightOutlinesVisible();
 
     // adding things functions
     // for models
@@ -97,15 +114,13 @@ private:
     // helper functions
     // input related functions
     void handleInput();
-    void updateTrackerPositions();
     void updateTrackerObjectConnections();
     static void setUpVtkCamera(SketchObject *cam, vtkCamera *vCam);
 
     // fields
     vtkSmartPointer<vtkRenderer> renderer;
     // managers -- these are owned by the project, raw pointers may be passed to other places, but
-    //              will be invalid once the project is deleted (if you're using these permanently outside
-    //              the project, we have bigger problems anyway)
+    //              will be invalid once the project is deleted
     QScopedPointer<ModelManager> models;
     QScopedPointer<TransformManager> transforms;
     QScopedPointer<WorldManager> world;
@@ -117,15 +132,8 @@ private:
     // project dir
     QDir *projectDir;
 
-    // vrpn button/analog data -- not owned here, so raw pointer ok
-    const bool *buttonDown;
-    const double *analog;
     // other ui stuff
-    int grabbedWorld; // state of world grabbing
     SketchObject *leftHand, *rightHand; // the objects for the left and right hand trackers
-    double lDist, rDist; // the distance to the closest object to the (left/right) hand
-    SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
-                                // and right hands respectively
     // outline actors are added to the renderer when the object is close enough to
     // interact with.  The outline mappers are updated whenever the closest object
     // changes (unless another one is currently grabbed).
@@ -144,8 +152,24 @@ inline const TransformManager *SketchProject::getTransformManager() const {
     return transforms.data();
 }
 
+inline TransformManager *SketchProject::getTransformManager() {
+    return transforms.data();
+}
+
 inline const WorldManager *SketchProject::getWorldManager() const {
     return world.data();
+}
+
+inline WorldManager *SketchProject::getWorldManager() {
+    return world.data();
+}
+
+inline SketchObject *SketchProject::getLeftHandObject() {
+    return leftHand;
+}
+
+inline SketchObject *SketchProject::getRightHandObject() {
+    return rightHand;
 }
 
 inline const QList<StructureReplicator *> *SketchProject::getReplicas() const {
@@ -169,6 +193,14 @@ inline SketchModel *SketchProject::getCameraModel() {
 }
 inline const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *SketchProject::getCameras() const {
     return &cameras;
+}
+
+inline bool SketchProject::isLeftOutlinesVisible() {
+    return renderer->HasViewProp(leftOutlinesActor);
+}
+
+inline bool SketchProject::isRightOutlinesVisible() {
+    return renderer->HasViewProp(rightOutlinesActor);
 }
 
 #endif // SKETCHPROJECT_H

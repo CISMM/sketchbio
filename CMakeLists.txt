@@ -45,13 +45,14 @@ endif (WIN32)
 # Set your files and resources here
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
 sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchproject.cpp projecttoxml.cpp
-physicsstrategy.cpp transformequals.cpp vrpnserver.cpp keyframe.cpp projecttoblenderanimation.cpp)
+physicsstrategy.cpp transformequals.cpp vrpnserver.cpp keyframe.cpp projecttoblenderanimation.cpp
+hydrainputmanager.cpp)
 SET(SimpleViewUI SimpleView.ui)
 SET(Headers_Needing_QT_WRAP SimpleView.h vrpnserver.h)
 SET(Headers_Not_Needing_QT_WRAP transformmanager.h structurereplicator.h modelmanager.h
 sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
 projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h keyframe.h
-projecttoblenderanimation.h)
+projecttoblenderanimation.h hydrainputmanager.h)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${Headers_Needing_QT_WRAP} )

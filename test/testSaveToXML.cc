@@ -367,13 +367,11 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
 }
 
 int testSave1() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -405,13 +403,11 @@ int testSave1() {
 
 
 int testSave2() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -446,13 +442,11 @@ int testSave2() {
 }
 
 int testSave3() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -488,13 +482,11 @@ int testSave3() {
 }
 
 int testSave4() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -538,13 +530,11 @@ int testSave4() {
 }
 
 int testSave6() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -609,10 +599,8 @@ int testSave6() {
 }
 
 int testSave9() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     vtkSmartPointer<vtkRenderer> r = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> project(new SketchProject(r,a,b));
+    QScopedPointer<SketchProject> project(new SketchProject(r));
     project->setProjectDir("test/test2");
 
     QDir dir = project->getProjectDir();
@@ -633,10 +621,8 @@ int testSave9() {
 
 
 int testSave5() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     vtkSmartPointer<vtkRenderer> r = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> project(new SketchProject(r,a,b)), project2(new SketchProject(r,a,b));
+    QScopedPointer<SketchProject> project(new SketchProject(r)), project2(new SketchProject(r));
     project->setProjectDir("test/test1");
     project2->setProjectDir("test/test1");
 
@@ -681,13 +667,11 @@ int testSave5() {
 }
 
 int testSave7() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
@@ -744,13 +728,11 @@ int testSave7() {
 }
 
 int testSave8() {
-    bool a[NUM_HYDRA_BUTTONS];
-    double b[NUM_HYDRA_ANALOGS];
     int retVal = 0;
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderer> r2 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1,a,b));
-    QScopedPointer<SketchProject> proj2(new SketchProject(r2,a,b));
+    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
+    QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
 
