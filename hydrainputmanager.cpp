@@ -265,7 +265,14 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             positionsSelected.append(pos[1]);
             positionsSelected.append(pos[2]);
         } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)) {
-            operationState = ADD_TRANSFORM_EQUALS_PENDING;
+            SketchObject *obj = NULL;
+            if (operationState == NO_OPERATION) {
+                if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
+                    obj = rightHandDominant ? rObj : lObj;
+                    objectsSelected.append(obj);
+                    operationState = ADD_TRANSFORM_EQUALS_PENDING;
+                }
+            }
         }
     } else if (!buttonPressed) {
         if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)
@@ -322,7 +329,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 double k = 2 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
                                                               : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
                 if (obj1 != NULL) {
-                    if (obj2 != NULL) {
+                    if (obj2 != NULL && obj1 != obj2) {
                         project->getWorldManager()->addSpring(obj1,obj2,p1,p2,true,k,0);
                     } else {
                         obj1->getWorldSpacePointInModelCoordinates(p1,p1);
@@ -337,6 +344,41 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             }
             objectsSelected.clear();
             positionsSelected.clear();
+            operationState = NO_OPERATION;
+        } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)
+                   && operationState == ADD_TRANSFORM_EQUALS_PENDING) {
+            SketchObject *obj = NULL;
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
+                obj = rightHandDominant ? rObj : lObj;
+                objectsSelected.append(obj);
+            }
+            if (objectsSelected.contains(NULL)) {
+                int idx = objectsSelected.indexOf(NULL) + 1;
+                QSharedPointer<TransformEquals> equals(project->addTransformEquals(objectsSelected[0],
+                                                                                     objectsSelected[idx+0]));
+                if (!equals.isNull()) {
+                    for (int i = 1; i < idx && idx + i < objectsSelected.size(); i++) {
+                        equals->addPair(objectsSelected[i],objectsSelected[idx+i]);
+                    }
+                }
+                objectsSelected.clear();
+                operationState = NO_OPERATION;
+            } else {
+                objectsSelected.append(NULL);
+            }
+        }
+    } else if (operationState == ADD_TRANSFORM_EQUALS_PENDING) {
+        SketchObject *obj = NULL;
+        if (objectsSelected.size() > 2 && objectsSelected.contains(NULL)) {
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
+                obj = rightHandDominant ? rObj : lObj;
+                objectsSelected.append(obj);
+            } else {
+                objectsSelected.clear();
+                operationState = NO_OPERATION;
+            }
+        } else {
+            objectsSelected.clear();
             operationState = NO_OPERATION;
         }
     }
