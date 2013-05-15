@@ -8,6 +8,7 @@
 #define ADD_SPRING_PENDING              3
 #define ADD_TRANSFORM_EQUALS_PENDING    4
 
+
 HydraInputManager::HydraInputManager(SketchProject *proj) :
     project(proj),
     tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
@@ -246,10 +247,28 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
         // events on press
         if (buttonNum == HydraButtonMapping::spring_disable_button_idx(rightHandDominant)) {
             emit toggleWorldSpringsEnabled();
+        } else if (buttonNum == HydraButtonMapping::collision_disable_button_idx(rightHandDominant)) {
+            emit toggleWorldCollisionsEnabled();
         } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)) {
             operationState = DUPLICATE_OBJECT_PENDING;
         } else if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)) {
-            operationState = REPLICATE_OBJECT_PENDING;
+            SketchObject *obj = rightHandDominant ? rObj : lObj;
+            if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
+                q_vec_type pos;
+                double bb[6];
+                obj->getPosition(pos);
+                obj->getAABoundingBox(bb);
+                pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
+                SketchObject *nObj = obj->deepCopy();
+                nObj->setPosition(pos);
+                project->addObject(nObj);
+                int nCopies = floor(100 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
+                                                                         : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)]);
+                project->addReplication(obj,nObj,nCopies);
+                objectsSelected.append(obj);
+                objectsSelected.append(nObj);
+                operationState = REPLICATE_OBJECT_PENDING;
+            }
         } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)) {
             operationState = ADD_SPRING_PENDING;
             SketchObject *obj = NULL;
@@ -280,19 +299,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
     } else if (!buttonPressed) {
         if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)
                 && operationState == REPLICATE_OBJECT_PENDING ) {
-            SketchObject *obj = rightHandDominant ? rObj : lObj;
-            if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
-                q_vec_type pos;
-                double bb[6];
-                obj->getPosition(pos);
-                obj->getAABoundingBox(bb);
-                pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
-                SketchObject *nObj = obj->deepCopy();
-                nObj->setPosition(pos);
-                project->addObject(nObj);
-                int nCopies = floor(100 * analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
-                project->addReplication(obj,nObj,nCopies);
-            }
+            objectsSelected.clear();
             operationState = NO_OPERATION;
         } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)
                    && operationState == DUPLICATE_OBJECT_PENDING ) {
@@ -331,6 +338,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 }
                 double k = 2 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
                                                               : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
+                k = 2 - k;
                 if (obj1 != NULL) {
                     if (obj2 != NULL && obj1 != obj2) {
                         project->getWorldManager()->addSpring(obj1,obj2,p1,p2,true,k,0);
@@ -391,6 +399,11 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
 void HydraInputManager::setAnalogStates(const double state[]) {
     for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
         analogStatus[i] = state[i];
+    }
+    if (operationState == REPLICATE_OBJECT_PENDING) {
+        int nCopies = floor(100 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
+                                                                 : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)]);
+        project->getReplicas()->back()->setNumShown(nCopies);
     }
 }
 

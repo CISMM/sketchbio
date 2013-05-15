@@ -26,7 +26,9 @@ TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, Grou
     transform->Identity();
     transform->PostMultiply();
     transform->Concatenate(pairsList[0].o2->getLocalTransform());
-    transform->Concatenate(pairsList[0].o1->getLocalTransform()->GetLinearInverse());
+    transform->Concatenate(pairsList[0].o1->getInverseLocalTransform());
+    q_vec_set(posOffset,0,0,0);
+    q_make(orientOffset,1,0,0,0);
 }
 
 TransformEquals::~TransformEquals() {
@@ -102,8 +104,10 @@ const QVector<ObjectPair> *TransformEquals::getPairsList() const {
 void TransformEquals::objectPushed(SketchObject *obj) {
     if (obj == pairsList[0].o1) {
         isMovingBase = true;
-        vtkSmartPointer< vtkMatrix4x4 > mat = transform->GetMatrix();
-        transform->SetMatrix(mat);
+        transform->GetPosition(posOffset);
+        double wxyz[4];
+        transform->GetOrientationWXYZ(wxyz);
+        q_from_axis_angle(orientOffset,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
         return;
     }
     for (int i = 1; i < pairsList.size(); i++) {
@@ -151,29 +155,20 @@ void TransformEquals::objectKeyframed(SketchObject *obj, double time) {
 void TransformEquals::objectMoved(SketchObject *obj) {
     if ( isMovingBase && obj == pairsList[0].o1) {
         isMovingBase = false;
-        vtkSmartPointer< vtkTransform > tfrm = vtkSmartPointer< vtkTransform >::New();
-        tfrm->Identity();
-        tfrm->PostMultiply();
-        tfrm->Concatenate(transform);
-        tfrm->Concatenate(pairsList[0].o1->getLocalTransform());
         q_vec_type pos;
         q_type orient;
+        pairsList[0].o1->getModelSpacePointInWorldCoordinates(posOffset,pos);
+        vtkSmartPointer<vtkTransform> tfrm = pairsList[0].o1->getLocalTransform();
         double wxyz[4];
-        tfrm->GetPosition(pos);
         tfrm->GetOrientationWXYZ(wxyz);
-        wxyz[0] = wxyz[0] * Q_PI / 180.0; // convert to radians
-        q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],wxyz[0]);
+        q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
+        q_mult(orient,orient,orientOffset);
         pairsList[0].o2->setPosAndOrient(pos,orient);
-        transform->Identity();
-        transform->PostMultiply();
-        transform->Concatenate(pairsList[0].o2->getLocalTransform());
-        transform->Concatenate(pairsList[0].o1->getLocalTransform()->GetLinearInverse());
+
     } else if (isMovingBase && obj == pairsList[0].o2) {
-        transform->Identity();
-        transform->PostMultiply();
-        transform->Concatenate(pairsList[0].o2->getLocalTransform());
-        transform->Concatenate(pairsList[0].o1->getLocalTransform()->GetLinearInverse());
-        vtkSmartPointer< vtkMatrix4x4 > mat = transform->GetMatrix();
-        transform->SetMatrix(mat);
+        transform->GetPosition(posOffset);
+        double wxyz[4];
+        transform->GetOrientationWXYZ(wxyz);
+        q_from_axis_angle(orientOffset,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
     }
 }

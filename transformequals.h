@@ -52,6 +52,8 @@ private:
     vtkSmartPointer<vtkTransform> transform;
     int transformEqualsGroupId;
     bool isMovingBase;
+    q_vec_type posOffset;
+    q_type orientOffset;
 };
 
 #endif // TRANSFORMEQUALS_H

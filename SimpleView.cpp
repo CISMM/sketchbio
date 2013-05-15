@@ -94,6 +94,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
     connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()), this, SLOT(toggleWorldSpringsEnabled()));
+    connect(this->inputManager, SIGNAL(toggleWorldCollisionsEnabled()), this, SLOT(toggleWorldCollisionTestsOn()));
 
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -156,6 +157,12 @@ void SimpleView::toggleWorldSpringsEnabled() {
 
 void SimpleView::setCollisionTestsOn(bool on) {
     project->setCollisionTestsOn(on);
+}
+
+void SimpleView::toggleWorldCollisionTestsOn() {
+    bool enabled = this->ui->actionCollision_Tests_On->isChecked();
+    this->ui->actionCollision_Tests_On->setChecked(!enabled);
+    project->setCollisionTestsOn(!enabled);
 }
 
 SketchObject *SimpleView::addObject(QString name)

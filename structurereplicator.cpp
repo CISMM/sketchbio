@@ -56,8 +56,7 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     transform = vtkSmartPointer<vtkTransform>::New();
     transform->Identity();
     transform->PostMultiply();
-    vtkSmartPointer<vtkTransform> other = obj1->getLocalTransform();
-    transform->Concatenate(other->GetLinearInverse());
+    transform->Concatenate(obj1->getInverseLocalTransform());
     transform->Concatenate(obj2->getLocalTransform());
 }
 

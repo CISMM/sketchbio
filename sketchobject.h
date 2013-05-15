@@ -75,6 +75,7 @@ public:
     void removeFromCollisionGroup(int num);
     // local transformation & transforming points/vectors
     vtkTransform *getLocalTransform();
+    vtkLinearTransform *getInverseLocalTransform();
     virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const;
     virtual void getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint, q_vec_type modelCoordsOut) const;
     virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const;
@@ -129,6 +130,7 @@ protected: // methods
     virtual void localTransformUpdated();
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
+    vtkSmartPointer<vtkLinearTransform> invLocalTransform;
 private: // methods
     void notifyForceObservers();
 private: // fields

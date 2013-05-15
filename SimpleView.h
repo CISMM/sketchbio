@@ -83,6 +83,7 @@ public slots:
   void setWorldSpringsEnabled(bool enabled);
   void toggleWorldSpringsEnabled();
   void setCollisionTestsOn(bool on);
+  void toggleWorldCollisionTestsOn();
 
   // Load a project
   void loadProject();

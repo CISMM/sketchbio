@@ -27,6 +27,7 @@ public:
 
 signals:
     void toggleWorldSpringsEnabled();
+    void toggleWorldCollisionsEnabled();
 private:
 
     // VRPN callback functions
@@ -50,5 +51,6 @@ private:
     QVector<SketchObject *> objectsSelected;
     QVector<double> positionsSelected; // have to put in coords... can't have a vector of arrays
 };
+
 
 #endif // HYDRAINPUTMANAGER_H

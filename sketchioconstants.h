@@ -53,6 +53,9 @@ inline int replicate_object_button(bool rightDominant) {
 inline int duplicate_object_button(bool rightDominant) {
     return rightDominant? BUTTON_RIGHT(FOUR_BUTTON_IDX) : BUTTON_LEFT(FOUR_BUTTON_IDX);
 }
+inline int collision_disable_button_idx(bool rightDominant) {
+    return rightDominant? BUTTON_LEFT(TWO_BUTTON_IDX) : BUTTON_RIGHT(TWO_BUTTON_IDX);
+}
 
 }
 

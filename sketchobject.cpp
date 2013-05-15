@@ -7,6 +7,7 @@
 //#########################################################################
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
+    invLocalTransform(localTransform->GetLinearInverse()),
     parent(NULL),
     visible(true),
     active(false),
@@ -179,6 +180,10 @@ void SketchObject::removeFromCollisionGroup(int num) {
 vtkTransform *SketchObject::getLocalTransform() {
     return localTransform;
 }
+//#########################################################################
+vtkLinearTransform *SketchObject::getInverseLocalTransform() {
+    return invLocalTransform;
+}
 
 //#########################################################################
 void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint,
@@ -188,11 +193,11 @@ void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPo
 //#########################################################################
 void SketchObject::getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint,
                                                         q_vec_type modelCoordsOut) const {
-    localTransform->GetLinearInverse()->TransformPoint(worldPoint, modelCoordsOut);
+    invLocalTransform->TransformPoint(worldPoint, modelCoordsOut);
 }
 //#########################################################################
 void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
-    localTransform->GetLinearInverse()->TransformVector(worldVec,modelVecOut);
+    invLocalTransform->TransformVector(worldVec,modelVecOut);
 }
 //#########################################################################
 void SketchObject::getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const {
