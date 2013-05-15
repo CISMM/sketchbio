@@ -45,6 +45,9 @@ void HydraInputManager::setProject(SketchProject *proj) {
     lDist = rDist = std::numeric_limits<double>::max();
     lObj = rObj = (SketchObject *) NULL;
     grabbedWorld = WORLD_NOT_GRABBED;
+    objectsSelected.clear();
+    positionsSelected.clear();
+    operationState = NO_OPERATION;
 }
 
 void HydraInputManager::handleCurrentInput() {
