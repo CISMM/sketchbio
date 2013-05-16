@@ -280,6 +280,7 @@ void SimpleView::loadProject() {
     renderer->InteractiveOff();
     renderer->SetViewport(0,0,1,1);
     renderer->AddActor2D(directionsTextActor);
+    renderer->AddActor2D(statusTextActor);
 
     delete project;
     // create new one
