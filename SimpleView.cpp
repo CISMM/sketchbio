@@ -52,6 +52,13 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     collisionModeGroup->addAction(this->ui->actionPose_Mode_PCA);
     this->ui->actionPose_Mode_1->setChecked(true);
 
+    renderer->InteractiveOff();
+    renderer->SetViewport(0,0,1,1);
+    vtkSmartPointer<vtkRenderer> dummyRenderer = vtkSmartPointer<vtkRenderer>::New();
+    dummyRenderer->InteractiveOn();
+    dummyRenderer->SetViewport(0,0,1,1);
+    dummyRenderer->SetBackground(0,0,0);
+
     project->setProjectDir(projDir);
     QDir pd(project->getProjectDir());
     QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
@@ -89,6 +96,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     }
 
     // VTK/Qt wedded
+    this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(dummyRenderer);
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
 
     // Set up action signals and slots
@@ -225,6 +233,8 @@ void SimpleView::loadProject() {
     // clean up old project
     this->ui->qvtkWidget->GetRenderWindow()->RemoveRenderer(renderer);
     renderer = vtkSmartPointer<vtkRenderer>::New();
+    renderer->InteractiveOff();
+    renderer->SetViewport(0,0,1,1);
 
     delete project;
     // create new one
