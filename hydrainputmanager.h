@@ -28,7 +28,7 @@ public:
 signals:
     void toggleWorldSpringsEnabled();
     void toggleWorldCollisionsEnabled();
-    void newDirectionsString(char *str);
+    void newDirectionsString(QString str);
 private:
 
     // VRPN callback functions

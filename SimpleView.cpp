@@ -104,27 +104,43 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
 
     // test of text stuff
-    vtkSmartPointer<vtkTextProperty> textProp = vtkSmartPointer<vtkTextProperty>::New();
-    textProp->SetFontFamilyToCourier();
-    textProp->SetFontSize(16);
-    textProp->SetVerticalJustificationToTop();
-    textProp->SetJustificationToLeft();
+    vtkSmartPointer<vtkTextProperty> textPropTop= vtkSmartPointer<vtkTextProperty>::New();
+    textPropTop->SetFontFamilyToCourier();
+    textPropTop->SetFontSize(16);
+    textPropTop->SetVerticalJustificationToTop();
+    textPropTop->SetJustificationToLeft();
 
-    textMapper = vtkSmartPointer<vtkTextMapper>::New();
-    textMapper->SetInput("Hello World");
-    textMapper->SetTextProperty(textProp);
+    vtkSmartPointer<vtkTextProperty> textPropBottom = vtkSmartPointer<vtkTextProperty>::New();
+    textPropBottom->SetFontFamilyToCourier();
+    textPropBottom->SetFontSize(16);
+    textPropBottom->SetVerticalJustificationToBottom();
+    textPropBottom->SetJustificationToLeft();
 
-    textActor = vtkSmartPointer<vtkActor2D>::New();
-    textActor->SetMapper(textMapper);
-    textActor->GetPositionCoordinate()->SetCoordinateSystemToNormalizedDisplay();
-    textActor->GetPositionCoordinate()->SetValue(0.05,0.95);
-    renderer->AddActor2D(textActor);
+    directionsTextMapper = vtkSmartPointer<vtkTextMapper>::New();
+    directionsTextMapper->SetInput(" ");
+    directionsTextMapper->SetTextProperty(textPropTop);
+
+    statusTextMapper = vtkSmartPointer<vtkTextMapper>::New();
+    statusTextMapper->SetInput("Collisions: ON\nSprings: ON");
+    statusTextMapper->SetTextProperty(textPropBottom);
+
+    directionsTextActor = vtkSmartPointer<vtkActor2D>::New();
+    directionsTextActor->SetMapper(directionsTextMapper);
+    directionsTextActor->GetPositionCoordinate()->SetCoordinateSystemToNormalizedDisplay();
+    directionsTextActor->GetPositionCoordinate()->SetValue(0.05,0.95);
+    renderer->AddActor2D(directionsTextActor);
+
+    statusTextActor = vtkSmartPointer<vtkActor2D>::New();
+    statusTextActor->SetMapper(statusTextMapper);
+    statusTextActor->GetPositionCoordinate()->SetCoordinateSystemToNormalizedDisplay();
+    statusTextActor->GetPositionCoordinate()->SetValue(0.05,0.05);
+    renderer->AddActor2D(statusTextActor);
 
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
     connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()), this, SLOT(toggleWorldSpringsEnabled()));
     connect(this->inputManager, SIGNAL(toggleWorldCollisionsEnabled()), this, SLOT(toggleWorldCollisionTestsOn()));
-    connect(this->inputManager, SIGNAL(newDirectionsString(char*)), this, SLOT(setTextMapperString(char*)));
+    connect(this->inputManager, SIGNAL(newDirectionsString(QString)), this, SLOT(setTextMapperString(QString)));
 
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -149,8 +165,6 @@ void SimpleView::slotExit()
  */
 void SimpleView::slot_frameLoop() {
     // input
-    // TODO - redo with new class
-    //handleInput();
     inputManager->handleCurrentInput();
 
     project->timestep(TIMESTEP);
@@ -177,22 +191,26 @@ void SimpleView::poseModePCA() {
 
 void SimpleView::setWorldSpringsEnabled(bool enabled) {
     project->setWorldSpringsEnabled(enabled);
+    bool cOn = this->ui->actionCollision_Tests_On->isChecked();
+    QString status("Collisions: %1\nSprings: %2");
+    status = status.arg(cOn ? "ON" : "OFF", enabled ? "ON" : "OFF");
+    statusTextMapper->SetInput(status.toStdString().c_str());
 }
 
 void SimpleView::toggleWorldSpringsEnabled() {
-    bool enabled = this->ui->actionWorld_Springs_On->isChecked();
-    this->ui->actionWorld_Springs_On->setChecked(!enabled);
-    project->setWorldSpringsEnabled(!enabled);
+    this->ui->actionWorld_Springs_On->trigger();
 }
 
 void SimpleView::setCollisionTestsOn(bool on) {
     project->setCollisionTestsOn(on);
+    bool springsEnabled = this->ui->actionWorld_Springs_On->isChecked();
+    QString status("Collisions: %1\nSprings: %2");
+    status = status.arg(on ? "ON" : "OFF", springsEnabled ? "ON" : "OFF");
+    statusTextMapper->SetInput(status.toStdString().c_str());
 }
 
 void SimpleView::toggleWorldCollisionTestsOn() {
-    bool enabled = this->ui->actionCollision_Tests_On->isChecked();
-    this->ui->actionCollision_Tests_On->setChecked(!enabled);
-    project->setCollisionTestsOn(!enabled);
+    this->ui->actionCollision_Tests_On->trigger();
 }
 
 SketchObject *SimpleView::addObject(QString name)
@@ -205,8 +223,8 @@ bool SimpleView::addObjects(QVector<QString> names)
     return project->addObjects(names);
 }
 
-void SimpleView::setTextMapperString(char *str) {
-    textMapper->SetInput(str);
+void SimpleView::setTextMapperString(QString str) {
+    directionsTextMapper->SetInput(str.toStdString().c_str());
 }
 
 void SimpleView::openOBJFile()
@@ -261,7 +279,7 @@ void SimpleView::loadProject() {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderer->InteractiveOff();
     renderer->SetViewport(0,0,1,1);
-    renderer->AddActor2D(textActor);
+    renderer->AddActor2D(directionsTextActor);
 
     delete project;
     // create new one

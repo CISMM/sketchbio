@@ -92,7 +92,7 @@ public slots:
   virtual void slotExit();
   void slot_frameLoop();
 
-  void setTextMapperString(char *str);
+  void setTextMapperString(QString str);
 
   // This method looks in settings and in a few default locations
   // to find the executable needed for a subprocess to run and returns the
@@ -114,8 +114,10 @@ private:
   QTimer *timer;
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
-  vtkSmartPointer<vtkTextMapper> textMapper;
-  vtkSmartPointer<vtkActor2D> textActor;
+  vtkSmartPointer<vtkTextMapper> directionsTextMapper;
+  vtkSmartPointer<vtkActor2D> directionsTextActor;
+  vtkSmartPointer<vtkTextMapper> statusTextMapper;
+  vtkSmartPointer<vtkActor2D> statusTextActor;
   SketchProject *project;
   HydraInputManager *inputManager;
 };
