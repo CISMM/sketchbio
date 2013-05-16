@@ -405,6 +405,13 @@ void HydraInputManager::setAnalogStates(const double state[]) {
                                                                  : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)]);
         project->getReplicas()->back()->setNumShown(nCopies);
     }
+    // maybe disable this sometimes?
+    double xdegrees, ydegrees;
+    xdegrees = 90.0 * analogStatus[rightHandDominant ? ANALOG_LEFT(UP_DOWN_ANALOG_IDX)
+                                                     : ANALOG_RIGHT(UP_DOWN_ANALOG_IDX)];
+    ydegrees = 180.0 * analogStatus[rightHandDominant ? ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)
+                                                      : ANALOG_RIGHT(LEFT_RIGHT_ANALOG_IDX)];
+    project->getTransformManager()->setRoomEyeOrientation(xdegrees, ydegrees);
 }
 
 //####################################################################################

@@ -49,6 +49,11 @@ public:
     void setRoomToEyeMatrix(vtkMatrix4x4 *matrix);
 
     /*
+     * Sets the orientation of the eye relative to the room
+     * x and y are rotations about x and y respectively and should be in degrees
+     */
+    void setRoomEyeOrientation(double x, double y);
+    /*
      * Gets the scale factor between the world and room
      */
     double getWorldToRoomScale() const;

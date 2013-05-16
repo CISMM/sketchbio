@@ -30,6 +30,10 @@
 #define FOUR_BUTTON_IDX     (4)
 #define BUMPER_BUTTON_IDX   (5)
 
+#define LEFT_RIGHT_ANALOG_IDX   (0)
+#define UP_DOWN_ANALOG_IDX      (1)
+#define TRIGGER_ANALOG_IDX      (2)
+
 #define ANALOG_LEFT(x) (x+0)
 #define ANALOG_RIGHT(x) (x+3)
 
@@ -58,8 +62,6 @@ inline int collision_disable_button_idx(bool rightDominant) {
 }
 
 }
-
-#define TRIGGER_ANALOG_IDX 2
 
 // debugging flag -- if false does not start vrpn clients
 #define VRPN_ON true

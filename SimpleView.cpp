@@ -202,6 +202,7 @@ void SimpleView::saveProjectAs() {
 
 void SimpleView::saveProject() {
     QString path = project->getProjectDir();
+    project->getTransformManager()->setRoomEyeOrientation(0,0);
     if (path.length() == 0) {
         // maybe eventually allow them to select if nothing exists... but for now,
         // enforce dir as part of project.

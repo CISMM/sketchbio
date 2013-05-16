@@ -59,6 +59,14 @@ void TransformManager::setRoomToEyeMatrix(vtkMatrix4x4 *matrix) {
     roomToEyes->SetMatrix(matrix);
 }
 
+void TransformManager::setRoomEyeOrientation(double x, double y) {
+    roomToEyes->Identity();
+    roomToEyes->RotateWXYZ(180,0,1,0);
+    roomToEyes->Translate(0,0,-STARTING_CAMERA_POSITION);
+    roomToEyes->RotateX(x);
+    roomToEyes->RotateY(y);
+}
+
 double TransformManager::getWorldToRoomScale() const {
     return worldToRoomScale;
 }
