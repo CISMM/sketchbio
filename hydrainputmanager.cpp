@@ -252,9 +252,10 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             emit toggleWorldCollisionsEnabled();
         } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)) {
             operationState = DUPLICATE_OBJECT_PENDING;
+            emit newDirectionsString("Move to the object you want to duplicate and release the button");
         } else if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)) {
             SketchObject *obj = rightHandDominant ? rObj : lObj;
-            if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) { // object is selected
                 q_vec_type pos;
                 double bb[6];
                 obj->getPosition(pos);
@@ -269,6 +270,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 objectsSelected.append(obj);
                 objectsSelected.append(nObj);
                 operationState = REPLICATE_OBJECT_PENDING;
+                emit newDirectionsString("Pull the trigger to set the number of replicas to add,\nthen release the button.");
             }
         } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)) {
             operationState = ADD_SPRING_PENDING;
@@ -287,6 +289,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             positionsSelected.append(pos[0]);
             positionsSelected.append(pos[1]);
             positionsSelected.append(pos[2]);
+            emit newDirectionsString("Move the tracker to the object and position to attach to\nand release the button.");
         } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)) {
             SketchObject *obj = NULL;
             if (operationState == NO_OPERATION) {
@@ -294,6 +297,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                     obj = rightHandDominant ? rObj : lObj;
                     objectsSelected.append(obj);
                     operationState = ADD_TRANSFORM_EQUALS_PENDING;
+                    emit newDirectionsString("Move the tracker to the object that will be 'like'\nthis one and release the button.");
                 }
             }
         }
@@ -302,10 +306,11 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 && operationState == REPLICATE_OBJECT_PENDING ) {
             objectsSelected.clear();
             operationState = NO_OPERATION;
+            emit newDirectionsString(" ");
         } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)
                    && operationState == DUPLICATE_OBJECT_PENDING ) {
             SketchObject *obj = rightHandDominant ? rObj : lObj;
-            if (rightHandDominant ? rDist : lDist < DISTANCE_THRESHOLD ) { // object is selected
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) { // object is selected
                 q_vec_type pos;
                 double bb[6];
                 obj->getPosition(pos);
@@ -316,6 +321,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 project->addObject(nObj);
             }
             operationState = NO_OPERATION;
+            emit newDirectionsString(" ");
         } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)
                    && operationState == ADD_SPRING_PENDING ) {
             SketchObject *obj1 = NULL, *obj2 = NULL;
@@ -357,11 +363,13 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             objectsSelected.clear();
             positionsSelected.clear();
             operationState = NO_OPERATION;
+            emit newDirectionsString(" ");
         } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)
                    && operationState == ADD_TRANSFORM_EQUALS_PENDING) {
             SketchObject *obj = NULL;
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
                 obj = rightHandDominant ? rObj : lObj;
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD &&
+                    ! objectsSelected.contains(obj)) {
                 objectsSelected.append(obj);
             }
             if (objectsSelected.contains(NULL)) {
@@ -375,23 +383,29 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
                 }
                 objectsSelected.clear();
                 operationState = NO_OPERATION;
+                emit newDirectionsString(" ");
             } else {
                 objectsSelected.append(NULL);
+                emit newDirectionsString("Move to the object that will be paired with the first one\nyou selected and press the button.");
             }
         }
     } else if (operationState == ADD_TRANSFORM_EQUALS_PENDING) {
         SketchObject *obj = NULL;
         if (objectsSelected.size() > 2 && objectsSelected.contains(NULL)) {
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
                 obj = rightHandDominant ? rObj : lObj;
+            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD &&
+                    ! objectsSelected.contains(obj) ) {
                 objectsSelected.append(obj);
+                emit newDirectionsString("Move to the object that will be paired with the second one\nyou selected and release the button.");
             } else {
                 objectsSelected.clear();
                 operationState = NO_OPERATION;
+                emit newDirectionsString(" ");
             }
         } else {
             objectsSelected.clear();
             operationState = NO_OPERATION;
+            emit newDirectionsString(" ");
         }
     }
     buttonsDown[buttonNum] = buttonPressed;

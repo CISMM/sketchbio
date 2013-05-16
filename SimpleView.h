@@ -29,6 +29,7 @@
  
 // Forward Qt class declarations
 class Ui_SimpleView;
+class vtkTextMapper;
 
 /*
  * SimpleView is the main GUI class in the SketchBio project.  It also manages
@@ -91,6 +92,7 @@ public slots:
   virtual void slotExit();
   void slot_frameLoop();
 
+  void setTextMapperString(char *str);
 
   // This method looks in settings and in a few default locations
   // to find the executable needed for a subprocess to run and returns the
@@ -112,6 +114,8 @@ private:
   QTimer *timer;
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
+  vtkSmartPointer<vtkTextMapper> textMapper;
+  vtkSmartPointer<vtkActor2D> textActor;
   SketchProject *project;
   HydraInputManager *inputManager;
 };

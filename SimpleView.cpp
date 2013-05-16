@@ -19,6 +19,10 @@
 #include <vtkCamera.h>
 #include <vtkProperty.h>
 #include <vtkVRMLExporter.h>
+// TODO - take out next 3 when moving text stuff
+#include <vtkTextProperty.h>
+#include <vtkTextMapper.h>
+#include <vtkActor2D.h>
 #include <limits>
 
 #include <sketchioconstants.h>
@@ -99,10 +103,28 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(dummyRenderer);
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
 
+    // test of text stuff
+    vtkSmartPointer<vtkTextProperty> textProp = vtkSmartPointer<vtkTextProperty>::New();
+    textProp->SetFontFamilyToCourier();
+    textProp->SetFontSize(16);
+    textProp->SetVerticalJustificationToTop();
+    textProp->SetJustificationToLeft();
+
+    textMapper = vtkSmartPointer<vtkTextMapper>::New();
+    textMapper->SetInput("Hello World");
+    textMapper->SetTextProperty(textProp);
+
+    textActor = vtkSmartPointer<vtkActor2D>::New();
+    textActor->SetMapper(textMapper);
+    textActor->GetPositionCoordinate()->SetCoordinateSystemToNormalizedDisplay();
+    textActor->GetPositionCoordinate()->SetValue(0.05,0.95);
+    renderer->AddActor2D(textActor);
+
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
     connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()), this, SLOT(toggleWorldSpringsEnabled()));
     connect(this->inputManager, SIGNAL(toggleWorldCollisionsEnabled()), this, SLOT(toggleWorldCollisionTestsOn()));
+    connect(this->inputManager, SIGNAL(newDirectionsString(char*)), this, SLOT(setTextMapperString(char*)));
 
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -183,6 +205,10 @@ bool SimpleView::addObjects(QVector<QString> names)
     return project->addObjects(names);
 }
 
+void SimpleView::setTextMapperString(char *str) {
+    textMapper->SetInput(str);
+}
+
 void SimpleView::openOBJFile()
 {
     // Ask the user for the name of the file to open.
@@ -235,6 +261,7 @@ void SimpleView::loadProject() {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderer->InteractiveOff();
     renderer->SetViewport(0,0,1,1);
+    renderer->AddActor2D(textActor);
 
     delete project;
     // create new one
