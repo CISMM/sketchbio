@@ -1,4 +1,5 @@
 #include "hydrainputmanager.h"
+#include "sketchtests.h"
 #include <QDebug>
 #include <QSettings>
 
@@ -401,8 +402,9 @@ void HydraInputManager::setAnalogStates(const double state[]) {
         analogStatus[i] = state[i];
     }
     if (operationState == REPLICATE_OBJECT_PENDING) {
-        int nCopies = floor(100 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
-                                                                 : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)]);
+        double value =  analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
+                                                       : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
+        int nCopies =  min( floor( pow(2.0,value / .125)), 64);
         project->getReplicas()->back()->setNumShown(nCopies);
     }
     // maybe disable this sometimes?
