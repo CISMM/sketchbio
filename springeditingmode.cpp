@@ -9,8 +9,8 @@ SpringEditingMode::SpringEditingMode(SketchProject *proj, const bool *buttonStat
     grabbedWorld(WORLD_NOT_GRABBED),
     lSpring(NULL),
     rSpring(NULL),
-    lDist(std::numeric_limits<double>::max()),
-    rDist(std::numeric_limits<double>::max()),
+    lSpringDist(std::numeric_limits<double>::max()),
+    rSpringDist(std::numeric_limits<double>::max()),
     lAtEnd1(true),
     rAtEnd1(true),
     leftGrabbedSpring(false),
@@ -27,14 +27,14 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
     // see if we should grab a spring or the world with each hand
     if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
     {
-        if (rDist < SPRING_DISTANCE_THRESHOLD)
+        if (rSpringDist < SPRING_DISTANCE_THRESHOLD)
             rightGrabbedSpring = true;
         else if (grabbedWorld == WORLD_NOT_GRABBED)
             grabbedWorld = RIGHT_GRABBED_WORLD;
     }
     else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
     {
-        if (lDist < SPRING_DISTANCE_THRESHOLD)
+        if (lSpringDist < SPRING_DISTANCE_THRESHOLD)
             leftGrabbedSpring = true;
         else if (grabbedWorld == WORLD_NOT_GRABBED)
             grabbedWorld = LEFT_GRABBED_WORLD;
@@ -88,14 +88,14 @@ void SpringEditingMode::doUpdatesForFrame()
             // if we haven't grabbed a spring, display which spring is grabbable
             SpringConnection *closest;
             bool atEnd1;
-            closest = world->getClosestSpring(leftTrackerPos,&lDist,&atEnd1);
+            closest = world->getClosestSpring(leftTrackerPos,&lSpringDist,&atEnd1);
             if (closest != lSpring || (atEnd1 != lAtEnd1))
             {
                 project->setLeftOutlineSpring(closest,atEnd1);
                 lSpring = closest;
                 lAtEnd1 = atEnd1;
             }
-            if (lDist < SPRING_DISTANCE_THRESHOLD)
+            if (lSpringDist < SPRING_DISTANCE_THRESHOLD)
             {
                 if (!project->isLeftOutlinesVisible())
                 {
@@ -126,14 +126,14 @@ void SpringEditingMode::doUpdatesForFrame()
             // if we haven't grabbed a spring, display which spring is grabbable
             SpringConnection *closest;
             bool atEnd1;
-            closest = world->getClosestSpring(rightTrackerPos,&rDist,&atEnd1);
+            closest = world->getClosestSpring(rightTrackerPos,&rSpringDist,&atEnd1);
             if (closest != rSpring || (atEnd1 != rAtEnd1))
             {
                 project->setRightOutlineSpring(closest,atEnd1);
                 rSpring = closest;
                 rAtEnd1 = atEnd1;
             }
-            if (rDist < SPRING_DISTANCE_THRESHOLD)
+            if (rSpringDist < SPRING_DISTANCE_THRESHOLD)
             {
                 if (!project->isRightOutlinesVisible())
                 {
@@ -172,7 +172,7 @@ void SpringEditingMode::clearStatus()
 {
     grabbedWorld = WORLD_NOT_GRABBED;
     lSpring = rSpring = NULL;
-    lDist = rDist = std::numeric_limits<double>::max();
+    lSpringDist = rSpringDist = std::numeric_limits<double>::max();
     lAtEnd1 = rAtEnd1 = true;
     leftGrabbedSpring = rightGrabbedSpring = false;
 }

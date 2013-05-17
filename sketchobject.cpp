@@ -506,7 +506,7 @@ bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int p
 
 //#########################################################################
 void ModelInstance::getAABoundingBox(double bb[]) {
-    modelTransformed->GetOutput()->GetBounds(bb);
+    model->getModelData()->GetOutput()->GetBounds(bb);
 }
 
 //#########################################################################
@@ -707,17 +707,7 @@ void ObjectGroup::getAABoundingBox(double bb[]) {
     if (children.size() == 0) {
         bb[0] = bb[1] = bb[2] = bb[3] = bb[4] = bb[5] = 0;
     } else {
-        double cbb[6];
-        children[0]->getAABoundingBox(bb);
-        for (int i = 1; i < children.size(); i++) {
-            children[i]->getAABoundingBox(cbb);
-            bb[0] = min(bb[0],cbb[0]);
-            bb[2] = min(bb[2],cbb[2]);
-            bb[4] = min(bb[4],cbb[4]);
-            bb[1] = max(bb[1],cbb[1]);
-            bb[3] = max(bb[3],cbb[3]);
-            bb[5] = max(bb[5],cbb[5]);
-        }
+        orientedBBs->GetOutput()->GetBounds(bb);
     }
 }
 

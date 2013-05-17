@@ -361,9 +361,10 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
         SketchObject *obj = it.next();
         double bb[6];
         double dist;
-        q_vec_type pos2;
+        if (obj->numInstances() == 1) {
+            obj->getWorldSpacePointInModelCoordinates(pos1,pos1);
+        }
         obj->getAABoundingBox(bb);
-        obj->getPosition(pos2);
         dist = distOutsideAABB(pos1,bb);
         if (dist < distance) {
             distance = dist;

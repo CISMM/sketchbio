@@ -26,7 +26,7 @@ public:
 private:
     int grabbedWorld;
     SpringConnection *lSpring, *rSpring;
-    double lDist, rDist;
+    double lSpringDist, rSpringDist;
     bool lAtEnd1, rAtEnd1;
     bool leftGrabbedSpring, rightGrabbedSpring;
 };
