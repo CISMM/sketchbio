@@ -46,9 +46,10 @@ endif (WIN32)
 SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
 sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchproject.cpp projecttoxml.cpp
 physicsstrategy.cpp transformequals.cpp vrpnserver.cpp keyframe.cpp projecttoblenderanimation.cpp
-hydrainputmanager.cpp)
+hydrainputmanager.cpp hydrainputmode.cpp objecteditingmode.cpp)
 SET(SimpleViewUI SimpleView.ui)
-SET(Headers_Needing_QT_WRAP SimpleView.h vrpnserver.h hydrainputmanager.h)
+SET(Headers_Needing_QT_WRAP SimpleView.h vrpnserver.h hydrainputmanager.h hydrainputmode.h
+objecteditingmode.h)
 SET(Headers_Not_Needing_QT_WRAP transformmanager.h structurereplicator.h modelmanager.h
 sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
 projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h keyframe.h

@@ -1,6 +1,8 @@
 #ifndef SKETCHTESTS_H
 #define SKETCHTESTS_H
 
+#include <quat.h>
+
 // do I have to explain these?
 inline double min(double a, double b) {
     return a < b ? a : b;

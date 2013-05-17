@@ -8,6 +8,7 @@
 
 #include "sketchioconstants.h"
 #include "sketchproject.h"
+#include "hydrainputmode.h"
 
 class HydraInputManager : public QObject
 {
@@ -29,6 +30,11 @@ signals:
     void toggleWorldSpringsEnabled();
     void toggleWorldCollisionsEnabled();
     void newDirectionsString(QString str);
+
+private slots:
+    // connected to all modes so that the signal they emit will be 'caught'
+    // here and re-emitted to listeners on this object
+    void setNewDirectionsString(QString str);
 private:
 
     // VRPN callback functions
@@ -43,14 +49,7 @@ private:
     bool buttonsDown[NUM_HYDRA_BUTTONS]; // number of buttons, each with 2 states
                                     // 1 = pressed, 0 = not pressed
     double analogStatus[NUM_HYDRA_ANALOGS]; // number of analogs and their current values
-    int grabbedWorld; // state of world grabbing
-    double lDist, rDist; // the distance to the closest object to the (left/right) hand
-    SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
-                                // and right hands respectively
-    bool rightHandDominant;
-    int operationState;
-    QVector<SketchObject *> objectsSelected;
-    QVector<double> positionsSelected; // have to put in coords... can't have a vector of arrays
+    HydraInputMode *mode;
 };
 
 

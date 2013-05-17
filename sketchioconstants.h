@@ -39,26 +39,26 @@
 
 namespace HydraButtonMapping {
 
-inline int scale_button_idx(bool rightDominant) {
-    return rightDominant? BUTTON_LEFT(FOUR_BUTTON_IDX) : BUTTON_RIGHT(FOUR_BUTTON_IDX);
+inline int scale_button_idx() {
+    return BUTTON_LEFT(FOUR_BUTTON_IDX);
 }
-inline int spring_disable_button_idx(bool rightDominant) {
-    return rightDominant? BUTTON_LEFT(THREE_BUTTON_IDX) : BUTTON_RIGHT(THREE_BUTTON_IDX);
+inline int spring_disable_button_idx() {
+    return BUTTON_LEFT(THREE_BUTTON_IDX);
 }
-inline int spring_add_button_idx(bool rightDominant) {
-    return rightDominant? BUTTON_RIGHT(THREE_BUTTON_IDX) : BUTTON_LEFT(THREE_BUTTON_IDX);
+inline int spring_add_button_idx() {
+    return BUTTON_RIGHT(THREE_BUTTON_IDX);
 }
-inline int transform_equals_add_button_idx(bool rightDominant) {
-    return rightDominant? BUTTON_RIGHT(TWO_BUTTON_IDX) : BUTTON_LEFT(TWO_BUTTON_IDX);
+inline int transform_equals_add_button_idx() {
+    return BUTTON_RIGHT(TWO_BUTTON_IDX);
 }
-inline int replicate_object_button(bool rightDominant) {
-    return rightDominant? BUTTON_RIGHT(ONE_BUTTON_IDX) : BUTTON_LEFT(ONE_BUTTON_IDX);
+inline int replicate_object_button() {
+    return BUTTON_RIGHT(ONE_BUTTON_IDX);
 }
-inline int duplicate_object_button(bool rightDominant) {
-    return rightDominant? BUTTON_RIGHT(FOUR_BUTTON_IDX) : BUTTON_LEFT(FOUR_BUTTON_IDX);
+inline int duplicate_object_button() {
+    return BUTTON_RIGHT(FOUR_BUTTON_IDX);
 }
-inline int collision_disable_button_idx(bool rightDominant) {
-    return rightDominant? BUTTON_LEFT(TWO_BUTTON_IDX) : BUTTON_RIGHT(TWO_BUTTON_IDX);
+inline int collision_disable_button_idx() {
+    return BUTTON_LEFT(TWO_BUTTON_IDX);
 }
 
 }

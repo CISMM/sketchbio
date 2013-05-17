@@ -1,4 +1,5 @@
 #include "hydrainputmanager.h"
+#include "objecteditingmode.h"
 #include "sketchtests.h"
 #include <QDebug>
 #include <QSettings>
@@ -15,15 +16,7 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
     buttons(VRPN_RAZER_HYDRA_DEVICE_STRING),
     analogRemote(VRPN_RAZER_HYDRA_DEVICE_STRING),
-    grabbedWorld(WORLD_NOT_GRABBED),
-    lDist(std::numeric_limits<double>::max()),
-    rDist(std::numeric_limits<double>::max()),
-    lObj(NULL),
-    rObj(NULL),
-    rightHandDominant(true),
-    operationState(NO_OPERATION),
-    objectsSelected(),
-    positionsSelected()
+    mode(new ObjectEditingMode(project,buttonsDown,analogStatus))
 {
     for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
         buttonsDown[i] = false;
@@ -36,20 +29,19 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     buttons.register_change_handler((void *) this, handle_button);
     analogRemote.register_change_handler((void *) this, handle_analogs);
 
-    QSettings settings;
-    rightHandDominant = settings.value(QString("handedness"),QString("right")).toString() == QString("right");
+    connect(this->mode, SIGNAL(newDirectionsString(QString)),
+            this, SLOT(setNewDirectionsString(QString)));
+
 }
 
-HydraInputManager::~HydraInputManager() {}
+HydraInputManager::~HydraInputManager()
+{
+    delete mode;
+}
 
 void HydraInputManager::setProject(SketchProject *proj) {
     project = proj;
-    lDist = rDist = std::numeric_limits<double>::max();
-    lObj = rObj = (SketchObject *) NULL;
-    grabbedWorld = WORLD_NOT_GRABBED;
-    objectsSelected.clear();
-    positionsSelected.clear();
-    operationState = NO_OPERATION;
+    mode->setProject(proj);
 }
 
 void HydraInputManager::handleCurrentInput() {
@@ -58,180 +50,18 @@ void HydraInputManager::handleCurrentInput() {
     buttons.mainloop();
     analogRemote.mainloop();
 
-    // use the updated data
-
-    q_vec_type beforeDVect, afterDVect, beforeLPos, beforeRPos, afterLPos, afterRPos;
-    q_type beforeLOr, afterLOr, beforeROr, afterROr;
-
-    TransformManager *transforms = project->getTransformManager();
-
-    // get former measurements
-    double dist = transforms->getOldWorldDistanceBetweenHands();
-    transforms->getOldLeftTrackerPosInWorldCoords(beforeLPos);
-    transforms->getOldRightTrackerPosInWorldCoords(beforeRPos);
-    transforms->getOldLeftTrackerOrientInWorldCoords(beforeLOr);
-    transforms->getOldRightTrackerOrientInWorldCoords(beforeROr);
-    transforms->getOldLeftToRightHandWorldVector(beforeDVect);
-
-    // get current measurements
-    double delta = transforms->getWorldDistanceBetweenHands() / dist;
-    transforms->getLeftToRightHandWorldVector(afterDVect);
-    transforms->getLeftTrackerPosInWorldCoords(afterLPos);
-    transforms->getRightTrackerPosInWorldCoords(afterRPos);
-    transforms->getLeftTrackerOrientInWorldCoords(afterLOr);
-    transforms->getRightTrackerOrientInWorldCoords(afterROr);
-
-    if (buttonsDown[HydraButtonMapping::scale_button_idx(rightHandDominant)]) {
-        if (rightHandDominant) {
-            transforms->scaleWithLeftTrackerFixed(delta);
-        } else {
-            transforms->scaleWithRightTrackerFixed(delta);
-        }
+    if (buttonsDown[HydraButtonMapping::scale_button_idx()]) {
+        mode->scaleWithLeftFixed();
     }
 
-
-    // if the world is grabbed, translate/rotate it
-    if (grabbedWorld == LEFT_GRABBED_WORLD) {
-        // translate
-        q_vec_type delta;
-        q_vec_subtract(delta,afterLPos,beforeLPos);
-        transforms->translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv,beforeLOr);
-        q_mult(rotation,afterLOr,inv);
-        transforms->rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-    } else if (grabbedWorld == RIGHT_GRABBED_WORLD) {
-        // translate
-        q_vec_type delta;
-        q_vec_subtract(delta,afterRPos,beforeRPos);
-        transforms->translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv,beforeROr);
-        q_mult(rotation,afterROr,inv);
-        transforms->rotateWorldRelativeToRoomAboutRightTracker(rotation);
-    }
-    // move fibers
-    updateTrackerObjectConnections();
+    // handle input
+    mode->doUpdatesForFrame();
 
     // update the main camera
-    transforms->updateCameraForFrame();
-
-    WorldManager *world = project->getWorldManager();
-    SketchObject *leftHand = project->getLeftHandObject();
-    SketchObject *rightHand = project->getRightHandObject();
-
-    // we don't want to show bounding boxes during animation
-    if (world->getNumberOfObjects() > 0) {// && !isDoingAnimation) { TODO - fix this
-        bool oldShown = false;
-
-        SketchObject *closest = NULL;
-
-        if (world->getLeftSprings()->size() == 0 ) {
-            oldShown = project->isLeftOutlinesVisible();
-            closest = world->getClosestObject(leftHand,&lDist);
-
-            if (lObj != closest) {
-                project->setLeftOutlineObject(closest);
-                lObj = closest;
-            }
-            if (lDist < DISTANCE_THRESHOLD) {
-                if (!oldShown) {
-                    project->setLeftOutlinesVisible(true);
-                }
-            } else if (oldShown) {
-                project->setLeftOutlinesVisible(false);
-            }
-        }
-
-        if (world->getRightSprings()->size() == 0 ) {
-            oldShown = project->isRightOutlinesVisible();
-            closest = world->getClosestObject(rightHand,&rDist);
-
-            if (rObj != closest) {
-                project->setRightOutlineObject(closest);
-                rObj = closest;
-            }
-            if (rDist < DISTANCE_THRESHOLD) {
-                if (!oldShown) {
-                    project->setRightOutlinesVisible(true);
-                }
-            } else if (oldShown) {
-                project->setRightOutlinesVisible(false);
-            }
-        }
-    }
+    project->getTransformManager()->updateCameraForFrame();
 
     // set tracker locations
     project->updateTrackerPositions();
-    // animation button
-    if (buttonsDown[0]) {
-        project->startAnimation();
-    }
-}
-
-
-/*
- * This method updates the springs connecting the trackers and the objects and the
- * status variable that determines if the world is grabbed
- */
-void HydraInputManager::updateTrackerObjectConnections() {
-    WorldManager *world = project->getWorldManager();
-    if (world->getNumberOfObjects() == 0)
-        return;
-    for (int i = 0; i < 2; i++) {
-        int buttonIdx;
-        int worldGrabConstant;
-        SketchObject *objectToGrab;
-        SketchObject *tracker;
-        QList<SpringConnection *> *springs;
-        double dist;
-        // select left or right
-        if (i == 0) {
-            buttonIdx = BUTTON_LEFT(BUMPER_BUTTON_IDX);
-            worldGrabConstant = LEFT_GRABBED_WORLD;
-            tracker = project->getLeftHandObject();
-            springs = world->getLeftSprings();
-            objectToGrab = lObj;
-            dist = lDist;
-        } else if (i == 1) {
-            buttonIdx = BUTTON_RIGHT(BUMPER_BUTTON_IDX);
-            worldGrabConstant = RIGHT_GRABBED_WORLD;
-            tracker = project->getRightHandObject();
-            springs = world->getRightSprings();
-            objectToGrab = rObj;
-            dist = rDist;
-        }
-        // if they are gripping the trigger
-        if (buttonsDown[buttonIdx]) {
-            // if we do not have springs yet add them
-            if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
-                if (dist > DISTANCE_THRESHOLD) {
-                    if (grabbedWorld == WORLD_NOT_GRABBED) {
-                        grabbedWorld = worldGrabConstant;
-                    }
-                    // allow grabbing world & moving something with other hand...
-                    // discouraged, but allowed -> the results are not guaranteed.
-                } else {
-                    bool left = i == 0;
-                    project->grabObject(left ? lObj : rObj, left);
-                }
-            }
-        } else {
-            if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
-                // remove springs between model & tracker, set grabbed objects solid
-                if (i == 0) {
-                    world->clearLeftHandSprings();
-                } else if (i == 1) {
-                    world->clearRightHandSprings();
-                }
-            }
-            if (grabbedWorld == worldGrabConstant) {
-                grabbedWorld = WORLD_NOT_GRABBED;
-            }
-        }
-    }
 }
 
 
@@ -244,169 +74,17 @@ void HydraInputManager::setRightPos(q_xyz_quat_type *newPos) {
 }
 
 void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
-    if (buttonPressed && operationState == NO_OPERATION) {
+    if (buttonPressed) {
         // events on press
-        if (buttonNum == HydraButtonMapping::spring_disable_button_idx(rightHandDominant)) {
+        if (buttonNum == HydraButtonMapping::spring_disable_button_idx()) {
             emit toggleWorldSpringsEnabled();
-        } else if (buttonNum == HydraButtonMapping::collision_disable_button_idx(rightHandDominant)) {
+        } else if (buttonNum == HydraButtonMapping::collision_disable_button_idx()) {
             emit toggleWorldCollisionsEnabled();
-        } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)) {
-            operationState = DUPLICATE_OBJECT_PENDING;
-            emit newDirectionsString("Move to the object you want to duplicate and release the button");
-        } else if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)) {
-            SketchObject *obj = rightHandDominant ? rObj : lObj;
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) { // object is selected
-                q_vec_type pos;
-                double bb[6];
-                obj->getPosition(pos);
-                obj->getAABoundingBox(bb);
-                pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
-                SketchObject *nObj = obj->deepCopy();
-                nObj->setPosition(pos);
-                project->addObject(nObj);
-                int nCopies = floor(100 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
-                                                                         : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)]);
-                project->addReplication(obj,nObj,nCopies);
-                objectsSelected.append(obj);
-                objectsSelected.append(nObj);
-                operationState = REPLICATE_OBJECT_PENDING;
-                emit newDirectionsString("Pull the trigger to set the number of replicas to add,\nthen release the button.");
-            }
-        } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)) {
-            operationState = ADD_SPRING_PENDING;
-            SketchObject *obj = NULL;
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
-                obj = rightHandDominant ? rObj : lObj;
-                objectsSelected.append(obj);
-            }
-            q_vec_type pos;
-            TransformManager *transforms = project->getTransformManager();
-            if (rightHandDominant) {
-                transforms->getRightTrackerPosInWorldCoords(pos);
-            } else {
-                transforms->getLeftTrackerPosInWorldCoords(pos);
-            }
-            positionsSelected.append(pos[0]);
-            positionsSelected.append(pos[1]);
-            positionsSelected.append(pos[2]);
-            emit newDirectionsString("Move the tracker to the object and position to attach to\nand release the button.");
-        } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)) {
-            SketchObject *obj = NULL;
-            if (operationState == NO_OPERATION) {
-                if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
-                    obj = rightHandDominant ? rObj : lObj;
-                    objectsSelected.append(obj);
-                    operationState = ADD_TRANSFORM_EQUALS_PENDING;
-                    emit newDirectionsString("Move the tracker to the object that will be 'like'\nthis one and release the button.");
-                }
-            }
-        }
-    } else if (!buttonPressed) {
-        if (buttonNum == HydraButtonMapping::replicate_object_button(rightHandDominant)
-                && operationState == REPLICATE_OBJECT_PENDING ) {
-            objectsSelected.clear();
-            operationState = NO_OPERATION;
-            emit newDirectionsString(" ");
-        } else if (buttonNum == HydraButtonMapping::duplicate_object_button(rightHandDominant)
-                   && operationState == DUPLICATE_OBJECT_PENDING ) {
-            SketchObject *obj = rightHandDominant ? rObj : lObj;
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) { // object is selected
-                q_vec_type pos;
-                double bb[6];
-                obj->getPosition(pos);
-                obj->getAABoundingBox(bb);
-                pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
-                SketchObject *nObj = obj->deepCopy();
-                nObj->setPosition(pos);
-                project->addObject(nObj);
-            }
-            operationState = NO_OPERATION;
-            emit newDirectionsString(" ");
-        } else if (buttonNum == HydraButtonMapping::spring_add_button_idx(rightHandDominant)
-                   && operationState == ADD_SPRING_PENDING ) {
-            SketchObject *obj1 = NULL, *obj2 = NULL;
-            q_vec_type p1, p2;
-            if (objectsSelected.size() > 0) {
-                obj1 = objectsSelected[0];
-            }
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD ) {
-                obj2 = rightHandDominant ? rObj : lObj;
-            }
-            if (positionsSelected.size() >= 3) {
-                // get points... both in world coordinates
-                p1[0] = positionsSelected[0];
-                p1[1] = positionsSelected[1];
-                p1[2] = positionsSelected[2];
-                TransformManager *transforms = project->getTransformManager();
-                if (rightHandDominant) {
-                    transforms->getRightTrackerPosInWorldCoords(p2);
-                } else {
-                    transforms->getLeftTrackerPosInWorldCoords(p2);
-                }
-                double k = 2 * analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
-                                                              : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
-                k = 2 - k;
-                if (obj1 != NULL) {
-                    if (obj2 != NULL && obj1 != obj2) {
-                        project->getWorldManager()->addSpring(obj1,obj2,p1,p2,true,k,0);
-                    } else {
-                        obj1->getWorldSpacePointInModelCoordinates(p1,p1);
-                        SpringConnection *conn = new ObjectPointSpring(obj1,0,0,k,p1,p2);
-                        project->addSpring(conn);
-                    }
-                } else if (obj2 != NULL) {
-                    obj2->getWorldSpacePointInModelCoordinates(p2,p2);
-                    SpringConnection *conn = new ObjectPointSpring(obj2,0,0,k,p2,p1);
-                    project->addSpring(conn);
-                }
-            }
-            objectsSelected.clear();
-            positionsSelected.clear();
-            operationState = NO_OPERATION;
-            emit newDirectionsString(" ");
-        } else if (buttonNum == HydraButtonMapping::transform_equals_add_button_idx(rightHandDominant)
-                   && operationState == ADD_TRANSFORM_EQUALS_PENDING) {
-            SketchObject *obj = NULL;
-                obj = rightHandDominant ? rObj : lObj;
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD &&
-                    ! objectsSelected.contains(obj)) {
-                objectsSelected.append(obj);
-            }
-            if (objectsSelected.contains(NULL)) {
-                int idx = objectsSelected.indexOf(NULL) + 1;
-                QSharedPointer<TransformEquals> equals(project->addTransformEquals(objectsSelected[0],
-                                                                                     objectsSelected[idx+0]));
-                if (!equals.isNull()) {
-                    for (int i = 1; i < idx && idx + i < objectsSelected.size(); i++) {
-                        equals->addPair(objectsSelected[i],objectsSelected[idx+i]);
-                    }
-                }
-                objectsSelected.clear();
-                operationState = NO_OPERATION;
-                emit newDirectionsString(" ");
-            } else {
-                objectsSelected.append(NULL);
-                emit newDirectionsString("Move to the object that will be paired with the first one\nyou selected and press the button.");
-            }
-        }
-    } else if (operationState == ADD_TRANSFORM_EQUALS_PENDING) {
-        SketchObject *obj = NULL;
-        if (objectsSelected.size() > 2 && objectsSelected.contains(NULL)) {
-                obj = rightHandDominant ? rObj : lObj;
-            if ((rightHandDominant ? rDist : lDist) < DISTANCE_THRESHOLD &&
-                    ! objectsSelected.contains(obj) ) {
-                objectsSelected.append(obj);
-                emit newDirectionsString("Move to the object that will be paired with the second one\nyou selected and release the button.");
-            } else {
-                objectsSelected.clear();
-                operationState = NO_OPERATION;
-                emit newDirectionsString(" ");
-            }
         } else {
-            objectsSelected.clear();
-            operationState = NO_OPERATION;
-            emit newDirectionsString(" ");
-        }
+            mode->buttonPressed(buttonNum);
+        } // TODO - change modes button
+    } else {
+        mode->buttonReleased(buttonNum);
     }
     buttonsDown[buttonNum] = buttonPressed;
 }
@@ -415,19 +93,11 @@ void HydraInputManager::setAnalogStates(const double state[]) {
     for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
         analogStatus[i] = state[i];
     }
-    if (operationState == REPLICATE_OBJECT_PENDING) {
-        double value =  analogStatus[rightHandDominant ? ANALOG_LEFT(TRIGGER_ANALOG_IDX)
-                                                       : ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
-        int nCopies =  min( floor( pow(2.0,value / .125)), 64);
-        project->getReplicas()->back()->setNumShown(nCopies);
-    }
-    // maybe disable this sometimes?
-    double xdegrees, ydegrees;
-    xdegrees = 90.0 * analogStatus[rightHandDominant ? ANALOG_LEFT(UP_DOWN_ANALOG_IDX)
-                                                     : ANALOG_RIGHT(UP_DOWN_ANALOG_IDX)];
-    ydegrees = 180.0 * analogStatus[rightHandDominant ? ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)
-                                                      : ANALOG_RIGHT(LEFT_RIGHT_ANALOG_IDX)];
-    project->getTransformManager()->setRoomEyeOrientation(xdegrees, ydegrees);
+    mode->analogsUpdated();
+}
+
+void HydraInputManager::setNewDirectionsString(QString str) {
+    emit newDirectionsString(str);
 }
 
 //####################################################################################
