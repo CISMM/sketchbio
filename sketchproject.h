@@ -84,7 +84,9 @@ public:
     void updateTrackerPositions();
     // update the object used for the outlines
     void setLeftOutlineObject(SketchObject *obj);
+    void setLeftOutlineSpring(SpringConnection *conn, bool end1Large);
     void setRightOutlineObject(SketchObject *obj);
+    void setRightOutlineSpring(SpringConnection *conn, bool end1Large);
     // show/hide the outlines of objects
     void setLeftOutlinesVisible(bool visible);
     void setRightOutlinesVisible(bool visible);

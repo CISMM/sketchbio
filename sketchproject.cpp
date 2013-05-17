@@ -2,6 +2,8 @@
 
 #include <vtkOBJReader.h>
 #include <vtkSphereSource.h>
+#include <vtkConeSource.h>
+#include <vtkExtractEdges.h>
 #include <vtkProperty.h>
 #include "sketchioconstants.h"
 #include <limits>
@@ -351,10 +353,63 @@ void SketchProject::setLeftOutlineObject(SketchObject *obj) {
     leftOutlinesMapper->Update();
 }
 
+void SketchProject::setLeftOutlineSpring(SpringConnection *conn, bool end1Large) {
+    q_vec_type end1, end2, midpoint, direction;
+    conn->getEnd1WorldPosition(end1);
+    conn->getEnd2WorldPosition(end2);
+    q_vec_add(midpoint,end1,end2);
+    q_vec_scale(midpoint, .5, midpoint);
+    q_vec_subtract(direction,end2,end1);
+    double length = q_vec_magnitude(direction);
+    if (!end1Large) {
+        q_vec_invert(direction,direction);
+    }
+    vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
+    cone->SetCenter(midpoint);
+    cone->SetDirection(direction);
+    cone->SetHeight(length);
+    cone->SetRadius(50);
+    cone->SetResolution(4);
+    cone->Update();
+
+    vtkSmartPointer<vtkExtractEdges> edges = vtkSmartPointer<vtkExtractEdges>::New();
+    edges->SetInputConnection(cone->GetOutputPort());
+    edges->Update();
+
+    leftOutlinesMapper->SetInputConnection(edges->GetOutputPort());
+}
+
 void SketchProject::setRightOutlineObject(SketchObject *obj) {
     rightOutlinesMapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
     rightOutlinesMapper->Update();
 }
+
+void SketchProject::setRightOutlineSpring(SpringConnection *conn, bool end1Large) {
+    q_vec_type end1, end2, midpoint, direction;
+    conn->getEnd1WorldPosition(end1);
+    conn->getEnd2WorldPosition(end2);
+    q_vec_add(midpoint,end1,end2);
+    q_vec_scale(midpoint, .5, midpoint);
+    q_vec_subtract(direction,end2,end1);
+    double length = q_vec_magnitude(direction);
+    if (!end1Large) {
+        q_vec_invert(direction,direction);
+    }
+    vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
+    cone->SetCenter(midpoint);
+    cone->SetDirection(direction);
+    cone->SetHeight(length);
+    cone->SetRadius(50);
+    cone->SetResolution(4);
+    cone->Update();
+
+    vtkSmartPointer<vtkExtractEdges> edges = vtkSmartPointer<vtkExtractEdges>::New();
+    edges->SetInputConnection(cone->GetOutputPort());
+    edges->Update();
+
+    rightOutlinesMapper->SetInputConnection(edges->GetOutputPort());
+}
+
 
 void SketchProject::setLeftOutlinesVisible(bool visible) {
     if (visible)

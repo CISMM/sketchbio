@@ -306,6 +306,17 @@ public:
     SketchObject *getClosestObject(SketchObject *subj,double *distOut);
     /*******************************************************************
      *
+     * Returns the closest spring to the given point, and the 'distance'
+     * to the spring.  For this, the spring is defined as a line between
+     * its two endpoints.  The distance is the distance from the closest
+     * point on this line to the point given.  The boolean return value
+     * (parameter) is true if the point is closer to End1 of the spring
+     * than to End2.
+     *
+     *******************************************************************/
+    SpringConnection *getClosestSpring(q_vec_type point, double *distOut, bool *closerToEnd1);
+    /*******************************************************************
+     *
      * Computes collision response force between the two objects based on
      * the given collision data.  Only applies collision response to the
      * objects whose primary group numbers are in affectedGroups.  This

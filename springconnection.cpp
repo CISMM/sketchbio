@@ -16,6 +16,10 @@ void SpringConnection::getEnd1WorldPosition(q_vec_type out) const {
     object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,out);
 }
 
+void SpringConnection::setEnd1WorldPosition(const q_vec_type newPos) {
+    object1->getWorldSpacePointInModelCoordinates(newPos,object1ConnectionPosition);
+}
+
 
 //######################################################################################
 //######################################################################################
@@ -59,6 +63,11 @@ void InterObjectSpring::getEnd2WorldPosition(q_vec_type out) const {
     object2->getModelSpacePointInWorldCoordinates(object2ConnectionPosition,out);
 }
 
+void InterObjectSpring::setEnd2WorldPosition(const q_vec_type newPos) {
+    object2->getWorldSpacePointInModelCoordinates(newPos,object2ConnectionPosition);
+
+}
+
 //######################################################################################
 //######################################################################################
 //######################################################################################
@@ -72,6 +81,10 @@ ObjectPointSpring::ObjectPointSpring(SketchObject *o1, double minRestLen, double
 
 void ObjectPointSpring::getEnd2WorldPosition(q_vec_type out) const {
     q_vec_copy(out,point);
+}
+
+void ObjectPointSpring::setEnd2WorldPosition(const q_vec_type newPos) {
+    q_vec_copy(point,newPos);
 }
 
 void ObjectPointSpring::addForce() {

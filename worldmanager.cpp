@@ -353,7 +353,7 @@ inline double distOutsideAABB(q_vec_type point, double bb[6]) {
 //##################################################################################################
 //##################################################################################################
 SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
-    SketchObject *closest;
+    SketchObject *closest = NULL;
     double distance = std::numeric_limits<double>::max();
     q_vec_type pos1;
     subj->getPosition(pos1);
@@ -374,6 +374,46 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
     return closest;
 }
 
+//##################################################################################################
+//##################################################################################################
+SpringConnection *WorldManager::getClosestSpring(q_vec_type point, double *distOut,
+                                                 bool *closerToEnd1) {
+    SpringConnection *closest = NULL;
+    double distance = std::numeric_limits<double>::max();
+    bool isCloserToEnd1 = false;
+    for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
+        SpringConnection *spr = it.next();
+        q_vec_type pt1, pt2, vec;
+        spr->getEnd1WorldPosition(pt1);
+        spr->getEnd2WorldPosition(pt2);
+        q_vec_subtract(vec,pt2,pt1);
+        q_vec_type tmp1, tmp2, tmp3;
+        double proj1;
+        q_vec_subtract(tmp1,point,pt1);
+        proj1 = q_vec_dot_product(tmp1,vec) / q_vec_dot_product(vec,vec);
+        double dist;
+        if (proj1 < 0) {
+            dist = q_vec_magnitude(tmp1);
+        } else if (proj1 > 1) {
+            q_vec_subtract(tmp2,point,pt2);
+            dist = q_vec_magnitude(tmp2);
+        } else {
+            q_vec_scale(tmp3,proj1,vec);
+            q_vec_subtract(tmp3,tmp1,tmp3);
+            dist = q_vec_magnitude(tmp3);
+        }
+        if (dist < distance) {
+            distance = dist;
+            closest = spr;
+            isCloserToEnd1 = proj1 < .5;
+        }
+    }
+    *distOut = distance;
+    if (closerToEnd1) {
+        *closerToEnd1 = isCloserToEnd1;
+    }
+    return closest;
+}
 
 //##################################################################################################
 //##################################################################################################

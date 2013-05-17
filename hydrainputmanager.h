@@ -7,8 +7,12 @@
 #include <quat.h>
 
 #include "sketchioconstants.h"
-#include "sketchproject.h"
 #include "hydrainputmode.h"
+#include <QObject>
+#include <QVector>
+#include <QSharedPointer>
+
+class SketchProject;
 
 class HydraInputManager : public QObject
 {
@@ -19,6 +23,7 @@ public:
     void setProject(SketchProject *proj);
     void handleCurrentInput();
     void updateTrackerObjectConnections();
+    QString getModeName();
 
     // called by the callback functions
     void setLeftPos(q_xyz_quat_type *newPos);
@@ -30,6 +35,7 @@ signals:
     void toggleWorldSpringsEnabled();
     void toggleWorldCollisionsEnabled();
     void newDirectionsString(QString str);
+    void changedModes(QString newModeName);
 
 private slots:
     // connected to all modes so that the signal they emit will be 'caught'
@@ -49,7 +55,9 @@ private:
     bool buttonsDown[NUM_HYDRA_BUTTONS]; // number of buttons, each with 2 states
                                     // 1 = pressed, 0 = not pressed
     double analogStatus[NUM_HYDRA_ANALOGS]; // number of analogs and their current values
-    HydraInputMode *mode;
+    QVector < QSharedPointer < HydraInputMode > > modeList;
+    int modeIndex;
+    QSharedPointer < HydraInputMode > activeMode;
 };
 
 

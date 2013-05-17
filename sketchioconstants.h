@@ -4,6 +4,7 @@
 
 // parameters that define how trackers and objects are connected
 #define DISTANCE_THRESHOLD 0
+#define SPRING_DISTANCE_THRESHOLD 40
 #define OBJECT_SIDE_LEN 200
 #define TRACKER_SIDE_LEN 200
 #define OBJECT_GRAB_SPRING_CONST 2
@@ -59,6 +60,9 @@ inline int duplicate_object_button() {
 }
 inline int collision_disable_button_idx() {
     return BUTTON_LEFT(TWO_BUTTON_IDX);
+}
+inline int change_modes_button_idx() {
+    return BUTTON_LEFT(ONE_BUTTON_IDX);
 }
 
 }

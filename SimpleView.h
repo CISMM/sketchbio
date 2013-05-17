@@ -93,6 +93,7 @@ public slots:
   void slot_frameLoop();
 
   void setTextMapperString(QString str);
+  void updateStatusText();
 
   // This method looks in settings and in a few default locations
   // to find the executable needed for a subprocess to run and returns the

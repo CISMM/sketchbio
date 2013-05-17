@@ -34,6 +34,12 @@ public:
     virtual void analogsUpdated() = 0;
     // Called in each frame to handle the input for that frame
     virtual void doUpdatesForFrame() = 0;
+    // TEMPLATE METHOD
+    // this will be called from within setProject after the new project is set
+    // it should refresh the status and delete all references to the old project
+    // also should be called on mode change to prevent contaminated status when
+    // switching to a mode that has some undefined status
+    virtual void clearStatus() = 0;
 
     // USEFUL FUNCTIONS FOR ALL MODES
     // uses the left joystick position to apply a rotation to the camera independent
@@ -51,10 +57,6 @@ signals:
     void newDirectionsString(QString str);
     // Maybe others?
 protected:
-    // TEMPLATE METHOD
-    // this will be called from within setProject after the new project is set
-    // it should refresh the status and delete all references to the old project
-    virtual void clearStatus() = 0;
 
     // fields
     bool const * const isButtonDown;

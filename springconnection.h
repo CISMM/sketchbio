@@ -31,7 +31,9 @@ public:
     inline SketchObject *getObject1() { return object1; } // if we have a non-const spring, get a non-const object
     inline void setObject1ConnectionPosition(q_vec_type newPos) { q_vec_copy(object1ConnectionPosition,newPos);}
     void getEnd1WorldPosition(q_vec_type out) const;
+    void setEnd1WorldPosition(const q_vec_type newPos);
     virtual void getEnd2WorldPosition(q_vec_type out) const = 0;
+    virtual void setEnd2WorldPosition(const q_vec_type newPos) = 0;
     inline vtkIdType getEnd1Id() const { return end1;}
     inline void setEnd1Id(vtkIdType id) { end1 = id;}
     inline vtkIdType getEnd2Id() const { return end2;}
@@ -64,6 +66,7 @@ public:
     inline SketchObject *getObject2() { return object2; } // if not a const reference to spring, get non-const obj
     inline void setObject2ConnectionPosition(q_vec_type newPos) { q_vec_copy(object2ConnectionPosition,newPos);}
     virtual void getEnd2WorldPosition(q_vec_type out) const;
+    virtual void setEnd2WorldPosition(const q_vec_type out);
 
     virtual void addForce();
 
@@ -123,6 +126,7 @@ public:
 
     inline void setWorldPoint(q_vec_type newPos) { q_vec_copy(point,newPos); }
     virtual void getEnd2WorldPosition(q_vec_type out) const;
+    virtual void setEnd2WorldPosition(const q_vec_type newPos);
 
     virtual void addForce();
 private:

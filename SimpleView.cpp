@@ -121,7 +121,8 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     directionsTextMapper->SetTextProperty(textPropTop);
 
     statusTextMapper = vtkSmartPointer<vtkTextMapper>::New();
-    statusTextMapper->SetInput("Collisions: ON\nSprings: ON");
+    QString modeString("Collisions: ON\nSprings: ON\nMode: %1");
+    statusTextMapper->SetInput(modeString.arg(inputManager->getModeName()).toStdString().c_str());
     statusTextMapper->SetTextProperty(textPropBottom);
 
     directionsTextActor = vtkSmartPointer<vtkActor2D>::New();
@@ -141,6 +142,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()), this, SLOT(toggleWorldSpringsEnabled()));
     connect(this->inputManager, SIGNAL(toggleWorldCollisionsEnabled()), this, SLOT(toggleWorldCollisionTestsOn()));
     connect(this->inputManager, SIGNAL(newDirectionsString(QString)), this, SLOT(setTextMapperString(QString)));
+    connect(this->inputManager, SIGNAL(changedModes(QString)), this, SLOT(updateStatusText()));
 
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -191,10 +193,7 @@ void SimpleView::poseModePCA() {
 
 void SimpleView::setWorldSpringsEnabled(bool enabled) {
     project->setWorldSpringsEnabled(enabled);
-    bool cOn = this->ui->actionCollision_Tests_On->isChecked();
-    QString status("Collisions: %1\nSprings: %2");
-    status = status.arg(cOn ? "ON" : "OFF", enabled ? "ON" : "OFF");
-    statusTextMapper->SetInput(status.toStdString().c_str());
+    updateStatusText();
 }
 
 void SimpleView::toggleWorldSpringsEnabled() {
@@ -203,10 +202,7 @@ void SimpleView::toggleWorldSpringsEnabled() {
 
 void SimpleView::setCollisionTestsOn(bool on) {
     project->setCollisionTestsOn(on);
-    bool springsEnabled = this->ui->actionWorld_Springs_On->isChecked();
-    QString status("Collisions: %1\nSprings: %2");
-    status = status.arg(on ? "ON" : "OFF", springsEnabled ? "ON" : "OFF");
-    statusTextMapper->SetInput(status.toStdString().c_str());
+    updateStatusText();
 }
 
 void SimpleView::toggleWorldCollisionTestsOn() {
@@ -225,6 +221,16 @@ bool SimpleView::addObjects(QVector<QString> names)
 
 void SimpleView::setTextMapperString(QString str) {
     directionsTextMapper->SetInput(str.toStdString().c_str());
+}
+
+void SimpleView::updateStatusText()
+{
+    bool cOn = this->ui->actionCollision_Tests_On->isChecked();
+    bool springsEnabled = this->ui->actionWorld_Springs_On->isChecked();
+    QString status("Collisions: %1\nSprings: %2\nMode: %3");
+    status = status.arg(cOn ? "ON" : "OFF", springsEnabled ? "ON" : "OFF",
+                        inputManager->getModeName());
+    statusTextMapper->SetInput(status.toStdString().c_str());
 }
 
 void SimpleView::openOBJFile()

@@ -20,7 +20,6 @@ public:
     virtual void analogsUpdated();
     // Called in each frame to handle the input for that frame
     virtual void doUpdatesForFrame();
-protected:
     // TEMPLATE METHOD
     // this will be called from within setProject after the new project is set
     // it should refresh the status and delete all references to the old project

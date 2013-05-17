@@ -1,5 +1,7 @@
 #include "hydrainputmanager.h"
+#include "sketchproject.h"
 #include "objecteditingmode.h"
+#include "springeditingmode.h"
 #include "sketchtests.h"
 #include <QDebug>
 #include <QSettings>
@@ -16,8 +18,11 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
     buttons(VRPN_RAZER_HYDRA_DEVICE_STRING),
     analogRemote(VRPN_RAZER_HYDRA_DEVICE_STRING),
-    mode(new ObjectEditingMode(project,buttonsDown,analogStatus))
+    modeList(),
+    modeIndex(0),
+    activeMode(NULL)
 {
+    // clear button and analog statuses
     for (int i = 0; i < NUM_HYDRA_BUTTONS; i++) {
         buttonsDown[i] = false;
     }
@@ -25,23 +30,45 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
         analogStatus[i] = 0.0;
     }
 
+    // set up modes
+    modeList.append(QSharedPointer< HydraInputMode >(
+                        new ObjectEditingMode(project,buttonsDown,analogStatus)));
+    modeList.append(QSharedPointer< HydraInputMode >(
+                        new SpringEditingMode(project,buttonsDown,analogStatus)));
+    activeMode = modeList[modeIndex];
+
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
     buttons.register_change_handler((void *) this, handle_button);
     analogRemote.register_change_handler((void *) this, handle_analogs);
 
-    connect(this->mode, SIGNAL(newDirectionsString(QString)),
+    for (int i = 0; i < modeList.size(); i++)
+    {
+    connect(this->modeList[i].data(), SIGNAL(newDirectionsString(QString)),
             this, SLOT(setNewDirectionsString(QString)));
+    }
 
 }
 
 HydraInputManager::~HydraInputManager()
 {
-    delete mode;
+}
+
+QString HydraInputManager::getModeName()
+{
+    switch (modeIndex)
+    {
+    case 0:
+        return QString("Edit Objects");
+    case 1:
+        return QString("Edit Springs");
+    default:
+        return QString("");
+    }
 }
 
 void HydraInputManager::setProject(SketchProject *proj) {
     project = proj;
-    mode->setProject(proj);
+    activeMode->setProject(proj);
 }
 
 void HydraInputManager::handleCurrentInput() {
@@ -51,11 +78,11 @@ void HydraInputManager::handleCurrentInput() {
     analogRemote.mainloop();
 
     if (buttonsDown[HydraButtonMapping::scale_button_idx()]) {
-        mode->scaleWithLeftFixed();
+        activeMode->scaleWithLeftFixed();
     }
 
     // handle input
-    mode->doUpdatesForFrame();
+    activeMode->doUpdatesForFrame();
 
     // update the main camera
     project->getTransformManager()->updateCameraForFrame();
@@ -80,11 +107,16 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             emit toggleWorldSpringsEnabled();
         } else if (buttonNum == HydraButtonMapping::collision_disable_button_idx()) {
             emit toggleWorldCollisionsEnabled();
+        } else if (buttonNum == HydraButtonMapping::change_modes_button_idx()) {
+            modeIndex = (modeIndex + 1 ) % modeList.size();
+            activeMode = modeList[modeIndex];
+            activeMode->clearStatus();
+            emit changedModes(getModeName());
         } else {
-            mode->buttonPressed(buttonNum);
+            activeMode->buttonPressed(buttonNum);
         } // TODO - change modes button
     } else {
-        mode->buttonReleased(buttonNum);
+        activeMode->buttonReleased(buttonNum);
     }
     buttonsDown[buttonNum] = buttonPressed;
 }
@@ -93,7 +125,7 @@ void HydraInputManager::setAnalogStates(const double state[]) {
     for (int i = 0; i < NUM_HYDRA_ANALOGS; i++) {
         analogStatus[i] = state[i];
     }
-    mode->analogsUpdated();
+    activeMode->analogsUpdated();
 }
 
 void HydraInputManager::setNewDirectionsString(QString str) {
