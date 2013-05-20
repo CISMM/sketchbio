@@ -184,15 +184,16 @@ QString getSubprocessExecutablePath(QString executableName) {
         else if (QFile("C:/Program Files(x86)/" + executableName + "/" + executableName + ".exe").exists()) {
             executablePath = "C:/Program Files(x86)/" + executableName + "/" + executableName;
         }
-#endif
         else {
-            executablePath = QFileDialog::getOpenFileName(this, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+            executablePath = QFileDialog::getOpenFileName(NULL, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+        }
+#endif
 #elif defined(__linux__)
         // test /usr/bin then ask for the file
         if (QFile("/usr/bin/" + executableName).exists()) {
             executablePath = "/usr/bin/" + executableName;
         } else {
-            executablePath = QFileDialog::getOpenFileName(this,"Specify location of '" + executableName + "'");
+            executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'");
         }
 #endif
         settings.setValue("subprocesses/" + executableName + "/path",executablePath);

@@ -29,6 +29,10 @@ INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
 ###
 IF(NOT WIN32 AND NOT APPLE)
 	find_package(Libusb1 REQUIRED)
+
+    INCLUDE_DIRECTORIES(
+        ${LIBUSB1_INCLUDE_DIRS}
+    )
 ENDIF(NOT WIN32 AND NOT APPLE)
 
 # support for out-of-source build
