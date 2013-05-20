@@ -74,6 +74,8 @@ void SpringEditingMode::doUpdatesForFrame()
         grabWorldWithRight();
 
     WorldManager *world = project->getWorldManager();
+    SketchObject *leftHand = project->getLeftHandObject();
+    SketchObject *rightHand = project->getRightHandObject();
 
     if ( world->getNumberOfSprings() > 0 )
     {
@@ -110,13 +112,28 @@ void SpringEditingMode::doUpdatesForFrame()
         else
         {
             // if we have grabbed a spring, move that spring's end
-            project->setLeftOutlineSpring(lSpring,lAtEnd1);
+            double objectDist = 0;
+            SketchObject *closestObject = world->getClosestObject(leftHand,&objectDist);
+            if (objectDist > DISTANCE_THRESHOLD)
+            {
+                closestObject = NULL;
+                project->setLeftOutlineSpring(lSpring,lAtEnd1);
+            }
+            else
+            {
+                project->setLeftOutlineObject(closestObject);
+            }
             if (lAtEnd1)
             {
+                std::cout << ((closestObject == NULL) ? "NULL" : "OBJECT") << endl;
+                if (closestObject != lSpring->getObject1())
+                    lSpring->setObject1(closestObject);
                 lSpring->setEnd1WorldPosition(leftTrackerPos);
             }
             else
             {
+                if (closestObject != lSpring->getObject2())
+                    lSpring->setObject2(closestObject);
                 lSpring->setEnd2WorldPosition(leftTrackerPos);
             }
         }
@@ -148,13 +165,27 @@ void SpringEditingMode::doUpdatesForFrame()
         else
         {
             // if we have grabbed a spring, move that spring's end
-            project->setRightOutlineSpring(rSpring,rAtEnd1);
+            double objectDist = 0;
+            SketchObject *closestObject = world->getClosestObject(rightHand,&objectDist);
+            if (objectDist > DISTANCE_THRESHOLD)
+            {
+                closestObject = NULL;
+                project->setRightOutlineSpring(rSpring,rAtEnd1);
+            }
+            else
+            {
+                project->setRightOutlineObject(closestObject);
+            }
             if (rAtEnd1)
             {
+                if (closestObject != rSpring->getObject1())
+                    rSpring->setObject1(closestObject);
                 rSpring->setEnd1WorldPosition(rightTrackerPos);
             }
             else
             {
+                if (closestObject != rSpring->getObject2())
+                    rSpring->setObject2(closestObject);
                 rSpring->setEnd2WorldPosition(rightTrackerPos);
             }
         }

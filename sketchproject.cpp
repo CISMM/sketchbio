@@ -43,6 +43,16 @@ public:
         q_xform(worldCoordsOut,orient,modelPoint);
         q_vec_add(worldCoordsOut,pos,worldCoordsOut);
     }
+    virtual void getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint, q_vec_type modelCoordsOut) const {
+        q_vec_type pos;
+        q_type orient;
+        getPosition(pos);
+        getOrientation(orient);
+        q_invert(orient,orient);
+        q_vec_invert(pos,pos);
+        q_vec_add(modelCoordsOut,pos,worldPoint);
+        q_xform(modelCoordsOut,orient,modelCoordsOut);
+    }
     virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
         q_type orient;
         getOrientation(orient);
@@ -50,6 +60,11 @@ public:
         q_invert(orientInv,orient);
         q_xform(modelVecOut,orientInv,worldVec);
 
+    }
+    virtual void getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const {
+        q_type orient;
+        getOrientation(orient);
+        q_xform(worldVecOut,orient,modelVec);
     }
 
     virtual int numInstances() const { return 0; }
@@ -474,8 +489,9 @@ void SketchProject::grabObject(SketchObject *objectToGrab, bool grabWithLeft) {
     // first spring --defined along the "x" axis (per1)
     SpringConnection *spring;
     q_vec_add(wPos2,tPos,tPer1);
-    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                           OBJECT_GRAB_SPRING_CONST,abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+    spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                          OBJECT_GRAB_SPRING_CONST,
+                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
     if (grabWithLeft) {
         world->addLeftHandSpring(spring);
     } else {
@@ -487,8 +503,9 @@ void SketchProject::grabObject(SketchObject *objectToGrab, bool grabWithLeft) {
     q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
     q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
     q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                           OBJECT_GRAB_SPRING_CONST,abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+    spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                          OBJECT_GRAB_SPRING_CONST,
+                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
     if (grabWithLeft) {
         world->addLeftHandSpring(spring);
     } else {
@@ -499,8 +516,9 @@ void SketchProject::grabObject(SketchObject *objectToGrab, bool grabWithLeft) {
     q_vec_invert(tPer2,tPer2);
     q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
     q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-    spring = InterObjectSpring::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                           OBJECT_GRAB_SPRING_CONST,abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+    spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
+                                          OBJECT_GRAB_SPRING_CONST,
+                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
     if (grabWithLeft) {
         world->addLeftHandSpring(spring);
     } else {

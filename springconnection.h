@@ -19,21 +19,44 @@ class SpringConnection
 {
 public:
 
-    SpringConnection(SketchObject *o1, double minRestLen, double maxRestLen,
-                     double k, const q_vec_type obj1Pos);
+    SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
+                     double maxRestLen, double k, const q_vec_type obj1Pos,
+                     const q_vec_type obj2Pos);
 
     inline double getStiffness() const { return stiffness; }
     inline void setStiffness(double newK) { stiffness = newK; }
     inline double getMinRestLength() const { return minRestLength; }
     inline double getMaxRestLength() const { return maxRestLength; }
-    inline void getObject1ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object1ConnectionPosition);}
+
+    inline void getObject1ConnectionPosition(q_vec_type out) const
+    { q_vec_copy(out,object1ConnectionPosition);}
+    inline void getObject2ConnectionPosition(q_vec_type out) const
+    { q_vec_copy(out,object2ConnectionPosition);}
+
     inline const SketchObject *getObject1() const { return object1; }
-    inline SketchObject *getObject1() { return object1; } // if we have a non-const spring, get a non-const object
-    inline void setObject1ConnectionPosition(q_vec_type newPos) { q_vec_copy(object1ConnectionPosition,newPos);}
+    // if we have a non-const spring, get a non-const object
+    inline SketchObject *getObject1() { return object1; }
+    // when setting the spring's object, the world position of the
+    // endpoint will not move (the relative position is recalculated)
+    void setObject1(SketchObject *obj);
+
+    inline const SketchObject *getObject2() const { return object2; }
+    // if not a const reference to spring, get non-const obj
+    inline SketchObject *getObject2() { return object2; }
+    // when setting the spring's object, the world position of the
+    // endpoint will not move (the relative position is recalculated)
+    void setObject2(SketchObject *obj);
+
+    inline void setObject1ConnectionPosition(q_vec_type newPos)
+    { q_vec_copy(object1ConnectionPosition,newPos);}
+    inline void setObject2ConnectionPosition(q_vec_type newPos)
+    { q_vec_copy(object2ConnectionPosition,newPos);}
+
     void getEnd1WorldPosition(q_vec_type out) const;
     void setEnd1WorldPosition(const q_vec_type newPos);
-    virtual void getEnd2WorldPosition(q_vec_type out) const = 0;
-    virtual void setEnd2WorldPosition(const q_vec_type newPos) = 0;
+    void getEnd2WorldPosition(q_vec_type out) const;
+    void setEnd2WorldPosition(const q_vec_type newPos);
+
     inline vtkIdType getEnd1Id() const { return end1;}
     inline void setEnd1Id(vtkIdType id) { end1 = id;}
     inline vtkIdType getEnd2Id() const { return end2;}
@@ -41,35 +64,16 @@ public:
     inline vtkIdType getCellId() const { return cellId; }
     inline void setCellId(vtkIdType id) { cellId = id;}
 
-    virtual void addForce() = 0;
+    void addForce();
 
 protected:
-    SketchObject *object1;
+    SketchObject *object1, *object2;
     double minRestLength, maxRestLength;
     double stiffness;
-    q_vec_type object1ConnectionPosition;
+    q_vec_type object1ConnectionPosition, object2ConnectionPosition;
 private:
     vtkIdType end1, end2, cellId;
-};
-
-/*
- * This class extends SpringConnection to define a spring between two objects.
- */
-class InterObjectSpring : public SpringConnection
-{
-public:
-    InterObjectSpring(SketchObject *o1, SketchObject *o2, double minRestLen, double maxRestLen,
-                        double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos);
-
-    inline void getObject2ConnectionPosition(q_vec_type out) const { q_vec_copy(out,object2ConnectionPosition);}
-    inline const SketchObject *getObject2() const { return object2; }
-    inline SketchObject *getObject2() { return object2; } // if not a const reference to spring, get non-const obj
-    inline void setObject2ConnectionPosition(q_vec_type newPos) { q_vec_copy(object2ConnectionPosition,newPos);}
-    virtual void getEnd2WorldPosition(q_vec_type out) const;
-    virtual void setEnd2WorldPosition(const q_vec_type out);
-
-    virtual void addForce();
-
+public: // static factories
     /*******************************************************************
      *
      * Creates the spring between the two objects and returns a pointer to it.
@@ -85,8 +89,10 @@ public:
      * maxLen - the maximum rest length of the spring
      *
      *******************************************************************/
-    static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                      const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen);
+    static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2,
+                                        const q_vec_type pos1, const q_vec_type pos2,
+                                        bool worldRelativePos, double k,
+                                        double minLen, double maxLen);
     /*******************************************************************
      *
      * Creates the spring between the two objects and returns a pointer to it.
@@ -101,36 +107,19 @@ public:
      * len - the length of the spring
      *
      *******************************************************************/
-    static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                      const q_vec_type pos2, bool worldRelativePos, double k, double len);
-private:
-    SketchObject *object2;
-    q_vec_type object2ConnectionPosition;
+    static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2,
+                                        const q_vec_type pos1, const q_vec_type pos2,
+                                        bool worldRelativePos, double k, double len);
 };
 
 
-inline SpringConnection *InterObjectSpring::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                                   const q_vec_type pos2, bool worldRelativePos, double k, double len) {
+inline SpringConnection *SpringConnection::makeSpring(SketchObject *o1,
+                                                      SketchObject *o2,
+                                                      const q_vec_type pos1,
+                                                      const q_vec_type pos2,
+                                                      bool worldRelativePos,
+                                                      double k, double len) {
     return makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
 }
-
-
-/*
- * This class extends SpringConnection to define a spring between an object and a location in the world
- */
-class ObjectPointSpring : public SpringConnection
-{
-public:
-    ObjectPointSpring(SketchObject *o1, double minRestLen, double maxRestLen, double k,
-                        const q_vec_type obj1Pos, const q_vec_type worldPoint);
-
-    inline void setWorldPoint(q_vec_type newPos) { q_vec_copy(point,newPos); }
-    virtual void getEnd2WorldPosition(q_vec_type out) const;
-    virtual void setEnd2WorldPosition(const q_vec_type newPos);
-
-    virtual void addForce();
-private:
-    q_vec_type point;
-};
 
 #endif // SPRINGCONNECTION_H

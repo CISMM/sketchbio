@@ -46,6 +46,15 @@ void compareNumbers(SketchProject *proj1, SketchProject *proj2, int &retVal) {
 }
 
 void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDifferences, bool printDiffs) {
+    if (o1 == NULL || o2 == NULL) {
+        if (o1 == o2) {
+            return;
+        } else {
+            numDifferences++;
+            if (printDiffs) cout << "One object is NULL." << endl;
+            return;
+        }
+    }
     if (o1->numInstances() != o2->numInstances()) {
         numDifferences++;
         if (printDiffs) cout << "Different numbers of objects contained in groups!" << endl;
@@ -275,47 +284,35 @@ void compareReplications(const StructureReplicator *rep1, const StructureReplica
 
 void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
                     int &diffs, bool printDiffs = false) {
-    const InterObjectSpring *isp1 = dynamic_cast<const InterObjectSpring *>(sp1);
-    const InterObjectSpring *isp2 = dynamic_cast<const InterObjectSpring *>(sp2);
-    if ((isp1 == NULL) ^ (isp2 == NULL)) {
-        diffs++;
-        if (printDiffs) cout << "Different kinds of spring" << endl;
-        return;
-    }
     int v = 0;
     q_vec_type pos1, pos2;
     compareObjects(sp1->getObject1(),sp2->getObject1(),v,printDiffs);
     if (v != 0) {
-        if (isp2 != NULL) { // they are 2-obj springs
+        v = 0;
+        compareObjects(sp1->getObject1(),sp2->getObject2(),v,printDiffs);
+        if (v != 0) {
+            diffs++;
+            if (printDiffs) cout << "Cannot match objects in 2-obj spring." << endl;
+        } else {
+            sp1->getObject1ConnectionPosition(pos1);
+            sp2->getObject2ConnectionPosition(pos2);
+            if (!q_vec_equals(pos1,pos2)) {
+                diffs++;
+                if (printDiffs) cout << "Object connection positions don't match" << endl;
+            }
             v = 0;
-            compareObjects(sp1->getObject1(),isp2->getObject2(),v,printDiffs);
+            compareObjects(sp1->getObject2(),sp2->getObject1(),v,printDiffs);
             if (v != 0) {
                 diffs++;
                 if (printDiffs) cout << "Cannot match objects in 2-obj spring." << endl;
             } else {
-                isp1->getObject1ConnectionPosition(pos1);
-                isp2->getObject2ConnectionPosition(pos2);
+                sp1->getObject2ConnectionPosition(pos1);
+                sp2->getObject1ConnectionPosition(pos2);
                 if (!q_vec_equals(pos1,pos2)) {
                     diffs++;
                     if (printDiffs) cout << "Object connection positions don't match" << endl;
                 }
-                v = 0;
-                compareObjects(isp1->getObject2(),isp2->getObject1(),v,printDiffs);
-                if (v != 0) {
-                    diffs++;
-                    if (printDiffs) cout << "Cannot match objects in 2-obj spring." << endl;
-                } else {
-                    isp1->getObject2ConnectionPosition(pos1);
-                    isp2->getObject1ConnectionPosition(pos2);
-                    if (!q_vec_equals(pos1,pos2)) {
-                        diffs++;
-                        if (printDiffs) cout << "Object connection positions don't match" << endl;
-                    }
-                }
             }
-        } else { // they are 1-obj springs
-            diffs++;
-            if (printDiffs) cout << "Cannot match objects in 1-obj spring" << endl;
         }
     } else { // the first objects match
         sp1->getObject1ConnectionPosition(pos1);
@@ -324,31 +321,21 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
             diffs++;
             if (printDiffs) cout << "Object connection positions don't match" << endl;
         }
-        if (isp1 != NULL) { // if they are 2-obj springs
-            v = 0;
-            compareObjects(isp1->getObject2(),isp2->getObject2(),v,printDiffs);
-            if (v != 0) {
-                diffs++;
-                if (printDiffs) cout << "Unable to match objects in 2-obj spring" << endl;
-            } else { // if the second objects match
-                isp1->getObject2ConnectionPosition(pos1);
-                isp2->getObject2ConnectionPosition(pos2);
-                if (!q_vec_equals(pos1,pos2)) {
-                    diffs++;
-                    if (printDiffs) cout << "Object connection positions don't match" << endl;
-                }
-                if (diffs && printDiffs) {
-                    q_vec_print(pos1);
-                    q_vec_print(pos2);
-                }
-            }
-        } else { // if they are 1-obj springs test the world position of the 2nd endpoint
-
-            sp1->getEnd2WorldPosition(pos1);
-            sp2->getEnd2WorldPosition(pos2);
+        v = 0;
+        compareObjects(sp1->getObject2(),sp2->getObject2(),v,printDiffs);
+        if (v != 0) {
+            diffs++;
+            if (printDiffs) cout << "Unable to match objects in 2-obj spring" << endl;
+        } else { // if the second objects match
+            sp1->getObject2ConnectionPosition(pos1);
+            sp2->getObject2ConnectionPosition(pos2);
             if (!q_vec_equals(pos1,pos2)) {
                 diffs++;
-                if (printDiffs) cout << "World connection positions don't match" << endl;
+                if (printDiffs) cout << "Object connection positions don't match" << endl;
+            }
+            if (diffs && printDiffs) {
+                q_vec_print(pos1);
+                q_vec_print(pos2);
             }
         }
     }

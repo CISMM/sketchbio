@@ -336,26 +336,23 @@ vtkXMLDataElement *ProjectToXML::springListToXML(const WorldManager *world, cons
     for (QListIterator<SpringConnection *> it = world->getSpringsIterator(); it.hasNext();) {
         const SpringConnection *spring = it.next();
         vtkSmartPointer<vtkXMLDataElement> child = springToXML(spring,objectIds);
-        element->AddNestedElement(child);
-        child->Delete();
+        if (child != NULL) {
+            element->AddNestedElement(child);
+            child->Delete();
+        }
     }
     return element;
 }
 
 vtkXMLDataElement *ProjectToXML::springToXML(const SpringConnection *spring, const QHash<const SketchObject *, QString> &objectIds) {
+    if (spring->getObject1() == spring->getObject2()) {
+        return NULL;
+    }
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(SPRING_ELEMENT_NAME);
-    // object 1 connection
     vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
-    child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
-    child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
-                        ("#" + objectIds.value(spring->getObject1())).toStdString().c_str());
     q_vec_type pos1;
-    spring->getObject1ConnectionPosition(pos1);
-    setPreciseVectorAttribute(child,pos1,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
-    element->AddNestedElement(child);
     // spring properties
-    child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
     double v = spring->getStiffness();
     setPreciseVectorAttribute(child,&v,1,SPRING_STIFFNESS_ATTRIBUTE_NAME);
@@ -365,22 +362,42 @@ vtkXMLDataElement *ProjectToXML::springToXML(const SpringConnection *spring, con
     setPreciseVectorAttribute(child,&v,1,SPRING_MAX_REST_ATTRIBUTE_NAME);
     element->AddNestedElement(child);
     // second end, depends on spring type
-    const InterObjectSpring *ispring = dynamic_cast<const InterObjectSpring *>(spring);
-    const ObjectPointSpring *pspring = dynamic_cast<const ObjectPointSpring *>(spring);
-    if (ispring != NULL) {
+    if (spring->getObject1() != NULL && spring->getObject2() != NULL) {
         child = vtkSmartPointer<vtkXMLDataElement>::New();
         child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
         child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
-                            ("#" +objectIds.value(ispring->getObject2())).toStdString().c_str());
+                    ("#" + objectIds.value(spring->getObject1())).toStdString().c_str());
+        spring->getObject1ConnectionPosition(pos1);
+        setPreciseVectorAttribute(child,pos1,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
+        element->AddNestedElement(child);
+        child = vtkSmartPointer<vtkXMLDataElement>::New();
+        child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
+        child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+                            ("#" +objectIds.value(spring->getObject2())).toStdString().c_str());
         q_vec_type pos2;
-        ispring->getObject2ConnectionPosition(pos2);
+        spring->getObject2ConnectionPosition(pos2);
         setPreciseVectorAttribute(child,pos2,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
         element->AddNestedElement(child);
-    } else if (pspring != NULL) {
+    } else if ((spring->getObject1() != NULL) ^ (spring->getObject2() != NULL)) {
+        q_vec_type pos2;
+        QString objId;
+        if (spring->getObject1() != NULL) {
+            spring->getObject1ConnectionPosition(pos1);
+            spring->getEnd2WorldPosition(pos2);
+            objId = "#" + objectIds.value(spring->getObject1());
+        } else {
+            spring->getObject2ConnectionPosition(pos1);
+            spring->getEnd1WorldPosition(pos2);
+            objId = "#" + objectIds.value(spring->getObject2());
+        }
+        child = vtkSmartPointer<vtkXMLDataElement>::New();
+        child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
+        child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+                    objId.toStdString().c_str());
+        setPreciseVectorAttribute(child,pos1,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
+        element->AddNestedElement(child);
         child = vtkSmartPointer<vtkXMLDataElement>::New();
         child->SetName(SPRING_POINT_END_ELEMENT_NAME);
-        q_vec_type pos2;
-        pspring->getEnd2WorldPosition(pos2);
         setPreciseVectorAttribute(child,pos2,3,SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
         element->AddNestedElement(child);
     }
@@ -919,14 +936,19 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(SketchProject *proj, vtk
                 if (err != 3) {
                     return XML_TO_DATA_FAILURE;
                 }
+                if (obj1Id.length() > 0) {
+                    objCount++;
+                }
             } else if (objCount == 1) {
                 obj2Id = child->GetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME);
                 int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,o2Pos);
                 if (err != 3) {
                     return XML_TO_DATA_FAILURE;
                 }
+                if (obj2Id.length() > 0) {
+                    objCount++;
+                }
             }
-            objCount++;
         } else if (name == QString(PROPERTIES_ELEMENT_NAME)) {
             int err = child->GetScalarAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,k);
             err += child->GetScalarAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,minRLen);
@@ -947,7 +969,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(SketchProject *proj, vtk
         // we have too few or too many endpoints
         return XML_TO_DATA_FAILURE;
     } else if (seenWPoint) {
-        spring = new ObjectPointSpring(objectIds.value(obj1Id),minRLen,maxRLen,k,o1Pos,wPos);
+        spring = new SpringConnection(objectIds.value(obj1Id),NULL,minRLen,maxRLen,k,o1Pos,wPos);
         proj->addSpring(spring);
     } else if (objCount == 2) {
         spring = proj->addSpring(objectIds.value(obj1Id),

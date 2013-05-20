@@ -405,14 +405,18 @@ static inline void applyCollisionResponseForce(SketchObject *o1, SketchObject *o
 static inline void springForcesFromList(QList<SpringConnection *> &list, QSet<int> &affectedGroups) {
     for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
         SpringConnection *c = it.next();
-        InterObjectSpring *cp = dynamic_cast<InterObjectSpring *>(c);
         c->addForce();
-        int i = c->getObject1()->getPrimaryCollisionGroupNum();
+        int i = OBJECT_HAS_NO_GROUP;
+        if (c->getObject1() != NULL)
+            i = c->getObject1()->getPrimaryCollisionGroupNum();
         if (i != OBJECT_HAS_NO_GROUP) { // if this one isn't the tracker
             affectedGroups.insert(i);
         }
-        if (cp != NULL && cp->getObject2()->getPrimaryCollisionGroupNum() != OBJECT_HAS_NO_GROUP) {
-            affectedGroups.insert(cp->getObject2()->getPrimaryCollisionGroupNum());
+        i = OBJECT_HAS_NO_GROUP;
+        if (c->getObject2() != NULL)
+            i = c->getObject2()->getPrimaryCollisionGroupNum();
+        if (i != OBJECT_HAS_NO_GROUP) { // if this one isn't the tracker
+            affectedGroups.insert(i);
         }
     }
 }

@@ -140,12 +140,12 @@ void ObjectEditingMode::buttonReleased(int vrpn_ButtonNum)
                     project->getWorldManager()->addSpring(obj1,obj2,p1,p2,true,k,0);
                 } else {
                     obj1->getWorldSpacePointInModelCoordinates(p1,p1);
-                    SpringConnection *conn = new ObjectPointSpring(obj1,0,0,k,p1,p2);
+                    SpringConnection *conn = new SpringConnection(obj1,NULL,0,0,k,p1,p2);
                     project->addSpring(conn);
                 }
             } else if (obj2 != NULL) {
                 obj2->getWorldSpacePointInModelCoordinates(p2,p2);
-                SpringConnection *conn = new ObjectPointSpring(obj2,0,0,k,p2,p1);
+                SpringConnection *conn = new SpringConnection(obj2,NULL,0,0,k,p2,p1);
                 project->addSpring(conn);
             }
         }

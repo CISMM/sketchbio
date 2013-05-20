@@ -137,7 +137,7 @@ void WorldManager::clearRightHandSprings() {
 SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,const q_vec_type pos1,
                              const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen)
 {
-    SpringConnection *spring = InterObjectSpring::makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,minLen,maxLen);
+    SpringConnection *spring = SpringConnection::makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,minLen,maxLen);
     addSpring(spring, &connections);
     return spring;
 }

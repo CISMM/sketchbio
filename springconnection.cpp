@@ -1,39 +1,69 @@
 #include "springconnection.h"
 #include <QDebug>
 
-SpringConnection::SpringConnection(SketchObject *o1, double minRestLen, double maxRestLen,
-                                   double k, const q_vec_type obj1Pos)
+SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
+                                   double maxRestLen, double k, const q_vec_type obj1Pos,
+                                   const q_vec_type obj2Pos) :
+    object1(o1),
+    object2(o2),
+    minRestLength(minRestLen),
+    maxRestLength(maxRestLen),
+    stiffness(k),
+    end1(-1),
+    end2(-1),
+    cellId(-1)
 {
-    object1 = o1;
-    minRestLength = minRestLen;
-    maxRestLength = maxRestLen;
-    stiffness = k;
     q_vec_copy(object1ConnectionPosition,obj1Pos);
-    end1 = end2 = cellId = -1;
+    q_vec_copy(object2ConnectionPosition,obj2Pos);
+}
+
+void SpringConnection::setObject1(SketchObject *obj)
+{
+    q_vec_type wPos;
+    getEnd1WorldPosition(wPos);
+    object1 = obj;
+    setEnd1WorldPosition(wPos);
+}
+
+void SpringConnection::setObject2(SketchObject *obj)
+{
+    q_vec_type wPos;
+    getEnd2WorldPosition(wPos);
+    object2 = obj;
+    setEnd2WorldPosition(wPos);
 }
 
 void SpringConnection::getEnd1WorldPosition(q_vec_type out) const {
-    object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,out);
+    if (object1 != NULL)
+        object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,out);
+    else
+        q_vec_copy(out,object1ConnectionPosition);
 }
 
 void SpringConnection::setEnd1WorldPosition(const q_vec_type newPos) {
-    object1->getWorldSpacePointInModelCoordinates(newPos,object1ConnectionPosition);
+    if (object1 != NULL)
+        object1->getWorldSpacePointInModelCoordinates(newPos,object1ConnectionPosition);
+    else
+        q_vec_copy(object1ConnectionPosition,newPos);
 }
 
-
-//######################################################################################
-//######################################################################################
-//######################################################################################
-
-InterObjectSpring::InterObjectSpring(SketchObject *o1, SketchObject *o2, double minRestLen, double maxRestLen,
-                                     double k, const q_vec_type obj1Pos, const q_vec_type obj2Pos):
-    SpringConnection(o1,minRestLen,maxRestLen,k,obj1Pos)
-{
-    object2 = o2;
-    q_vec_copy(object2ConnectionPosition, obj2Pos);
+void SpringConnection::getEnd2WorldPosition(q_vec_type out) const {
+    if (object2 != NULL)
+        object2->getModelSpacePointInWorldCoordinates(object2ConnectionPosition,out);
+    else
+        q_vec_copy(out,object2ConnectionPosition);
 }
 
-void InterObjectSpring::addForce() {
+void SpringConnection::setEnd2WorldPosition(const q_vec_type newPos) {
+    if (object2 != NULL)
+        object2->getWorldSpacePointInModelCoordinates(newPos,object2ConnectionPosition);
+    else
+        q_vec_copy(object2ConnectionPosition,newPos);
+}
+
+void SpringConnection::addForce() {
+    if (object1 == object2)
+        return; // No point if both ends connected to same object
     q_vec_type end1pos, end2pos, difference, f1, f2;
     double length, displacement;
 
@@ -55,81 +85,28 @@ void InterObjectSpring::addForce() {
     }
     q_vec_scale(f2,displacement*stiffness,difference);
     q_vec_scale(f1,-1,f2);
-    object1->addForce(object1ConnectionPosition,f1);
-    object2->addForce(object2ConnectionPosition,f2);
+    if (object1 != NULL)
+        object1->addForce(object1ConnectionPosition,f1);
+    if (object2 != NULL)
+        object2->addForce(object2ConnectionPosition,f2);
 }
 
-void InterObjectSpring::getEnd2WorldPosition(q_vec_type out) const {
-    object2->getModelSpacePointInWorldCoordinates(object2ConnectionPosition,out);
-}
-
-void InterObjectSpring::setEnd2WorldPosition(const q_vec_type newPos) {
-    object2->getWorldSpacePointInModelCoordinates(newPos,object2ConnectionPosition);
-
-}
-
-//######################################################################################
-//######################################################################################
-//######################################################################################
-
-ObjectPointSpring::ObjectPointSpring(SketchObject *o1, double minRestLen, double maxRestLen, double k,
-                                        const q_vec_type obj1Pos, const q_vec_type worldPoint)
-    : SpringConnection(o1,minRestLen,maxRestLen,k,obj1Pos)
-{
-    q_vec_copy(point,worldPoint);
-}
-
-void ObjectPointSpring::getEnd2WorldPosition(q_vec_type out) const {
-    q_vec_copy(out,point);
-}
-
-void ObjectPointSpring::setEnd2WorldPosition(const q_vec_type newPos) {
-    q_vec_copy(point,newPos);
-}
-
-void ObjectPointSpring::addForce() {
-    q_vec_type end1pos, difference, f;
-    double length, displacement;
-
-    object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,end1pos);
-    q_vec_subtract(difference,point,end1pos);
-    length = q_vec_magnitude(difference);
-    if (length < Q_EPSILON) {
-        return; // even if we don't have rest length 0, what direction do we push in?
-                // just return...
-    }
-    q_vec_normalize(difference,difference);
-    if (length < minRestLength) {
-        displacement = minRestLength - length;
-    } else if (length > maxRestLength) {
-        displacement = maxRestLength - length;
-    } else {
-        displacement = 0;
-    }
-    q_vec_scale(f,-displacement*stiffness,difference);
-    object1->addForce(object1ConnectionPosition,f);
-}
-
-
-SpringConnection *InterObjectSpring::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+SpringConnection *SpringConnection::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
                    const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen) {
-    q_type oPos1, oPos2, newPos1, newPos2;
-    q_type orient1, orient2;
+    q_type newPos1, newPos2;
     if (worldRelativePos) {
-        o1->getPosition(oPos1);
-        o1->getOrientation(orient1);
-        o2->getPosition(oPos2);
-        o2->getOrientation(orient2);
-        q_invert(orient1,orient1);
-        q_invert(orient2,orient2);
-        q_vec_subtract(newPos1,pos1,oPos1);
-        q_xform(newPos1,orient1,newPos1);
-        q_vec_subtract(newPos2,pos2,oPos2);
-        q_xform(newPos2,orient2,newPos2);
+        if (o1 != NULL)
+            o1->getWorldSpacePointInModelCoordinates(pos1,newPos1);
+        else
+            q_vec_copy(newPos1,pos1);
+        if (o2 != NULL)
+            o2->getWorldSpacePointInModelCoordinates(pos2,newPos2);
+        else
+            q_vec_copy(newPos2,pos2);
     } else {
         q_vec_copy(newPos1,pos1);
         q_vec_copy(newPos2,pos2);
     }
-    SpringConnection *spring = new InterObjectSpring(o1,o2,minLen,maxLen,k,newPos1,newPos2);
+    SpringConnection *spring = new SpringConnection(o1,o2,minLen,maxLen,k,newPos1,newPos2);
     return spring;
 }
