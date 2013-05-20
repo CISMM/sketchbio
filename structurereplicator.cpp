@@ -1,6 +1,7 @@
 #include "structurereplicator.h"
 #include "sketchobject.h"
 #include <QDebug>
+#include <vtkProperty.h>
 
 //############################################################################################
 //############################################################################################
@@ -46,6 +47,8 @@ void ReplicatedObject::addKeyframeForCurrentLocation(double t) {
 //############################################################################################
 //############################################################################################
 
+#define COLOR_MODIFIER  ( 1 / 2.0 )
+
 StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w) :
     numShown(0),
     obj1(object1),
@@ -87,6 +90,17 @@ void StructureReplicator::setNumShown(int num) {
             tform->PostMultiply();
             tform->Concatenate(previous->getLocalTransform());
             tform->Concatenate(transform);
+            vtkSmartPointer<vtkActor> actor = next->getActor();
+            if (numShown % 2 == 0) {
+                actor->GetProperty()->SetColor(obj1->getActor()->GetProperty()->GetColor());
+            } else {
+                double color[3];
+                obj1->getActor()->GetProperty()->GetColor(color);
+                color[0] *= COLOR_MODIFIER;
+                color[1] *= COLOR_MODIFIER;
+                color[2] *= COLOR_MODIFIER;
+                actor->GetProperty()->SetColor(color);
+            }
             previous = next;
         }
     } else {
