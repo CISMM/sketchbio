@@ -356,11 +356,11 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
     SketchObject *closest = NULL;
     double distance = std::numeric_limits<double>::max();
     q_vec_type pos1;
-    subj->getPosition(pos1);
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
         double bb[6];
         double dist;
+        subj->getPosition(pos1);
         if (obj->numInstances() == 1) {
             obj->getWorldSpacePointInModelCoordinates(pos1,pos1);
         }
