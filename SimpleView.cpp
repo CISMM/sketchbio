@@ -547,7 +547,7 @@ void SimpleView::exportBlenderAnimation() {
         connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
         connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
         connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
-        dialog->setValue(1);
+        dialog->open();
     }
 }
 
