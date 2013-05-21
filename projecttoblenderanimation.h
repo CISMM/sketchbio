@@ -33,11 +33,12 @@ private:
     // Writes code to create an object in Blender for each SketchObject (for now assumes no groups)
     // stores the index of each object in the myObjects list in the objectIdxs QHash
     static bool writeCreateObjects(QFile &file, QHash<SketchModel *, int> &modelIdxs,
-                                   QHash<SketchObject *, int> &objectIdxs, const WorldManager *world);
+                                   QHash<SketchObject *, int> &objectIdxs, SketchProject *proj);
     // Writes code to create a single object and recurse on groups (only objects with the an individual model
     // are keyframed, groups are ignored and each object within them is added)
     static void writeCreateObject(QFile &file, QHash<SketchModel *, int> &modelIdxs,
-                                  QHash<SketchObject *, int> &objectIdxs, int &objectsLen, SketchObject *obj);
+                                  QHash<SketchObject *, int> &objectIdxs, int &objectsLen, SketchProject *proj,
+                                  SketchObject *obj);
     // Writes a keyframe for each object at each frame with its position at that time from SketchBio
     static bool writeObjectKeyframes(QFile &file, QHash<SketchObject *, int> &objectIdxs, SketchProject *proj,
                                      unsigned frameRate = BLENDER_RENDERER_FRAMERATE);

@@ -21,12 +21,18 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     QHash<SketchModel *, int> modelIdxs;
     QHash<SketchObject *, int> objectIdxs;
     success &= writeCreateModels(file,modelIdxs,proj->getModelManager());
-    success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj->getWorldManager());
+    success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj);
     success &= writeObjectKeyframes(file,objectIdxs, proj);
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
     file.write(buf.data());
     file.write("bpy.context.scene.render.fps_base = 1\n");
+    file.write("bpy.context.scene.world.light_settings.use_ambient_occlusion = True\n");
+    file.write("bpy.context.scene.world.light_settings.ao_factor = 1.0\n");
+    file.write("bpy.context.scene.world.light_settings.ao_blend_type = 'MULTIPLY'\n");
+    file.write("bpy.context.scene.world.light_settings.distance = 40\n");
+    file.write("bpy.context.scene.world.light_settings.samples = 5\n");
+    file.write("bpy.context.scene.world.horizon_color = (0.0, 0.0, 0.0)\n");
     file.write("bpy.ops.render.render(animation=True)\n");
     file.write("bpy.ops.wm.quit_blender()\n");
     return success && file.error() == QFile::NoError;
@@ -51,6 +57,7 @@ bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash<SketchModel
         }
         file.write("select_object(obj)\n");
         // throw them way out in space
+        file.write("bpy.ops.object.shade_smooth()\n");
         file.write("bpy.context.active_object.location = (float(50000), float(50000), float(50000))\n");
         file.write("modelObjects.append(obj)\n");
     }
@@ -58,7 +65,8 @@ bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash<SketchModel
 }
 
 bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchModel *, int> &modelIdxs,
-                                                   QHash<SketchObject *, int> &objectIdxs, const WorldManager *world) {
+                                                   QHash<SketchObject *, int> &objectIdxs, SketchProject *proj) {
+    WorldManager *world = proj->getWorldManager();
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
     int objectsLen = 0;
@@ -66,7 +74,7 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     QListIterator<SketchObject *> it = world->getObjectIterator();
     while (it.hasNext()) {
-        writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, it.next());
+        writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
     }
     file.write("\n\n");
     return file.error() == QFile::NoError;
@@ -74,12 +82,12 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
 
 void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel *, int> &modelIdxs,
                                                   QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
-                                                  SketchObject *obj)
+                                                  SketchProject *proj, SketchObject *obj)
 {
     if (obj->numInstances() != 1) {
         QListIterator<SketchObject *> it(*obj->getSubObjects());
         while (it.hasNext()) {
-            writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, it.next());
+            writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
         }
     } else {
         QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
@@ -113,7 +121,7 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel
             file.write("bpy.context.active_object.data.clip_end = 2000\n");
             // give the camera a light that will follow it around
             file.write("cam = bpy.context.active_object\n");
-            file.write("bpy.ops.object.lamp_add(type='HEMI')\n");
+            file.write("bpy.ops.object.lamp_add(type='AREA')\n");
             sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
                     pos[Q_X], pos[Q_Y], pos[Q_Z]);
             file.write(buf.data());
@@ -122,6 +130,27 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel
                     "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
                     orient[Q_Y], orient[Q_Z]);
             file.write(buf.data());
+            file.write("bpy.context.active_object.data.energy = 0.7\n");
+            file.write("bpy.context.active_object.data.distance = 200\n");
+            file.write("bpy.context.active_object.data.shadow_method = 'RAY_SHADOW'\n");
+            file.write("bpy.context.active_object.data.shadow_ray_samples_x = 10\n");
+            file.write("bpy.context.active_object.data.size = 100\n");
+            file.write("lamp = bpy.context.active_object\n");
+            file.write("select_object(cam)\n");
+            file.write("lamp.select = True\n");
+            file.write("bpy.ops.object.parent_set()\n");
+            q_vec_type nPos;
+            q_vec_type up;
+            proj->getCameras()->value(obj)->GetViewUp(up);
+            q_xform(up,tmp,up);
+            q_vec_scale(up,500,up);
+            q_vec_add(nPos,pos,up);
+            file.write("bpy.ops.object.lamp_add(type='POINT')\n");
+            sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
+                    nPos[Q_X], nPos[Q_Y], nPos[Q_Z]);
+            file.write(buf.data());
+            file.write("bpy.context.active_object.data.energy = 15.0\n");
+            file.write("bpy.context.active_object.data.distance = 1000.0\n");
             file.write("lamp = bpy.context.active_object\n");
             file.write("select_object(cam)\n");
             file.write("lamp.select = True\n");
