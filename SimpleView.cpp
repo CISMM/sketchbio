@@ -534,6 +534,12 @@ void SimpleView::exportBlenderAnimation() {
                                               tr("Select Save Location"),
                                               "./",
                                               tr("AVI Files (*.avi)"));
+    QFile f(fn);
+    if (f.exists()) {
+        if (!f.remove()) {
+            return;
+        }
+    }
     BlenderAnimationRunner *r = BlenderAnimationRunner::createAnimationFor(project,fn);
     if (r == NULL) {
         QMessageBox::warning(NULL, "Error while setting up animation", "See log for details");
