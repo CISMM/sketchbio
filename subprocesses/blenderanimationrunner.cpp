@@ -1,22 +1,30 @@
 #include "blenderanimationrunner.h"
+#include "subprocessutils.h"
 #include <projecttoblenderanimation.h>
 #include <QDebug>
 #include <QDir>
 #include <QMessageBox>
+#include <QProcess>
 #include <QFile>
+#include <QTemporaryFile>
 
 // remove when relocating getSubprocessExecutableName
 #include <QSettings>
 #include <QFileDialog>
 
 BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, QString &animationFile, QObject *parent) :
-    QObject(parent),
+    SubprocessRunner(parent),
     blender(NULL),
     ffmpeg(NULL),
     py_file(new QTemporaryFile("XXXXXX.py",this)),
     animationFile(new QFile(animationFile,this)),
     valid(true)
 {
+    // for now we only render avi files
+    if (!animationFile.endsWith(".avi",Qt::CaseInsensitive))
+    {
+        valid = false;
+    }
     // py_file is a child of this object as well
     if (!py_file->open())
     {
@@ -68,8 +76,10 @@ BlenderAnimationRunner::~BlenderAnimationRunner()
 void BlenderAnimationRunner::start()
 {
     // start the subprocess for blender
-    blender->start(getSubprocessExecutablePath("blender") ,QStringList() << "-noaudio" << "-b" <<
-                   "-F" << "PNG" << "-x" << "1" << "-o" << "anim/#####.png" <<"-P" << py_file->fileName());
+    blender->start(SubprocessUtils::getSubprocessExecutablePath("blender"),
+                   QStringList() << "-noaudio" << "-b" <<
+                   "-F" << "PNG" << "-x" << "1" << "-o" <<
+                   "anim/#####.png" <<"-P" << py_file->fileName());
     qDebug() << "Starting blender.";
     emit statusChanged("Rendering frames in blender.");
 }
@@ -79,25 +89,6 @@ bool BlenderAnimationRunner::isValid()
     return valid;
 }
 
-BlenderAnimationRunner * BlenderAnimationRunner::createAnimationFor(SketchProject *proj, QString &animationFile)
-{
-    if (!animationFile.endsWith(".avi", Qt::CaseInsensitive))
-    {
-        // we don't know how to render other formats than avi right now
-        return NULL;
-    }
-    // this object will automatically delete itself when the subprocess finishes with
-    // Qt slots/signals... it is really strange that you can do this.
-    BlenderAnimationRunner *runner = new BlenderAnimationRunner(proj,animationFile,NULL);
-    // check if temporary files were created and such
-    if (!runner->isValid())
-    {
-        delete runner;
-        return NULL;
-    }
-    runner->start();
-    return runner;
-}
 
 void BlenderAnimationRunner::firstStageDone(int exitCode)
 {
@@ -118,7 +109,7 @@ void BlenderAnimationRunner::firstStageDone(int exitCode)
         list << "-r" << QString::number(BLENDER_RENDERER_FRAMERATE) << "-i" << "anim/%05d.png";
         list << "-vcodec" << "huffyuv" << animationFile->fileName();
 //        qDebug() << list;
-        ffmpeg->start(getSubprocessExecutablePath("ffmpeg"),list);
+        ffmpeg->start(SubprocessUtils::getSubprocessExecutablePath("ffmpeg"),list);
         qDebug() << "Starting ffmpeg.";
         emit statusChanged("Converting frames into video.");
     }
@@ -140,7 +131,7 @@ void BlenderAnimationRunner::secondStageDone(int exitCode)
     }
 }
 
-void BlenderAnimationRunner::canceled()
+void BlenderAnimationRunner::cancel()
 {
     qDebug() << "Animation canceled.";
     if (blender != NULL && blender->state() == QProcess::Running)
@@ -157,46 +148,3 @@ void BlenderAnimationRunner::canceled()
     }
 }
 
-QString getSubprocessExecutablePath(QString executableName) {
-    QSettings settings; // default parameters specified to the QCoreApplication at startup
-    QString executablePath = settings.value("subprocesses/" + executableName + "/path",QString("")).toString();
-    if (executablePath.length() == 0 || ! QFile(executablePath).exists()) {
-#if defined(__APPLE__) && defined(__MACH__)
-        // test /Applications/appName and /usr/bin then ask
-        if (QFile("/Applications/" + executableName + ".app/Contents/MacOS/" + executableName).exists()) {
-            executablePath = "/Applications/" + executableName + ".app/Contents/MacOS/" + executableName;
-        } else if (QFile("/usr/bin/" + executableName).exists()) {
-            executablePath = "/usr/bin/" + executableName;
-        } else if (QFile("/usr/local/bin/" + executableName).exists()) {
-            executablePath = "/usr/local/bin/" + executableName;
-        } else {
-            executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'","/Applications");
-            if (executablePath.endsWith(".app")) {
-                executablePath = executablePath + "/Contents/MacOS/" + executableName;
-            }
-        }
-#elif defined(__WINDOWS__)
-        // test default locations C:/Program Files and C:/Program Files(x86) then ask for a .exe file
-        if (QFile("C:/Program Files/" + executableName "/" + executableName + ".exe").exists()) {
-            executablePath = "C:/Program Files/" + executableName + "/" + executableName;
-        }
-#ifdef _WIN64
-        else if (QFile("C:/Program Files(x86)/" + executableName + "/" + executableName + ".exe").exists()) {
-            executablePath = "C:/Program Files(x86)/" + executableName + "/" + executableName;
-        }
-        else {
-            executablePath = QFileDialog::getOpenFileName(NULL, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
-        }
-#endif
-#elif defined(__linux__)
-        // test /usr/bin then ask for the file
-        if (QFile("/usr/bin/" + executableName).exists()) {
-            executablePath = "/usr/bin/" + executableName;
-        } else {
-            executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'");
-        }
-#endif
-        settings.setValue("subprocesses/" + executableName + "/path",executablePath);
-    }
-    return executablePath;
-}

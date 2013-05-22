@@ -95,12 +95,6 @@ public slots:
   void setTextMapperString(QString str);
   void updateStatusText();
 
-  // This method looks in settings and in a few default locations
-  // to find the executable needed for a subprocess to run and returns the
-  // full path to the executable.  It also stores what it finds in settings, so
-  // the user only has to specify the location once.
-  QString getSubprocessExecutablePath(QString executableName);
- 
 protected:
  
 protected slots:

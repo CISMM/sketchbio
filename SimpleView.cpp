@@ -30,7 +30,8 @@
 #include <projecttoxml.h>
 #include <transformequals.h>
 
-#include "subprocesses/blenderanimationrunner.h"
+#include "subprocesses/subprocessrunner.h"
+#include "subprocesses/subprocessutils.h"
 
 // default number extra fibers
 #define NUM_EXTRA_FIBERS 14
@@ -379,7 +380,7 @@ bool SimpleView::simplifyObjectByName(const QString name)
     blender.setProcessChannelMode(QProcess::MergedChannels);
     // -P: Run the specified Python script
     // -b: Run in background
-    blender.start(getSubprocessExecutablePath("blender"),
+    blender.start(SubprocessUtils::getSubprocessExecutablePath("blender"),
                   QStringList() << "-noaudio" << "-b" << "-P" << py_file.fileName());
     if (!blender.waitForStarted()) {
       QMessageBox::warning(NULL, "Could not run Blender to simplify file ", name);
@@ -435,8 +436,26 @@ void SimpleView::importPDBId()
 					"Choose a directory to save to");
 
     if (fn.length() > 0) {
-	  printf("Importing %s from PDB\n", text.toStdString().c_str());
-
+      printf("Importing %s from PDB\n", text.toStdString().c_str());
+      SubprocessRunner *objMaker = SubprocessUtils::makeChimeraOBJFor(text,fn + "/" + text + ".obj");
+      if (objMaker == NULL)
+      {
+          QMessageBox::warning(NULL, "Could not run Chimera to import molecule ", text);
+      }
+      else
+      {
+          timer->stop();
+          MyDialog *dialog = new MyDialog("Generating surface for molecule...","Cancel",0,0,this);
+          connect(objMaker, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
+          connect(objMaker, SIGNAL(finished(bool)), timer, SLOT(start()));
+          connect(dialog, SIGNAL(canceled()), objMaker, SLOT(cancel()));
+          connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
+          connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
+          connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
+          dialog->open();
+          objMaker->start();
+      }
+/*
 	  // Start the pymol process and then write the commands to it
 	  // that will cause it to load the PDB file, generate a surface
 	  // for it, and then save the file.
@@ -522,7 +541,7 @@ void SimpleView::importPDBId()
 		QMessageBox::warning(NULL, "Error while importing", text);
             printf("Python problem:\n%s\n", result.data());
         }
-      }
+      }*/
 
     }
   }
@@ -540,7 +559,7 @@ void SimpleView::exportBlenderAnimation() {
             return;
         }
     }
-    BlenderAnimationRunner *r = BlenderAnimationRunner::createAnimationFor(project,fn);
+    SubprocessRunner *r = SubprocessUtils::createAnimationFor(project,fn);
     if (r == NULL) {
         QMessageBox::warning(NULL, "Error while setting up animation", "See log for details");
         timer->start();
@@ -549,54 +568,11 @@ void SimpleView::exportBlenderAnimation() {
         connect(r, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
         connect(r, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
         connect(r, SIGNAL(finished(bool)), timer, SLOT(start()));
-        connect(dialog, SIGNAL(canceled()), r, SLOT(canceled()));
+        connect(dialog, SIGNAL(canceled()), r, SLOT(cancel()));
         connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
         connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
         connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
         dialog->open();
+        r->start();
     }
-}
-
-QString SimpleView::getSubprocessExecutablePath(QString executableName) {
-    QSettings settings; // default parameters specified to the QCoreApplication at startup
-    QString executablePath = settings.value("subprocesses/" + executableName + "/path",QString("")).toString();
-    if (executablePath.length() == 0 || ! QFile(executablePath).exists()) {
-#if defined(__APPLE__) && defined(__MACH__)
-        // test /Applications/appName and /usr/bin then ask
-        if (QFile("/Applications/" + executableName + ".app/Contents/MacOS/" + executableName).exists()) {
-            executablePath = "/Applications/" + executableName + ".app/Contents/MacOS/" + executableName;
-        } else if (QFile("/usr/bin/" + executableName).exists()) {
-            executablePath = "/usr/bin/" + executableName;
-        } else if (QFile("/usr/local/bin/" + executableName).exists()) {
-            executablePath = "/usr/local/bin/" + executableName;
-        } else {
-            executablePath = QFileDialog::getOpenFileName(this,"Specify location of '" + executableName + "'","/Applications");
-            if (executablePath.endsWith(".app")) {
-                executablePath = executablePath + "/Contents/MacOS/" + executableName;
-            }
-        }
-#elif defined(_WIN32)
-        // test default locations C:/Program Files and C:/Program Files(x86) then ask for a .exe file
-        if (QFile("C:/Program Files/" + executableName + "/" + executableName + ".exe").exists()) {
-            executablePath = "C:/Program Files/" + executableName + "/" + executableName;
-        }
-#ifdef _WIN64
-        else if (QFile("C:/Program Files(x86)/" + executableName + "/" + executableName + ".exe").exists()) {
-            executablePath = "C:/Program Files(x86)/" + executableName + "/" + executableName;
-        }
-#endif
-        else {
-            executablePath = QFileDialog::getOpenFileName(this, "Specify location of '" + executableName + "'","C:/Program Files","", &QString(".exe"));
-        }
-#elif defined(__linux__)
-        // test /usr/bin then ask for the file
-        if (QFile("/usr/bin/" + executableName).exists()) {
-            executablePath = "/usr/bin/" + executableName;
-        } else {
-            executablePath = QFileDialog::getOpenFileName(this,"Specify location of '" + executableName + "'");
-        }
-#endif
-        settings.setValue("subprocesses/" + executableName + "/path",executablePath);
-    }
-    return executablePath;
 }

@@ -1,5 +1,6 @@
-SET(Subprocess_src "blenderanimationrunner.cpp")
-SET(Subprocess_qt_headers "blenderanimationrunner.h")
+SET(Subprocess_src "blenderanimationrunner.cpp" "chimeraobjmaker.cpp" "subprocessutils.cpp")
+SET(Subprocess_qt_headers "blenderanimationrunner.h" "chimeraobjmaker.h" "subprocessrunner.h")
+SET(Subprocess_non_qt_headers "subprocessutils.h" "subprocessrunner.h")
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -12,4 +13,4 @@ SOURCE_GROUP( "Generated" FILES
              ${Subprocess_MOC_Srcs}
 )
 
-ADD_LIBRARY(SketchSubprocess ${Subprocess_src} ${Subprocess_MOC_Srcs})
+ADD_LIBRARY(SketchSubprocess ${Subprocess_src} ${Subprocess_MOC_Srcs} ${Subprocess_non_qt_headers})
