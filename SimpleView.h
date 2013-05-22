@@ -49,7 +49,7 @@ public:
   bool addObjects(QVector<QString> names);
 
   // Simplify an external object based on the root file name.
-  bool simplifyObjectByName(const QString name);
+  void simplifyObjectByName(const QString name);
  
 public slots:
 

@@ -36,7 +36,17 @@ SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *createAnimationFor(SketchProject *proj, QString &animationFile);
+SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile);
+
+/*
+ * This method returns a valid SubprocessRunner to run Blender to decimate an
+ * obj file or NULL.  There is no need to check if the returned object
+ * is valid, simply check for NULL.  Then connect it to the signals/slots
+ * and call start().
+ *
+ * For detailed usage information, see subprocessrunner.h
+ */
+SubprocessRunner *simplifyObjFile(QString objFile);
 
 }
 

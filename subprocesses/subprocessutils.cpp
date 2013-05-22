@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include "chimeraobjmaker.h"
 #include "blenderanimationrunner.h"
+#include "blenderdecimationrunner.h"
 
 namespace SubprocessUtils {
 
@@ -63,7 +64,7 @@ SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile)
     return maker;
 }
 
-SubprocessRunner *createAnimationFor(SketchProject *proj, QString &animationFile)
+SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
 {
     if (!animationFile.endsWith(".avi", Qt::CaseInsensitive))
     {
@@ -74,6 +75,18 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString &animationFile
     // Qt slots/signals... it is really strange that you can do this.
     BlenderAnimationRunner *runner = new BlenderAnimationRunner(proj,animationFile,NULL);
     // check if temporary files were created and such
+    if (!runner->isValid())
+    {
+        delete runner;
+        return NULL;
+    }
+    return runner;
+}
+
+SubprocessRunner *simplifyObjFile(QString objFile)
+{
+    BlenderDecimationRunner *runner = new BlenderDecimationRunner(objFile);
+
     if (!runner->isValid())
     {
         delete runner;

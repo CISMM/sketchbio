@@ -1,5 +1,7 @@
-SET(Subprocess_src "blenderanimationrunner.cpp" "chimeraobjmaker.cpp" "subprocessutils.cpp")
-SET(Subprocess_qt_headers "blenderanimationrunner.h" "chimeraobjmaker.h" "subprocessrunner.h")
+SET(Subprocess_src "blenderanimationrunner.cpp" "chimeraobjmaker.cpp" "subprocessutils.cpp"
+"blenderdecimationrunner.cpp")
+SET(Subprocess_qt_headers "blenderanimationrunner.h" "chimeraobjmaker.h" "subprocessrunner.h"
+"blenderdecimationrunner.h")
 SET(Subprocess_non_qt_headers "subprocessutils.h" "subprocessrunner.h")
 
 INCLUDE_DIRECTORIES(

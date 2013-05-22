@@ -89,7 +89,7 @@ void ChimeraOBJMaker::cancel()
     if (chimera->state() == QProcess::Running)
     {
         disconnect(chimera, SIGNAL(finished(int)), this, SLOT(processResult(int)));
+        connect(chimera, SIGNAL(finished(int)), this, SLOT(deleteLater()));
         chimera->kill();
     }
-    deleteLater();
 }

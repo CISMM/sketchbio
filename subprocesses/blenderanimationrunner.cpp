@@ -81,7 +81,14 @@ void BlenderAnimationRunner::start()
                    "-F" << "PNG" << "-x" << "1" << "-o" <<
                    "anim/#####.png" <<"-P" << py_file->fileName());
     qDebug() << "Starting blender.";
-    emit statusChanged("Rendering frames in blender.");
+    if (!blender->waitForStarted())
+    {
+        emit finished(false);
+        qDebug() << "Blender failed to start";
+        deleteLater();
+    }
+    else
+        emit statusChanged("Rendering frames in blender.");
 }
 
 bool BlenderAnimationRunner::isValid()
