@@ -30,6 +30,7 @@
 // Forward Qt class declarations
 class Ui_SimpleView;
 class vtkTextMapper;
+class SubprocessRunner;
 
 /*
  * SimpleView is the main GUI class in the SketchBio project.  It also manages
@@ -102,7 +103,7 @@ protected slots:
 private:
 
   // Methods
-  void addActor(vtkActor *actor, q_vec_type position, q_type orientation);
+  void runSubprocessAndFreezeGUI(SubprocessRunner *runner);
 
   // Fields
   Ui_SimpleView *ui;

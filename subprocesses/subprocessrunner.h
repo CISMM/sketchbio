@@ -25,6 +25,8 @@ public:
     virtual bool isValid() = 0;
 public slots:
     // starts the subprocess
+    // start should emit a status message via statusChanged() that describes
+    // the operation or the first phase of the operation (whichever is appropriate)
     virtual void start() = 0;
     // cancels the subprocess
     virtual void cancel() = 0;
@@ -33,7 +35,8 @@ signals:
     // false otherwise.
     void finished(bool success);
     // emitted to give status messages to the user (use if the process has stages that
-    // can be displayed to the user)
+    // can be displayed to the user, but should always be emitted once in start()
+    // with some default message for the operation)
     void statusChanged(QString status);
 };
 

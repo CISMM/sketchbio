@@ -120,6 +120,8 @@ void PymolOBJMaker::start()
         emit finished(false);
         deleteLater();
     }
+    else
+        emit statusChanged("Creating surface in PyMOL...");
 }
 
 void PymolOBJMaker::cancel()

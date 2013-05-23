@@ -58,7 +58,10 @@ void ChimeraOBJMaker::start()
         deleteLater();
     }
     else
+    {
+        emit statusChanged("Creating surface with UCSF Chimera...");
         qDebug() << "Chimera Started";
+    }
 }
 
 void ChimeraOBJMaker::processResult(int status)

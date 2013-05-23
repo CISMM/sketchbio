@@ -324,17 +324,7 @@ void SimpleView::simplifyObjectByName(const QString name)
     }
     else
     {
-        timer->stop();
-        MyDialog *dialog = new MyDialog("Simplifying model....","Cancel",0,0,this);
-        connect(runner, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
-        connect(runner, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
-        connect(runner, SIGNAL(finished(bool)), timer, SLOT(start()));
-        connect(dialog, SIGNAL(canceled()), runner, SLOT(cancel()));
-        connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
-        connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
-        connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
-        dialog->open();
-        runner->start();
+        runSubprocessAndFreezeGUI(runner);
     }
 }
 
@@ -378,17 +368,7 @@ void SimpleView::importPDBId()
       }
       else
       {
-          timer->stop();
-          MyDialog *dialog = new MyDialog("Generating surface for molecule...","Cancel",0,0,this);
-          connect(objMaker, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
-          connect(objMaker, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
-          connect(objMaker, SIGNAL(finished(bool)), timer, SLOT(start()));
-          connect(dialog, SIGNAL(canceled()), objMaker, SLOT(cancel()));
-          connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
-          connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
-          connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
-          dialog->open();
-          objMaker->start();
+          runSubprocessAndFreezeGUI(objMaker);
       }
 
     }
@@ -410,16 +390,23 @@ void SimpleView::exportBlenderAnimation() {
     if (r == NULL) {
         QMessageBox::warning(NULL, "Error while setting up animation", "See log for details");
     } else {
-        timer->stop();
-        MyDialog *dialog = new MyDialog("Rendering animation...","Cancel",0,0,this);
-        connect(r, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
-        connect(r, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
-        connect(r, SIGNAL(finished(bool)), timer, SLOT(start()));
-        connect(dialog, SIGNAL(canceled()), r, SLOT(cancel()));
-        connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
-        connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
-        connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
-        dialog->open();
-        r->start();
+        runSubprocessAndFreezeGUI(r);
     }
+}
+
+void SimpleView::runSubprocessAndFreezeGUI(SubprocessRunner *runner)
+{
+    if (runner == NULL)
+        return;
+    timer->stop();
+    MyDialog *dialog = new MyDialog(".","Cancel",0,0,this);
+    connect(runner, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
+    connect(runner, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
+    connect(runner, SIGNAL(finished(bool)), timer, SLOT(start()));
+    connect(dialog, SIGNAL(canceled()), runner, SLOT(cancel()));
+    connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
+    connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
+    connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
+    dialog->open();
+    runner->start();
 }

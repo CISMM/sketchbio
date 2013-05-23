@@ -72,6 +72,8 @@ void BlenderDecimationRunner::start()
         emit finished(false);
         deleteLater();
     }
+    else
+        emit statusChanged("Simplifying object...");
 }
 
 void BlenderDecimationRunner::cancel()
