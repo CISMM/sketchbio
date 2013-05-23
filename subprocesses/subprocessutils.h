@@ -25,7 +25,7 @@ QString getSubprocessExecutablePath(QString executableName);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile);
+SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile, int threshold = 0);
 
 /*
  * This method returns a valid SubprocessRunner to make an obj file

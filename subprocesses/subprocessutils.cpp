@@ -54,9 +54,9 @@ QString getSubprocessExecutablePath(QString executableName) {
     return executablePath;
 }
 
-SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile)
+SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile,int threshold)
 {
-    ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile);
+    ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile,threshold);
     if (!maker->isValid())
     {
         delete maker;

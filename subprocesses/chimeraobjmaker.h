@@ -20,7 +20,8 @@ class ChimeraOBJMaker : public SubprocessRunner
     Q_OBJECT
 public:
     // constructor
-    ChimeraOBJMaker(QString pdbId, QString objFile, QObject *parent = 0);
+    ChimeraOBJMaker(QString pdbId, QString objFile, int threshold = 0,
+                    QObject *parent = 0);
     // destructor
     virtual ~ChimeraOBJMaker();
     virtual bool isValid();

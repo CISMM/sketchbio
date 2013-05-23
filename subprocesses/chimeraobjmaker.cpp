@@ -6,7 +6,8 @@
 #include <QTemporaryFile>
 #include <QDebug>
 
-ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, QObject *parent) :
+ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, int threshold,
+                                 QObject *parent) :
     SubprocessRunner(parent),
     chimera(new QProcess(this)),
     cmdFile(new QTemporaryFile("XXXXXX.py",this)),
@@ -24,7 +25,8 @@ ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, QObject *parent
         cmdFile->write(line.arg(pdbId).toStdString().c_str());
         cmdFile->write("runCommand(\"~show; ~ribbon\")\n");
         // TODO - change resolution/export multiple resolutions ?
-        cmdFile->write("runCommand(\"sym #0 surfaces all resolution 0\")\n");
+        line = "runCommand(\"sym #0 surfaces all resolution %1\")\n";
+        cmdFile->write(line.arg(threshold).toStdString().c_str());
         cmdFile->write("import ExportOBJ\n");
         line = "ExportOBJ.write_surfaces_as_wavefront_obj(\"%1\")\n";
         cmdFile->write(line.arg(objFile).toStdString().c_str());
