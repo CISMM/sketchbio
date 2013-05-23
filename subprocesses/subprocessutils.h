@@ -27,6 +27,15 @@ QString getSubprocessExecutablePath(QString executableName);
  */
 SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile);
 
+/*
+ * This method returns a valid SubprocessRunner to make an obj file
+ * from a pdb id in PyMOL or NULL.  There is no need to check if
+ * the returned object is valid.  Simply check for NULL.  Then connect
+ * it to the signals/slots and call start().
+ *
+ * For detailed usage information, see subprocessrunner.h
+ */
+SubprocessRunner *makePyMolOBJFor(QString pdbID, QString saveDir);
 
 /*
  * This method returns a valid SubprocessRunner to make a blender animation

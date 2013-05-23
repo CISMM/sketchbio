@@ -15,7 +15,7 @@ BlenderDecimationRunner::BlenderDecimationRunner(QString objFile, QObject *paren
         tempFile->write("import bpy\n");
         // Read the data file
         QString line = "bpy.ops.import_scene.obj(filepath='%1')\n";
-        line.arg(objFile);
+        line = line.arg(objFile);
         tempFile->write(line.toStdString().c_str());
         // Delete the cube object
         tempFile->write("bpy.ops.object.select_all(action='DESELECT')\n");
@@ -47,7 +47,7 @@ BlenderDecimationRunner::BlenderDecimationRunner(QString objFile, QObject *paren
         tempFile->write("bpy.ops.object.modifier_apply()\n");
         // Save the resulting simplified object.
         line = "bpy.ops.export_scene.obj(filepath='%1.decimated.0.1.obj')\n";
-        line.arg(objFile);
+        line = line.arg(objFile);
         tempFile->write(line.toStdString().c_str());
         if (tempFile->error() != QFile::NoError)
             valid = false;

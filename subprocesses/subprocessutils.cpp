@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include "chimeraobjmaker.h"
+#include "pymolobjmaker.h"
 #include "blenderanimationrunner.h"
 #include "blenderdecimationrunner.h"
 
@@ -56,6 +57,17 @@ QString getSubprocessExecutablePath(QString executableName) {
 SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile)
 {
     ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile);
+    if (!maker->isValid())
+    {
+        delete maker;
+        maker = NULL;
+    }
+    return maker;
+}
+
+SubprocessRunner *makePyMolOBJFor(QString pdbID, QString saveDir)
+{
+    PymolOBJMaker *maker = new PymolOBJMaker(pdbID,saveDir);
     if (!maker->isValid())
     {
         delete maker;
