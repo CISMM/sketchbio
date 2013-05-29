@@ -53,9 +53,9 @@ physicsstrategy.cpp transformequals.cpp vrpnserver.cpp keyframe.cpp projecttoble
 hydrainputmanager.cpp hydrainputmode.cpp objecteditingmode.cpp springeditingmode.cpp)
 SET(SimpleViewUI SimpleView.ui)
 SET(Headers_Needing_QT_WRAP SimpleView.h vrpnserver.h hydrainputmanager.h hydrainputmode.h
-objecteditingmode.h springeditingmode.h)
+objecteditingmode.h springeditingmode.h sketchmodel.h)
 SET(Headers_Not_Needing_QT_WRAP transformmanager.h structurereplicator.h modelmanager.h
-sketchobject.h sketchmodel.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
+sketchobject.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
 projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h keyframe.h
 projecttoblenderanimation.h )
  

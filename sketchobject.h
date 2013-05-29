@@ -12,6 +12,10 @@
 #include <QMap>
 #include <QSet>
 #include <keyframe.h>
+#include <PQP.h>
+
+// forward declarations
+class vtkPolyDataMapper;
 
 // forward declare the collision handler so it can be passed to collide
 class PhysicsStrategy;
@@ -51,6 +55,10 @@ public:
     // however, these must be implemented to return a valid SketchModel if numInstances returns 1
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
+    // the conformation of the model used by this object.  If numInstances returns 1, this
+    // must return a valid conformation of the model returned by getModel.  Otherwise, let
+    // this default implementation return -1
+    virtual int getModelConformation() const;
     // actor - NULL by default since not all objects will have one actor, but must return a valid
     // actor if numInstances is 1
     virtual vtkActor *getActor();
@@ -90,7 +98,10 @@ public:
     // and decide how to respond. The bool return value is true iff there was a collision
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS) =0;
     // bounding box info for grab (have to stop using PQP_Distance)
-    virtual void getAABoundingBox(double bb[6]) = 0; // TODO - may just get rid of this one
+    // the bounding box is relative to the object, and should be the axis-aligned bounding
+    // box of the untransformed object (so sort-of oriented bounding box)
+    // TODO - fix getBoundingBox of ObjectGroup to work this way
+    virtual void getBoundingBox(double bb[6]) = 0;
     // this returns the box(es) that contain the lowest-level objects in whatever heirarchy
     // group should do an AppendPolyData to combine these
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() = 0;
@@ -162,17 +173,19 @@ private: // fields
 class ModelInstance : public SketchObject {
 public:
     // constructor
-    ModelInstance(SketchModel *m);
+    explicit ModelInstance(SketchModel *m, int confNum = 0);
     virtual ~ModelInstance();
     // specify that this is a leaf by returning 1
     virtual int numInstances() const;
     // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
+    virtual int getModelConformation() const;
     virtual vtkActor *getActor();
     // collision function that depend on data in this subclass
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
-    virtual void getAABoundingBox(double bb[]);
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics,
+                         int pqp_flags = PQP_ALL_CONTACTS);
+    virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual SketchObject *deepCopy();
 protected:
@@ -180,6 +193,7 @@ protected:
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
+    int conformation;
     vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
     vtkSmartPointer<vtkTransformPolyDataFilter> orientedBB;
     vtkSmartPointer<vtkPolyDataMapper> solidMapper;
@@ -209,7 +223,7 @@ public:
     virtual const QList<SketchObject *> *getSubObjects() const;
     // collision function... have to change declaration
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
-    virtual void getAABoundingBox(double bb[]);
+    virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual void setIsVisible(bool isVisible);
     virtual SketchObject *deepCopy();
@@ -234,12 +248,12 @@ public:
 
 // helper function-- converts quaternion to a PQP rotation matrix
 inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
-    q_matrix_type rowMat;
-    q_to_col_matrix(rowMat,quat);
+    q_matrix_type colMat;
+    q_to_col_matrix(colMat,quat);
     for (int i = 0; i < 3; i++) {
-        mat[i][0] = rowMat[i][0];
-        mat[i][1] = rowMat[i][1];
-        mat[i][2] = rowMat[i][2];
+        mat[i][0] = colMat[i][0];
+        mat[i][1] = colMat[i][1];
+        mat[i][2] = colMat[i][2];
     }
 }
 #endif // SKETCHOBJECT_H

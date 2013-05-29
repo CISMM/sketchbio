@@ -29,10 +29,12 @@ int main() {
     QScopedPointer<SketchProject> project(new SketchProject(renderer));
     project->setProjectDir("test/testModels/replicatorTest");
 
-    SketchObject *o1 = project->addObject("models/1m1j.obj");
-    SketchObject *o2 = project->addObject("models/1m1j.obj");
-    SketchObject *o3 = project->addObject("models/1m1j.obj");
-    SketchObject *o4 = project->addObject("models/1m1j.obj");
+    QString filename = "models/1m1j.obj";
+
+    SketchObject *o1 = project->addObject(filename,filename);
+    SketchObject *o2 = project->addObject(filename,filename);
+    SketchObject *o3 = project->addObject(filename,filename);
+    SketchObject *o4 = project->addObject(filename,filename);
 
     project->addReplication(o1,o2,5);
     QWeakPointer<TransformEquals> equals = project->addTransformEquals(o1,o2);

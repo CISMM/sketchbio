@@ -1,24 +1,28 @@
 #include <transformequals.h>
 #include <sketchtests.h>
 #include <vtkCubeSource.h>
+#include <vtkPolyDataWriter.h>
 #include <QScopedPointer>
 #include <QTime>
 
 #include <iostream>
 
 inline SketchModel *getModel() {
-    vtkSmartPointer<vtkCubeSource> cube = vtkSmartPointer<vtkCubeSource>::New();
+    vtkSmartPointer<vtkCubeSource> cube =
+            vtkSmartPointer<vtkCubeSource>::New();
     cube->SetBounds(-1,1,-1,1,-1,1);
     cube->Update();
-    vtkSmartPointer<vtkTransformPolyDataFilter> data =
-            vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-    data->SetInputConnection(cube->GetOutputPort());
-    vtkSmartPointer<vtkTransform> t = vtkSmartPointer<vtkTransform>::New();
-    t->Identity();
-    t->Update();
-    data->SetTransform(t);
-    data->Update();
-    return new SketchModel("",data,1,1);
+    vtkSmartPointer< vtkPolyDataWriter > writer =
+            vtkSmartPointer< vtkPolyDataWriter >::New();
+    writer->SetInputConnection(cube->GetOutputPort());
+    QString fileName = "transform_equals_tests_cube_model.vtk";
+    writer->SetFileName(fileName.toStdString().c_str());
+    writer->SetFileTypeToASCII();
+    writer->Update();
+    writer->Write();
+    SketchModel *model = new SketchModel(1,1);
+    model->addConformation(fileName,fileName);
+    return model;
 }
 
 inline void initializeVectorsAndQuats(q_vec_type nv, q_vec_type p1, q_vec_type p2, q_vec_type p3, q_vec_type p4,

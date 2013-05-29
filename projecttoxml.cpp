@@ -14,15 +14,22 @@
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_ATTRIBUTE_NAME                  "version"
 #define SAVE_MAJOR_VERSION                      1
-#define SAVE_MINOR_VERSION                      3
+#define SAVE_MINOR_VERSION                      4
 #define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
 
 #define MODEL_ELEMENT_NAME                      "model"
+#define MODEL_NUM_CONFORMATIONS_ATTR_NAME       "numConformations"
+#define MODEL_CONFORMATION_ELEMENT_NAME         "conformation"
+#define MODEL_CONFORMATION_NUMBER_ATTR_NAME     "confNum"
+#define MODEL_RESOLUTION_ELEMENT_NAME           "resolution"
+#define MODEL_FILENAME_ATTRIBUTE_NAME           "filename"
 #define MODEL_SOURCE_ELEMENT_NAME               "source"
 #define MODEL_SCALE_ATTRIBUTE_NAME              "scale"
 #define MODEL_TRANSLATE_ATTRIBUTE_NAME          "translate"
+#define MODEL_ROTATE_ATTRIBUTE_NAME             "rotation"
+#define MODEL_ROTATE_ENABLED_ATTR_NAME          "canRotate"
 #define MODEL_IMASS_ATTRIBUTE_NAME              "inverseMass"
 #define MODEL_IMOMENT_ATTRIBUTE_NAME            "inverseMomentOfInertia"
 
@@ -113,54 +120,157 @@ vtkXMLDataElement *ProjectToXML::modelManagerToXML(const ModelManager *models, c
 
     int id= 0;
 
-    QHashIterator<QString,SketchModel *> it = models->getModelIterator();
+    QVectorIterator<SketchModel *> it = models->getModelIterator();
     while (it.hasNext()) {
-        const SketchModel *model = it.next().value();
+        const SketchModel *model = it.next();
         QString idStr = QString("M%1").arg(id);
         vtkSmartPointer<vtkXMLDataElement> child = modelToXML(model, dir,idStr);
         element->AddNestedElement(child);
         child->Delete();
         modelIds.insert(model,idStr);
+        std:: cout << "Saving model " << id << "." << std::endl;
         id++;
     }
 
     return element;
 }
 
-vtkXMLDataElement *ProjectToXML::modelToXML(const SketchModel *model, const QString &dir, const QString &id) {
+inline const char *getResolutionString(ModelResolution::ResolutionType res)
+{
+    if (res == ModelResolution::FULL_RESOLUTION)
+        return "full_resolution";
+    else if (res == ModelResolution::SIMPLIFIED_FULL_RESOLUTION)
+        return "simplified_full_resolution";
+    else if (res == ModelResolution::SIMPLIFIED_5000)
+        return "5000_tris";
+    else if (res == ModelResolution::SIMPLIFIED_2000)
+        return "2000_tris";
+    else if (res == ModelResolution::SIMPLIFIED_1000)
+        return "1000_tris";
+    else
+    {
+        std::cout << "ERROR: Unknown resolution type in model save." << std::endl;
+        return NULL;
+    }
+}
+
+inline ModelResolution::ResolutionType getResolutionTypeFromId(const char *r)
+{
+    if (strcmp(r,"full_resolution") == 0)
+        return ModelResolution::FULL_RESOLUTION;
+    if (strcmp(r, "simplified_full_resolution") == 0)
+        return ModelResolution::SIMPLIFIED_FULL_RESOLUTION;
+    if (strcmp(r, "5000_tris") == 0)
+        return ModelResolution::SIMPLIFIED_5000;
+    if (strcmp(r, "2000_tris") == 0)
+        return ModelResolution::SIMPLIFIED_2000;
+    if (strcmp(r, "1000_tris") == 0)
+        return ModelResolution::SIMPLIFIED_1000;
+    else
+    {
+        std::cout << "ERROR: Unknown resolution type in model load." << std::endl;
+        throw "Failed to find resolution";
+    }
+}
+
+vtkXMLDataElement *ProjectToXML::modelToXML(const SketchModel *model,
+                                            const QString &dir,
+                                            const QString &id)
+{
     vtkXMLDataElement *element = vtkXMLDataElement::New();
     element->SetName(MODEL_ELEMENT_NAME);
     element->SetAttribute(ID_ATTRIBUTE_NAME,id.toStdString().c_str());
+    element->SetIntAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,
+                             model->getNumberOfConformations());
+    vtkSmartPointer< vtkXMLDataElement > properties =
+            vtkSmartPointer< vtkXMLDataElement >::New();
+    properties->SetName(PROPERTIES_ELEMENT_NAME);
+    properties->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME,
+                          model->shouldRotate() ? "true" : "false");
+    properties->SetDoubleAttribute(MODEL_IMASS_ATTRIBUTE_NAME,
+                                   model->getInverseMass());
+    properties->SetDoubleAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,
+                                   model->getInverseMomentOfInertia());
+    element->AddNestedElement(properties);
 
-    // the source of the model.  note that while it is possible to have models from vtk classes,
-    // they are not handled by the save/load code (at least not very well)
-    vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
-    child->SetName(MODEL_SOURCE_ELEMENT_NAME);
-    QString source = model->getDataSource();
-    if (source.indexOf(dir) != -1) {
-        source = source.mid(source.indexOf(dir) + dir.length() + 1);
+    for (int i = 0; i < model->getNumberOfConformations(); i++)
+    {
+        vtkSmartPointer< vtkXMLDataElement > conformationElt
+                = vtkSmartPointer< vtkXMLDataElement >::New();
+        conformationElt->SetName(MODEL_CONFORMATION_ELEMENT_NAME);
+        conformationElt->SetIntAttribute(MODEL_CONFORMATION_NUMBER_ATTR_NAME,i);
+        vtkSmartPointer< vtkXMLDataElement > child
+                = vtkSmartPointer< vtkXMLDataElement >::New();
+        child->SetName(MODEL_SOURCE_ELEMENT_NAME);
+        const char *data = model->getSource(i).toStdString().c_str();
+        child->SetCharacterData(data,strlen(data));
+        conformationElt->AddNestedElement(child);
+        QString filename;
+        filename = model->getFileNameFor(i,ModelResolution::FULL_RESOLUTION);
+        if (filename.startsWith(dir))
+            filename = filename.mid(dir.length()+1);
+        child = vtkSmartPointer< vtkXMLDataElement >::New();
+        child->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
+        child->SetAttribute(ID_ATTRIBUTE_NAME,
+                            getResolutionString(ModelResolution::FULL_RESOLUTION));
+        child->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
+                            filename.toStdString().c_str());
+        conformationElt->AddNestedElement(child);
+        filename = model->getFileNameFor(i,ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
+        if (filename.length() > 0)
+        {
+            if (filename.startsWith(dir))
+                filename = filename.mid(dir.length()+1);
+            child = vtkSmartPointer< vtkXMLDataElement >::New();
+            child->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
+            child->SetAttribute(ID_ATTRIBUTE_NAME,
+                                getResolutionString(
+                                    ModelResolution::SIMPLIFIED_FULL_RESOLUTION));
+            child->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
+                                filename.toStdString().c_str());
+            conformationElt->AddNestedElement(child);
+        }
+        filename = model->getFileNameFor(i,ModelResolution::SIMPLIFIED_5000);
+        if (filename.length() > 0)
+        {
+            if (filename.startsWith(dir))
+                filename = filename.mid(dir.length()+1);
+            child = vtkSmartPointer< vtkXMLDataElement >::New();
+            child->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
+            child->SetAttribute(ID_ATTRIBUTE_NAME,
+                                getResolutionString(ModelResolution::SIMPLIFIED_5000));
+            child->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
+                                filename.toStdString().c_str());
+            conformationElt->AddNestedElement(child);
+        }
+        filename = model->getFileNameFor(i,ModelResolution::SIMPLIFIED_2000);
+        if (filename.length() > 0)
+        {
+            if (filename.startsWith(dir))
+                filename = filename.mid(dir.length()+1);
+            child = vtkSmartPointer< vtkXMLDataElement >::New();
+            child->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
+            child->SetAttribute(ID_ATTRIBUTE_NAME,
+                                getResolutionString(ModelResolution::SIMPLIFIED_2000));
+            child->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
+                                filename.toStdString().c_str());
+            conformationElt->AddNestedElement(child);
+        }
+        filename = model->getFileNameFor(i,ModelResolution::SIMPLIFIED_1000);
+        if (filename.length() > 0)
+        {
+            if (filename.startsWith(dir))
+                filename = filename.mid(dir.length()+1);
+            child = vtkSmartPointer< vtkXMLDataElement >::New();
+            child->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
+            child->SetAttribute(ID_ATTRIBUTE_NAME,
+                                getResolutionString(ModelResolution::SIMPLIFIED_1000));
+            child->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
+                                filename.toStdString().c_str());
+            conformationElt->AddNestedElement(child);
+        }
+        element->AddNestedElement(conformationElt);
     }
-    child->SetCharacterData(source.toStdString().c_str(),source.length());
-    element->AddNestedElement(child);
-
-    // physical properties (mass, etc..)
-    child = vtkSmartPointer<vtkXMLDataElement>::New();
-    child->SetName(PROPERTIES_ELEMENT_NAME);
-    double v = model->getInverseMass();
-    setPreciseVectorAttribute(child,&v,1,MODEL_IMASS_ATTRIBUTE_NAME);
-    v = model->getInverseMomentOfInertia();
-    setPreciseVectorAttribute(child,&v,1,MODEL_IMOMENT_ATTRIBUTE_NAME);
-    element->AddNestedElement(child);
-
-    // transformations from source to model
-    child = vtkSmartPointer<vtkXMLDataElement>::New();
-    child->SetName(TRANSFORM_ELEMENT_NAME);
-    double translate[3];
-    model->getTranslate(translate);
-    setPreciseVectorAttribute(child,translate,3,MODEL_TRANSLATE_ATTRIBUTE_NAME);
-    v = model->getScale();
-    setPreciseVectorAttribute(child,&v,1,MODEL_SCALE_ATTRIBUTE_NAME);
-    element->AddNestedElement(child);
 
     return element;
 }
@@ -231,7 +341,13 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
     vtkSmartPointer<vtkXMLDataElement> child = vtkSmartPointer<vtkXMLDataElement>::New();
     child->SetName(PROPERTIES_ELEMENT_NAME);
     if (!isGroup) {
-        QString modelId = "#" + modelIds.constFind(object->getModel()).value();
+        QString modelId("#");
+        QHash< const SketchModel *, QString >::const_iterator itr =
+                modelIds.constFind(object->getModel());
+        if (itr == modelIds.constEnd())
+            std::cout << "Error finding model." << std::endl;
+        QString idx = itr.value();
+        modelId = modelId.append(idx);
         child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
     }
     // Current thoughts: collision groups should be recreated from effects placed on objects being recreated.
@@ -512,6 +628,62 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataEl
         transforms->AddNestedElement(roomToEye);
         roomToEye->Delete();
     }
+    case 3: // in 4 we completely changed how models are saved (and stored in the program)
+        // rewrite all models
+    {
+        vtkXMLDataElement *modelMgr =
+                root->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
+        if (modelMgr == NULL) return XML_TO_DATA_FAILURE;
+        for (int i = 0; i < modelMgr->GetNumberOfNestedElements(); i++)
+        {
+            vtkXMLDataElement *model = modelMgr->GetNestedElement(i);
+            if (QString(model->GetName()) == QString(MODEL_ELEMENT_NAME))
+            {
+                vtkXMLDataElement *transform =
+                        model->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
+                if (transform == NULL) return XML_TO_DATA_FAILURE;
+                // even though we are taking it out, it should have been there
+                // if it wasn't there, the file was corrupted
+                model->RemoveNestedElement(transform);
+                vtkSmartPointer< vtkXMLDataElement > props =
+                        model->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+                props->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME,"false");
+                vtkSmartPointer< vtkXMLDataElement > source =
+                        model->FindNestedElementWithName(MODEL_SOURCE_ELEMENT_NAME);
+                // if source is null, this is doomed.  Source's information has to
+                // be formatted slightly differently in the new version.
+                if (source == NULL) return XML_TO_DATA_FAILURE;
+                const char *src = source->GetCharacterData();
+                if (QString(src).startsWith("VTK"))
+                {
+                    modelMgr->RemoveNestedElement(model);
+                    i--;
+                }
+                else
+                {
+                    model->RemoveNestedElement(source);
+                    vtkSmartPointer< vtkXMLDataElement > conformationElt
+                            = vtkSmartPointer< vtkXMLDataElement >::New();
+                    conformationElt->SetName(MODEL_CONFORMATION_ELEMENT_NAME);
+                    conformationElt->SetIntAttribute(MODEL_CONFORMATION_NUMBER_ATTR_NAME,0);
+                    conformationElt->AddNestedElement(source);
+                    vtkSmartPointer< vtkXMLDataElement > resElt
+                            = vtkSmartPointer< vtkXMLDataElement >::New();
+                    resElt->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
+                    resElt->SetAttribute(ID_ATTRIBUTE_NAME,
+                                         getResolutionString(ModelResolution::FULL_RESOLUTION));
+                    resElt->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
+                                         src);
+                    conformationElt->AddNestedElement(resElt);
+                    model->AddNestedElement(conformationElt);
+                    vtkXMLDataElement *props =
+                            model->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+                    props->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME, "false");
+                }
+            }
+        }
+
+    }
     }
     return XML_TO_DATA_SUCCESS;
 }
@@ -594,50 +766,91 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
     }
     // need addmodel method on project...
     QString source, id;
-    double invMass, invMoment, scale;
-    q_vec_type trans; // calculated to center object... we really don't need it (yet)
+    double invMass, invMoment;
+    bool shouldRotate;
     id = elem->GetAttribute(ID_ATTRIBUTE_NAME);
-    if (id == NULL) {
+    if (id == NULL) return XML_TO_DATA_FAILURE;
+
+    vtkXMLDataElement *props = elem->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+    if (props == NULL) return XML_TO_DATA_FAILURE;
+    if (! props->GetScalarAttribute(MODEL_IMASS_ATTRIBUTE_NAME,invMass) )
         return XML_TO_DATA_FAILURE;
-    }
-    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
-        vtkXMLDataElement *child = elem->GetNestedElement(i);
-        if (QString(child->GetName()) == QString(MODEL_SOURCE_ELEMENT_NAME)) {
-            source = child->GetCharacterData();
-            if (source == NULL) {
-                return XML_TO_DATA_FAILURE;
+    if (! props->GetScalarAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,invMoment) )
+        return XML_TO_DATA_FAILURE;
+    const char *c = props->GetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME);
+    if (c == NULL) return XML_TO_DATA_FAILURE;
+    if (QString(c).toLower() == QString("true"))
+        shouldRotate = true;
+    else
+        shouldRotate = false;
+
+    QScopedPointer< SketchModel > model(new SketchModel(invMass, invMoment, shouldRotate));
+
+    int conformations = 0;
+    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++)
+    {
+        vtkXMLDataElement *conf = elem->GetNestedElement(i);
+        if (conf->GetName() == QString(MODEL_CONFORMATION_ELEMENT_NAME))
+        {
+            conformations++;
+            vtkXMLDataElement *src =
+                    conf->FindNestedElementWithName(MODEL_SOURCE_ELEMENT_NAME);
+            if (src == NULL) return XML_TO_DATA_FAILURE;
+            const char *srcString = src->GetCharacterData();
+            if (srcString == NULL) return XML_TO_DATA_FAILURE;
+
+            vtkXMLDataElement *fullRes =
+                    conf->FindNestedElementWithNameAndAttribute(
+                        MODEL_RESOLUTION_ELEMENT_NAME,
+                        ID_ATTRIBUTE_NAME,
+                        getResolutionString(ModelResolution::FULL_RESOLUTION));
+            if (fullRes == NULL) return XML_TO_DATA_FAILURE;
+            const char *fileString = fullRes->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+            if (fileString == NULL) return XML_TO_DATA_FAILURE;
+
+            QString filename = proj->getProjectDir() + "/" + fileString;
+            QString source = srcString;
+            if (source == CAMERA_MODEL_KEY) {
+                model.reset(proj->getCameraModel());
+                break;
+            } else {
+                model->addConformation(source,filename);
             }
-            source = source.trimmed();
-        } else if (QString(child->GetName()) == QString(TRANSFORM_ELEMENT_NAME)) {
-            int err = child->GetVectorAttribute(MODEL_TRANSLATE_ATTRIBUTE_NAME,3,trans);
-            if (err != 3) {
-                return XML_TO_DATA_FAILURE;
+
+            for (int j = 0; j < conf->GetNumberOfNestedElements(); j++)
+            {
+                vtkXMLDataElement *elt = conf->GetNestedElement(j);
+                if (elt != src && elt != fullRes &&
+                        elt->GetName() == QString(MODEL_RESOLUTION_ELEMENT_NAME))
+                {
+                    const char *f = elt->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+                    if (f == NULL) return XML_TO_DATA_FAILURE;
+                    const char *r = elt->GetAttribute(ID_ATTRIBUTE_NAME);
+                    if (r == NULL) return XML_TO_DATA_FAILURE;
+                    ModelResolution::ResolutionType res = getResolutionTypeFromId(r);
+                    QString fName = proj->getProjectDir() + "/" + f;
+                    model->addSurfaceFileForResolution(model->getNumberOfConformations()-1,
+                                                       res,fName);
+                }
             }
-            if (!child->GetScalarAttribute(MODEL_SCALE_ATTRIBUTE_NAME,scale) )
-                return XML_TO_DATA_FAILURE;
-        } else if (QString(child->GetName()) == QString(PROPERTIES_ELEMENT_NAME)) {
-            if (! child->GetScalarAttribute(MODEL_IMASS_ATTRIBUTE_NAME,invMass) )
-                return XML_TO_DATA_FAILURE;
-            if (! child->GetScalarAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,invMoment) )
-                return XML_TO_DATA_FAILURE;
         }
     }
-    SketchModel *model = NULL;
-    QString src = source;
-    if (src == QString(CAMERA_MODEL_KEY)) { // load in the camera model
-        model = proj->getCameraModel();
-    } else if (!src.startsWith("VTK")) {
-        // trans not used right now
-        model = proj->addModelFromFile(proj->getProjectDir() + "/" + source,invMass,invMoment,scale);
-    } else {
-        return XML_TO_DATA_SUCCESS;
+
+    if (model.data() != NULL && conformations > 0)
+    {
+        modelIds.insert("#" + id,model.data());
     }
-    if (model != NULL) {
-        modelIds.insert("#" + id,model);
-        return XML_TO_DATA_SUCCESS;
-    } else {
+    else
+    {
         return XML_TO_DATA_FAILURE;
     }
+
+    if (model.data() != proj->getCameraModel())
+    {
+        proj->addModel(model.data());
+    }
+    model.take();
+    return XML_TO_DATA_SUCCESS;
 }
 
 inline void matrixFromDoubleArray(vtkMatrix4x4 *mat, double *data) {

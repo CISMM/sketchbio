@@ -76,7 +76,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         // eventually we will just load the example from a project directory...
         // example of keyframes this time
 
-        SketchModel *model = project->addModelFromFile("./models/1m1j.obj",INVERSEMASS,INVERSEMOMENT,1);
+        SketchModel *model = project->addModelFromFile("PDB:1m1j","./models/1m1j.obj",INVERSEMASS,INVERSEMOMENT);
         q_vec_type position = {200,0,0};
         q_type orientation;
         q_from_axis_angle(orientation,0,1,0,0);
@@ -212,7 +212,7 @@ void SimpleView::toggleWorldCollisionTestsOn() {
 
 SketchObject *SimpleView::addObject(QString name)
 {
-    return project->addObject(name);
+    return project->addObject(name,name);
 }
 
 bool SimpleView::addObjects(QVector<QString> names)

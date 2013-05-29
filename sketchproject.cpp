@@ -5,6 +5,7 @@
 #include <vtkConeSource.h>
 #include <vtkExtractEdges.h>
 #include <vtkProperty.h>
+#include <vtkPolyDataMapper.h>
 #include "sketchioconstants.h"
 #include <limits>
 #include <QDebug>
@@ -70,7 +71,7 @@ public:
     virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
-    virtual void getAABoundingBox(double bb[]) {}
+    virtual void getBoundingBox(double bb[]) {}
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
     virtual SketchObject *deepCopy() { return NULL; }
 
@@ -231,31 +232,38 @@ void SketchProject::timestep(double dt) {
     }
 }
 
-SketchModel *SketchProject::addModelFromFile(QString fileName, double iMass, double iMoment, double scale) {
+SketchModel *SketchProject::addModel(SketchModel *model)
+{
+    models->addModel(model);
+    return model;
+}
+
+
+SketchModel *SketchProject::addModelFromFile(QString source, QString fileName,
+                                             double iMass, double iMoment) {
     QFile file(fileName);
 //    qDebug() << filename;
     QString localname = fileName.mid(fileName.lastIndexOf("/") +1).toLower();
     QString fullpath = projectDir->absoluteFilePath(localname);
 //    qDebug() << fullpath;
-    if (projectDir->entryList().contains(localname, Qt::CaseInsensitive) || file.copy(fileName,fullpath)) {
-        SketchModel *model = NULL;
-        if (fileName.endsWith("obj", Qt::CaseInsensitive)) {
-            model = models->modelForOBJSource(fullpath,iMass,iMoment,scale);
-        }
+    if (projectDir->entryList().contains(localname, Qt::CaseInsensitive)
+            || file.copy(fileName,fullpath)) {
+        SketchModel *model = models->makeModel(source,fullpath,iMass, iMoment);
         return model;
     } else {
         throw "Cannot create local copy of model file";
     }
 }
 
-SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos, const q_type orient) {
+SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
+                                       const q_type orient) {
     int myIdx = world->getNumberOfObjects();
     SketchObject *object = world->addObject(model,pos,orient);
     object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
     return object;
 }
 
-SketchObject *SketchProject::addObject(QString filename) {
+SketchObject *SketchProject::addObject(QString source,QString filename) {
     QFile file(filename);
 //    qDebug() << filename;
     QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
@@ -263,7 +271,7 @@ SketchObject *SketchProject::addObject(QString filename) {
     QFile localfile(fullpath);
 //    qDebug() << fullpath;
     if (localfile.exists() || file.copy(filename,fullpath)) {
-        SketchModel *model = models->modelForOBJSource(fullpath);
+        SketchModel *model = models->makeModel(source,filename,INVERSEMASS,INVERSEMOMENT);
 
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;
@@ -288,7 +296,7 @@ SketchObject *SketchProject::addObject(SketchObject *object) {
     world->addObject(object);
     // this is for when the object is read in from a file, this method is called
     // with the objects instead of addCamera.  So this needs to recognize cameras
-    if (object->getModel() == models->getCameraModel()) {
+    if (object->getModel() == models->getCameraModel(*projectDir)) {
         cameras.insert(object,vtkSmartPointer<vtkCamera>::New());
         // cameras are not visible! make sure they are not.
         if (object->isVisible()) {
@@ -306,14 +314,14 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
         // notes: no good cross-platform way to check if file exists
         // VTK prints out errors but does not throw anything, so we must
         // do error checking before calling this
-        addObject(filenames[i]);
+        addObject(filenames[i],filenames[i]);
     }
 
     return true;
 }
 
 SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient) {
-    SketchModel *model = models->getCameraModel();
+    SketchModel *model = models->getCameraModel(*projectDir);
     SketchObject *obj = addObject(model,pos,orient);
     // cameras are invisible (from the animation's standpoint)
     obj->setIsVisible(false);

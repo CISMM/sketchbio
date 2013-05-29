@@ -23,7 +23,8 @@ public:
 private: // no other code should call these (this is the reason for making this a class
     static vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &dir,
                                                 QHash<const SketchModel *, QString> &modelIds);
-    static vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir, const QString &id);
+    static vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir,
+                                         const QString &id);
 
     static vtkXMLDataElement *transformManagerToXML(const TransformManager *transforms);
 

@@ -3,6 +3,9 @@
  * This test makes sure that PQP is detecting the deformation collisions correctly
  * Author: Shawn Waldon
  *
+ * TODO --- redo this test now that we no longer use PQP_Update and handle ids
+ * differently
+ *
  */
 
 #include <iostream>
@@ -15,7 +18,7 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkSphereSource.h>
 #include <vtkTetra.h>
-#include "../modelmanager.h"
+#include "../sketchmodel.h"
 #include <PQP.h>
 
 using namespace std;
@@ -75,17 +78,17 @@ int main() {
     vtkSmartPointer<vtkPolyData> tetra;
 //    makeTetrahedron(&tetra);
     tetra = sphere->GetOutput();
-    PQP_Model model, model2;
-    QHash<int,int> hash;
-    makePQP_Model(model,*tetra,&hash);
+    QScopedPointer< PQP_Model > model(new PQP_Model()),
+            model2(new PQP_Model());
+    ModelUtilities::makePQP_Model(model.data(),tetra);
 #ifdef PQP_UPDATE_EPSILON
-    makePQP_Model(model2,*tetra);
+    ModelUtilities::makePQP_Model(model2.data(),tetra);
 #endif
     PQP_REAL IDENT[3][3] = {{1,0,0},{0,1,0},{0,0,1}};
     PQP_REAL t1[3] = {0,0,0}, t2[3] = {.5,.5,-.3};
     PQP_CollideResult cr;
-    PQP_Collide(&cr,IDENT,t1,&model,IDENT,t2,&model,PQP_ALL_CONTACTS);
-    printResults(cr,model);
+    PQP_Collide(&cr,IDENT,t1,model.data(),IDENT,t2,model.data(),PQP_ALL_CONTACTS);
+    printResults(cr,*model.data());
 
     vtkSmartPointer<vtkPoints> pts = tetra->GetPoints();
     for (int i = 0; i < pts->GetNumberOfPoints(); i++) {
@@ -105,13 +108,13 @@ int main() {
     // update model
 
 #ifndef PQP_UPDATE_EPSILON
-    makePQP_Model(model2,*tetra, &hash);
+    ModelUtilities::makePQP_Model(model2.data(),tetra);
     cout << "Using original PQP rebuild" << endl;
 #else
-    updatePQP_Model(model2,*tetra);
+    ModelUtilities::updatePQP_Model(model2.data(),tetra);
     cout << "Using new PQP update" << endl;
 #endif
-    PQP_Collide(&cr2,IDENT,t1,&model,IDENT,t2,&model2,PQP_ALL_CONTACTS);
-    printResults(cr2,model2);
+    PQP_Collide(&cr2,IDENT,t1,model.data(),IDENT,t2,model2.data(),PQP_ALL_CONTACTS);
+    printResults(cr2,*model2.data());
     return 0;
 }

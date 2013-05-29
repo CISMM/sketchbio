@@ -1,6 +1,7 @@
 #include "worldmanager.h"
 #include <sketchtests.h>
 #include <vtkTubeFilter.h>
+#include <vtkPolyDataMapper.h>
 #include <QDebug>
 #include <limits>
 
@@ -364,7 +365,7 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
         if (obj->numInstances() == 1) {
             obj->getWorldSpacePointInModelCoordinates(pos1,pos1);
         }
-        obj->getAABoundingBox(bb);
+        obj->getBoundingBox(bb);
         dist = distOutsideAABB(pos1,bb);
         if (dist < distance) {
             distance = dist;

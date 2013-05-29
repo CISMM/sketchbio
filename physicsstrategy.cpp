@@ -231,12 +231,13 @@ static inline void computeMeanCollisionPoint(PQP_REAL mean[3], PQP_CollideResult
             m1Tri= cr->Id1(i);
         else
             m1Tri = cr->Id2(i);
-        int triId1;
+        int triId1 = m1Tri;
+        /*
 #ifndef PQP_UPDATE_EPSILON
         triId1 = model1->getTriIdToTriIndexHash()->value(m1Tri);
 #else
         triId1 = m1->idsToIndices(m1Tri);
-#endif
+#endif  */
         mean[0] += m1->tris[triId1].p1[0] + m1->tris[triId1].p2[0] + m1->tris[triId1].p3[0];
         mean[1] += m1->tris[triId1].p1[1] + m1->tris[triId1].p2[1] + m1->tris[triId1].p3[1];
         mean[2] += m1->tris[triId1].p1[2] + m1->tris[triId1].p2[2] + m1->tris[triId1].p3[2];
@@ -267,12 +268,13 @@ static inline void computeCollisonPointCovariance(PQP_REAL mean[3], PQP_CollideR
                 } else {
                     m1Tri = cr->Id2(k);
                 }
-                int triId1;
+                int triId1 = m1Tri;
+                /*
 #ifndef PQP_UPDATE_EPSILON
                 triId1 = model1->getTriIdToTriIndexHash()->value(m1Tri);
 #else
                 triId1 = m1->idsToIndices(m1Tri);
-#endif
+#endif          */
                 cov[i][j] += (mean[i] - m1->tris[triId1].p1[i]) *
                              (mean[j] - m1->tris[triId1].p1[j])
                           +  (mean[i] - m1->tris[triId1].p2[i]) *
@@ -295,8 +297,8 @@ static inline void applyPCACollisionResponseForce(SketchObject *o1, SketchObject
     // get the collision models:
     SketchModel *model1 = o1->getModel();
     SketchModel *model2 = o2->getModel();
-    PQP_Model *m1 = model1->getCollisionModel();
-    PQP_Model *m2 = model2->getCollisionModel();
+    PQP_Model *m1 = model1->getCollisionModel(o1->getModelConformation());
+    PQP_Model *m2 = model2->getCollisionModel(o2->getModelConformation());
 
     // get object's orientations
     q_type quat1, quat2;
@@ -358,8 +360,8 @@ static inline void applyPCACollisionResponseForce(SketchObject *o1, SketchObject
 static inline void applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
                                                PQP_CollideResult *cr, QSet<int> &affectedGroups) {
     // get the collision models:
-    PQP_Model *pqp_model1 = o1->getModel()->getCollisionModel();
-    PQP_Model *pqp_model2 = o2->getModel()->getCollisionModel();
+    PQP_Model *pqp_model1 = o1->getModel()->getCollisionModel(o1->getModelConformation());
+    PQP_Model *pqp_model2 = o2->getModel()->getCollisionModel(o2->getModelConformation());
 
     // get object's orientations
     q_type quat1, quat2;

@@ -29,14 +29,14 @@ private:
     // Writes code to create a base object to copy for each model and assigns them to the list modelObjects
     // with indices that populate the given QHash so that a model's value in the map is its base object's
     // index in the list
-    static bool writeCreateModels(QFile &file, QHash<SketchModel *, int> &modelIdxs, const ModelManager *models);
+    static bool writeCreateModels(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs, const ModelManager *models);
     // Writes code to create an object in Blender for each SketchObject (for now assumes no groups)
     // stores the index of each object in the myObjects list in the objectIdxs QHash
-    static bool writeCreateObjects(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+    static bool writeCreateObjects(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
                                    QHash<SketchObject *, int> &objectIdxs, SketchProject *proj);
     // Writes code to create a single object and recurse on groups (only objects with the an individual model
     // are keyframed, groups are ignored and each object within them is added)
-    static void writeCreateObject(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+    static void writeCreateObject(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
                                   QHash<SketchObject *, int> &objectIdxs, int &objectsLen, SketchProject *proj,
                                   SketchObject *obj);
     // Writes a keyframe for each object at each frame with its position at that time from SketchBio

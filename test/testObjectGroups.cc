@@ -3,19 +3,32 @@
 
 #include <QDebug>
 #include <QScopedPointer>
+#include <QDir>
 
 #include <vtkSphereSource.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkPolyDataWriter.h>
 #include <vtkSmartPointer.h>
 
 // declare these -- they are at the bottom of the file, but I wanted main at the top
 //                  where I can find it
 int testModelInstance();
 int testObjectGroup();
+int testModelInstanceBoundingBoxCorrection();
 
-int main() {
+int main(int argc, char *argv[]) {
+    QDir dir = QDir::current();
+    // change the working dir to the dir where the test executable is
+    QString executable = dir.absolutePath() + "/" + argv[0];
+    int last = executable.lastIndexOf("/");
+    if (QDir::setCurrent(executable.left(last)))
+        dir = QDir::current();
+    std::cout << "Working directory: " <<
+                 dir.absolutePath().toStdString().c_str() << std::endl;
     int errors = 0;
     errors += testModelInstance();
     errors += testObjectGroup();
+    errors += testModelInstanceBoundingBoxCorrection();
     return errors;
 }
 
@@ -512,7 +525,7 @@ inline int testModelInstanceActions(ModelInstance *obj) {
     double bb[6];
     q_vec_type pos;
     obj->getPosition(pos); // position set in getSketchObjectActions
-    obj->getAABoundingBox(bb);
+    obj->getBoundingBox(bb);
     for (int i = 0; i < 3; i++) {
         // due to tessalation, bounding box has some larger fluctuations.
         if (Q_ABS(bb[2*i+1] - bb[2*i] - 8) > .025) {
@@ -520,7 +533,9 @@ inline int testModelInstanceActions(ModelInstance *obj) {
             qDebug() << "Object bounding box wrong";
         }
         // average of fluctuations has larger fluctuation
-        if (Q_ABS((bb[2*i+1] +bb[2*i])/2 - pos[i]) > .05) {
+        // note model instance bounding box is now an OBB that fits the
+        // untransformed model...
+        if (Q_ABS((bb[2*i+1] +bb[2*i])/2) > .05) {
             errors++;
             qDebug() << "Object bounding box position wrong";
         }
@@ -541,7 +556,17 @@ inline SketchModel *getSphereModel() {
     sourceData->SetInputConnection(source->GetOutputPort());
     sourceData->SetTransform(transform);
     sourceData->Update();
-    return new SketchModel("abc",sourceData,1.0,1.0);
+    vtkSmartPointer< vtkPolyDataWriter > writer =
+            vtkSmartPointer< vtkPolyDataWriter >::New();
+    writer->SetInputConnection(sourceData->GetOutputPort());
+    QString fileName = "object_tests_sphere_model.vtk";
+    writer->SetFileName(fileName.toStdString().c_str());
+    writer->SetFileTypeToASCII();
+    writer->Update();
+    writer->Write();
+    SketchModel *model = new SketchModel(1.0,1.0);
+    model->addConformation(fileName,fileName);
+    return model;
 }
 
 //#########################################################################
@@ -840,5 +865,30 @@ inline int testObjectGroup() {
         errors += testObjectGroupSubGroup();
     }
     qDebug() << "Found " << errors << " errors in ObjectGroup.";
+    return errors;
+}
+
+//#########################################################################
+// This is really testing something in SketchModel, whether the bounds
+// rotation/translation works right, but has to be tested here due to
+// the SketchObject having the method
+int testModelInstanceBoundingBoxCorrection()
+{
+    int errors = 0;
+    QScopedPointer< SketchModel > model(new SketchModel(1,1));
+    model->addConformation("models/1m1j.obj","models/1m1j.obj");
+    QScopedPointer< ModelInstance > instance(new ModelInstance(model.data(),0));
+    double bb[6];
+    instance->getBoundingBox(bb);
+    if (bb[0] >= 0 || bb[2] >= 0 || bb[4] >= 0)
+    {
+        qDebug() << "Bounding box minimum greater than 0";
+        errors++;
+    }
+    if (bb[1] <= 0 || bb[3] <= 0 || bb[5] <= 0)
+    {
+        qDebug() << "Bounding box maximum less than 0";
+        errors++;
+    }
     return errors;
 }

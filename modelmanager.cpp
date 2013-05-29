@@ -1,36 +1,37 @@
 
 /*
  *
- * This class was originally written for a homework assignment in Physically Based Modeling (COMP768)
+ * This class was originally written for a homework assignment in
+ * Physically Based Modeling (COMP768)
  * Author: Shawn Waldon
  *
  */
 
 #include "modelmanager.h"
+#include "sketchmodel.h"
 
 #include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkCellArray.h>
 #include <vtkOBJReader.h>
 #include <vtkConeSource.h>
+#include <vtkPolyDataWriter.h>
 
 #include <QDebug>
+#include <QDir>
+#include <QScopedPointer>
 
 
 ModelManager::ModelManager() :
-    models()
+    models(),
+    modelSourceToIdx()
 {
 }
 
 ModelManager::~ModelManager() {
-    SketchModel * model;
-    QMutableHashIterator<QString, SketchModel *> i(models);
-     while (i.hasNext()) {
-         i.next();
-         model = i.value();
-         i.setValue((SketchModel *) NULL);
-         delete model;
-     }
-     models.clear();
+    modelSourceToIdx.clear();
+    qDeleteAll(models);
+    models.clear();
 }
 
 /*****************************************************************************
@@ -41,10 +42,10 @@ ModelManager::~ModelManager() {
   * guaranteed to have the key CAMERA_MODEL_KEY in the models hash.
   *
   ****************************************************************************/
-SketchModel *ModelManager::getCameraModel() {
+SketchModel *ModelManager::getCameraModel(QDir &projectDir) {
     QString cameraKey(CAMERA_MODEL_KEY);
-    if (models.contains(cameraKey)) {
-        return models.value(cameraKey);
+    if (modelSourceToIdx.contains(cameraKey)) {
+        return models[modelSourceToIdx.value(cameraKey)];
     } else {
         // create the "camera"
         vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
@@ -54,23 +55,20 @@ SketchModel *ModelManager::getCameraModel() {
         cone->SetResolution(4);
         cone->CappingOff();
         cone->Update();
-        vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
-                vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-        transformPD->SetInputConnection(cone->GetOutputPort());
-        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-        transform->Identity();
-        transformPD->SetTransform(transform);
-        transformPD->Update();
+        vtkSmartPointer<vtkPolyDataWriter> writer
+                = vtkSmartPointer<vtkPolyDataWriter>::New();
+        QString filename = projectDir.absoluteFilePath(cameraKey + ".vtk");
+        writer->SetInputConnection(cone->GetOutputPort());
+        writer->SetFileName(filename.toStdString().c_str());
+        writer->SetFileTypeToASCII();
+        writer->Update();
+        writer->Write();
         // initialize the model data
-        SketchModel *sModel = new SketchModel(cameraKey,transformPD,INVERSEMASS,INVERSEMOMENT);
-        // initialize the collision model
-        makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput())
-#ifndef PQP_UPDATE_EPSILON
-                      , sModel->getTriIdToTriIndexHash()
-#endif
-                      );
-        // insert into the has and return the new model
-        models.insert(cameraKey,sModel);
+        SketchModel *sModel = new SketchModel(INVERSEMASS,INVERSEMOMENT,false);
+        sModel->addConformation(cameraKey,filename);
+        // insert into datastructure and return the new model
+        models.append(sModel);
+        modelSourceToIdx.insert(cameraKey,models.size()-1);
         return sModel;
     }
 }
@@ -78,22 +76,18 @@ SketchModel *ModelManager::getCameraModel() {
 /*****************************************************************************
   *
   * This method creates a SketchModel from the given vtk source using the given
-  * scale factor.  If there is already a model using a vtk source of the same class name, this
+  * scale factor.  If there is already a model using a vtk source of the same
+  * class name, this
   * method simply returns the old one (ignores scale for now).
   *
-  * source  - the VTK source that should be used to generate the geometry for
-  *             the model
-  * scale   - the scale at which the source should be interpreted
-  *
   ****************************************************************************/
-SketchModel *ModelManager::modelForVTKSource(vtkPolyDataAlgorithm *source, double scale) {
+SketchModel *ModelManager::modelForVTKSource(QString sourceName,
+                                             vtkPolyDataAlgorithm *source,
+                                             double scale,
+                                             QDir &dir) {
 
-    const char *src = source->GetClassName();
-    QString srcString(src);
-    srcString = "VTK: " + srcString;
-
-    if (models.contains(srcString)) {
-        return models[srcString];
+    if (modelSourceToIdx.contains(sourceName)) {
+        return models[modelSourceToIdx.value(sourceName)];
     }
 
     vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
@@ -107,77 +101,60 @@ SketchModel *ModelManager::modelForVTKSource(vtkPolyDataAlgorithm *source, doubl
 
     transformPD->SetTransform(transform);
     transformPD->Update();
+    vtkSmartPointer<vtkPolyDataWriter> writer
+            = vtkSmartPointer<vtkPolyDataWriter>::New();
+    QString filename = dir.absoluteFilePath(sourceName + ".vtk");
+    writer->SetInputConnection(transformPD->GetOutputPort());
+    writer->SetFileName(filename.toStdString().c_str());
+    writer->SetFileTypeToASCII();
+    writer->Update();
+    writer->Write();
 
-    SketchModel *sModel = new SketchModel(srcString,transformPD,INVERSEMASS,INVERSEMOMENT);
+    SketchModel *sModel = new SketchModel(INVERSEMASS,INVERSEMOMENT);
+    sModel->addConformation(sourceName,filename);
 
-    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput())
-#ifndef PQP_UPDATE_EPSILON
-                  , sModel->getTriIdToTriIndexHash()
-#endif
-                  );
-
-    models.insert(srcString,sModel);
+    models.append(sModel);
+    modelSourceToIdx.insert(sourceName,models.size()-1);
 
     return sModel;
 }
 
-/*****************************************************************************
-  *
-  * This method creates a SketchModel from the given obj file using the given
-  * scale factor.  If there is already a model using the given OBJ file, this
-  * method simply returns the old one (ignores scale for now).
-  *
-  * objFile - the filename of the obj file (should be absolute path, but in
-  *             the project folder
-  * scale   - the scale at which the obj should be interpreted
-  *
-  ****************************************************************************/
-SketchModel *ModelManager::modelForOBJSource(QString objFile, double iMass, double iMoment, double scale) {
-    if (models.contains(objFile)) {
-        return models[objFile];
+SketchModel *ModelManager::makeModel(QString source, QString filename,
+                                     double iMass, double iMoment)
+{
+    if (modelSourceToIdx.contains(source))
+        return models[modelSourceToIdx.value(source)];
+    else
+    {
+        SketchModel *model = new SketchModel(iMass, iMoment);
+        model->addConformation(source,filename);
+        models.append(model);
+        modelSourceToIdx.insert(source,models.size()-1);
+        return model;
     }
+}
 
-    vtkSmartPointer<vtkTransformPolyDataFilter> transformPD =
-            vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-    // set the correct input connection
-    vtkSmartPointer<vtkOBJReader> polyDataSrc = vtkSmartPointer<vtkOBJReader>::New();
-    polyDataSrc->SetFileName(objFile.toStdString().c_str());
-    polyDataSrc->Update();
+SketchModel *ModelManager::addConformation(QString originalSource,
+                                            QString newSource,
+                                            QString newFilename)
+{
+    if (modelSourceToIdx.contains(originalSource))
+    {
+        SketchModel *model = models[modelSourceToIdx.value(originalSource)];
+        model->addConformation(newSource,newFilename);
+        return model;
+    }
+    return NULL;
+}
 
-    transformPD->SetInputConnection(polyDataSrc->GetOutputPort());
-
-
-    // get the bounding box of the polydata so we can recenter it
-    vtkSmartPointer<vtkPolyData> polyData = polyDataSrc->GetOutput();
-    double bb[6];
-    polyData->GetBounds(bb);
-
-    // set the scale of the transformation
-    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
-    transform->Identity();
-    transform->PostMultiply();
-    // make sure the object is centered
-    transform->Translate(
-                -(bb[0]+bb[1])/2,
-                -(bb[2]+bb[3])/2,
-                -(bb[4]+bb[5])/2);
-    // apply the requested scale factor
-    transform->Scale(scale,scale,scale);
-    transformPD->SetTransform(transform);
-    transformPD->Update();
-
-    // remember the mass and moment of inertia are inverses!!!!!!!!
-    SketchModel * sModel = new SketchModel(objFile,transformPD,iMass,iMoment);
-
-    makePQP_Model(*(sModel->getCollisionModel()),*(transformPD->GetOutput())
-              #ifndef PQP_UPDATE_EPSILON
-                  , sModel->getTriIdToTriIndexHash()
-              #endif
-                  );
-
-    models.insert(objFile,sModel);
-
-    return sModel;
+void ModelManager::addModel(SketchModel *model)
+{
+    int idx = models.size();
+    models.append(model);
+    for (int i = 0; i < model->getNumberOfConformations(); i++)
+    {
+        modelSourceToIdx.insert(model->getSource(i),idx);
+    }
 }
 
 /*****************************************************************************
@@ -186,8 +163,8 @@ SketchModel *ModelManager::modelForOBJSource(QString objFile, double iMass, doub
   * models in the ModelManager.
   *
   ****************************************************************************/
-QHashIterator<QString,SketchModel *> ModelManager::getModelIterator() const {
-    return QHashIterator<QString,SketchModel *>(models);
+QVectorIterator<SketchModel *> ModelManager::getModelIterator() const {
+    return QVectorIterator<SketchModel *>(models);
 }
 
 /*****************************************************************************
@@ -199,179 +176,3 @@ int ModelManager::getNumberOfModels() const {
     return models.size();
 }
 
-
-/*****************************************************************************
-  *
-  * This function initializes the PQP_Model from the vtkPolyData object passed
-  * to it.
-  *
-  * m1 a reference parameter to an empty PQP_Model to initialize
-  * polyData a reference parameter to a vtkPolyData to pull the model data from
-  *
-  ****************************************************************************/
-void makePQP_Model(PQP_Model &m1, vtkPolyData &polyData
-#ifndef PQP_UPDATE_EPSILON
-                   , QHash<int, int> *idToIndexHash
-#endif
-                   ) {
-
-    int numPoints = polyData.GetNumberOfPoints();
-
-    // get points
-    double *points = new double[3*numPoints];
-    for (int i = 0; i < numPoints; i++) {
-        polyData.GetPoint(i,&points[3*i]);
-    }
-
-    int numStrips = polyData.GetNumberOfStrips();
-    int numPolygons = polyData.GetNumberOfPolys();
-    if (numStrips > 0) {  // if we have triangle strips, great, use them!
-        vtkCellArray *strips = polyData.GetStrips();
-
-        m1.BeginModel();
-        vtkIdType nvertices, *pvertices, loc = 0;
-        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
-        int triId = 0;
-        for (int i = 0; i < numStrips; i++) {
-            strips->GetCell( loc, nvertices, pvertices );
-            // todo, refactor to getNextCell for better performance
-
-            p1[0] = points[3*pvertices[0]];
-            p1[1] = points[3*pvertices[0]+1];
-            p1[2] = points[3*pvertices[0]+2];
-            p2[0] = points[3*pvertices[1]];
-            p2[1] = points[3*pvertices[1]+1];
-            p2[2] = points[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
-                p3[0] = points[3*pvertices[j]];
-                p3[1] = points[3*pvertices[j]+1];
-                p3[2] = points[3*pvertices[j]+2];
-                // ensure counterclockwise points
-                if (j % 2 == 0)
-                    m1.AddTri(p1,p2,p3,triId++);
-                else
-                    m1.AddTri(p1,p3,p2,triId++);
-                PQP_REAL *tmp = p1;
-                p1 = p2;
-                p2 = p3;
-                p3 = tmp;
-            }
-            loc += nvertices+1;
-        }
-        m1.EndModel();
-    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
-        vtkCellArray *polys = polyData.GetPolys();
-
-        m1.BeginModel();
-        vtkIdType nvertices, *pvertices, loc = 0;
-        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
-        int triId = 0;
-        for (int i = 0; i < numPolygons; i++) {
-            polys->GetCell(loc,nvertices,pvertices);
-            p1[0] = points[3*pvertices[0]];
-            p1[1] = points[3*pvertices[0]+1];
-            p1[2] = points[3*pvertices[0]+2];
-            p2[0] = points[3*pvertices[1]];
-            p2[1] = points[3*pvertices[1]+1];
-            p2[2] = points[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
-                p3[0] = points[3*pvertices[j]];
-                p3[1] = points[3*pvertices[j]+1];
-                p3[2] = points[3*pvertices[j]+2];
-                m1.AddTri(p1,p2,p3,triId++);
-                PQP_REAL *tmp = p2;
-                p2= p3;
-                p3 = tmp;
-            }
-            loc += nvertices +1;
-        }
-        m1.EndModel();
-    }
-#ifndef PQP_UPDATE_EPSILON
-    for (int i = 0; i < m1.num_tris; i++) {
-        idToIndexHash->insert(m1.tris[i].id,i);
-    }
-#endif
-
-    delete[] points;
-}
-
-
-#ifdef PQP_UPDATE_EPSILON
-/****************************************************************************
-  ***************************************************************************/
-void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
-
-    int numPoints = polyData.GetNumberOfPoints();
-
-    // get points
-    double *points = new double[3*numPoints];
-    for (int i = 0; i < numPoints; i++) {
-        polyData.GetPoint(i,&points[3*i]);
-    }
-
-    int numStrips = polyData.GetNumberOfStrips();
-    int numPolygons = polyData.GetNumberOfPolys();
-    if (numStrips > 0) {  // if we have triangle strips, great, use them!
-        vtkCellArray *strips = polyData.GetStrips();
-
-        vtkIdType nvertices, *pvertices, loc = 0;
-        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
-        int triId = 0;
-        for (int i = 0; i < numStrips; i++) {
-            strips->GetCell( loc, nvertices, pvertices );
-            // todo, refactor to getNextCell for better performance
-
-            p1[0] = points[3*pvertices[0]];
-            p1[1] = points[3*pvertices[0]+1];
-            p1[2] = points[3*pvertices[0]+2];
-            p2[0] = points[3*pvertices[1]];
-            p2[1] = points[3*pvertices[1]+1];
-            p2[2] = points[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
-                p3[0] = points[3*pvertices[j]];
-                p3[1] = points[3*pvertices[j]+1];
-                p3[2] = points[3*pvertices[j]+2];
-                // ensure counterclockwise points
-                if (j % 2 == 0)
-                    model.UpdateTri(p1,p2,p3,triId++);
-                else
-                    model.UpdateTri(p1,p3,p2,triId++);
-                PQP_REAL *tmp = p1;
-                p1 = p2;
-                p2 = p3;
-                p3 = tmp;
-            }
-            loc += nvertices+1;
-        }
-    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
-        vtkCellArray *polys = polyData.GetPolys();
-
-        vtkIdType nvertices, *pvertices, loc = 0;
-        PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
-        int triId = 0;
-        for (int i = 0; i < numPolygons; i++) {
-            polys->GetCell(loc,nvertices,pvertices);
-            p1[0] = points[3*pvertices[0]];
-            p1[1] = points[3*pvertices[0]+1];
-            p1[2] = points[3*pvertices[0]+2];
-            p2[0] = points[3*pvertices[1]];
-            p2[1] = points[3*pvertices[1]+1];
-            p2[2] = points[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
-                p3[0] = points[3*pvertices[j]];
-                p3[1] = points[3*pvertices[j]+1];
-                p3[2] = points[3*pvertices[j]+2];
-                model.UpdateTri(p1,p2,p3,triId++);
-                PQP_REAL *tmp = p2;
-                p2= p3;
-                p3 = tmp;
-            }
-            loc += nvertices +1;
-        }
-    }
-    model.UpdateModel();
-
-    delete[] points;
-}
-#endif

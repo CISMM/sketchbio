@@ -38,7 +38,7 @@ void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
             q_vec_type pos;
             double bb[6];
             obj->getPosition(pos);
-            obj->getAABoundingBox(bb);
+            obj->getBoundingBox(bb);
             pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
             SketchObject *nObj = obj->deepCopy();
             nObj->setPosition(pos);
@@ -108,7 +108,7 @@ void ObjectEditingMode::buttonReleased(int vrpn_ButtonNum)
             q_vec_type pos;
             double bb[6];
             obj->getPosition(pos);
-            obj->getAABoundingBox(bb);
+            obj->getBoundingBox(bb);
             pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
             SketchObject *nObj = obj->deepCopy();
             nObj->setPosition(pos);

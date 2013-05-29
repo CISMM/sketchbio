@@ -103,10 +103,11 @@ public:
 
     // adding things functions
     // for models
-    SketchModel *addModelFromFile(QString fileName, double iMass, double iMoment, double scale);
+    SketchModel *addModel(SketchModel *model);
+    SketchModel *addModelFromFile(QString source, QString filename, double imass, double imoment);
     // for objects
     SketchObject *addObject(SketchModel *model, const q_vec_type pos, const q_type orient);
-    SketchObject *addObject(QString filename);
+    SketchObject *addObject(QString source, QString filename);
     SketchObject *addObject(SketchObject *obj);
     SketchObject *addCamera(const q_vec_type pos, const q_type orient);
     bool addObjects(QVector<QString> filenames);
@@ -198,7 +199,7 @@ inline int SketchProject::getNumberOfTransformOps() const {
 }
 
 inline SketchModel *SketchProject::getCameraModel() {
-    return models->getCameraModel();
+    return models->getCameraModel(*projectDir);
 }
 inline const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *SketchProject::getCameras() const {
     return &cameras;

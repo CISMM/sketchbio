@@ -1,0 +1,143 @@
+<sketchbio version="1.0">
+  <models>
+    <model id="M0">
+      <source>VTK: vtkSphereSource</source>
+      <properties inverseMass="1"
+                  inverseMomentOfInertia="4e-05"></properties>
+      <transform translate="0 0 0"
+                 scale="0.001953125"></transform>
+    </model>
+    <model id="M1">
+      <source>actin.obj.decimated.0.1.obj</source>
+      <properties inverseMass="1"
+                  inverseMomentOfInertia="4e-05"></properties>
+      <transform translate="-5.299325943 -9.4355831146 12.6710186004638671875"
+                 scale="1"></transform>
+    </model>
+  </models>
+  <viewpoint>
+    <worldToRoom matrix="0.01162030962267546208 -0.020898796495 0.02683468446707481039 9.865073888756848319303572 -0.0015595877978 0.02800035873504984688 0.02248197450714502221 -4.5963596057 -0.033976869651 -0.0084327810883 0.00814568063104878504 7.873870901457245885524117 0 0 0 1"></worldToRoom>
+    <roomToEye matrix="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"></roomToEye>
+  </viewpoint>
+  <objectlist>
+    <object id="O0">
+      <properties modelid="#M1"
+                  physicsEnabled="true"></properties>
+      <transform position="22.870922564274113852889059 116.9559504299796515169873601 -253.56077531"
+                 orientation="-0.7111428153 0.01504537831884484103 0.01083025686360904703 0.70280312917447751441813"></transform>
+    </object>
+    <object id="O1">
+      <properties modelid="#M1"
+                  physicsEnabled="true"></properties>
+      <transform position="42.5974258350425003527561785 130.9347852741514941499190172 -210.49082766"
+                 orientation="-0.16423172184 -0.33524658792 -0.90557750389 0.20141263932532385561"></transform>
+    </object>
+  </objectlist>
+  <replicatorList>
+    <replicator numReplicas="14"
+                original1="#O0"
+                original2="#O1">
+      <objectlist>
+        <object id="O2">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="2"></properties>
+          <transform position="8.329044793518662004316866 165.9670886065544550547201652 -216.65353235"
+                     orientation="-0.63116390684 0.178306506358021837899 0.4518358036373103514549 0.60471755311772146246341"></transform>
+        </object>
+        <object id="O3">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="3"></properties>
+          <transform position="46.9354150487991859108660719 193.3282353698900521976611344 -202.49447276"
+                     orientation="0.4716010885090291537836 0.2484134256688790287626 0.6855388050680893963218 -0.49590294414"></transform>
+        </object>
+        <object id="O4">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="4"></properties>
+          <transform position="11.06996043388670614149305 213.1589545132644047953363042 -174.9268307"
+                     orientation="-0.40149974777 0.2992809101421275985722 0.78568510341116759576607 0.3632186774388784789025"></transform>
+        </object>
+        <object id="O5">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="5"></properties>
+          <transform position="33.611852884646040706684289 253.9357881207011473634338472 -191.31817204"
+                     orientation="0.66712672274370232727847 0.10266715784570575043 0.3029194410329395514836 -0.67278614934"></transform>
+        </object>
+        <object id="O6">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="6"></properties>
+          <transform position="27.662616149723888270273164 265.31834844039605059151654132 -143.6253314"
+                     orientation="-0.076616914589 0.349278603202196780142 0.93320329279607139305597 0.035579770356417149413"></transform>
+        </object>
+        <object id="O7">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="7"></properties>
+          <transform position="13.531405914666407852564589 307.57226867350095744768623263 -164.9438273"
+                     orientation="-0.70443825507 0.067427395873193837761 0.151539538595037215352 0.69011307719972969643152"></transform>
+        </object>
+        <object id="O8">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="8"></properties>
+          <transform position="42.3148555323073480849416228 324.79911672846219516941346228 -128.69038775"
+                     orientation="0.2664361940763174119162 0.3164422579341783503537 0.8594053276422510823096 -0.30049714591"></transform>
+        </object>
+        <object id="O9">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="9"></properties>
+          <transform position="3.62849214163833266866277 355.27339150029638403793796897 -124.91586661"
+                     orientation="-0.57468697598 0.2215310373434836999085 0.5700597809710920005344 0.5437745169252777843738"></transform>
+        </object>
+        <object id="O10">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="10"></properties>
+          <transform position="40.9661231248041275421201135 387.42161154186817384470487013 -121.458063"
+                     orientation="0.5463019625784852895123 0.208559259701930177489 0.5817929484458099764765 -0.56530891202"></transform>
+        </object>
+        <object id="O11">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="11"></properties>
+          <transform position="11.75523837664404425140674 403.37150299276243003987474367 -84.963017855"
+                     orientation="-0.30864437368 0.323096933100366356939 0.85338607412339584357142 0.2684757547836923441409"></transform>
+        </object>
+        <object id="O12">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="12"></properties>
+          <transform position="23.834911480876499467740359 446.20255133578615414080559276 -106.39070883"
+                     orientation="0.69660812653557013796046 0.051214870037621366972 0.166204011427781267463 -0.69605343309"></transform>
+        </object>
+        <object id="O13">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="13"></properties>
+          <transform position="29.674349847814013969582447 457.844682296115763620036887 -58.74698006"
+                     orientation="0.030595554882339639352 0.3480379698056055848276 0.93432546431482321747097 -0.070494044627"></transform>
+        </object>
+        <object id="O14">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="14"></properties>
+          <transform position="5.223781403164579728581884 497.58680563507613214824232273 -74.942549835"
+                     orientation="-0.68170845273 0.118275509872784692633 0.2888014524735754151585 0.66172366610554422816648"></transform>
+        </object>
+        <object id="O15">
+          <properties modelid="#M1"
+                      physicsEnabled="true"
+                      replicaNum="15"></properties>
+          <transform position="40.409959202948172674041416 518.98198538022927550628082827 -47.670910343"
+                     orientation="0.3625795183177052960488 0.2904391936903669146908 0.79368256858202834713722 -0.39274565306"></transform>
+        </object>
+      </objectlist>
+    </replicator>
+  </replicatorList>
+  <springList></springList>
+</sketchbio>

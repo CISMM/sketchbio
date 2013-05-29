@@ -1,8 +1,10 @@
 #include "sketchobject.h"
 #include <physicsstrategy.h>
 #include <sketchtests.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkExtractEdges.h>
 #include <vtkCubeSource.h>
+#include <vtkPolyDataMapper.h>
 
 //#########################################################################
 SketchObject::SketchObject() :
@@ -62,6 +64,10 @@ SketchModel *SketchObject::getModel() {
 //#########################################################################
 const SketchModel *SketchObject::getModel() const {
     return NULL;
+}
+//#########################################################################
+int SketchObject::getModelConformation() const {
+    return -1;
 }
 //#########################################################################
 vtkActor *SketchObject::getActor() {
@@ -437,16 +443,17 @@ bool SketchObject::isActive() const {
 //#########################################################################
 //#########################################################################
 //#########################################################################
-ModelInstance::ModelInstance(SketchModel *m) :
+ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     SketchObject(),
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
+    conformation(confNum),
     modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     orientedBB(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
 {
     vtkSmartPointer<vtkCubeSource> cube = vtkSmartPointer<vtkCubeSource>::New();
-    cube->SetBounds(model->getModelData()->GetOutput()->GetBounds());
+    cube->SetBounds(model->getVTKSource(conformation)->GetOutput()->GetBounds());
     cube->Update();
     vtkSmartPointer<vtkExtractEdges> cubeEdges = vtkSmartPointer<vtkExtractEdges>::New();
     cubeEdges->SetInputConnection(cube->GetOutputPort());
@@ -454,7 +461,7 @@ ModelInstance::ModelInstance(SketchModel *m) :
     orientedBB->SetInputConnection(cubeEdges->GetOutputPort());
     orientedBB->SetTransform(getLocalTransform());
     orientedBB->Update();
-    modelTransformed->SetInputConnection(model->getModelData()->GetOutputPort());
+    modelTransformed->SetInputConnection(model->getVTKSource(conformation)->GetOutputPort());
     modelTransformed->SetTransform(getLocalTransform());
     modelTransformed->Update();
     solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
@@ -486,6 +493,11 @@ vtkActor *ModelInstance::getActor() {
 }
 
 //#########################################################################
+int ModelInstance::getModelConformation() const {
+    return conformation;
+}
+
+//#########################################################################
 bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) {
     if (other->numInstances() != 1 || other->getModel() == NULL) {
         return other->collide(this,physics,pqp_flags);
@@ -496,7 +508,8 @@ bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int p
         getOrientation(r1);
         other->getPosition(t2);
         other->getOrientation(r2);
-        PQP_Collide(cr,r1,t1,model->getCollisionModel(),r2,t2,other->getModel()->getCollisionModel(),pqp_flags);
+        PQP_Collide(cr,r1,t1,model->getCollisionModel(conformation),r2,t2,
+                    other->getModel()->getCollisionModel(conformation),pqp_flags);
         if (cr->NumPairs() != 0) {
             physics->respondToCollision(this,other,cr,pqp_flags);
         }
@@ -505,8 +518,8 @@ bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int p
 }
 
 //#########################################################################
-void ModelInstance::getAABoundingBox(double bb[]) {
-    model->getModelData()->GetOutput()->GetBounds(bb);
+void ModelInstance::getBoundingBox(double bb[]) {
+    model->getVTKSource(conformation)->GetOutput()->GetBounds(bb);
 }
 
 //#########################################################################
@@ -703,7 +716,7 @@ bool ObjectGroup::collide(SketchObject *other, PhysicsStrategy *physics, int pqp
 }
 
 //#########################################################################
-void ObjectGroup::getAABoundingBox(double bb[]) {
+void ObjectGroup::getBoundingBox(double bb[]) {
     if (children.size() == 0) {
         bb[0] = bb[1] = bb[2] = bb[3] = bb[4] = bb[5] = 0;
     } else {

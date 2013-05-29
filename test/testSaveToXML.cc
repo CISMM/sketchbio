@@ -117,12 +117,16 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
                 q_print(orient2);
             }
         }
-
-        if (o2->getModel()->getDataSource() != o1->getModel()->getDataSource()) {
+        if (o2->getModelConformation() != o1->getModelConformation())
+        {
             numDifferences++;
-            if (printDiffs) {
-                cout << "Model got mixed up" << endl;
-            }
+            if (printDiffs) cout << "Model conformation changed";
+        }
+        else if (o2->getModel()->getSource(o2->getModelConformation())
+                != o1->getModel()->getSource(o1->getModelConformation()))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Model got mixed up" << endl;
         }
     } else { // test group specific stuff
         compareObjectLists(o1->getSubObjects(),o2->getSubObjects(),numDifferences,printDiffs);
@@ -361,8 +365,10 @@ int testSave1() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -374,17 +380,25 @@ int testSave1() {
 //    vtkIndent indent(0);
 //    vtkXMLUtilities::FlattenElement(root,cout,&indent);
 
-    ProjectToXML::xmlToProject(proj2.data(),root);
-
-    compareNumbers(proj1.data(),proj2.data(),retVal);
-    const SketchObject *o2 = proj2->getWorldManager()->getObjectIterator().next();
-    compareObjects(o1,o2,retVal);
-
-    if (retVal == 0) {
-        cout << "Passed test 1" << endl;
+    if (ProjectToXML::xmlToProject(proj2.data(),root) == ProjectToXML::XML_TO_DATA_FAILURE)
+    {
+        retVal++;
+        std::cout << "Failed to load project." << std::endl;
+        root->Delete();
     }
+    else
+    {
 
-    root->Delete();
+        compareNumbers(proj1.data(),proj2.data(),retVal);
+        const SketchObject *o2 = proj2->getWorldManager()->getObjectIterator().next();
+        compareObjects(o1,o2,retVal);
+
+        if (retVal == 0) {
+            cout << "Passed test 1" << endl;
+        }
+        root->Delete();
+
+    }
     return retVal;
 }
 
@@ -397,8 +411,10 @@ int testSave2() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -436,8 +452,10 @@ int testSave3() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -476,8 +494,10 @@ int testSave4() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -524,8 +544,10 @@ int testSave6() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -612,8 +634,10 @@ int testSave5() {
     QScopedPointer<SketchProject> project(new SketchProject(r)), project2(new SketchProject(r));
     project->setProjectDir("test/test1");
     project2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = project->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = project->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -661,8 +685,10 @@ int testSave7() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -722,8 +748,10 @@ int testSave8() {
     QScopedPointer<SketchProject> proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
     proj2->setProjectDir("test/test1");
+    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile("models/1m1j.obj",3*sqrt(12.0),4*sqrt(13.0),1*sqrt(14.0));
+    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
+                                              3*sqrt(12.0),4*sqrt(13.0));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
@@ -768,7 +796,26 @@ int testSave8() {
     return retVal;
 }
 
-int main() {
-    return testSave1() + testSave2() + testSave3() + testSave4() + testSave5() +
-            testSave6() + testSave7() + testSave8() + testSave9();
+int main(int argc, char *argv[])
+{
+    int val = 0;
+    QDir dir = QDir::current();
+    // change the working dir to the dir where the test executable is
+    QString executable = dir.absolutePath() + "/" + argv[0];
+    int last = executable.lastIndexOf("/");
+    if (QDir::setCurrent(executable.left(last)))
+        dir = QDir::current();
+    std::cout << "Working directory: " <<
+                 dir.absolutePath().toStdString().c_str() << std::endl;
+    try
+    {
+        val = testSave1() + testSave2() + testSave3() + testSave4() + testSave5() +
+                testSave6() + testSave7() + testSave8() + testSave9();
+    }
+    catch (char *c)
+    {
+        std::cout << c << std::endl;
+        val = 1;
+    }
+    return val;
 }

@@ -18,7 +18,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("bpy.ops.object.delete()\n");
     file.write("modelObjects = list()\n");
     file.write("myObjects = list()\n");
-    QHash<SketchModel *, int> modelIdxs;
+    QHash< QPair< SketchModel *, int >, int> modelIdxs;
     QHash<SketchObject *, int> objectIdxs;
     success &= writeCreateModels(file,modelIdxs,proj->getModelManager());
     success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj);
@@ -38,33 +38,37 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     return success && file.error() == QFile::NoError;
 }
 
-bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
                                                   const ModelManager *models) {
     file.write("\n\n");
     file.write("# Create template objects for each model\n");
     int modelObjectsLen = 0;
-    QHashIterator<QString,SketchModel *> it = models->getModelIterator();
+    QVectorIterator<SketchModel *> it = models->getModelIterator();
     while (it.hasNext()) {
-        QString key = it.peekNext().key();
-        SketchModel *model = it.next().value();
-        modelIdxs.insert(model,modelObjectsLen++);
-        if (key == CAMERA_MODEL_KEY) {
-            file.write("obj = getDefaultCamera()\n");
-        } else {
-            file.write("obj = read_obj_model('");
-            file.write(model->getDataSource().toStdString().c_str());
-            file.write("')\n");
+        SketchModel *model = it.next();
+        for (int i = 0; i < model->getNumberOfConformations(); i++)
+        {
+            modelIdxs.insert(QPair< SketchModel *, int >(model,i),modelObjectsLen++);
+            if (model->getSource(i) == CAMERA_MODEL_KEY) {
+                file.write("obj = getDefaultCamera()\n");
+            } else {
+                file.write("obj = read_obj_model('");
+                file.write(model->getFileNameFor(
+                               i,
+                               ModelResolution::FULL_RESOLUTION).toStdString().c_str());
+                file.write("')\n");
+            }
+            file.write("select_object(obj)\n");
+            // throw them way out in space
+            file.write("bpy.ops.object.shade_smooth()\n");
+            file.write("bpy.context.active_object.location = (float(50000), float(50000), float(50000))\n");
+            file.write("modelObjects.append(obj)\n");
         }
-        file.write("select_object(obj)\n");
-        // throw them way out in space
-        file.write("bpy.ops.object.shade_smooth()\n");
-        file.write("bpy.context.active_object.location = (float(50000), float(50000), float(50000))\n");
-        file.write("modelObjects.append(obj)\n");
     }
     return file.error() == QFile::NoError;
 }
 
-bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
                                                    QHash<SketchObject *, int> &objectIdxs, SketchProject *proj) {
     WorldManager *world = proj->getWorldManager();
     file.write("\n\n");
@@ -80,7 +84,7 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash<SketchMode
     return file.error() == QFile::NoError;
 }
 
-void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel *, int> &modelIdxs,
+void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
                                                   QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
                                                   SketchProject *proj, SketchObject *obj)
 {
@@ -92,7 +96,8 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel
     } else {
         QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
         SketchModel *model  = obj->getModel();
-        int idx = modelIdxs.value(model);
+        int idx = modelIdxs.value(
+                    QPair< SketchModel *, int >(model,obj->getModelConformation()));
         sprintf(buf.data(),"select_object(modelObjects[%u])\n",idx);
         file.write(buf.data());
         file.write("bpy.ops.object.duplicate(linked=True)\n");
@@ -104,7 +109,7 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash<SketchModel
         obj->getOrientation(orient);
         q_from_axis_angle(tmp,0,1,0,Q_PI);
         bool isCamera = false;
-        if (model->getDataSource() == CAMERA_MODEL_KEY) {
+        if (model->getSource(obj->getModelConformation()) == CAMERA_MODEL_KEY) {
             q_mult(orient,orient,tmp);
             isCamera = true;
         }
@@ -187,7 +192,8 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
             file.write(buf.data());
             obj->getPosition(pos);
             obj->getOrientation(orient);
-            if (obj->getModel()->getDataSource() == CAMERA_MODEL_KEY) {
+            if (obj->getModel()->getSource(obj->getModelConformation())
+                    == CAMERA_MODEL_KEY) {
                 q_type tmp;
                 q_from_axis_angle(tmp,0,1,0,Q_PI);
                 q_mult(orient,orient,tmp);
