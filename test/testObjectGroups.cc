@@ -7,7 +7,6 @@
 
 #include <vtkSphereSource.h>
 #include <vtkTransformPolyDataFilter.h>
-#include <vtkPolyDataWriter.h>
 #include <vtkSmartPointer.h>
 
 // declare these -- they are at the bottom of the file, but I wanted main at the top
@@ -556,14 +555,8 @@ inline SketchModel *getSphereModel() {
     sourceData->SetInputConnection(source->GetOutputPort());
     sourceData->SetTransform(transform);
     sourceData->Update();
-    vtkSmartPointer< vtkPolyDataWriter > writer =
-            vtkSmartPointer< vtkPolyDataWriter >::New();
-    writer->SetInputConnection(sourceData->GetOutputPort());
-    QString fileName = "object_tests_sphere_model.vtk";
-    writer->SetFileName(fileName.toStdString().c_str());
-    writer->SetFileTypeToASCII();
-    writer->Update();
-    writer->Write();
+    QString fileName = ModelUtilities::createFileFromVTKSource(
+                sourceData,"object_tests_sphere_model");
     SketchModel *model = new SketchModel(1.0,1.0);
     model->addConformation(fileName,fileName);
     return model;

@@ -15,7 +15,6 @@
 #include <vtkCellArray.h>
 #include <vtkOBJReader.h>
 #include <vtkConeSource.h>
-#include <vtkPolyDataWriter.h>
 
 #include <QDebug>
 #include <QDir>
@@ -55,14 +54,11 @@ SketchModel *ModelManager::getCameraModel(QDir &projectDir) {
         cone->SetResolution(4);
         cone->CappingOff();
         cone->Update();
-        vtkSmartPointer<vtkPolyDataWriter> writer
-                = vtkSmartPointer<vtkPolyDataWriter>::New();
-        QString filename = projectDir.absoluteFilePath(cameraKey + ".vtk");
-        writer->SetInputConnection(cone->GetOutputPort());
-        writer->SetFileName(filename.toStdString().c_str());
-        writer->SetFileTypeToASCII();
-        writer->Update();
-        writer->Write();
+        // create the model file
+        QString filename = ModelUtilities::createFileFromVTKSource(
+                    cone,
+                    cameraKey,
+                    projectDir);
         // initialize the model data
         SketchModel *sModel = new SketchModel(INVERSEMASS,INVERSEMOMENT,false);
         sModel->addConformation(cameraKey,filename);
@@ -101,14 +97,10 @@ SketchModel *ModelManager::modelForVTKSource(QString sourceName,
 
     transformPD->SetTransform(transform);
     transformPD->Update();
-    vtkSmartPointer<vtkPolyDataWriter> writer
-            = vtkSmartPointer<vtkPolyDataWriter>::New();
-    QString filename = dir.absoluteFilePath(sourceName + ".vtk");
-    writer->SetInputConnection(transformPD->GetOutputPort());
-    writer->SetFileName(filename.toStdString().c_str());
-    writer->SetFileTypeToASCII();
-    writer->Update();
-    writer->Write();
+
+    QString filename = ModelUtilities::createFileFromVTKSource(transformPD,
+                                                               sourceName,
+                                                               dir);
 
     SketchModel *sModel = new SketchModel(INVERSEMASS,INVERSEMOMENT);
     sModel->addConformation(sourceName,filename);

@@ -93,10 +93,14 @@ SET(Test6Srcs testTransformEquals.cc "${CMAKE_SOURCE_DIR}/transformequals.cpp" $
 ADD_EXECUTABLE( TransformEqualsTest ${Test6Srcs})
 TARGET_LINK_LIBRARIES( TransformEqualsTest QVTK ${QUATLIB_LIBRARIES} PQP )
 
+SET(Test7Srcs testSketchModel.cc ${SketchObject_Deps})
+ADD_EXECUTABLE( ModelTest ${Test7Srcs})
+TARGET_LINK_LIBRARIES( ModelTest QVTK ${QUATLIB_LIBRARIES} PQP )
+
 ADD_TEST(RotateAboutTrackerTransformTest    TransformTest "4")
 ADD_TEST(LeftTrackerTransformTest           TransformTest "6")
 ADD_TEST(RightTrackerTransformTest          TransformTest "7")
 ADD_TEST(ModelInstanceObjectGroupTest       ObjectTest)
 ADD_TEST(TransformEqualsTest                TransformEqualsTest)
-ADD_TEST(SaveLoadTest                       SaveTest)  # breaks when run by CTest... maybe because it writes a file?
-                                                    # this works in GDB and Valgrind doesn't find anything...
+ADD_TEST(SaveLoadTest                       SaveTest)
+ADD_TEST(SketchModelTest                    ModelTest)

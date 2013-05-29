@@ -1,7 +1,6 @@
 #include <transformequals.h>
 #include <sketchtests.h>
 #include <vtkCubeSource.h>
-#include <vtkPolyDataWriter.h>
 #include <QScopedPointer>
 #include <QTime>
 
@@ -12,14 +11,8 @@ inline SketchModel *getModel() {
             vtkSmartPointer<vtkCubeSource>::New();
     cube->SetBounds(-1,1,-1,1,-1,1);
     cube->Update();
-    vtkSmartPointer< vtkPolyDataWriter > writer =
-            vtkSmartPointer< vtkPolyDataWriter >::New();
-    writer->SetInputConnection(cube->GetOutputPort());
-    QString fileName = "transform_equals_tests_cube_model.vtk";
-    writer->SetFileName(fileName.toStdString().c_str());
-    writer->SetFileTypeToASCII();
-    writer->Update();
-    writer->Write();
+    QString fileName = ModelUtilities::createFileFromVTKSource(
+                cube,"transform_equals_test_cube_model");
     SketchModel *model = new SketchModel(1,1);
     model->addConformation(fileName,fileName);
     return model;

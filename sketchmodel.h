@@ -12,6 +12,7 @@ class PQP_Model;
 class vtkPolyDataAlgorithm;
 class vtkTransformPolyDataFilter;
 class vtkPolyData;
+class QDir;
 
 namespace ModelResolution
 {
@@ -34,6 +35,13 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);
 #endif
 
 vtkPolyDataAlgorithm *read(QString filename);
+
+// Writes the given algorithm's output to a file whose name is based on the descr string
+// and returns the name of the file it created (file is in the current directory by
+// default)
+QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr);
+QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr,
+                                const QDir &dir);
 }
 
 /*

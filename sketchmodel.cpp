@@ -7,8 +7,10 @@
 #include <vtkCellArray.h>
 
 #include <vtkPolyDataReader.h>
+#include <vtkPolyDataWriter.h>
 #include <vtkOBJReader.h>
-#include <QDebug>
+
+#include <QDir>
 
 
 SketchModel::SketchModel(double iMass, double iMoment, bool applyRotations,
@@ -155,13 +157,18 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
     // get the orientation of the model
     if (shouldRotateToAxisAligned)
     {
-        qDebug() << "Rotating to axis aligned.";
         q_type orient;
         pqpMatrixToQuat(orient,collisionModel->b->R);
         q_invert(orient,orient);
         double theta, x, y, z;
         q_to_axis_angle(&x, &y, &z, &theta, orient);
         transform->RotateWXYZ(theta * 180.0 / Q_PI, x, y, z);
+        transform->Update();
+        filter->Update();
+        filter->GetOutput()->GetBounds(bb);
+        transform->Translate(-(bb[1]+bb[0])/2.0,
+                             -(bb[3]+bb[2])/2.0,
+                             -(bb[5]+bb[4])/2.0);
         transform->Update();
         filter->Update();
         ModelUtilities::makePQP_Model(collisionModel.data(), filter->GetOutput());
@@ -434,6 +441,24 @@ vtkPolyDataAlgorithm *read(QString filename)
     }
     result->GetOutput()->ReleaseDataFlagOn();
     return result;
+}
+
+QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr)
+{
+    return createFileFromVTKSource(algorithm,descr,QDir::current());
+}
+
+QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr,
+                                const QDir &dir)
+{
+    vtkSmartPointer< vtkPolyDataWriter > writer =
+            vtkSmartPointer< vtkPolyDataWriter >::New();
+    writer->SetInputConnection(algorithm->GetOutputPort());
+    writer->SetFileName(dir.absoluteFilePath(descr + ".vtk").toStdString().c_str());
+    writer->SetFileTypeToASCII();
+    writer->Update();
+    writer->Write();
+    return descr + ".vtk";
 }
 
 }
