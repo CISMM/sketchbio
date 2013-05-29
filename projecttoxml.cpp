@@ -639,6 +639,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataEl
             vtkXMLDataElement *model = modelMgr->GetNestedElement(i);
             if (QString(model->GetName()) == QString(MODEL_ELEMENT_NAME))
             {
+                model->SetIntAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,1);
                 vtkXMLDataElement *transform =
                         model->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
                 if (transform == NULL) return XML_TO_DATA_FAILURE;
@@ -765,11 +766,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
         return XML_TO_DATA_FAILURE;
     }
     // need addmodel method on project...
-    QString source, id;
+    QString id;
+    int numConformations;
     double invMass, invMoment;
     bool shouldRotate;
     id = elem->GetAttribute(ID_ATTRIBUTE_NAME);
     if (id == NULL) return XML_TO_DATA_FAILURE;
+    if (! elem->GetScalarAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,numConformations))
+        return XML_TO_DATA_FAILURE;
 
     vtkXMLDataElement *props = elem->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
     if (props == NULL) return XML_TO_DATA_FAILURE;
@@ -787,56 +791,60 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
     QScopedPointer< SketchModel > model(new SketchModel(invMass, invMoment, shouldRotate));
 
     int conformations = 0;
-    for (int i = 0; i < elem->GetNumberOfNestedElements(); i++)
+    for (int i = 0; i < numConformations; i++)
     {
-        vtkXMLDataElement *conf = elem->GetNestedElement(i);
-        if (conf->GetName() == QString(MODEL_CONFORMATION_ELEMENT_NAME))
+        // the relationship between conformation numbers and conformations needs
+        // to be kept since only the conformation number is saved with each object
+        vtkXMLDataElement *conf = elem->FindNestedElementWithNameAndAttribute(
+                    MODEL_CONFORMATION_ELEMENT_NAME,
+                    MODEL_CONFORMATION_NUMBER_ATTR_NAME,
+                    QString::number(i).toStdString().c_str()
+                    );
+        if (conf == NULL) return XML_TO_DATA_FAILURE;
+        conformations++;
+        vtkXMLDataElement *src =
+                conf->FindNestedElementWithName(MODEL_SOURCE_ELEMENT_NAME);
+        if (src == NULL) return XML_TO_DATA_FAILURE;
+        const char *srcString = src->GetCharacterData();
+        if (srcString == NULL) return XML_TO_DATA_FAILURE;
+
+        vtkXMLDataElement *fullRes =
+                conf->FindNestedElementWithNameAndAttribute(
+                    MODEL_RESOLUTION_ELEMENT_NAME,
+                    ID_ATTRIBUTE_NAME,
+                    getResolutionString(ModelResolution::FULL_RESOLUTION));
+        if (fullRes == NULL) return XML_TO_DATA_FAILURE;
+        const char *fileString = fullRes->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+        if (fileString == NULL) return XML_TO_DATA_FAILURE;
+
+        QString filename = proj->getProjectDir() + "/" + fileString;
+        QString source = srcString;
+        if (source == CAMERA_MODEL_KEY) {
+            model.reset(proj->getCameraModel());
+            break;
+        } else {
+            model->addConformation(source,filename);
+        }
+
+        for (int j = 0; j < conf->GetNumberOfNestedElements(); j++)
         {
-            conformations++;
-            vtkXMLDataElement *src =
-                    conf->FindNestedElementWithName(MODEL_SOURCE_ELEMENT_NAME);
-            if (src == NULL) return XML_TO_DATA_FAILURE;
-            const char *srcString = src->GetCharacterData();
-            if (srcString == NULL) return XML_TO_DATA_FAILURE;
-
-            vtkXMLDataElement *fullRes =
-                    conf->FindNestedElementWithNameAndAttribute(
-                        MODEL_RESOLUTION_ELEMENT_NAME,
-                        ID_ATTRIBUTE_NAME,
-                        getResolutionString(ModelResolution::FULL_RESOLUTION));
-            if (fullRes == NULL) return XML_TO_DATA_FAILURE;
-            const char *fileString = fullRes->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
-            if (fileString == NULL) return XML_TO_DATA_FAILURE;
-
-            QString filename = proj->getProjectDir() + "/" + fileString;
-            QString source = srcString;
-            if (source == CAMERA_MODEL_KEY) {
-                model.reset(proj->getCameraModel());
-                break;
-            } else {
-                model->addConformation(source,filename);
-            }
-
-            for (int j = 0; j < conf->GetNumberOfNestedElements(); j++)
+            vtkXMLDataElement *elt = conf->GetNestedElement(j);
+            if (elt != src && elt != fullRes &&
+                    elt->GetName() == QString(MODEL_RESOLUTION_ELEMENT_NAME))
             {
-                vtkXMLDataElement *elt = conf->GetNestedElement(j);
-                if (elt != src && elt != fullRes &&
-                        elt->GetName() == QString(MODEL_RESOLUTION_ELEMENT_NAME))
-                {
-                    const char *f = elt->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
-                    if (f == NULL) return XML_TO_DATA_FAILURE;
-                    const char *r = elt->GetAttribute(ID_ATTRIBUTE_NAME);
-                    if (r == NULL) return XML_TO_DATA_FAILURE;
-                    ModelResolution::ResolutionType res = getResolutionTypeFromId(r);
-                    QString fName = proj->getProjectDir() + "/" + f;
-                    model->addSurfaceFileForResolution(model->getNumberOfConformations()-1,
-                                                       res,fName);
-                }
+                const char *f = elt->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+                if (f == NULL) return XML_TO_DATA_FAILURE;
+                const char *r = elt->GetAttribute(ID_ATTRIBUTE_NAME);
+                if (r == NULL) return XML_TO_DATA_FAILURE;
+                ModelResolution::ResolutionType res = getResolutionTypeFromId(r);
+                QString fName = proj->getProjectDir() + "/" + f;
+                model->addSurfaceFileForResolution(model->getNumberOfConformations()-1,
+                                                   res,fName);
             }
         }
     }
 
-    if (model.data() != NULL && conformations > 0)
+    if (model.data() != NULL && conformations == numConformations)
     {
         modelIds.insert("#" + id,model.data());
     }
