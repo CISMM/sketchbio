@@ -31,6 +31,8 @@ SketchModel::SketchModel(double iMass, double iMoment, bool applyRotations,
 
 SketchModel::~SketchModel()
 {
+    qDeleteAll(collisionModelForConf);
+    collisionModelForConf.clear();
 }
 
 int SketchModel::getNumberOfConformations() const
@@ -138,6 +140,7 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
             ModelUtilities::read(fullResolutionFileName);
     double bb[6];
     dataSource->GetOutput()->GetBounds(bb);
+    dataSource->Delete();
     vtkSmartPointer< vtkTransformPolyDataFilter > filter =
             vtkSmartPointer< vtkTransformPolyDataFilter >::New();
     filter->SetInputConnection(dataSource->GetOutputPort());
@@ -233,6 +236,7 @@ void SketchModel::setReslutionForConfiguration(
     {
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
                 ModelUtilities::read(fileNames.value(key));
+        dataSource->Delete();
         modelDataForConf[conformation]->SetInputConnection(dataSource->GetOutputPort());
         modelDataForConf[conformation]->Update();
         resolutionLevelForConf[conformation] = resolution;

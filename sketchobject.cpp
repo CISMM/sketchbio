@@ -326,7 +326,7 @@ void SketchObject::setPositionByAnimationTime(double t) {
     // go until the next one is greater than the time (the last one
     // will be less than the time unless the time is less than the first
     // time in the keyframes list
-    while (it.peekNext().key() < t && it.hasNext()) {
+    while (it.hasNext() && it.peekNext().key() < t) {
         last = it.next().key();
     }
     // if we are after the end of the last keyframe defined

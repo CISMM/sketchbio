@@ -200,8 +200,8 @@ vtkXMLDataElement *ProjectToXML::modelToXML(const SketchModel *model,
         vtkSmartPointer< vtkXMLDataElement > child
                 = vtkSmartPointer< vtkXMLDataElement >::New();
         child->SetName(MODEL_SOURCE_ELEMENT_NAME);
-        const char *data = model->getSource(i).toStdString().c_str();
-        child->SetCharacterData(data,strlen(data));
+        QString src = model->getSource(i);
+        child->SetCharacterData(src.toStdString().c_str(),src.length()+1);
         conformationElt->AddNestedElement(child);
         QString filename;
         filename = model->getFileNameFor(i,ModelResolution::FULL_RESOLUTION);
