@@ -467,10 +467,13 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
     solidMapper->Update();
     actor->SetMapper(solidMapper);
+    model->incrementUses(conformation);
 }
 
 //#########################################################################
-ModelInstance::~ModelInstance() {}
+ModelInstance::~ModelInstance() {
+    model->decrementUses(conformation);
+}
 
 //#########################################################################
 int ModelInstance::numInstances() const {

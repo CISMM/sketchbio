@@ -565,9 +565,9 @@ inline SketchModel *getSphereModel() {
 //#########################################################################
 // test the actions performed on the object group work correctly
 inline int testObjectGroupActions() {
+    QScopedPointer<SketchModel> m(getSphereModel());
     ObjectGroup grp, grp2;
     int errors = testSketchObjectActions(&grp2);
-    QScopedPointer<SketchModel> m(getSphereModel());
     ModelInstance *a = new ModelInstance(m.data()), *b = new ModelInstance(m.data()), *c = new ModelInstance(m.data());
     q_vec_type va = {2,0,0}, vb = {0,4,0}, vc = {0,-1,-5};
     q_vec_type v1 = {0,0,1}, v2, v3;
@@ -837,6 +837,12 @@ inline int testModelInstance() {
     QScopedPointer<ModelInstance> obj(new ModelInstance(model.data()));
     int errors = 0;
 
+    if (model->getNumberOfUses(0) != 1)
+    {
+        errors++;
+        qDebug() << "Did not increment model uses.";
+    }
+
     // test that a new ModelInstance is right
     errors += testNewModelInstance(obj.data());
     errors += testModelInstanceActions(obj.data());
@@ -845,6 +851,14 @@ inline int testModelInstance() {
 
     // clean up
     qDebug() << "Found " << errors << " errors in ModelInstance.";
+
+    obj.reset();
+
+    if (model->getNumberOfUses(0) != 0)
+    {
+        errors++;
+        qDebug() << "Did not decrement model uses.";
+    }
 
     return errors;
 }
