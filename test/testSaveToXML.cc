@@ -102,7 +102,6 @@ void compareModels(const SketchModel *m1, const SketchModel *m2, int &numDiffere
         numDifferences++;
         if (printDiffs) cout << "Moments of inertia are different."<< endl;
     }
-    cout << "a";
 }
 
 void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDifferences, bool printDiffs) {
@@ -180,7 +179,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
         if (o2->getModelConformation() != o1->getModelConformation())
         {
             numDifferences++;
-            if (printDiffs) cout << "Model conformation changed";
+            if (printDiffs) cout << "Model conformation changed" << endl;
         }
         else
         {
@@ -427,11 +426,14 @@ int testSave1() {
 
     SketchModel *m1 = proj1->addModelFromFile(filename,filename,
                                               3*sqrt(12.0),4*sqrt(13.0));
+    m1->addConformation(m1->getSource(0),
+                        m1->getFileNameFor(0,ModelResolution::FULL_RESOLUTION));
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
     q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
+    proj1->addObject(m1,pos1,orient1);
+    proj1->addObject(new ModelInstance(m1,1));
 
     vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
 
@@ -447,9 +449,9 @@ int testSave1() {
     else
     {
 
+        // test objects and models
         compareNumbers(proj1.data(),proj2.data(),retVal);
-        const SketchObject *o2 = proj2->getWorldManager()->getObjectIterator().next();
-        compareObjects(o1,o2,retVal);
+        compareWorldObjects(proj1.data(),proj2.data(),retVal);
 
         if (retVal == 0) {
             cout << "Passed test 1" << endl;

@@ -171,6 +171,8 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
                              -(bb[5]+bb[4])/2.0);
         transform->Update();
         filter->Update();
+        // reinitialize to avoid pages of error prints
+        collisionModel.reset(new PQP_Model());
         ModelUtilities::makePQP_Model(collisionModel.data(), filter->GetOutput());
     }
     if (collisionModel.data()->num_tris < 5000)
@@ -460,7 +462,7 @@ QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &
     writer->SetFileTypeToASCII();
     writer->Update();
     writer->Write();
-    return descr + ".vtk";
+    return dir.absoluteFilePath(descr + ".vtk");
 }
 
 }

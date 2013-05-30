@@ -3,6 +3,7 @@
 #include <sketchioconstants.h>
 #include <sketchtests.h>
 #include <QScopedPointer>
+#include <QDebug>
 
 
 #define ID_ATTRIBUTE_NAME                       "id"
@@ -26,10 +27,7 @@
 #define MODEL_RESOLUTION_ELEMENT_NAME           "resolution"
 #define MODEL_FILENAME_ATTRIBUTE_NAME           "filename"
 #define MODEL_SOURCE_ELEMENT_NAME               "source"
-#define MODEL_SCALE_ATTRIBUTE_NAME              "scale"
-#define MODEL_TRANSLATE_ATTRIBUTE_NAME          "translate"
-#define MODEL_ROTATE_ATTRIBUTE_NAME             "rotation"
-#define MODEL_ROTATE_ENABLED_ATTR_NAME          "canRotate"
+#define MODEL_ROTATE_ENABLED_ATTR_NAME          "shouldRotateModel"
 #define MODEL_IMASS_ATTRIBUTE_NAME              "inverseMass"
 #define MODEL_IMOMENT_ATTRIBUTE_NAME            "inverseMomentOfInertia"
 
@@ -41,6 +39,7 @@
 #define OBJECTLIST_ELEMENT_NAME                 "objectlist"
 #define OBJECT_ELEMENT_NAME                     "object"
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
+#define OBJECT_MODEL_CONF_NUM_ATTR_NAME         "conformation"
 #define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME     "numInstances"
 #define OBJECT_VISIBILITY_ATTRIBUTE_NAME        "visibility"
 #define OBJECT_ACTIVE_ATTRIBUTE_NAME            "active"
@@ -128,7 +127,6 @@ vtkXMLDataElement *ProjectToXML::modelManagerToXML(const ModelManager *models, c
         element->AddNestedElement(child);
         child->Delete();
         modelIds.insert(model,idStr);
-        std:: cout << "Saving model " << id << "." << std::endl;
         id++;
     }
 
@@ -350,6 +348,7 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
         modelId = modelId.append(idx);
         child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
     }
+    child->SetIntAttribute(OBJECT_MODEL_CONF_NUM_ATTR_NAME,object->getModelConformation());
     // Current thoughts: collision groups should be recreated from effects placed on objects being recreated.
     //   There is no reason that they should need to be saved.
     child->SetAttribute(OBJECT_VISIBILITY_ATTRIBUTE_NAME,object->isVisible() ? "true" : "false");
@@ -685,6 +684,39 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataEl
         }
 
     }
+        // add a conformation number (default of 0) to each object's properties
+    {
+        QVector< vtkXMLDataElement * > eStack;
+        QVector< int > iStack;
+        eStack.push_back(root);
+        iStack.push_back(0);
+        while (! eStack.empty() )
+        {
+            if (eStack.last()->GetNumberOfNestedElements() == iStack.last())
+            {
+                eStack.pop_back();
+                iStack.pop_back();
+            }
+            else
+            {
+                int index = iStack.last();
+                if (index == 0)
+                {
+                    vtkXMLDataElement *elem = eStack.last();
+                    if (QString(elem->GetName()) == QString(OBJECT_ELEMENT_NAME))
+                    {
+                        vtkXMLDataElement *props = elem->FindNestedElementWithName(
+                                    PROPERTIES_ELEMENT_NAME);
+                        props->SetIntAttribute(OBJECT_MODEL_CONF_NUM_ATTR_NAME,0);
+                    }
+                }
+                iStack.last()++;
+                vtkXMLDataElement *next = eStack.last()->GetNestedElement(index);
+                eStack.push_back(next);
+                iStack.push_back(0);
+            }
+        }
+    }
     }
     return XML_TO_DATA_SUCCESS;
 }
@@ -986,6 +1018,7 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
                                        QHash<QString, SketchObject *> &objectIds) {
     if (QString(elem->GetName()) == QString(OBJECT_ELEMENT_NAME)) {
         QString mId, oId;
+        int confNum = -1;
         q_vec_type pos;
         q_type orient;
         bool visibility, active;
@@ -1004,6 +1037,8 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
                 return NULL;
             }
             mId = c;
+            if (props->GetScalarAttribute(OBJECT_MODEL_CONF_NUM_ATTR_NAME,confNum) == 0)
+                return NULL;
         } else {
             mId = "";
         }
@@ -1036,7 +1071,7 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
         QScopedPointer<SketchObject> object(NULL);
         if (numInstances == 1) {
             // modelInstace
-            object.reset(new ModelInstance(modelIds.value(mId)));
+            object.reset(new ModelInstance(modelIds.value(mId),confNum));
             object->setPosAndOrient(pos,orient);
         } else {
             // group
