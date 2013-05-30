@@ -187,10 +187,10 @@ vtkXMLDataElement *ProjectToXML::modelToXML(const SketchModel *model,
     properties->SetName(PROPERTIES_ELEMENT_NAME);
     properties->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME,
                           model->shouldRotate() ? "true" : "false");
-    properties->SetDoubleAttribute(MODEL_IMASS_ATTRIBUTE_NAME,
-                                   model->getInverseMass());
-    properties->SetDoubleAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,
-                                   model->getInverseMomentOfInertia());
+    double d = model->getInverseMass();
+    setPreciseVectorAttribute(properties,&d,1,MODEL_IMASS_ATTRIBUTE_NAME);
+    d = model->getInverseMomentOfInertia();
+    setPreciseVectorAttribute(properties,&d,1,MODEL_IMOMENT_ATTRIBUTE_NAME);
     element->AddNestedElement(properties);
 
     for (int i = 0; i < model->getNumberOfConformations(); i++)

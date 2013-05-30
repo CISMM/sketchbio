@@ -38,29 +38,29 @@ int SketchModel::getNumberOfConformations() const
     return numConformations;
 }
 
-ModelResolution::ResolutionType SketchModel::getResolutionLevel(int configurationNum) const
+ModelResolution::ResolutionType SketchModel::getResolutionLevel(int conformationNum) const
 {
-    return resolutionLevelForConf[configurationNum];
+    return resolutionLevelForConf[conformationNum];
 }
 
-vtkPolyDataAlgorithm *SketchModel::getVTKSource(int configurationNum)
+vtkPolyDataAlgorithm *SketchModel::getVTKSource(int conformationNum)
 {
-    return modelDataForConf[configurationNum];
+    return modelDataForConf[conformationNum];
 }
 
-void SketchModel::getTranslation(q_vec_type out, int configuration) const
+void SketchModel::getTranslation(q_vec_type out, int conformation) const
 {
     vtkTransformPolyDataFilter *tformFilter =
-            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[configuration]);
+            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[conformation]);
     vtkTransform *transform =
             vtkTransform::SafeDownCast(tformFilter->GetTransform());
     transform->GetPosition(out);
 }
 
-void SketchModel::getRotation(q_type rotationOut, int configuration) const
+void SketchModel::getRotation(q_type rotationOut, int conformation) const
 {
     vtkTransformPolyDataFilter *tformFilter =
-            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[configuration]);
+            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[conformation]);
     vtkTransform *transform =
             vtkTransform::SafeDownCast(tformFilter->GetTransform());
     double wxyz[4];
@@ -73,35 +73,35 @@ bool SketchModel::shouldRotate() const
     return shouldRotateToAxisAligned;
 }
 
-double SketchModel::getScale(int configuration) const
+double SketchModel::getScale(int conformation) const
 {
     vtkTransformPolyDataFilter *tformFilter =
-            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[configuration]);
+            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[conformation]);
     vtkTransform *transform =
             vtkTransform::SafeDownCast(tformFilter->GetTransform());
     return transform->GetScale()[0]; // assume uniform scale
 }
 
-PQP_Model *SketchModel::getCollisionModel(int configurationNum)
+PQP_Model *SketchModel::getCollisionModel(int conformationNum)
 {
-    return collisionModelForConf[configurationNum];
+    return collisionModelForConf[conformationNum];
 }
 
-int SketchModel::getNumberOfUses(int configuration) const
+int SketchModel::getNumberOfUses(int conformation) const
 {
-    return useCount[configuration];
+    return useCount[conformation];
 }
 
-QString SketchModel::getFileNameFor(int configuration,
+QString SketchModel::getFileNameFor(int conformation,
                                     ModelResolution::ResolutionType resolution) const
 {
     return fileNames.value(QPair< int,
-                           ModelResolution::ResolutionType >(configuration,resolution));
+                           ModelResolution::ResolutionType >(conformation,resolution));
 }
 
-QString SketchModel::getSource(int configuration) const
+QString SketchModel::getSource(int conformation) const
 {
-    return source[configuration];
+    return source[conformation];
 }
 
 double SketchModel::getInverseMass() const
@@ -202,40 +202,40 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
     numConformations++;
 }
 
-void SketchModel::incrementUses(int configuration)
+void SketchModel::incrementUses(int conformation)
 {
-    useCount[configuration]++;
+    useCount[conformation]++;
 }
 
-void SketchModel::decrementUses(int configuration)
+void SketchModel::decrementUses(int conformation)
 {
-    useCount[configuration]--;
+    useCount[conformation]--;
 }
 
 void SketchModel::addSurfaceFileForResolution(
-        int configuration,
+        int conformation,
         ModelResolution::ResolutionType resolution,
         QString filename)
 {
     fileNames.insert(
                 QPair< int, ModelResolution::ResolutionType >(
-                    configuration, resolution),
+                    conformation, resolution),
                 filename);
 }
 
 void SketchModel::setReslutionForConfiguration(
-        int configuration, ModelResolution::ResolutionType resolution)
+        int conformation, ModelResolution::ResolutionType resolution)
 {
-    QPair< int, ModelResolution::ResolutionType > key(configuration, resolution);
-    if (fileNames.contains(key) && resolutionLevelForConf[configuration] != resolution)
+    QPair< int, ModelResolution::ResolutionType > key(conformation, resolution);
+    if (fileNames.contains(key) && resolutionLevelForConf[conformation] != resolution)
     {
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
                 ModelUtilities::read(fileNames.value(key));
-        modelDataForConf[configuration]->SetInputConnection(dataSource->GetOutputPort());
-        modelDataForConf[configuration]->Update();
-        resolutionLevelForConf[configuration] = resolution;
-        ModelUtilities::makePQP_Model(collisionModelForConf[configuration],
-                                      modelDataForConf[configuration]->GetOutput());
+        modelDataForConf[conformation]->SetInputConnection(dataSource->GetOutputPort());
+        modelDataForConf[conformation]->Update();
+        resolutionLevelForConf[conformation] = resolution;
+        ModelUtilities::makePQP_Model(collisionModelForConf[conformation],
+                                      modelDataForConf[conformation]->GetOutput());
     }
 }
 

@@ -45,6 +45,66 @@ void compareNumbers(SketchProject *proj1, SketchProject *proj2, int &retVal) {
     }
 }
 
+void compareModels(const SketchModel *m1, const SketchModel *m2, int &numDifferences,
+                   bool printDiffs)
+{
+    if (m1->getNumberOfConformations() != m2->getNumberOfConformations())
+    {
+        numDifferences++;
+        if (printDiffs) cout << "Different numbers of conformations." << endl;
+        return;
+    }
+    for (int i = 0; i < m1->getNumberOfConformations(); i++)
+    {
+        if (m1->getSource(i) != m2->getSource(i))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Conformation " << i << " sources are different." << endl;
+        }
+        if (m1->getFileNameFor(i,ModelResolution::FULL_RESOLUTION)
+                != m2->getFileNameFor(i,ModelResolution::FULL_RESOLUTION))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Conformation " << i << " filenames are different." << endl;
+        }
+        if (m1->getFileNameFor(i,ModelResolution::SIMPLIFIED_FULL_RESOLUTION)
+                != m2->getFileNameFor(i,ModelResolution::SIMPLIFIED_FULL_RESOLUTION))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Conformation " << i << " filenames are different." << endl;
+        }
+        if (m1->getFileNameFor(i,ModelResolution::SIMPLIFIED_5000)
+                != m2->getFileNameFor(i,ModelResolution::SIMPLIFIED_5000))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Conformation " << i << " filenames are different." << endl;
+        }
+        if (m1->getFileNameFor(i,ModelResolution::SIMPLIFIED_2000)
+                != m2->getFileNameFor(i,ModelResolution::SIMPLIFIED_2000))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Conformation " << i << " filenames are different." << endl;
+        }
+        if (m1->getFileNameFor(i,ModelResolution::SIMPLIFIED_1000)
+                != m2->getFileNameFor(i,ModelResolution::SIMPLIFIED_1000))
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Conformation " << i << " filenames are different." << endl;
+        }
+    }
+    if (Q_ABS(m1->getInverseMass() - m2->getInverseMass()) > Q_EPSILON)
+    {
+        numDifferences++;
+        if (printDiffs) cout << "Masses are different." << endl;
+    }
+    if (Q_ABS(m1->getInverseMomentOfInertia() != m2->getInverseMomentOfInertia()) > Q_EPSILON)
+    {
+        numDifferences++;
+        if (printDiffs) cout << "Moments of inertia are different."<< endl;
+    }
+    cout << "a";
+}
+
 void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDifferences, bool printDiffs) {
     if (o1 == NULL || o2 == NULL) {
         if (o1 == o2) {
@@ -122,11 +182,9 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             numDifferences++;
             if (printDiffs) cout << "Model conformation changed";
         }
-        else if (o2->getModel()->getSource(o2->getModelConformation())
-                != o1->getModel()->getSource(o1->getModelConformation()))
+        else
         {
-            numDifferences++;
-            if (printDiffs) cout << "Model got mixed up" << endl;
+            compareModels(o1->getModel(), o2->getModel(), numDifferences, printDiffs);
         }
     } else { // test group specific stuff
         compareObjectLists(o1->getSubObjects(),o2->getSubObjects(),numDifferences,printDiffs);
