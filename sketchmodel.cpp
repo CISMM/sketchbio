@@ -232,6 +232,8 @@ void SketchModel::setReslutionForConfiguration(
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
                 ModelUtilities::read(fileNames.value(key));
         modelDataForConf[configuration]->SetInputConnection(dataSource->GetOutputPort());
+        modelDataForConf[configuration]->Update();
+        resolutionLevelForConf[configuration] = resolution;
         ModelUtilities::makePQP_Model(collisionModelForConf[configuration],
                                       modelDataForConf[configuration]->GetOutput());
     }

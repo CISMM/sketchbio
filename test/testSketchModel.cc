@@ -4,12 +4,15 @@
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
+#include <vtkCubeSource.h>
 
 #include <QScopedPointer>
 #include <QDir>
 #include <QDebug>
 
 
+int testUseCount();
+int testAddResolutionFileAndChangeResolutions();
 int testAddConformations();
 int testTranslateAndRotateBounds();
 
@@ -31,7 +34,101 @@ int main(int argc, char *argv[])
     // tests
     errors += testAddConformations();
     errors += testTranslateAndRotateBounds();
+    errors += testUseCount();
+    errors += testAddResolutionFileAndChangeResolutions();
+
+    // return result of tests
     return errors;
+}
+
+int testUseCount()
+{
+    int retVal = 0;
+    QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
+    QString filename = "models/1m1j.obj";
+    // add some conformations
+    model->addConformation(filename,filename);
+    model->addConformation(filename,filename);
+
+    model->incrementUses(0);
+    if (model->getNumberOfUses(0) != 1)
+    {
+        retVal++;
+        qDebug() << "Incrementing use count failed.";
+    }
+    model->incrementUses(1);
+    if (model->getNumberOfUses(1) != 1)
+    {
+        retVal++;
+        qDebug() << "Incrementing use count of other failed.";
+    }
+    model->incrementUses(0);
+    model->incrementUses(0);
+    model->incrementUses(1);
+    model->incrementUses(0);
+    model->incrementUses(1);
+    model->incrementUses(0);
+    if (model->getNumberOfUses(0) != 5 || model->getNumberOfUses(1) != 3)
+    {
+        retVal++;
+        qDebug() << "Multi-incrementing number of uses failed.";
+    }
+    model->decrementUses(0);
+    if (model->getNumberOfUses(0) != 4)
+    {
+        retVal++;
+        qDebug() << "Decrementing use count failed.";
+    }
+    model->decrementUses(1);
+    model->decrementUses(1);
+    model->decrementUses(1);
+    if (model->getNumberOfUses(1) != 0)
+    {
+        retVal++;
+        qDebug() << "Multi-decrementing use count failed.";
+    }
+
+    return retVal;
+}
+
+int testAddResolutionFileAndChangeResolutions()
+{
+    int retVal = 0;
+    QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
+    QString filename = "models/1m1j.obj";
+    // add some conformations
+    model->addConformation(filename,filename);
+    model->addConformation(filename,filename);
+
+    // create a lower resolution model
+    vtkSmartPointer< vtkCubeSource > cube =
+            vtkSmartPointer< vtkCubeSource >::New();
+    cube->SetBounds(-1,1,-1,1,-1,1);
+    cube->Update();
+    filename = ModelUtilities::createFileFromVTKSource(cube,"models/cube_for_model_test");
+    model->addSurfaceFileForResolution(0,ModelResolution::SIMPLIFIED_1000,filename);
+    int points1 = model->getVTKSource(0)->GetOutput()->GetNumberOfPoints();
+    model->setReslutionForConfiguration(0,ModelResolution::SIMPLIFIED_1000);
+    int points2 = model->getVTKSource(0)->GetOutput()->GetNumberOfPoints();
+    if (points1 == points2)
+    {
+        retVal++;
+        qDebug() << "Switching model resolutions failed.";
+    }
+    model->setReslutionForConfiguration(0,ModelResolution::SIMPLIFIED_2000);
+    if (model->getVTKSource(0)->GetOutput()->GetNumberOfPoints() != points2)
+    {
+        retVal++;
+        qDebug() << "Resolution changed even though no file for given resolution.";
+    }
+    model->setReslutionForConfiguration(0,ModelResolution::FULL_RESOLUTION);
+    if (points1 != model->getVTKSource(0)->GetOutput()->GetNumberOfPoints())
+    {
+        retVal++;
+        qDebug() << "Setting resolution back to full failed.";
+    }
+
+    return retVal;
 }
 
 inline int testConformationAdded(SketchModel *model,int confNum)
@@ -98,6 +195,16 @@ int testAddConformations()
     sphere->Update();
     filename = ModelUtilities::createFileFromVTKSource(sphere,"models/sphere_for_model_test");
     model->addConformation(filename,filename);
+    retVal += testConformationAdded(model.data(),2);
+    // test if the lower resolutions of the model got filled in with the same filename
+    if (model->getFileNameFor(2,ModelResolution::SIMPLIFIED_FULL_RESOLUTION) != filename
+            || model->getFileNameFor(2,ModelResolution::SIMPLIFIED_5000) != filename
+            || model->getFileNameFor(2,ModelResolution::SIMPLIFIED_2000) != filename
+            || model->getFileNameFor(2,ModelResolution::SIMPLIFIED_1000) != filename)
+    {
+        retVal++;
+        qDebug() << "Model with few triangles used at all resolutions";
+    }
     retVal += testConformationAdded(model.data(),2);
 
     return retVal;
