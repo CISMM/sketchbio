@@ -133,10 +133,19 @@ SketchModel *ModelManager::addConformation(QString originalSource,
     if (modelSourceToIdx.contains(originalSource))
     {
         SketchModel *model = models[modelSourceToIdx.value(originalSource)];
-        model->addConformation(newSource,newFilename);
-        return model;
+        return addConformation(model,newSource,newFilename);
     }
     return NULL;
+}
+
+SketchModel *ModelManager::addConformation(SketchModel *model,
+                                            QString newSource,
+                                            QString newFilename)
+{
+    if (model == NULL)
+        return NULL;
+    model->addConformation(newSource,newFilename);
+    return model;
 }
 
 void ModelManager::addModel(SketchModel *model)

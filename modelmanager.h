@@ -71,6 +71,9 @@ public:
     SketchModel *addConformation(QString originalSource,
                                   QString newSource,
                                   QString newFilename);
+    SketchModel *addConformation(SketchModel *model,
+                                 QString newSource,
+                                 QString newFilename);
     void addModel(SketchModel *model);
     /*****************************************************************************
       *
