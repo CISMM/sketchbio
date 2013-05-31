@@ -13,7 +13,6 @@
 //                  where I can find it
 int testModelInstance();
 int testObjectGroup();
-int testModelInstanceBoundingBoxCorrection();
 
 int main(int argc, char *argv[]) {
     QDir dir = QDir::current();
@@ -27,7 +26,6 @@ int main(int argc, char *argv[]) {
     int errors = 0;
     errors += testModelInstance();
     errors += testObjectGroup();
-    errors += testModelInstanceBoundingBoxCorrection();
     return errors;
 }
 
@@ -872,30 +870,5 @@ inline int testObjectGroup() {
         errors += testObjectGroupSubGroup();
     }
     qDebug() << "Found " << errors << " errors in ObjectGroup.";
-    return errors;
-}
-
-//#########################################################################
-// This is really testing something in SketchModel, whether the bounds
-// rotation/translation works right, but has to be tested here due to
-// the SketchObject having the method
-int testModelInstanceBoundingBoxCorrection()
-{
-    int errors = 0;
-    QScopedPointer< SketchModel > model(new SketchModel(1,1));
-    model->addConformation("models/1m1j.obj","models/1m1j.obj");
-    QScopedPointer< ModelInstance > instance(new ModelInstance(model.data(),0));
-    double bb[6];
-    instance->getBoundingBox(bb);
-    if (bb[0] >= 0 || bb[2] >= 0 || bb[4] >= 0)
-    {
-        qDebug() << "Bounding box minimum greater than 0";
-        errors++;
-    }
-    if (bb[1] <= 0 || bb[3] <= 0 || bb[5] <= 0)
-    {
-        qDebug() << "Bounding box maximum less than 0";
-        errors++;
-    }
     return errors;
 }

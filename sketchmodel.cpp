@@ -13,8 +13,7 @@
 #include <QDir>
 
 
-SketchModel::SketchModel(double iMass, double iMoment, bool applyRotations,
-                         QObject *parent) :
+SketchModel::SketchModel(double iMass, double iMoment, QObject *parent) :
     QObject(parent),
     numConformations(0),
     resolutionLevelForConf(),
@@ -24,8 +23,7 @@ SketchModel::SketchModel(double iMass, double iMoment, bool applyRotations,
     source(),
     fileNames(),
     invMass(iMass),
-    invMomentOfInertia(iMoment),
-    shouldRotateToAxisAligned(applyRotations)
+    invMomentOfInertia(iMoment)
 {
 }
 
@@ -50,40 +48,6 @@ vtkPolyDataAlgorithm *SketchModel::getVTKSource(int conformationNum)
     return modelDataForConf[conformationNum];
 }
 
-void SketchModel::getTranslation(q_vec_type out, int conformation) const
-{
-    vtkTransformPolyDataFilter *tformFilter =
-            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[conformation]);
-    vtkTransform *transform =
-            vtkTransform::SafeDownCast(tformFilter->GetTransform());
-    transform->GetPosition(out);
-}
-
-void SketchModel::getRotation(q_type rotationOut, int conformation) const
-{
-    vtkTransformPolyDataFilter *tformFilter =
-            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[conformation]);
-    vtkTransform *transform =
-            vtkTransform::SafeDownCast(tformFilter->GetTransform());
-    double wxyz[4];
-    transform->GetOrientationWXYZ(wxyz);
-    q_make(rotationOut,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
-}
-
-bool SketchModel::shouldRotate() const
-{
-    return shouldRotateToAxisAligned;
-}
-
-double SketchModel::getScale(int conformation) const
-{
-    vtkTransformPolyDataFilter *tformFilter =
-            vtkTransformPolyDataFilter::SafeDownCast(modelDataForConf[conformation]);
-    vtkTransform *transform =
-            vtkTransform::SafeDownCast(tformFilter->GetTransform());
-    return transform->GetScale()[0]; // assume uniform scale
-}
-
 PQP_Model *SketchModel::getCollisionModel(int conformationNum)
 {
     return collisionModelForConf[conformationNum];
@@ -92,6 +56,14 @@ PQP_Model *SketchModel::getCollisionModel(int conformationNum)
 int SketchModel::getNumberOfUses(int conformation) const
 {
     return useCount[conformation];
+}
+
+bool SketchModel::hasFileNameFor(int conformation,
+                                 ModelResolution::ResolutionType resolution) const
+{
+    return fileNames.contains(QPair< int,
+                              ModelResolution::ResolutionType >(conformation,
+                                                                resolution));
 }
 
 QString SketchModel::getFileNameFor(int conformation,
@@ -147,10 +119,6 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
     vtkSmartPointer< vtkTransform > transform =
             vtkSmartPointer< vtkTransform >::New();
     transform->Identity();
-    transform->PostMultiply();
-    transform->Translate(-(bb[1]+bb[0])/2.0,
-                         -(bb[3]+bb[2])/2.0,
-                         -(bb[5]+bb[4])/2.0);
     filter->SetTransform(transform);
     filter->Update();
     modelDataForConf.append(filter);
@@ -158,26 +126,6 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
     // populate the PQP collision detection model
     ModelUtilities::makePQP_Model(collisionModel.data(), filter->GetOutput());
     // get the orientation of the model
-    if (shouldRotateToAxisAligned)
-    {
-        q_type orient;
-        pqpMatrixToQuat(orient,collisionModel->b->R);
-        q_invert(orient,orient);
-        double theta, x, y, z;
-        q_to_axis_angle(&x, &y, &z, &theta, orient);
-        transform->RotateWXYZ(theta * 180.0 / Q_PI, x, y, z);
-        transform->Update();
-        filter->Update();
-        filter->GetOutput()->GetBounds(bb);
-        transform->Translate(-(bb[1]+bb[0])/2.0,
-                             -(bb[3]+bb[2])/2.0,
-                             -(bb[5]+bb[4])/2.0);
-        transform->Update();
-        filter->Update();
-        // reinitialize to avoid pages of error prints
-        collisionModel.reset(new PQP_Model());
-        ModelUtilities::makePQP_Model(collisionModel.data(), filter->GetOutput());
-    }
     if (collisionModel.data()->num_tris < 5000)
     {
         fileNames.insert(

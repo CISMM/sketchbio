@@ -1,4 +1,5 @@
 #include <sketchmodel.h>
+#include <sketchtests.h>
 
 #include <vtkPolyData.h>
 #include <vtkPolyDataAlgorithm.h>
@@ -10,11 +11,12 @@
 #include <QDir>
 #include <QDebug>
 
+#include <limits>
+
 
 int testUseCount();
 int testAddResolutionFileAndChangeResolutions();
 int testAddConformations();
-int testTranslateAndRotateBounds();
 
 // The main method for the program that tests the SketchModel class
 int main(int argc, char *argv[])
@@ -33,7 +35,6 @@ int main(int argc, char *argv[])
 
     // tests
     errors += testAddConformations();
-    errors += testTranslateAndRotateBounds();
     errors += testUseCount();
     errors += testAddResolutionFileAndChangeResolutions();
 
@@ -207,64 +208,5 @@ int testAddConformations()
     }
     retVal += testConformationAdded(model.data(),2);
 
-    return retVal;
-}
-
-// tests if the given bounding box is centered on zero
-inline int testBBCentered(double bb[6])
-{
-    int retVal = 0;
-    if (bb[0] >= 0 || bb[2] >= 0 || bb[4] >= 0)
-    {
-        qDebug() << "Bounding box minimum greater than 0";
-        retVal++;
-    }
-    if (bb[1] <= 0 || bb[3] <= 0 || bb[5] <= 0)
-    {
-        qDebug() << "Bounding box maximum less than 0";
-        retVal++;
-    }
-    if (Q_ABS(bb[0] + bb[1]) > 10e-5)
-    {
-        qDebug() << "Bounds not centered in x: " << bb[0] << " " << bb[1];
-        retVal++;
-    }
-    if (Q_ABS(bb[2] + bb[3]) > 10e-5)
-    {
-        qDebug() << "Bounds not centered in y: " << bb[2] << " " << bb[3];
-        retVal++;
-    }
-    if (Q_ABS(bb[4] + bb[5]) > 10e-5)
-    {
-        qDebug() << "Bounds not centered in z: " << bb[4] << " " << bb[5];
-        retVal++;
-    }
-    return retVal;
-}
-
-// this ensures that the center of the bounding box for a model
-// is centered on the model's local origin
-int testTranslateAndRotateBounds()
-{
-    int retVal = 0;
-    // test a model with rotate-to-principle-components off
-    QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
-    QString filename = "models/1m1j.obj";
-    model->addConformation(filename,filename);
-    double bb[6];
-    model->getVTKSource(0)->GetOutput()->GetBounds(bb);
-    retVal += testBBCentered(bb);
-    double volumeNoRotation = 8 * bb[1] * bb[3] * bb[5];
-    // test a model with rotate-to-principle-components on
-    model.reset(new SketchModel(1,1,true));
-    model->addConformation(filename,filename);
-    model->getVTKSource(0)->GetOutput()->GetBounds(bb);
-    retVal += testBBCentered(bb);
-    double volumeWithRotation = 8 * bb[1] * bb[3] * bb[5];
-    if (volumeWithRotation > volumeNoRotation)
-    {
-        retVal++;
-        qDebug() << "Rotation did not shrink bounding volume.";
-    }
     return retVal;
 }

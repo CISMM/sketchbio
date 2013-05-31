@@ -15,7 +15,7 @@
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_ATTRIBUTE_NAME                  "version"
 #define SAVE_MAJOR_VERSION                      1
-#define SAVE_MINOR_VERSION                      4
+#define SAVE_MINOR_VERSION                      0
 #define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
@@ -183,8 +183,6 @@ vtkXMLDataElement *ProjectToXML::modelToXML(const SketchModel *model,
     vtkSmartPointer< vtkXMLDataElement > properties =
             vtkSmartPointer< vtkXMLDataElement >::New();
     properties->SetName(PROPERTIES_ELEMENT_NAME);
-    properties->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME,
-                          model->shouldRotate() ? "true" : "false");
     double d = model->getInverseMass();
     setPreciseVectorAttribute(properties,&d,1,MODEL_IMASS_ATTRIBUTE_NAME);
     d = model->getInverseMomentOfInertia();
@@ -592,131 +590,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrent(vtkXMLDataElement *
 
 ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataElement *root,int minorVersion) {
     switch(minorVersion) {
-    case 0: // in 1 we added object groups... objects need numInstances parameter: default to 1
-    {
-        vtkXMLDataElement *objList = root->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
-        if (objList == NULL) {
-            return XML_TO_DATA_FAILURE;
-        }
-        for (int i = 0; i < objList->GetNumberOfNestedElements(); i++) {
-            vtkXMLDataElement *obj = objList->GetNestedElement(i);
-            obj->SetAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,"1");
-        }
-    }
-    case 1: // in 2 we added a transform op list that is assumed to be present.  So add an empty one.
-    {
-        vtkSmartPointer<vtkXMLDataElement> transOpList = vtkSmartPointer<vtkXMLDataElement>::New();
-        transOpList->SetName(TRANSFORM_OP_LIST_ELEMENT_NAME);
-        root->AddNestedElement(transOpList);
-    }
-    case 2: // in 3 we changed how the camera works and must update the transformation matrices that are saved
-        // notably the room to eye matrix
-    {
-        vtkXMLDataElement *transforms = root->FindNestedElementWithName(TRANSFORM_MANAGER_ELEMENT_NAME);
-        if (transforms == NULL) return XML_TO_DATA_FAILURE;
-        vtkXMLDataElement *roomToEye = transforms->FindNestedElementWithName(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME);
-        if (roomToEye == NULL) return XML_TO_DATA_FAILURE;
-        transforms->RemoveNestedElement(roomToEye);  // This takes care of deleting it, no need to do it explicitly
-        roomToEye = NULL; // just delete the old one
-        vtkSmartPointer<vtkTransform> trans = vtkSmartPointer<vtkTransform>::New();
-        trans->Identity();
-        trans->RotateWXYZ(180,0,1,0);
-        trans->Translate(0,0,-STARTING_CAMERA_POSITION);
-        roomToEye = matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,trans->GetMatrix());
-        // create a new one with the correct room to eye matrix and add it
-        transforms->AddNestedElement(roomToEye);
-        roomToEye->Delete();
-    }
-    case 3: // in 4 we completely changed how models are saved (and stored in the program)
-        // rewrite all models
-    {
-        vtkXMLDataElement *modelMgr =
-                root->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
-        if (modelMgr == NULL) return XML_TO_DATA_FAILURE;
-        for (int i = 0; i < modelMgr->GetNumberOfNestedElements(); i++)
-        {
-            vtkXMLDataElement *model = modelMgr->GetNestedElement(i);
-            if (QString(model->GetName()) == QString(MODEL_ELEMENT_NAME))
-            {
-                model->SetIntAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,1);
-                vtkXMLDataElement *transform =
-                        model->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
-                if (transform == NULL) return XML_TO_DATA_FAILURE;
-                // even though we are taking it out, it should have been there
-                // if it wasn't there, the file was corrupted
-                model->RemoveNestedElement(transform);
-                vtkSmartPointer< vtkXMLDataElement > props =
-                        model->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
-                props->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME,"false");
-                vtkSmartPointer< vtkXMLDataElement > source =
-                        model->FindNestedElementWithName(MODEL_SOURCE_ELEMENT_NAME);
-                // if source is null, this is doomed.  Source's information has to
-                // be formatted slightly differently in the new version.
-                if (source == NULL) return XML_TO_DATA_FAILURE;
-                const char *src = source->GetCharacterData();
-                if (QString(src).startsWith("VTK"))
-                {
-                    modelMgr->RemoveNestedElement(model);
-                    i--;
-                }
-                else
-                {
-                    model->RemoveNestedElement(source);
-                    vtkSmartPointer< vtkXMLDataElement > conformationElt
-                            = vtkSmartPointer< vtkXMLDataElement >::New();
-                    conformationElt->SetName(MODEL_CONFORMATION_ELEMENT_NAME);
-                    conformationElt->SetIntAttribute(MODEL_CONFORMATION_NUMBER_ATTR_NAME,0);
-                    conformationElt->AddNestedElement(source);
-                    vtkSmartPointer< vtkXMLDataElement > resElt
-                            = vtkSmartPointer< vtkXMLDataElement >::New();
-                    resElt->SetName(MODEL_RESOLUTION_ELEMENT_NAME);
-                    resElt->SetAttribute(ID_ATTRIBUTE_NAME,
-                                         getResolutionString(ModelResolution::FULL_RESOLUTION));
-                    resElt->SetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME,
-                                         src);
-                    conformationElt->AddNestedElement(resElt);
-                    model->AddNestedElement(conformationElt);
-                    vtkXMLDataElement *props =
-                            model->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
-                    props->SetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME, "false");
-                }
-            }
-        }
-
-    }
-        // add a conformation number (default of 0) to each object's properties
-    {
-        QVector< vtkXMLDataElement * > eStack;
-        QVector< int > iStack;
-        eStack.push_back(root);
-        iStack.push_back(0);
-        while (! eStack.empty() )
-        {
-            if (eStack.last()->GetNumberOfNestedElements() == iStack.last())
-            {
-                eStack.pop_back();
-                iStack.pop_back();
-            }
-            else
-            {
-                int index = iStack.last();
-                if (index == 0)
-                {
-                    vtkXMLDataElement *elem = eStack.last();
-                    if (QString(elem->GetName()) == QString(OBJECT_ELEMENT_NAME))
-                    {
-                        vtkXMLDataElement *props = elem->FindNestedElementWithName(
-                                    PROPERTIES_ELEMENT_NAME);
-                        props->SetIntAttribute(OBJECT_MODEL_CONF_NUM_ATTR_NAME,0);
-                    }
-                }
-                iStack.last()++;
-                vtkXMLDataElement *next = eStack.last()->GetNestedElement(index);
-                eStack.push_back(next);
-                iStack.push_back(0);
-            }
-        }
-    }
     }
     return XML_TO_DATA_SUCCESS;
 }
@@ -801,7 +674,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
     QString id;
     int numConformations;
     double invMass, invMoment;
-    bool shouldRotate;
     id = elem->GetAttribute(ID_ATTRIBUTE_NAME);
     if (id == NULL) return XML_TO_DATA_FAILURE;
     if (! elem->GetScalarAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,numConformations))
@@ -813,14 +685,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
         return XML_TO_DATA_FAILURE;
     if (! props->GetScalarAttribute(MODEL_IMOMENT_ATTRIBUTE_NAME,invMoment) )
         return XML_TO_DATA_FAILURE;
-    const char *c = props->GetAttribute(MODEL_ROTATE_ENABLED_ATTR_NAME);
-    if (c == NULL) return XML_TO_DATA_FAILURE;
-    if (QString(c).toLower() == QString("true"))
-        shouldRotate = true;
-    else
-        shouldRotate = false;
 
-    QScopedPointer< SketchModel > model(new SketchModel(invMass, invMoment, shouldRotate));
+    QScopedPointer< SketchModel > model(new SketchModel(invMass, invMoment));
 
     int conformations = 0;
     for (int i = 0; i < numConformations; i++)

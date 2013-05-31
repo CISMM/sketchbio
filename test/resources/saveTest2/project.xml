@@ -1,143 +1,243 @@
 <sketchbio version="1.0">
   <models>
-    <model id="M0">
-      <source>VTK: vtkSphereSource</source>
+    <model id="M0"
+           numConformations="1">
       <properties inverseMass="1"
                   inverseMomentOfInertia="4e-05"></properties>
-      <transform translate="0 0 0"
-                 scale="0.001953125"></transform>
+      <conformation confNum="0">
+        <source>CAMERA</source>
+        <resolution id="full_resolution"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="simplified_full_resolution"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="5000_tris"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="2000_tris"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="1000_tris"
+                    filename="CAMERA.vtk"></resolution>
+      </conformation>
     </model>
-    <model id="M1">
-      <source>actin.obj.decimated.0.1.obj</source>
+    <model id="M1"
+           numConformations="1">
       <properties inverseMass="1"
                   inverseMomentOfInertia="4e-05"></properties>
-      <transform translate="-5.299325943 -9.4355831146 12.6710186004638671875"
-                 scale="1"></transform>
+      <conformation confNum="0">
+        <source>1m1j.obj.decimated.0.1.obj</source>
+        <resolution id="full_resolution"
+                    filename="1m1j.obj.decimated.0.1.obj"></resolution>
+      </conformation>
+    </model>
+    <model id="M2"
+           numConformations="1">
+      <properties inverseMass="1"
+                  inverseMomentOfInertia="4e-05"></properties>
+      <conformation confNum="0">
+        <source>1fzc.obj.decimated.0.1.obj</source>
+        <resolution id="full_resolution"
+                    filename="1fzc.obj.decimated.0.1.obj"></resolution>
+      </conformation>
     </model>
   </models>
   <viewpoint>
-    <worldToRoom matrix="0.01162030962267546208 -0.020898796495 0.02683468446707481039 9.865073888756848319303572 -0.0015595877978 0.02800035873504984688 0.02248197450714502221 -4.5963596057 -0.033976869651 -0.0084327810883 0.00814568063104878504 7.873870901457245885524117 0 0 0 1"></worldToRoom>
-    <roomToEye matrix="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"></roomToEye>
+    <worldToRoom matrix="0.01694019683993585809 -0.0028238679095 0.01897618968154433927 -1.6302039617 -0.014178923638 0.01521047006351002907 0.01492112591913797963 -2.9252742318 -0.012923936292 -0.020388909835 0.00850320529273275102 10.37476335930095849846566 0 0 0 1"></worldToRoom>
+    <roomToEye matrix="-1 0 1.2246467991e-16 -6.1232339957e-15 0 1 0 0 -1.2246467991e-16 0 -1 50 0 0 0 1"></roomToEye>
   </viewpoint>
   <objectlist>
-    <object id="O0">
-      <properties modelid="#M1"
-                  physicsEnabled="true"></properties>
-      <transform position="22.870922564274113852889059 116.9559504299796515169873601 -253.56077531"
-                 orientation="-0.7111428153 0.01504537831884484103 0.01083025686360904703 0.70280312917447751441813"></transform>
+    <object id="O0"
+            numInstances="1">
+      <properties modelid="#M2"
+                  conformation="0"
+                  visibility="true"
+                  active="false"></properties>
+      <transform position="-97.364469462 384.70227207109275013863225468 -170.02926615"
+                 orientation="-0.26395878277 0.73820975357416740436634 0.198006411985272662291 0.5883583784898951396514"></transform>
     </object>
-    <object id="O1">
+    <object id="O1"
+            numInstances="1">
       <properties modelid="#M1"
-                  physicsEnabled="true"></properties>
-      <transform position="42.5974258350425003527561785 130.9347852741514941499190172 -210.49082766"
-                 orientation="-0.16423172184 -0.33524658792 -0.90557750389 0.20141263932532385561"></transform>
+                  conformation="0"
+                  visibility="true"
+                  active="false"></properties>
+      <transform position="-195.11851556 85.8092496957874431018353789 -137.22355618"
+                 orientation="-0.095130573098 -0.16699877077 0.199306569971240660211 0.9609050295370884509083"></transform>
+    </object>
+    <object id="O2"
+            numInstances="1">
+      <properties modelid="#M1"
+                  conformation="0"
+                  visibility="true"
+                  active="false"></properties>
+      <transform position="42.5042013329189956039044773 260.20125704961668589021428488 170.6968855784803622555045877"
+                 orientation="0.191492266869486144065 -0.24553878438 0.3421266815845847575339 0.88656119407642841601103"></transform>
+    </object>
+    <object id="O3"
+            numInstances="1">
+      <properties modelid="#M1"
+                  conformation="0"
+                  visibility="true"
+                  active="false"></properties>
+      <transform position="-60.964954756 122.171199992738465311958862 31.357205300550500481904237"
+                 orientation="-0.74293429841 -0.25421794082 -0.60433353544 0.134917918555154975335"></transform>
+    </object>
+    <object id="O4"
+            numInstances="1">
+      <properties modelid="#M1"
+                  conformation="0"
+                  visibility="true"
+                  active="false"></properties>
+      <transform position="171.2910409566811438253353117 314.70919549170110940394806676 332.48574763747433280514087528"
+                 orientation="0.78361793741898611020957 0.3563635569082479470637 0.3686341755200934211523 -0.35079450979"></transform>
+    </object>
+    <object id="O5"
+            numInstances="1">
+      <properties modelid="#M0"
+                  conformation="0"
+                  visibility="false"
+                  active="true"></properties>
+      <transform position="301.93422429645005422571557574 177.0648193535881489424355095 57.8390756763682958307981608"
+                 orientation="0.84768497440587353697339 0.14459201533678350815 -0.50714315428 0.057698824375293396305"></transform>
     </object>
   </objectlist>
   <replicatorList>
-    <replicator numReplicas="14"
-                original1="#O0"
-                original2="#O1">
+    <replicator numReplicas="5"
+                original1="#O1"
+                original2="#O2">
       <objectlist>
-        <object id="O2">
+        <object id="O6"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
+                      conformation="0"
+                      visibility="true"
+                      active="false"
                       replicaNum="2"></properties>
-          <transform position="8.329044793518662004316866 165.9670886065544550547201652 -216.65353235"
-                     orientation="-0.63116390684 0.178306506358021837899 0.4518358036373103514549 0.60471755311772146246341"></transform>
+          <transform position="213.0397651785181665218260605 333.54428336414957811939530075 554.40321627957450800749938935"
+                     orientation="0.4562379241566058007962 -0.29602702896 0.4458602648738029805564 0.71093148677776107913218"></transform>
         </object>
-        <object id="O3">
+        <object id="O7"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
+                      conformation="0"
+                      visibility="true"
+                      active="false"
                       replicaNum="3"></properties>
-          <transform position="46.9354150487991859108660719 193.3282353698900521976611344 -202.49447276"
-                     orientation="0.4716010885090291537836 0.2484134256688790287626 0.6855388050680893963218 -0.49590294414"></transform>
+          <transform position="368.44412307144159512972692028 264.85206999893171087023802102 945.329029748170796665363013744"
+                     orientation="0.66886032562955244351599 -0.31269543582 0.4986561960895932177351 0.4540808598894544578783"></transform>
         </object>
-        <object id="O4">
+        <object id="O8"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
+                      conformation="0"
+                      visibility="true"
+                      active="false"
                       replicaNum="4"></properties>
-          <transform position="11.06996043388670614149305 213.1589545132644047953363042 -174.9268307"
-                     orientation="-0.40149974777 0.2992809101421275985722 0.78568510341116759576607 0.3632186774388784789025"></transform>
+          <transform position="567.39043361302242374222259969 76.1922053972194248672167305 1271.702967548915921724983491"
+                     orientation="0.80506825997728637123174 -0.29363970987 0.4944827630857213662807 0.14535341266866394494"></transform>
         </object>
-        <object id="O5">
+        <object id="O9"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
+                      conformation="0"
+                      visibility="true"
+                      active="false"
                       replicaNum="5"></properties>
-          <transform position="33.611852884646040706684289 253.9357881207011473634338472 -191.31817204"
-                     orientation="0.66712672274370232727847 0.10266715784570575043 0.3029194410329395514836 -0.67278614934"></transform>
+          <transform position="849.222232486894426983781158924 -157.11036169 1490.41025046232334716478362679"
+                     orientation="0.84930054600459825575598 -0.24103688732 0.4338167629554720572393 -0.17998004802"></transform>
         </object>
-        <object id="O6">
+        <object id="O10"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
+                      conformation="0"
+                      visibility="true"
+                      active="false"
                       replicaNum="6"></properties>
-          <transform position="27.662616149723888270273164 265.31834844039605059151654132 -143.6253314"
-                     orientation="-0.076616914589 0.349278603202196780142 0.93320329279607139305597 0.035579770356417149413"></transform>
+          <transform position="1216.48761701543207891518250108 -339.91240261 1606.13266587158682341396342963"
+                     orientation="0.79650383185760831317168 -0.16089661847 0.3235890299775978640184 -0.4847515484"></transform>
         </object>
-        <object id="O7">
+      </objectlist>
+    </replicator>
+    <replicator numReplicas="4"
+                original1="#O3"
+                original2="#O4">
+      <objectlist>
+        <object id="O11"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="7"></properties>
-          <transform position="13.531405914666407852564589 307.57226867350095744768623263 -164.9438273"
-                     orientation="-0.70443825507 0.067427395873193837761 0.151539538595037215352 0.69011307719972969643152"></transform>
+                      conformation="0"
+                      visibility="true"
+                      active="false"
+                      replicaNum="2"></properties>
+          <transform position="414.17528152249462891631992534 604.48902333970443123689619824 529.27757501442010834580287337"
+                     orientation="0.73477653685720178966534 0.4177961417983442893309 0.0908199180520950360984 -0.52659430995"></transform>
         </object>
-        <object id="O8">
+        <object id="O12"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="8"></properties>
-          <transform position="42.3148555323073480849416228 324.79911672846219516941346228 -128.69038775"
-                     orientation="0.2664361940763174119162 0.3164422579341783503537 0.8594053276422510823096 -0.30049714591"></transform>
+                      conformation="0"
+                      visibility="true"
+                      active="false"
+                      replicaNum="3"></properties>
+          <transform position="576.17778001303554447076749057 981.033006347073524011648260057 646.161900777015716812456958"
+                     orientation="-0.60199002045 -0.43149728214 0.197370131455555569699 0.64223293437320050358608"></transform>
         </object>
-        <object id="O9">
+        <object id="O13"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="9"></properties>
-          <transform position="3.62849214163833266866277 355.27339150029638403793796897 -124.91586661"
-                     orientation="-0.57468697598 0.2215310373434836999085 0.5700597809710920005344 0.5437745169252777843738"></transform>
+                      conformation="0"
+                      visibility="true"
+                      active="false"
+                      replicaNum="4"></properties>
+          <transform position="601.69446276605196999298641458 1395.34616848969517377554439008 743.041355987456427101278677583"
+                     orientation="-0.40042868684 -0.39590168052 0.4630114770803530621635 0.68449915865955335281257"></transform>
         </object>
-        <object id="O10">
+        <object id="O14"
+                numInstances="1">
           <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="10"></properties>
-          <transform position="40.9661231248041275421201135 387.42161154186817384470487013 -121.458063"
-                     orientation="0.5463019625784852895123 0.208559259701930177489 0.5817929484458099764765 -0.56530891202"></transform>
-        </object>
-        <object id="O11">
-          <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="11"></properties>
-          <transform position="11.75523837664404425140674 403.37150299276243003987474367 -84.963017855"
-                     orientation="-0.30864437368 0.323096933100366356939 0.85338607412339584357142 0.2684757547836923441409"></transform>
-        </object>
-        <object id="O12">
-          <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="12"></properties>
-          <transform position="23.834911480876499467740359 446.20255133578615414080559276 -106.39070883"
-                     orientation="0.69660812653557013796046 0.051214870037621366972 0.166204011427781267463 -0.69605343309"></transform>
-        </object>
-        <object id="O13">
-          <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="13"></properties>
-          <transform position="29.674349847814013969582447 457.844682296115763620036887 -58.74698006"
-                     orientation="0.030595554882339639352 0.3480379698056055848276 0.93432546431482321747097 -0.070494044627"></transform>
-        </object>
-        <object id="O14">
-          <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="14"></properties>
-          <transform position="5.223781403164579728581884 497.58680563507613214824232273 -74.942549835"
-                     orientation="-0.68170845273 0.118275509872784692633 0.2888014524735754151585 0.66172366610554422816648"></transform>
-        </object>
-        <object id="O15">
-          <properties modelid="#M1"
-                      physicsEnabled="true"
-                      replicaNum="15"></properties>
-          <transform position="40.409959202948172674041416 518.98198538022927550628082827 -47.670910343"
-                     orientation="0.3625795183177052960488 0.2904391936903669146908 0.79368256858202834713722 -0.39274565306"></transform>
+                      conformation="0"
+                      visibility="true"
+                      active="false"
+                      replicaNum="5"></properties>
+          <transform position="495.71154184002824649724061601 1781.666623988939818445942364633 888.699354051594355041743256152"
+                     orientation="-0.15312006706 -0.31507598408 0.67575571707902237772458 0.64856424520104960507183"></transform>
         </object>
       </objectlist>
     </replicator>
   </replicatorList>
-  <springList></springList>
+  <springList>
+    <spring>
+      <properties stiffness="2"
+                  minRestLen="0"
+                  maxRestLen="0"></properties>
+      <objConnection objId="#O1"
+                     connectionPoint="195.0031956320525239334529033 -2.7239546896 82.9688489172819458872254472"></objConnection>
+      <objConnection objId="#O2"
+                     connectionPoint="-198.83128826 -15.409049131 -101.93677658"></objConnection>
+    </spring>
+    <spring>
+      <properties stiffness="2"
+                  minRestLen="0"
+                  maxRestLen="0"></properties>
+      <objConnection objId="#O3"
+                     connectionPoint="-193.61982152 -29.579088888 -88.977809654"></objConnection>
+      <objConnection objId="#O1"
+                     connectionPoint="0.3920700614801404526588 -1.222813393 2.73004844963495640897122"></objConnection>
+    </spring>
+    <spring>
+      <properties stiffness="2"
+                  minRestLen="0"
+                  maxRestLen="0"></properties>
+      <objConnection objId="#O3"
+                     connectionPoint="178.4477227029367156774242176 -12.759381767 112.2393376469926948857391835"></objConnection>
+      <objConnection objId="#O2"
+                     connectionPoint="-0.74101814211 -2.964132803 7.94179581043973925602586"></objConnection>
+    </spring>
+  </springList>
+  <transformOpList>
+    <transformOp>
+      <objectPair firstObject="#O1"
+                  secondObject="#O2"></objectPair>
+      <objectPair firstObject="#O3"
+                  secondObject="#O4"></objectPair>
+    </transformOp>
+  </transformOpList>
 </sketchbio>

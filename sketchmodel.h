@@ -62,11 +62,7 @@ public:
     // are the same across all conformations.
     // Parameters: iMass - the inverse mass of the model
     //              iMoment - the invers moment of inertia of the model
-    //              applyRotations - leave as default unless there is a good reason
-    //                              that the model's orientation relative to the object
-    //                              that contains it matters.  In that case set to false.
-    SketchModel(double iMass, double iMoment, bool applyRotations = true,
-                QObject *parent = 0);
+    SketchModel(double iMass, double iMoment, QObject *parent = 0);
     // cleans up the SketchModel
     virtual ~SketchModel();
 
@@ -81,20 +77,12 @@ public:
     /// vtkPolyData's GetBounds() will be the oriented bounding box)
     // note: rotation is only applied if shouldRotateToAxisAligned is true
     vtkPolyDataAlgorithm *getVTKSource(int conformationNum);
-    // Gets the translation that was applied to the data read in
-    // for the given conformation
-    void getTranslation(q_vec_type out, int conformation) const;
-    // Gets the rotation that was applied to the data read in
-    // for the given conformation
-    void getRotation(q_type rotationOut, int conformation) const;
-    bool shouldRotate() const;
-    // Gets the scale that was applied to the data read in
-    // for the given conformation
-    double getScale(int conformation) const;
     // Gets the collision model for the given conformation
     PQP_Model *getCollisionModel(int conformationNum);
     // Gets the number of uses for a conformation
     int getNumberOfUses(int conformation) const;
+    bool hasFileNameFor(int conformation,
+                        ModelResolution::ResolutionType resolution) const;
     // Gets the filename for the geometry file that is used by the given
     // conformation at the given resolution.  Will return an empty string
     // if the the conformation at that resolution has no geometry file yet.
@@ -159,9 +147,6 @@ private:
     double invMass;
     // moment of inerita, but save the trouble of inverting it to divide
     double invMomentOfInertia;
-    // true (default) means that the models should be rotated so that the oriented
-    // bounding box is also the axis-aligned bounding box.
-    bool shouldRotateToAxisAligned;
 };
 
 

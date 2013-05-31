@@ -70,14 +70,18 @@ FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
 FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/project.xml"
     DESTINATION ${CMAKE_BINARY_DIR}/test/test/test2
 )
-FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/actin.obj.decimated.0.1.obj"
+FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1m1j.obj.decimated.0.1.obj"
+    DESTINATION ${CMAKE_BINARY_DIR}/test/test/test2
+)
+FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1fzc.obj.decimated.0.1.obj"
     DESTINATION ${CMAKE_BINARY_DIR}/test/test/test2
 )
 
 # this file is assumed to be present by several tests' code
 SOURCE_GROUP("Resources" FILES
     ${CMAKE_SOURCE_DIR}/models/1m1j.obj
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/actin.obj.decimated.0.1.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1m1j.obj.decimated.0.1.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1fzc.obj.decimated.0.1.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/project.xml
 )
 
