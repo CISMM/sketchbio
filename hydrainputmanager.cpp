@@ -68,7 +68,8 @@ QString HydraInputManager::getModeName()
 
 void HydraInputManager::setProject(SketchProject *proj) {
     project = proj;
-    activeMode->setProject(proj);
+    for (int i = 0; i < modeList.size(); i++)
+        modeList[i]->setProject(proj);
 }
 
 void HydraInputManager::handleCurrentInput() {
