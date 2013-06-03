@@ -87,4 +87,8 @@ inline int change_modes_button_idx() {
 // the name of the project's save file in the project directory
 #define PROJECT_XML_FILENAME "project.xml"
 
+// default mass and moment of inertia
+#define DEFAULT_INVERSE_MASS 1.0
+#define DEFAULT_INVERSE_MOMENT (1.0/25000)
+
 #endif // SKETCHIOCONSTANTS_H

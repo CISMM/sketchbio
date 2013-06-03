@@ -271,7 +271,8 @@ SketchObject *SketchProject::addObject(QString source,QString filename) {
     QFile localfile(fullpath);
 //    qDebug() << fullpath;
     if (localfile.exists() || file.copy(filename,fullpath)) {
-        SketchModel *model = models->makeModel(source,filename,INVERSEMASS,INVERSEMOMENT);
+        SketchModel *model = models->makeModel(source,filename,DEFAULT_INVERSE_MASS,
+                                               DEFAULT_INVERSE_MOMENT);
 
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;

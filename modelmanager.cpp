@@ -9,6 +9,7 @@
 
 #include "modelmanager.h"
 #include "sketchmodel.h"
+#include "sketchioconstants.h"
 
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
@@ -60,7 +61,8 @@ SketchModel *ModelManager::getCameraModel(QDir &projectDir) {
                     cameraKey,
                     projectDir);
         // initialize the model data
-        SketchModel *sModel = new SketchModel(INVERSEMASS,INVERSEMOMENT,false);
+        SketchModel *sModel = new SketchModel(DEFAULT_INVERSE_MASS,
+                                              DEFAULT_INVERSE_MOMENT);
         sModel->addConformation(cameraKey,filename);
         // insert into datastructure and return the new model
         models.append(sModel);
@@ -102,7 +104,7 @@ SketchModel *ModelManager::modelForVTKSource(QString sourceName,
                                                                sourceName,
                                                                dir);
 
-    SketchModel *sModel = new SketchModel(INVERSEMASS,INVERSEMOMENT);
+    SketchModel *sModel = new SketchModel(DEFAULT_INVERSE_MASS,DEFAULT_INVERSE_MOMENT);
     sModel->addConformation(sourceName,filename);
 
     models.append(sModel);
@@ -166,6 +168,19 @@ void ModelManager::addModel(SketchModel *model)
   ****************************************************************************/
 QVectorIterator<SketchModel *> ModelManager::getModelIterator() const {
     return QVectorIterator<SketchModel *>(models);
+}
+
+bool ModelManager::hasModel(QString source) const
+{
+    return modelSourceToIdx.contains(source);
+}
+
+SketchModel *ModelManager::getModel(QString source) const
+{
+    if (hasModel(source))
+        return models[modelSourceToIdx.value(source)];
+    else
+        return NULL;
 }
 
 /*****************************************************************************

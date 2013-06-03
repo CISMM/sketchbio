@@ -182,10 +182,18 @@ int testAddConformations()
     QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
     QString filename = "models/1m1j.obj";
     // test initial conformation
-    model->addConformation(filename,filename);
+    if (model->addConformation(filename,filename) != 0)
+    {
+        retVal++;
+        qDebug() << "Returned wrong conformation number.";
+    }
     retVal += testConformationAdded(model.data(),0);
     // add another and test it
-    model->addConformation(filename,filename);
+    if (model->addConformation(filename,filename) != 1)
+    {
+        retVal++;
+        qDebug() << "Returned wrong conformation number.";
+    }
     retVal += testConformationAdded(model.data(),1);
 
     // add a conformation with few triangles to test that
@@ -195,7 +203,11 @@ int testAddConformations()
     sphere->SetRadius(4);
     sphere->Update();
     filename = ModelUtilities::createFileFromVTKSource(sphere,"models/sphere_for_model_test");
-    model->addConformation(filename,filename);
+    if (model->addConformation(filename,filename) != 2)
+    {
+        retVal++;
+        qDebug() << "Returned wrong conformation number.";
+    }
     retVal += testConformationAdded(model.data(),2);
     // test if the lower resolutions of the model got filled in with the same filename
     if (model->getFileNameFor(2,ModelResolution::SIMPLIFIED_FULL_RESOLUTION) != filename

@@ -99,8 +99,9 @@ public:
     double getInverseMomentOfInertia() const;
 
     // Adds a new conformation with the given source and full resolution filename
-    // other resolutions will be generated later
-    void addConformation(QString src, QString fullResolutionFileName);
+    // other resolutions will be generated later.  Returns the conformation number
+    // of the conformation added.
+    int addConformation(QString src, QString fullResolutionFileName);
     // Incrementes the use count on a conformation (used to determine which
     // conformations need simplifying). This should be called whenever an
     // object is created that uses the conformation or when the conformation

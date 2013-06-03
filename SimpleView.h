@@ -119,26 +119,4 @@ private:
 };
 
 
-// A dialog that sends signals correctly so that I can delete it after the animation is
-// finished/cancelled.
-class MyDialog : public QProgressDialog {
-    Q_OBJECT
-public:
-    explicit MyDialog(const QString &a, const QString &b, int min, int max, QWidget *parent = 0) :
-        QProgressDialog(a,b,min,max,parent)
-    {
-        setModal(true);
-    }
-    virtual ~MyDialog() {
-        qDebug() << "Deleting dialog";
-    }
-public slots:
-    void resetAndSignal() {
-        QProgressDialog::reset();
-        emit deleteMe();
-    }
-signals:
-    void deleteMe();
-};
-
 #endif // SimpleViewUI_H

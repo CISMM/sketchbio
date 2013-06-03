@@ -53,10 +53,36 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
  * is valid, simply check for NULL.  Then connect it to the signals/slots
  * and call start().
  *
+ * The parameter percentOfOriginal controls how many triangles will be in the
+ * resulting file (in percent of the original amount).
+ *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *simplifyObjFile(QString objFile);
+SubprocessRunner *simplifyObjFileByPercent(QString objFile, int percentOfOriginal);
 
+/*
+ * This method returns a valid SubprocessRunner to run Blender to decimate an
+ * obj file or NULL.  There is no need to check if the returned object
+ * is valid, simply check for NULL.  Then connect it to the signals/slots
+ * and call start().
+ *
+ * The parameter percentOfOriginal controls how many triangles will be
+ * (absolute amount)
+ *
+ * For detailed usage information, see subprocessrunner.h
+ */
+SubprocessRunner *simplifyObjFile(QString objFile, int triangles);
+
+/*
+ * This method returns a valid SubprocessRunner to run various subprocesses to
+ * create a model and object from a PDB id or NULL.  There is no need to
+ * check if the returned object is valid, simply check for NULL.  Then
+  *connect it to the signals/slots and call start().
+ *
+ *
+ * For detailed usage information, see subprocessrunner.h
+ */
+SubprocessRunner *loadFromPDB(SketchProject *proj, QString pdb);
 }
 
 #endif // SUBPROCESSUTILS_H

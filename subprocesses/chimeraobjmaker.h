@@ -1,7 +1,7 @@
 #ifndef CHIMERAOBJMAKER_H
 #define CHIMERAOBJMAKER_H
 
-#include "subprocessrunner.h"
+#include "abstractsingleprocessrunner.h"
 
 class QProcess;
 class QTemporaryFile;
@@ -15,7 +15,7 @@ class QTemporaryFile;
  *
  */
 
-class ChimeraOBJMaker : public SubprocessRunner
+class ChimeraOBJMaker : public AbstractSingleProcessRunner
 {
     Q_OBJECT
 public:
@@ -26,19 +26,13 @@ public:
     virtual ~ChimeraOBJMaker();
     virtual bool isValid();
     
-public:
     // starts the subprocess
     virtual void start();
-    // cancels the subprocess
-    virtual void cancel();
 
-private slots:
-    void processResult(int status);
 
 private:
 
     // fields
-    QProcess *chimera;
     QTemporaryFile *cmdFile;
     bool valid;
 };

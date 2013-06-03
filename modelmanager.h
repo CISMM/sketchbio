@@ -24,8 +24,6 @@ class SketchModel;
 class vtkPolyDataAlgorithm;
 
 
-#define INVERSEMASS 1.0
-#define INVERSEMOMENT (1.0/25000)
 
 #define CAMERA_MODEL_KEY "CAMERA"
 
@@ -82,6 +80,18 @@ public:
       *
       ****************************************************************************/
     QVectorIterator<SketchModel *> getModelIterator() const;
+    /*****************************************************************************
+      *
+      * Returns true if the model manager has a model with the given source
+      *
+      ****************************************************************************/
+    bool hasModel(QString source) const;
+    /*****************************************************************************
+      *
+      * Returns the model with the given source or NULL
+      *
+      ****************************************************************************/
+    SketchModel *getModel(QString source) const;
     /*****************************************************************************
       *
       * This method returns the number of models in the model manager

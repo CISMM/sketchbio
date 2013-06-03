@@ -99,7 +99,7 @@ inline void pqpMatrixToQuat(q_type quat, const PQP_REAL mat[3][3]) {
     q_from_col_matrix(quat,colMat);
 }
 
-void SketchModel::addConformation(QString src, QString fullResolutionFileName)
+int SketchModel::addConformation(QString src, QString fullResolutionFileName)
 {
     useCount.append(0);
     source.append(src);
@@ -152,7 +152,7 @@ void SketchModel::addConformation(QString src, QString fullResolutionFileName)
                     fullResolutionFileName);
     }
     collisionModelForConf.append(collisionModel.take());
-    numConformations++;
+    return numConformations++;
 }
 
 void SketchModel::incrementUses(int conformation)

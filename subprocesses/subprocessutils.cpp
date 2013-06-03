@@ -7,6 +7,7 @@
 #include "pymolobjmaker.h"
 #include "blenderanimationrunner.h"
 #include "blenderdecimationrunner.h"
+#include "modelfrompdbrunner.h"
 
 namespace SubprocessUtils {
 
@@ -95,10 +96,35 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
     return runner;
 }
 
-SubprocessRunner *simplifyObjFile(QString objFile)
+SubprocessRunner *simplifyObjFileByPercent(QString objFile, int percentOfOriginal)
 {
-    BlenderDecimationRunner *runner = new BlenderDecimationRunner(objFile);
+    BlenderDecimationRunner *runner = new BlenderDecimationRunner(objFile,DecimationType::PERCENT,
+                                                                  percentOfOriginal);
 
+    if (!runner->isValid())
+    {
+        delete runner;
+        return NULL;
+    }
+    return runner;
+}
+
+SubprocessRunner *simplifyObjFile(QString objFile, int triangles)
+{
+    BlenderDecimationRunner *runner = new BlenderDecimationRunner(
+                objFile,DecimationType::POLYGON_COUNT,triangles);
+
+    if (!runner->isValid())
+    {
+        delete runner;
+        return NULL;
+    }
+    return runner;
+}
+
+SubprocessRunner *loadFromPDB(SketchProject *proj, QString pdb)
+{
+    ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdb);
     if (!runner->isValid())
     {
         delete runner;

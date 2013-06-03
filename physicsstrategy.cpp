@@ -2,6 +2,7 @@
 #include <QSet>
 #include <quat.h>
 #include <sketchobject.h>
+#include <sketchioconstants.h>
 #include <springconnection.h>
 #include <modelmanager.h>  // for #define default mass and moment of inertia
 
@@ -142,8 +143,8 @@ static inline void euler(SketchObject *obj, double dt) {
             iMass = model->getInverseMass();
             iMoment = model->getInverseMomentOfInertia();
         } else {
-            iMass = INVERSEMASS;
-            iMoment = INVERSEMOMENT;
+            iMass = DEFAULT_INVERSE_MASS;
+            iMoment = DEFAULT_INVERSE_MOMENT;
         }
         // get force & torque
         obj->getForce(force);

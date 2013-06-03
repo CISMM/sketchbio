@@ -1,28 +1,36 @@
 #ifndef BLENDERDECIMATIONRUNNER_H
 #define BLENDERDECIMATIONRUNNER_H
 
-#include "subprocessrunner.h"
+#include "abstractsingleprocessrunner.h"
 
-class QProcess;
+#include <QFile>
 class QTemporaryFile;
 
-class BlenderDecimationRunner : public SubprocessRunner
+namespace DecimationType
+{
+enum Type { PERCENT, POLYGON_COUNT };
+}
+
+/*
+ *
+ * This class is a SubprocessRunner that uses Blender to decimate complex meshes to make
+ * them more usable.
+ */
+class BlenderDecimationRunner : public AbstractSingleProcessRunner
 {
     Q_OBJECT
 public:
-    explicit BlenderDecimationRunner(QString objFile, QObject *parent = 0);
+    explicit BlenderDecimationRunner(QString objFile, DecimationType::Type type,
+                                     int param, QObject *parent = 0);
 
     virtual void start();
-    virtual void cancel();
     virtual bool isValid();
-private slots:
-    void blenderFinished(int status);
+protected:
+    virtual bool didProcessSucceed();
 
 private:
-    QProcess *blender;
-    QTemporaryFile *tempFile;
+    QFile *tempFile;
     bool valid;
-    
 };
 
 #endif // BLENDERDECIMATIONRUNNER_H

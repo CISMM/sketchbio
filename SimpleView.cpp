@@ -76,7 +76,8 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         // eventually we will just load the example from a project directory...
         // example of keyframes this time
 
-        SketchModel *model = project->addModelFromFile("PDB:1m1j","./models/1m1j.obj",INVERSEMASS,INVERSEMOMENT);
+        SketchModel *model = project->addModelFromFile("PDB:1m1j","./models/1m1j.obj",
+                                                       DEFAULT_INVERSE_MASS,DEFAULT_INVERSE_MOMENT);
         q_vec_type position = {200,0,0};
         q_type orientation;
         q_from_axis_angle(orientation,0,1,0,0);
@@ -317,7 +318,7 @@ void SimpleView::simplifyObjectByName(const QString name)
     }
     printf("Simplifying %s \n", name.toStdString().c_str());
 
-    SubprocessRunner *runner = SubprocessUtils::simplifyObjFile(name);
+    SubprocessRunner *runner = SubprocessUtils::simplifyObjFileByPercent(name,10);
     if (runner == NULL)
     {
         QMessageBox::warning(NULL,"Could not run Blender to simplify model.", name);
@@ -351,28 +352,32 @@ void SimpleView::importPDBId()
                                          tr("PDB ID:"), QLineEdit::Normal,
                                          "1M1J", &ok);
     if (ok && !text.isEmpty()) {
-	// Ask the user where to put the output file.
-	QString fn = QFileDialog::getExistingDirectory ( this,
-					"Choose a directory to save to");
 
-    if (fn.length() > 0) {
-      printf("Importing %s from PDB\n", text.toStdString().c_str());
-      // uncomment this and comment the other to switch from using Chimera
-      // to using PyMOL to surface obj files
-//      SubprocessRunner *objMaker = SubprocessUtils::makePyMolOBJFor(text,fn);
-      SubprocessRunner *objMaker =
-              SubprocessUtils::makeChimeraOBJFor(text,fn + "/" + text + ".obj");
-      if (objMaker == NULL)
-      {
-          QMessageBox::warning(NULL, "Could not run subprocess to import molecule ", text);
-      }
-      else
-      {
-          runSubprocessAndFreezeGUI(objMaker);
-      }
+        QString source = "PDB:" + text.toLower();
+        if (project->getModelManager()->hasModel(source))
+        {
+            SketchModel *model = project->getModelManager()->getModel(source);
+            q_vec_type pos = Q_NULL_VECTOR;
+            q_type orient = Q_ID_QUAT;
+            project->addObject(model,pos,orient);
+        }
+        else
+        {
 
+            printf("Importing %s from PDB\n", text.toStdString().c_str());
+            // uncomment this and comment the other to switch from using Chimera
+            // to using PyMOL to surface obj files
+            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDB(project,text);
+            if (objMaker == NULL)
+            {
+                QMessageBox::warning(NULL, "Could not run subprocess to import molecule ", text);
+            }
+            else
+            {
+                runSubprocessAndFreezeGUI(objMaker);
+            }
+        }
     }
-  }
 }
 
 void SimpleView::exportBlenderAnimation() {
@@ -399,14 +404,14 @@ void SimpleView::runSubprocessAndFreezeGUI(SubprocessRunner *runner)
     if (runner == NULL)
         return;
     timer->stop();
-    MyDialog *dialog = new MyDialog(".","Cancel",0,0,this);
+    QProgressDialog *dialog = new QProgressDialog(".","Cancel",0,0,NULL);
     connect(runner, SIGNAL(statusChanged(QString)), dialog, SLOT(setLabelText(QString)));
-    connect(runner, SIGNAL(finished(bool)), dialog, SLOT(resetAndSignal()));
+    connect(runner, SIGNAL(finished(bool)), dialog, SLOT(reset()));
     connect(runner, SIGNAL(finished(bool)), timer, SLOT(start()));
+    connect(runner, SIGNAL(destroyed()), dialog, SLOT(deleteLater()));
     connect(dialog, SIGNAL(canceled()), runner, SLOT(cancel()));
     connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
-    connect(dialog, SIGNAL(canceled()), dialog, SLOT(resetAndSignal()));
-    connect(dialog, SIGNAL(deleteMe()), dialog, SLOT(deleteLater()));
+    connect(dialog, SIGNAL(canceled()), dialog, SLOT(reset()));
     dialog->open();
     runner->start();
 }
