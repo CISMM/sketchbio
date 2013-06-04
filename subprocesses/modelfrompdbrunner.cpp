@@ -12,6 +12,7 @@ ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, QString &pdb, QObjec
     pdbId(pdb.toLower()),
     project(proj),
     model(NULL),
+    configuration(-1),
     currentRunner(NULL),
     stepNum(0)
 {
@@ -57,7 +58,15 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             model = project->addModelFromFile(
                         "PDB:" + pdbId, project->getProjectDir() + "/" + pdbId + ".obj",
                         DEFAULT_INVERSE_MASS, DEFAULT_INVERSE_MOMENT);
-            if (! model->hasFileNameFor(0,ModelResolution::SIMPLIFIED_1000))
+            for (int conf = 0; conf < model->getNumberOfConformations(); conf++)
+            {
+                if (model->getSource(conf) == QString("PDB:" + pdbId))
+                {
+                    configuration = conf;
+                    break;
+                }
+            }
+            if (! model->hasFileNameFor(configuration,ModelResolution::SIMPLIFIED_1000))
             {
                 currentRunner = SubprocessUtils::makeChimeraOBJFor(pdbId,simplified,5);
                 if (currentRunner == NULL)
@@ -80,9 +89,11 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             break;
         case 1:
-            model->addSurfaceFileForResolution(0,ModelResolution::SIMPLIFIED_FULL_RESOLUTION,
+            model->addSurfaceFileForResolution(configuration,
+                                               ModelResolution::SIMPLIFIED_FULL_RESOLUTION,
                                                simplified);
-            model->setReslutionForConfiguration(0,ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
+            model->setReslutionForConfiguration(configuration,
+                                                ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
         {
             q_vec_type pos = Q_NULL_VECTOR;
             q_type orient = Q_ID_QUAT;
@@ -101,7 +112,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             break;
         case 2:
-            model->addSurfaceFileForResolution(0,ModelResolution::SIMPLIFIED_5000,
+            model->addSurfaceFileForResolution(configuration,ModelResolution::SIMPLIFIED_5000,
                                                simplified + ".decimated.5000.obj");
             currentRunner = SubprocessUtils::simplifyObjFile(simplified,2000);
             if (currentRunner == NULL)
@@ -115,7 +126,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             break;
         case 3:
-            model->addSurfaceFileForResolution(0,ModelResolution::SIMPLIFIED_2000,
+            model->addSurfaceFileForResolution(configuration,ModelResolution::SIMPLIFIED_2000,
                                                simplified + ".decimated.2000.obj");
             currentRunner = SubprocessUtils::simplifyObjFile(simplified,1000);
             if (currentRunner == NULL)
@@ -129,7 +140,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             break;
         case 4:
-            model->addSurfaceFileForResolution(0,ModelResolution::SIMPLIFIED_1000,
+            model->addSurfaceFileForResolution(configuration,ModelResolution::SIMPLIFIED_1000,
                                                simplified + ".decimated.1000.obj");
             deleteLater();
             break;

@@ -18,3 +18,5 @@ SOURCE_GROUP( "Generated" FILES
 )
 
 ADD_LIBRARY(SketchSubprocess ${Subprocess_src} ${Subprocess_MOC_Srcs} ${Subprocess_non_qt_headers})
+
+ADD_SUBDIRECTORY(test)
