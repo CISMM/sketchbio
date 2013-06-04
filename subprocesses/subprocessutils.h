@@ -54,11 +54,11 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
  * and call start().
  *
  * The parameter percentOfOriginal controls how many triangles will be in the
- * resulting file (in percent of the original amount).
+ * resulting file (in percent of the original amount [ .5 is 50% ] ).
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *simplifyObjFileByPercent(QString objFile, int percentOfOriginal);
+SubprocessRunner *simplifyObjFileByPercent(QString objFile, double percentOfOriginal);
 
 /*
  * This method returns a valid SubprocessRunner to run Blender to decimate an

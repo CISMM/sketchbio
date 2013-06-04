@@ -3,7 +3,6 @@
 
 #include "abstractsingleprocessrunner.h"
 
-#include <QFile>
 class QTemporaryFile;
 
 namespace DecimationType
@@ -21,7 +20,7 @@ class BlenderDecimationRunner : public AbstractSingleProcessRunner
     Q_OBJECT
 public:
     explicit BlenderDecimationRunner(QString objFile, DecimationType::Type type,
-                                     int param, QObject *parent = 0);
+                                     double param, QObject *parent = 0);
 
     virtual void start();
     virtual bool isValid();
@@ -29,7 +28,7 @@ protected:
     virtual bool didProcessSucceed();
 
 private:
-    QFile *tempFile;
+    QTemporaryFile *tempFile;
     bool valid;
 };
 

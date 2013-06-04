@@ -2,6 +2,8 @@
 #include <QString>
 #include <QSettings>
 #include <QFile>
+#include <QApplication>
+#include <QDebug>
 #include <QFileDialog>
 #include "chimeraobjmaker.h"
 #include "pymolobjmaker.h"
@@ -15,6 +17,7 @@ QString getSubprocessExecutablePath(QString executableName) {
     QSettings settings; // default parameters specified to the QCoreApplication at startup
     QString executablePath = settings.value("subprocesses/" + executableName + "/path",QString("")).toString();
     if (executablePath.length() == 0 || ! QFile(executablePath).exists()) {
+        bool hasGui = (qobject_cast<QApplication *>(QCoreApplication::instance()) != 0);
 #if defined(__APPLE__) && defined(__MACH__)
         // test /Applications/appName and /usr/bin then ask
         if (QFile("/Applications/" + executableName + ".app/Contents/MacOS/" + executableName).exists()) {
@@ -24,9 +27,17 @@ QString getSubprocessExecutablePath(QString executableName) {
         } else if (QFile("/usr/local/bin/" + executableName).exists()) {
             executablePath = "/usr/local/bin/" + executableName;
         } else {
-            executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'","/Applications");
-            if (executablePath.endsWith(".app")) {
-                executablePath = executablePath + "/Contents/MacOS/" + executableName;
+            if (hasGui)
+            {
+                executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'","/Applications");
+                if (executablePath.endsWith(".app")) {
+                    executablePath = executablePath + "/Contents/MacOS/" + executableName;
+                }
+            }
+            else
+            {
+                qDebug() << "Could not find \"" << executableName << "\"\n" <<
+                            "Please run the SketchBio GUI to input the location of this program.";
             }
         }
 #elif defined(__WINDOWS__)
@@ -39,7 +50,15 @@ QString getSubprocessExecutablePath(QString executableName) {
             executablePath = "C:/Program Files(x86)/" + executableName + "/" + executableName;
         }
         else {
-            executablePath = QFileDialog::getOpenFileName(NULL, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+            if (hasGui)
+            {
+                executablePath = QFileDialog::getOpenFileName(NULL, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+            }
+            else
+            {
+                qDebug() << "Could not find \"" << executableName << "\"\n" <<
+                            "Please run the SketchBio GUI to input the location of this program.";
+            }
         }
 #endif
 #elif defined(__linux__)
@@ -47,7 +66,15 @@ QString getSubprocessExecutablePath(QString executableName) {
         if (QFile("/usr/bin/" + executableName).exists()) {
             executablePath = "/usr/bin/" + executableName;
         } else {
-            executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'");
+            if (hasGui)
+            {
+                executablePath = QFileDialog::getOpenFileName(NULL,"Specify location of '" + executableName + "'");
+            }
+            else
+            {
+                qDebug() << "Could not find \"" << executableName << "\"\n" <<
+                            "Please run the SketchBio GUI to input the location of this program.";
+            }
         }
 #endif
         settings.setValue("subprocesses/" + executableName + "/path",executablePath);
@@ -96,7 +123,7 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
     return runner;
 }
 
-SubprocessRunner *simplifyObjFileByPercent(QString objFile, int percentOfOriginal)
+SubprocessRunner *simplifyObjFileByPercent(QString objFile, double percentOfOriginal)
 {
     BlenderDecimationRunner *runner = new BlenderDecimationRunner(objFile,DecimationType::PERCENT,
                                                                   percentOfOriginal);

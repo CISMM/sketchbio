@@ -13,6 +13,8 @@
 #include <QFile>
 #include <QtCore/QCoreApplication>
 
+#define FILENAME "1m1j.obj"
+
 class ChimeraTest : public Test
 {
 public:
@@ -31,12 +33,12 @@ void ChimeraTest::setUp()
     QFile f("1m1j.obj");
     if (f.exists())
         f.remove();
-    runner = SubprocessUtils::makeChimeraOBJFor("1m1j","1m1j.obj",thresh);
+    runner = SubprocessUtils::makeChimeraOBJFor("1m1j",FILENAME,thresh);
 }
 
 int ChimeraTest::testResults()
 {
-    QFile f("1m1j.obj");
+    QFile f(FILENAME);
     if (f.exists())
     {
         f.remove();
@@ -49,6 +51,13 @@ int ChimeraTest::testResults()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc,argv);
+
+    // set required fields to use QSettings API (these specify the location of the settings)
+    // used to locate subprocess files
+    app.setApplicationName("Sketchbio");
+    app.setOrganizationName("UNC Computer Science");
+    app.setOrganizationDomain("sketchbio.org");
+
     ChimeraTest myTest(0), myTest2(3);
     TestQObject *test = new TestQObject(app,myTest);
     TestQObject *test2 = new TestQObject(app,myTest2);

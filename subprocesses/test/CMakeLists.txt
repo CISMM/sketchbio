@@ -60,8 +60,12 @@ SOURCE_GROUP("Generated" FILES ${MocTestSrc})
 MESSAGE( STATUS "MocSRC: " ${MocTestSrc} )
 ADD_LIBRARY(TestSubprocess testqt.cpp ${MocTestSrc} ${SketchProject_Deps})
 
-SET(TestChimeraSrc testChimera.cc)
-ADD_EXECUTABLE(TestChimera ${TestChimeraSrc})
-TARGET_LINK_LIBRARIES(TestChimera ${SUBPROCESS_TEST_LINK_LIBRARIES})
+macro (make_subprocess_test name source)
+    ADD_EXECUTABLE(${name} ${source})
+    TARGET_LINK_LIBRARIES(${name} ${SUBPROCESS_TEST_LINK_LIBRARIES})
+    ADD_TEST(${name} ${name})
+endmacro (make_subprocess_test)
 
-ADD_TEST(TestingChimeraImport           TestChimera)
+
+make_subprocess_test(TestChimera testChimera.cc)
+make_subprocess_test(TestBlenderDecimate testBlenderDecimate.cc)

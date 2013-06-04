@@ -44,12 +44,12 @@ inline void writeBlenderHelpers(QFile &file)
 }
 
 BlenderDecimationRunner::BlenderDecimationRunner(QString objFile, DecimationType::Type type,
-                                                 int param, QObject *parent) :
+                                                 double param, QObject *parent) :
     AbstractSingleProcessRunner(parent),
-    tempFile(new QFile("XXXXXX.py",this)),
+    tempFile(new QTemporaryFile("XXXXXX.py",this)),
     valid(true)
 {
-    if (tempFile->open(QFile::WriteOnly))
+    if (tempFile->open())
     {
         tempFile->write("import bpy\n");
         writeBlenderHelpers(*tempFile);
@@ -103,7 +103,7 @@ BlenderDecimationRunner::BlenderDecimationRunner(QString objFile, DecimationType
         // Switch back to object mode.
         tempFile->write("bpy.ops.object.mode_set(mode='OBJECT')\n");
         // Save the resulting simplified object.
-        line = "bpy.ops.export_scene.obj(filepath='%1.decimated.%2.obj')\n";
+        line = "bpy.ops.export_scene.obj(filepath='%1.decimated.%2.obj',use_edges=False)\n";
         line = line.arg(objFile).arg(param);
         tempFile->write(line.toStdString().c_str());
         tempFile->close();
