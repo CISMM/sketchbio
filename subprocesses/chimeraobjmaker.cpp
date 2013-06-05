@@ -39,6 +39,9 @@ ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, int threshold,
 
 ChimeraOBJMaker::~ChimeraOBJMaker()
 {
+    QFile f(cmdFile->fileName() + "c");
+    if (f.exists())
+        f.remove();
 }
 
 bool ChimeraOBJMaker::isValid()
