@@ -69,3 +69,4 @@ endmacro (make_subprocess_test)
 
 make_subprocess_test(TestChimera testChimera.cc)
 make_subprocess_test(TestBlenderDecimate testBlenderDecimate.cc)
+make_subprocess_test(TestLoadFromPDB testModelFromPDB.cc)

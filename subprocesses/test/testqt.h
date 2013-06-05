@@ -10,6 +10,9 @@ class Test
 {
 public:
     virtual ~Test() {}
+    // if true, then testResults will be called on the finished() event
+    // of the runner, otherwise it will use destroyed()
+    virtual bool useFinishedEvent() { return true; }
     virtual void setUp() = 0;
     virtual SubprocessRunner *getRunner() = 0;
     virtual int testResults() = 0;
@@ -26,6 +29,7 @@ public slots:
     void start();
 private slots:
     void runTests(bool success);
+    void runTests();
 
 signals:
     void finished();

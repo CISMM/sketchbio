@@ -18,7 +18,10 @@ void TestQObject::start()
 {
     test.setUp();
     SubprocessRunner *runner = test.getRunner();
-    runner->connect(runner,SIGNAL(finished(bool)),this,SLOT(runTests(bool)));
+    if (test.useFinishedEvent())
+        runner->connect(runner,SIGNAL(finished(bool)),this,SLOT(runTests(bool)));
+    else
+        runner->connect(runner,SIGNAL(destroyed()),this,SLOT(runTests()));
     runner->start();
 }
 
@@ -29,4 +32,9 @@ void TestQObject::runTests(bool success)
         application.exit(result);
     else
         emit finished();
+}
+
+void TestQObject::runTests()
+{
+    runTests(true);
 }

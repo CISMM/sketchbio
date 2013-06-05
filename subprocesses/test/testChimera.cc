@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
     TestQObject *test2 = new TestQObject(app,myTest2);
 
     QObject::connect(test, SIGNAL(finished()), test2, SLOT(start()));
+    QObject::connect(test, SIGNAL(finished()), test, SLOT(deleteLater()));
+    QObject::connect(test2, SIGNAL(finished()), test2, SLOT(deleteLater()));
     QObject::connect(test2, SIGNAL(finished()), &app, SLOT(quit()));
 
     QTimer::singleShot(0, test, SLOT(start()));
