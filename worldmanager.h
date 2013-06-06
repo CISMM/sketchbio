@@ -267,6 +267,19 @@ public:
     bool setAnimationTime(double t);
     /*******************************************************************
      *
+     * Should be called to sync states if an object's visibility status
+     * is externally modified
+     *
+     *******************************************************************/
+    void changedVisibility(SketchObject *obj);
+    /*******************************************************************
+     *
+     * Returns true if invisible objects are being shown
+     *
+     *******************************************************************/
+    bool isShowingInvisible() const;
+    /*******************************************************************
+     *
      * Shows all the invisible objects (for edit mode where you should be
      * able to position invisible things like cameras)
      *

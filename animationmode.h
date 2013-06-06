@@ -3,6 +3,8 @@
 
 #include "hydrainputmode.h"
 
+class SketchObject;
+
 class AnimationMode : public HydraInputMode
 {
     Q_OBJECT
@@ -23,6 +25,9 @@ public slots:
 private:
     int worldGrabbed;
     
+    double lDist, rDist; // the distance to the closest object to the (left/right) hand
+    SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
+                                // and right hands respectively
 };
 
 #endif // ANIMATIONMODE_H
