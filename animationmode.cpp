@@ -41,16 +41,22 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
     {
         if (rDist < DISTANCE_THRESHOLD)
         {
+            // toggle object visible
             rObj->setIsVisible(!rObj->isVisible());
             project->getWorldManager()->changedVisibility(rObj);
         }
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
-        // TODO -- set active camera
+        if (rDist < DISTANCE_THRESHOLD)
+        {
+            // add keyframe
+            rObj->addKeyframeForCurrentLocation(project->getViewTime());
+        }
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
+        // toggle invisible objects shown
         WorldManager *world = project->getWorldManager();
         if (world->isShowingInvisible())
             world->hideInvisibleObjects();
