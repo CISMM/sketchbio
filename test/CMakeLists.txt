@@ -1,67 +1,30 @@
-SET(SketchObject_Cpp
-            "${CMAKE_SOURCE_DIR}/sketchobject.cpp"
-            "${CMAKE_SOURCE_DIR}/sketchmodel.cpp"
-            "${CMAKE_SOURCE_DIR}/keyframe.cpp"
-)
-SET(SketchObject_MOC_Cpp
-            "${CMAKE_SOURCE_DIR}/sketchmodel.h"
-)
-SET(WorldMgr_Cpp
-             ${SketchObject_Cpp}
-            "${CMAKE_SOURCE_DIR}/springconnection.cpp"
-            "${CMAKE_SOURCE_DIR}/physicsstrategy.cpp"
-            "${CMAKE_SOURCE_DIR}/worldmanager.cpp"
-)
-SET(WorldMgr_MOC_Cpp
-            ${SketchObject_MOC_Cpp}
-)
-SET(SketchProject_Cpp
-             ${WorldMgr_Cpp}
-            "${CMAKE_SOURCE_DIR}/modelmanager.cpp"
-            "${CMAKE_SOURCE_DIR}/transformmanager.cpp"
-            "${CMAKE_SOURCE_DIR}/transformequals.cpp"
-            "${CMAKE_SOURCE_DIR}/structurereplicator.cpp"
-            "${CMAKE_SOURCE_DIR}/sketchproject.cpp"
-)
-SET(SketchProject_MOC_Cpp
-            ${WorldMgr_MOC_Cpp}
-)
 
-QT4_WRAP_CPP(SketchObject_MOC_Out ${SketchObject_MOC_Cpp})
-QT4_WRAP_CPP(WorldMgr_MOC_Out ${WorldMgr_MOC_Cpp})
-QT4_WRAP_CPP(SketchProject_MOC_Out ${SketchProject_MOC_Cpp})
-
-SOURCE_GROUP("Generated" FILES ${SketchProject_MOC_Out})
-
-SET(SketchObject_Deps
-    ${SketchObject_Cpp}
-    ${SketchObject_MOC_Out}
-)
-
-SET(WorldMgr_Deps
-    ${WorldMgr_Cpp}
-    ${WorldMgr_MOC_Out}
-)
-
-SET(SketchProject_Deps
-    ${SketchProject_Cpp}
-    ${SketchProject_MOC_Out}
-)
-
-SET(Test1Srcs testTransformManager.cc "${CMAKE_SOURCE_DIR}/transformmanager.cpp")
+SET(Test1Srcs testTransformManager.cc)
 ADD_EXECUTABLE( TransformTest ${Test1Srcs})
-TARGET_LINK_LIBRARIES( TransformTest QVTK ${QUATLIB_LIBRARIES} )
+TARGET_LINK_LIBRARIES( TransformTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    SketchBioCore
+)
 
-SET(Test2Srcs testPQPDeform.cc "${CMAKE_SOURCE_DIR}/modelmanager.cpp"
-            ${SketchObject_Deps})
-
+SET(Test2Srcs testPQPDeform.cc )
 ADD_EXECUTABLE( PQPTest ${Test2Srcs})
-TARGET_LINK_LIBRARIES( PQPTest QVTK ${QUATLIB_LIBRARIES} PQP )
+TARGET_LINK_LIBRARIES( PQPTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    PQP
+    SketchBioCore
+)
 
 
-SET(Test3Srcs testReplicatedObjects.cc ${SketchProject_Deps} )
+SET(Test3Srcs testReplicatedObjects.cc )
 ADD_EXECUTABLE( ReplicatorTest ${Test3Srcs})
-TARGET_LINK_LIBRARIES( ReplicatorTest QVTK ${QUATLIB_LIBRARIES} PQP )
+TARGET_LINK_LIBRARIES( ReplicatorTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    PQP
+    SketchBioCore
+)
 
 # move files used by several tests to location where tests can find them
 FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
@@ -85,21 +48,42 @@ SOURCE_GROUP("Resources" FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/project.xml
 )
 
-SET(Test4Srcs testSaveToXML.cc "${CMAKE_SOURCE_DIR}/projecttoxml.cpp" ${SketchProject_Deps} )
+SET(Test4Srcs testSaveToXML.cc )
 ADD_EXECUTABLE( SaveTest ${Test4Srcs})
-TARGET_LINK_LIBRARIES( SaveTest QVTK ${QUATLIB_LIBRARIES} PQP )
+TARGET_LINK_LIBRARIES( SaveTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    PQP
+    SketchBioCore
+    SketchBioExport
+)
 
-SET(Test5Srcs testObjectGroups.cc ${SketchObject_Deps})
+SET(Test5Srcs testObjectGroups.cc)
 ADD_EXECUTABLE( ObjectTest ${Test5Srcs})
-TARGET_LINK_LIBRARIES( ObjectTest QVTK ${QUATLIB_LIBRARIES} PQP )
+TARGET_LINK_LIBRARIES( ObjectTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    PQP
+    SketchBioCore
+)
 
-SET(Test6Srcs testTransformEquals.cc "${CMAKE_SOURCE_DIR}/transformequals.cpp" ${SketchObject_Deps} )
+SET(Test6Srcs testTransformEquals.cc )
 ADD_EXECUTABLE( TransformEqualsTest ${Test6Srcs})
-TARGET_LINK_LIBRARIES( TransformEqualsTest QVTK ${QUATLIB_LIBRARIES} PQP )
+TARGET_LINK_LIBRARIES( TransformEqualsTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    PQP
+    SketchBioCore
+)
 
-SET(Test7Srcs testSketchModel.cc ${SketchObject_Deps})
+SET(Test7Srcs testSketchModel.cc )
 ADD_EXECUTABLE( ModelTest ${Test7Srcs})
-TARGET_LINK_LIBRARIES( ModelTest QVTK ${QUATLIB_LIBRARIES} PQP )
+TARGET_LINK_LIBRARIES( ModelTest
+    QVTK
+    ${QUATLIB_LIBRARIES}
+    PQP
+    SketchBioCore
+)
 
 ADD_TEST(RotateAboutTrackerTransformTest    TransformTest "4")
 ADD_TEST(LeftTrackerTransformTest           TransformTest "6")

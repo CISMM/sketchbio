@@ -46,18 +46,79 @@ if (WIN32)
     LINK_DIRECTORIES(C:/usr/local/lib)
 endif (WIN32)
 
+
+QT4_WRAP_CPP(SketchBioCoreMoc sketchmodel.h)
+SOURCE_GROUP("Generated" FILES ${SketchBioCoreMoc})
+
+SET(SketchBioCoreSrcs
+transformmanager.cpp
+transformmanager.h
+structurereplicator.cpp
+structurereplicator.h
+modelmanager.cpp
+modelmanager.h
+sketchobject.cpp
+sketchobject.h
+sketchmodel.cpp # h file used by Moc, no need to include here
+worldmanager.cpp
+worldmanager.h
+springconnection.cpp
+springconnection.h
+sketchproject.cpp
+sketchproject.h
+physicsstrategy.cpp
+physicsstrategy.h
+transformequals.cpp
+transformequals.h
+keyframe.cpp
+keyframe.h
+groupidgenerator.h
+sketchioconstants.h
+${SketchBioCoreMoc}
+)
+
+ADD_LIBRARY(SketchBioCore ${SketchBioCoreSrcs})
+
+SET(SketchBioExportSrcs
+projecttoxml.cpp
+projecttoxml.h
+projecttoblenderanimation.cpp
+projecttoblenderanimation.h
+)
+ADD_LIBRARY(SketchBioExport ${SketchBioExportSrcs})
+
+QT4_WRAP_CPP(SketchBioInputMoc
+vrpnserver.h
+hydrainputmanager.h
+hydrainputmode.h
+objecteditingmode.h
+springeditingmode.h
+)
+SOURCE_GROUP("Generated" FILES ${SketchBioInputMoc})
+
+SET(SketchBioInputSrcs
+vrpnserver.cpp  # h file used by Moc, no need to include here
+hydrainputmanager.cpp  # h file used by Moc, no need to include here
+hydrainputmode.cpp  # h file used by Moc, no need to include here
+objecteditingmode.cpp  # h file used by Moc, no need to include here
+springeditingmode.cpp  # h file used by Moc, no need to include here
+${SketchBioInputMoc}
+)
+ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})
+
+SET(SketchBioLibraries
+    SketchBioCore
+    SketchBioExport
+    SketchBioInput
+    SketchBioSubprocess
+)
+
 # Set your files and resources here
-SET(SimpleViewSrcs main.cpp SimpleView.cpp transformmanager.cpp structurereplicator.cpp modelmanager.cpp
-sketchobject.cpp sketchmodel.cpp worldmanager.cpp springconnection.cpp sketchproject.cpp projecttoxml.cpp
-physicsstrategy.cpp transformequals.cpp vrpnserver.cpp keyframe.cpp projecttoblenderanimation.cpp
-hydrainputmanager.cpp hydrainputmode.cpp objecteditingmode.cpp springeditingmode.cpp)
+SET(SketchBioSrcs main.cpp SimpleView.cpp
+)
 SET(SimpleViewUI SimpleView.ui)
-SET(Headers_Needing_QT_WRAP SimpleView.h vrpnserver.h hydrainputmanager.h hydrainputmode.h
-objecteditingmode.h springeditingmode.h sketchmodel.h)
-SET(Headers_Not_Needing_QT_WRAP transformmanager.h structurereplicator.h modelmanager.h
-sketchobject.h worldmanager.h springconnection.h sketchproject.h sketchioconstants.h
-projecttoxml.h sketchtests.h physicsstrategy.h transformequals.h groupidgenerator.h keyframe.h
-projecttoblenderanimation.h )
+SET(Headers_Needing_QT_WRAP SimpleView.h
+)
  
 QT4_WRAP_UI(UISrcs ${SimpleViewUI})
 QT4_WRAP_CPP(MOCSrcs ${Headers_Needing_QT_WRAP} )
@@ -73,7 +134,7 @@ SOURCE_GROUP("Generated" FILES
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
-ADD_EXECUTABLE( SketchBio ${SimpleViewSrcs} ${Headers_Not_Needing_QT_WRAP} ${UISrcs} ${MOCSrcs})
+ADD_EXECUTABLE( SketchBio ${SketchBioSrcs} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( SketchBio
     QVTK
     ${VTK_LIBRARIES}
@@ -81,7 +142,7 @@ TARGET_LINK_LIBRARIES( SketchBio
     ${VRPN_SERVER_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     PQP
-    SketchSubprocess
+    ${SketchBioLibraries}
 )
 IF(UNIX AND NOT APPLE)
 	TARGET_LINK_LIBRARIES( SketchBio ${LIBUSB1_LIBRARIES} )
