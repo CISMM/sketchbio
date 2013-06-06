@@ -38,35 +38,6 @@
 #define ANALOG_LEFT(x) (x+0)
 #define ANALOG_RIGHT(x) (x+3)
 
-namespace HydraButtonMapping {
-
-inline int scale_button_idx() {
-    return BUTTON_LEFT(FOUR_BUTTON_IDX);
-}
-inline int spring_disable_button_idx() {
-    return BUTTON_LEFT(THREE_BUTTON_IDX);
-}
-inline int spring_add_button_idx() {
-    return BUTTON_RIGHT(THREE_BUTTON_IDX);
-}
-inline int transform_equals_add_button_idx() {
-    return BUTTON_RIGHT(TWO_BUTTON_IDX);
-}
-inline int replicate_object_button() {
-    return BUTTON_RIGHT(ONE_BUTTON_IDX);
-}
-inline int duplicate_object_button() {
-    return BUTTON_RIGHT(FOUR_BUTTON_IDX);
-}
-inline int collision_disable_button_idx() {
-    return BUTTON_LEFT(TWO_BUTTON_IDX);
-}
-inline int change_modes_button_idx() {
-    return BUTTON_LEFT(ONE_BUTTON_IDX);
-}
-
-}
-
 // debugging flag -- if false does not start vrpn clients
 #define VRPN_ON true
 // change this to false to use an external vrpn server

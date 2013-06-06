@@ -7,6 +7,19 @@
 #include <QDebug>
 #include <QSettings>
 
+inline int scale_button_idx() {
+    return BUTTON_LEFT(FOUR_BUTTON_IDX);
+}
+inline int spring_disable_button_idx() {
+    return BUTTON_LEFT(THREE_BUTTON_IDX);
+}
+inline int collision_disable_button_idx() {
+    return BUTTON_LEFT(TWO_BUTTON_IDX);
+}
+inline int change_modes_button_idx() {
+    return BUTTON_LEFT(ONE_BUTTON_IDX);
+}
+
 #define NO_OPERATION                    0
 #define DUPLICATE_OBJECT_PENDING        1
 #define REPLICATE_OBJECT_PENDING        2
@@ -85,7 +98,7 @@ void HydraInputManager::handleCurrentInput() {
     buttons.mainloop();
     analogRemote.mainloop();
 
-    if (buttonsDown[HydraButtonMapping::scale_button_idx()]) {
+    if (buttonsDown[scale_button_idx()]) {
         activeMode->scaleWithLeftFixed();
     }
     activeMode->useRightJoystickToChangeViewTime();
@@ -112,11 +125,11 @@ void HydraInputManager::setRightPos(q_xyz_quat_type *newPos) {
 void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
     if (buttonPressed) {
         // events on press
-        if (buttonNum == HydraButtonMapping::spring_disable_button_idx()) {
+        if (buttonNum == spring_disable_button_idx()) {
             emit toggleWorldSpringsEnabled();
-        } else if (buttonNum == HydraButtonMapping::collision_disable_button_idx()) {
+        } else if (buttonNum == collision_disable_button_idx()) {
             emit toggleWorldCollisionsEnabled();
-        } else if (buttonNum == HydraButtonMapping::change_modes_button_idx()) {
+        } else if (buttonNum == change_modes_button_idx()) {
             modeIndex = (modeIndex + 1 ) % modeList.size();
             activeMode = modeList[modeIndex];
             activeMode->clearStatus();

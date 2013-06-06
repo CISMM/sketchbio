@@ -4,6 +4,21 @@
 #include "sketchproject.h"
 #include <limits>
 
+
+inline int camera_add_button_idx() {
+    return BUTTON_RIGHT(THREE_BUTTON_IDX);
+}
+inline int transform_equals_add_button_idx() {
+    return BUTTON_RIGHT(TWO_BUTTON_IDX);
+}
+inline int replicate_object_button() {
+    return BUTTON_RIGHT(ONE_BUTTON_IDX);
+}
+inline int duplicate_object_button() {
+    return BUTTON_RIGHT(FOUR_BUTTON_IDX);
+}
+
+
 #define NO_OPERATION                    0
 #define DUPLICATE_OBJECT_PENDING        1
 #define REPLICATE_OBJECT_PENDING        2
@@ -29,10 +44,10 @@ ObjectEditingMode::~ObjectEditingMode()
 
 void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == HydraButtonMapping::duplicate_object_button()) {
+    if (vrpn_ButtonNum == duplicate_object_button()) {
         operationState = DUPLICATE_OBJECT_PENDING;
         emit newDirectionsString("Move to the object you want to duplicate and release the button");
-    } else if (vrpn_ButtonNum == HydraButtonMapping::replicate_object_button()) {
+    } else if (vrpn_ButtonNum == replicate_object_button()) {
         SketchObject *obj = rObj;
         if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
             q_vec_type pos;
@@ -50,21 +65,12 @@ void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
             operationState = REPLICATE_OBJECT_PENDING;
             emit newDirectionsString("Pull the trigger to set the number of replicas to add,\nthen release the button.");
         }
-    } else if (vrpn_ButtonNum == HydraButtonMapping::spring_add_button_idx()) {
-        operationState = ADD_SPRING_PENDING;
-        SketchObject *obj = NULL;
-        if ( rDist < DISTANCE_THRESHOLD ) {
-            obj = rObj;
-            objectsSelected.append(obj);
-        }
-        q_vec_type pos;
-        TransformManager *transforms = project->getTransformManager();
-        transforms->getRightTrackerPosInWorldCoords(pos);
-        positionsSelected.append(pos[0]);
-        positionsSelected.append(pos[1]);
-        positionsSelected.append(pos[2]);
-        emit newDirectionsString("Move the tracker to the object and position to attach to\nand release the button.");
-    } else if (vrpn_ButtonNum == HydraButtonMapping::transform_equals_add_button_idx()) {
+    }
+    else if (vrpn_ButtonNum == camera_add_button_idx())
+    {
+        emit newDirectionsString("Release the button to add a camera.");
+    }
+    else if (vrpn_ButtonNum == transform_equals_add_button_idx()) {
         SketchObject *obj = NULL;
         if (operationState == NO_OPERATION) {
             if ( rDist < DISTANCE_THRESHOLD ) {
@@ -96,12 +102,12 @@ void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
 
 void ObjectEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == HydraButtonMapping::replicate_object_button()
+    if (vrpn_ButtonNum == replicate_object_button()
             && operationState == REPLICATE_OBJECT_PENDING ) {
         objectsSelected.clear();
         operationState = NO_OPERATION;
         emit newDirectionsString(" ");
-    } else if (vrpn_ButtonNum == HydraButtonMapping::duplicate_object_button()
+    } else if (vrpn_ButtonNum == duplicate_object_button()
                && operationState == DUPLICATE_OBJECT_PENDING ) {
         SketchObject *obj = rObj;
         if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
@@ -116,44 +122,17 @@ void ObjectEditingMode::buttonReleased(int vrpn_ButtonNum)
         }
         operationState = NO_OPERATION;
         emit newDirectionsString(" ");
-    } else if (vrpn_ButtonNum == HydraButtonMapping::spring_add_button_idx()
-               && operationState == ADD_SPRING_PENDING ) {
-        SketchObject *obj1 = NULL, *obj2 = NULL;
-        q_vec_type p1, p2;
-        if (objectsSelected.size() > 0) {
-            obj1 = objectsSelected[0];
-        }
-        if ( rDist < DISTANCE_THRESHOLD ) {
-            obj2 = rObj;
-        }
-        if (positionsSelected.size() >= 3) {
-            // get points... both in world coordinates
-            p1[0] = positionsSelected[0];
-            p1[1] = positionsSelected[1];
-            p1[2] = positionsSelected[2];
-            TransformManager *transforms = project->getTransformManager();
-            transforms->getRightTrackerPosInWorldCoords(p2);
-            double k = 2 * analogStatus[ ANALOG_LEFT(TRIGGER_ANALOG_IDX)];
-            k = 2 - k;
-            if (obj1 != NULL) {
-                if (obj2 != NULL && obj1 != obj2) {
-                    project->getWorldManager()->addSpring(obj1,obj2,p1,p2,true,k,0);
-                } else {
-                    obj1->getWorldSpacePointInModelCoordinates(p1,p1);
-                    SpringConnection *conn = new SpringConnection(obj1,NULL,0,0,k,p1,p2);
-                    project->addSpring(conn);
-                }
-            } else if (obj2 != NULL) {
-                obj2->getWorldSpacePointInModelCoordinates(p2,p2);
-                SpringConnection *conn = new SpringConnection(obj2,NULL,0,0,k,p2,p1);
-                project->addSpring(conn);
-            }
-        }
-        objectsSelected.clear();
-        positionsSelected.clear();
-        operationState = NO_OPERATION;
+    }
+    else if (vrpn_ButtonNum == camera_add_button_idx())
+    {
+        TransformManager *transforms = project->getTransformManager();
+        q_vec_type pos;
+        q_type orient;
+        transforms->getRightTrackerPosInWorldCoords(pos);
+        transforms->getRightTrackerOrientInWorldCoords(orient);
+        project->addCamera(pos,orient);
         emit newDirectionsString(" ");
-    } else if (vrpn_ButtonNum == HydraButtonMapping::transform_equals_add_button_idx()
+    } else if (vrpn_ButtonNum == transform_equals_add_button_idx()
                && operationState == ADD_TRANSFORM_EQUALS_PENDING) {
         SketchObject *obj = NULL;
         obj = rObj;
