@@ -18,15 +18,26 @@ AnimationMode::~AnimationMode()
 
 void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX) &&
-            worldGrabbed == WORLD_NOT_GRABBED)
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
     {
-        worldGrabbed = LEFT_GRABBED_WORLD;
+        if (lDist > DISTANCE_THRESHOLD)
+        {
+            if (worldGrabbed == WORLD_NOT_GRABBED)
+                worldGrabbed = LEFT_GRABBED_WORLD;
+        }
+        else
+            project->grabObject(lObj,true);
     }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX) &&
-               worldGrabbed == WORLD_NOT_GRABBED)
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
     {
-        worldGrabbed = RIGHT_GRABBED_WORLD;
+        if (rDist > DISTANCE_THRESHOLD)
+        {
+            if (worldGrabbed == WORLD_NOT_GRABBED)
+                worldGrabbed = RIGHT_GRABBED_WORLD;
+        }
+        else
+            project->grabObject(rObj,false);
+
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
@@ -48,12 +59,20 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 
 void AnimationMode::buttonReleased(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX) &&
-            worldGrabbed == LEFT_GRABBED_WORLD)
-        worldGrabbed = WORLD_NOT_GRABBED;
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX) &&
-             worldGrabbed == RIGHT_GRABBED_WORLD)
-        worldGrabbed = WORLD_NOT_GRABBED;
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        if (worldGrabbed == LEFT_GRABBED_WORLD)
+            worldGrabbed = WORLD_NOT_GRABBED;
+        else if (!project->getWorldManager()->getLeftSprings()->empty())
+            project->getWorldManager()->clearLeftHandSprings();
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        if (worldGrabbed == RIGHT_GRABBED_WORLD)
+            worldGrabbed = WORLD_NOT_GRABBED;
+        else if (!project->getWorldManager()->getRightSprings()->empty())
+            project->getWorldManager()->clearRightHandSprings();
+    }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
         if (rDist < DISTANCE_THRESHOLD)

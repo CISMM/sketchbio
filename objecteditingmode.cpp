@@ -44,10 +44,34 @@ ObjectEditingMode::~ObjectEditingMode()
 
 void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == duplicate_object_button()) {
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        if (lDist > DISTANCE_THRESHOLD)
+        {
+            if (grabbedWorld == WORLD_NOT_GRABBED)
+                grabbedWorld = LEFT_GRABBED_WORLD;
+        }
+        else
+            project->grabObject(lObj,true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        if (rDist > DISTANCE_THRESHOLD)
+        {
+            if (grabbedWorld == WORLD_NOT_GRABBED)
+                grabbedWorld = RIGHT_GRABBED_WORLD;
+        }
+        else
+            project->grabObject(rObj,false);
+
+    }
+    else if (vrpn_ButtonNum == duplicate_object_button())
+    {
         operationState = DUPLICATE_OBJECT_PENDING;
         emit newDirectionsString("Move to the object you want to duplicate and release the button");
-    } else if (vrpn_ButtonNum == replicate_object_button()) {
+    }
+    else if (vrpn_ButtonNum == replicate_object_button())
+    {
         SketchObject *obj = rObj;
         if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
             q_vec_type pos;
@@ -70,7 +94,8 @@ void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
         emit newDirectionsString("Release the button to add a camera.");
     }
-    else if (vrpn_ButtonNum == transform_equals_add_button_idx()) {
+    else if (vrpn_ButtonNum == transform_equals_add_button_idx())
+    {
         SketchObject *obj = NULL;
         if (operationState == NO_OPERATION) {
             if ( rDist < DISTANCE_THRESHOLD ) {
@@ -102,13 +127,30 @@ void ObjectEditingMode::buttonPressed(int vrpn_ButtonNum)
 
 void ObjectEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == replicate_object_button()
-            && operationState == REPLICATE_OBJECT_PENDING ) {
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        if (grabbedWorld == LEFT_GRABBED_WORLD)
+            grabbedWorld = WORLD_NOT_GRABBED;
+        else if (!project->getWorldManager()->getLeftSprings()->empty())
+            project->getWorldManager()->clearLeftHandSprings();
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        if (grabbedWorld == RIGHT_GRABBED_WORLD)
+            grabbedWorld = WORLD_NOT_GRABBED;
+        else if (!project->getWorldManager()->getRightSprings()->empty())
+            project->getWorldManager()->clearRightHandSprings();
+    }
+    else if (vrpn_ButtonNum == replicate_object_button()
+            && operationState == REPLICATE_OBJECT_PENDING )
+    {
         objectsSelected.clear();
         operationState = NO_OPERATION;
         emit newDirectionsString(" ");
-    } else if (vrpn_ButtonNum == duplicate_object_button()
-               && operationState == DUPLICATE_OBJECT_PENDING ) {
+    }
+    else if (vrpn_ButtonNum == duplicate_object_button()
+               && operationState == DUPLICATE_OBJECT_PENDING )
+    {
         SketchObject *obj = rObj;
         if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
             q_vec_type pos;
@@ -220,7 +262,6 @@ void ObjectEditingMode::doUpdatesForFrame()
             }
         }
     }
-    updateTrackerObjectConnections();
 }
 
 void ObjectEditingMode::clearStatus()
@@ -233,65 +274,3 @@ void ObjectEditingMode::clearStatus()
     operationState = NO_OPERATION;
 }
 
-
-/*
- * This method updates the springs connecting the trackers and the objects and the
- * status variable that determines if the world is grabbed
- */
-void ObjectEditingMode::updateTrackerObjectConnections() {
-    WorldManager *world = project->getWorldManager();
-    if (world->getNumberOfObjects() == 0)
-        return;
-    for (int i = 0; i < 2; i++) {
-        int buttonIdx;
-        int worldGrabConstant;
-        SketchObject *objectToGrab;
-        SketchObject *tracker;
-        QList<SpringConnection *> *springs;
-        double dist;
-        // select left or right
-        if (i == 0) {
-            buttonIdx = BUTTON_LEFT(BUMPER_BUTTON_IDX);
-            worldGrabConstant = LEFT_GRABBED_WORLD;
-            tracker = project->getLeftHandObject();
-            springs = world->getLeftSprings();
-            objectToGrab = lObj;
-            dist = lDist;
-        } else if (i == 1) {
-            buttonIdx = BUTTON_RIGHT(BUMPER_BUTTON_IDX);
-            worldGrabConstant = RIGHT_GRABBED_WORLD;
-            tracker = project->getRightHandObject();
-            springs = world->getRightSprings();
-            objectToGrab = rObj;
-            dist = rDist;
-        }
-        // if they are gripping the trigger
-        if (isButtonDown[buttonIdx]) {
-            // if we do not have springs yet add them
-            if (springs->size() == 0 && grabbedWorld != worldGrabConstant) { // add springs
-                if (dist > DISTANCE_THRESHOLD) {
-                    if (grabbedWorld == WORLD_NOT_GRABBED) {
-                        grabbedWorld = worldGrabConstant;
-                    }
-                    // allow grabbing world & moving something with other hand...
-                    // discouraged, but allowed -> the results are not guaranteed.
-                } else {
-                    bool left = i == 0;
-                    project->grabObject(left ? lObj : rObj, left);
-                }
-            }
-        } else {
-            if (!springs->empty()) { // if we have springs and they are no longer gripping the trigger
-                // remove springs between model & tracker, set grabbed objects solid
-                if (i == 0) {
-                    world->clearLeftHandSprings();
-                } else if (i == 1) {
-                    world->clearRightHandSprings();
-                }
-            }
-            if (grabbedWorld == worldGrabConstant) {
-                grabbedWorld = WORLD_NOT_GRABBED;
-            }
-        }
-    }
-}
