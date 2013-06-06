@@ -52,7 +52,7 @@ void HydraInputMode::useRightJoystickToChangeViewTime()
     if (finalTime != currentTime)
     {
         project->setViewTime(finalTime);
-        qDebug() << "Time: " << finalTime;
+        emit viewTimeChanged(finalTime);
     }
 }
 

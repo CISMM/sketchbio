@@ -118,6 +118,13 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     textPropBottom->SetVerticalJustificationToBottom();
     textPropBottom->SetJustificationToLeft();
 
+    vtkSmartPointer< vtkTextProperty > textPropBottomRight =
+            vtkSmartPointer< vtkTextProperty >::New();
+    textPropBottomRight->SetFontFamilyToCourier();
+    textPropBottomRight->SetFontSize(16);
+    textPropBottomRight->SetVerticalJustificationToBottom();
+    textPropBottomRight->SetJustificationToRight();
+
     directionsTextMapper = vtkSmartPointer<vtkTextMapper>::New();
     directionsTextMapper->SetInput(" ");
     directionsTextMapper->SetTextProperty(textPropTop);
@@ -126,6 +133,10 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     QString modeString("Collisions: ON\nSprings: ON\nMode: %1");
     statusTextMapper->SetInput(modeString.arg(inputManager->getModeName()).toStdString().c_str());
     statusTextMapper->SetTextProperty(textPropBottom);
+
+    timeTextMapper = vtkSmartPointer<vtkTextMapper>::New();
+    timeTextMapper->SetInput(QString("0.0").toStdString().c_str());
+    timeTextMapper->SetTextProperty(textPropBottomRight);
 
     directionsTextActor = vtkSmartPointer<vtkActor2D>::New();
     directionsTextActor->SetMapper(directionsTextMapper);
@@ -139,12 +150,24 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     statusTextActor->GetPositionCoordinate()->SetValue(0.05,0.05);
     renderer->AddActor2D(statusTextActor);
 
+    timeTextActor = vtkSmartPointer< vtkActor2D >::New();
+    timeTextActor->SetMapper(timeTextMapper);
+    timeTextActor->GetPositionCoordinate()->SetCoordinateSystemToNormalizedDisplay();
+    timeTextActor->GetPositionCoordinate()->SetValue(0.95,0.05);
+    renderer->AddActor2D(timeTextActor);
+
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
-    connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()), this, SLOT(toggleWorldSpringsEnabled()));
-    connect(this->inputManager, SIGNAL(toggleWorldCollisionsEnabled()), this, SLOT(toggleWorldCollisionTestsOn()));
-    connect(this->inputManager, SIGNAL(newDirectionsString(QString)), this, SLOT(setTextMapperString(QString)));
-    connect(this->inputManager, SIGNAL(changedModes(QString)), this, SLOT(updateStatusText()));
+    connect(this->inputManager, SIGNAL(toggleWorldSpringsEnabled()),
+            this, SLOT(toggleWorldSpringsEnabled()));
+    connect(this->inputManager, SIGNAL(toggleWorldCollisionsEnabled()),
+            this, SLOT(toggleWorldCollisionTestsOn()));
+    connect(this->inputManager, SIGNAL(newDirectionsString(QString)),
+            this, SLOT(setTextMapperString(QString)));
+    connect(this->inputManager, SIGNAL(changedModes(QString)),
+            this, SLOT(updateStatusText()));
+    connect(this->inputManager, SIGNAL(viewTimeChanged(double)),
+            this, SLOT(updateViewTime(double)));
 
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -235,6 +258,12 @@ void SimpleView::updateStatusText()
     statusTextMapper->SetInput(status.toStdString().c_str());
 }
 
+void SimpleView::updateViewTime(double time)
+{
+    QString t("%1");
+    timeTextMapper->SetInput(t.arg(time,8,'f',1).toStdString().c_str());
+}
+
 void SimpleView::openOBJFile()
 {
     // Ask the user for the name of the file to open.
@@ -289,6 +318,7 @@ void SimpleView::loadProject() {
     renderer->SetViewport(0,0,1,1);
     renderer->AddActor2D(directionsTextActor);
     renderer->AddActor2D(statusTextActor);
+    renderer->AddActor2D(timeTextActor);
 
     delete project;
     // create new one

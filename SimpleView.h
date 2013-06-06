@@ -95,6 +95,7 @@ public slots:
 
   void setTextMapperString(QString str);
   void updateStatusText();
+  void updateViewTime(double time);
 
 protected:
  
@@ -114,6 +115,8 @@ private:
   vtkSmartPointer<vtkActor2D> directionsTextActor;
   vtkSmartPointer<vtkTextMapper> statusTextMapper;
   vtkSmartPointer<vtkActor2D> statusTextActor;
+  vtkSmartPointer<vtkTextMapper> timeTextMapper;
+  vtkSmartPointer<vtkActor2D> timeTextActor;
   SketchProject *project;
   HydraInputManager *inputManager;
 };

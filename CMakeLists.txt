@@ -93,6 +93,7 @@ hydrainputmanager.h
 hydrainputmode.h
 objecteditingmode.h
 springeditingmode.h
+animationmode.h
 )
 SOURCE_GROUP("Generated" FILES ${SketchBioInputMoc})
 
@@ -102,6 +103,7 @@ hydrainputmanager.cpp  # h file used by Moc, no need to include here
 hydrainputmode.cpp  # h file used by Moc, no need to include here
 objecteditingmode.cpp  # h file used by Moc, no need to include here
 springeditingmode.cpp  # h file used by Moc, no need to include here
+animationmode.cpp  # h file used by Moc, no need to include here
 ${SketchBioInputMoc}
 )
 ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})

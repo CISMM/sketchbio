@@ -36,11 +36,13 @@ signals:
     void toggleWorldCollisionsEnabled();
     void newDirectionsString(QString str);
     void changedModes(QString newModeName);
+    void viewTimeChanged(double time);
 
 private slots:
     // connected to all modes so that the signal they emit will be 'caught'
     // here and re-emitted to listeners on this object
     void setNewDirectionsString(QString str);
+    void newViewTime(double time);
 private:
 
     // VRPN callback functions

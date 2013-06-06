@@ -46,6 +46,8 @@ public:
     // of the world to tracker transformation
     void useLeftJoystickToRotateViewPoint();
     // uses the right joystick left/right to move forward/backward in animation time
+    // this internally emits viewTimeChanged so there is no need to re-emit it after
+    // the call to this
     void useRightJoystickToChangeViewTime();
     // scales based on the change in distance between trackers with the left assumed fixed
     void scaleWithLeftFixed();
@@ -57,6 +59,8 @@ public:
     void grabWorldWithRight();
 signals:
     void newDirectionsString(QString str);
+    // should be emitted whenever the setViewTime() method is called on the project
+    void viewTimeChanged(double time);
     // Maybe others?
 protected:
 

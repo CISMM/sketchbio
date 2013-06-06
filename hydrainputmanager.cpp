@@ -2,6 +2,7 @@
 #include "sketchproject.h"
 #include "objecteditingmode.h"
 #include "springeditingmode.h"
+#include "animationmode.h"
 #include "sketchtests.h"
 #include <QDebug>
 #include <QSettings>
@@ -35,6 +36,8 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
                         new ObjectEditingMode(project,buttonsDown,analogStatus)));
     modeList.append(QSharedPointer< HydraInputMode >(
                         new SpringEditingMode(project,buttonsDown,analogStatus)));
+    modeList.append(QSharedPointer< HydraInputMode >(
+                        new AnimationMode(project,buttonsDown,analogStatus)));
     activeMode = modeList[modeIndex];
 
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
@@ -45,6 +48,8 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
     {
     connect(this->modeList[i].data(), SIGNAL(newDirectionsString(QString)),
             this, SLOT(setNewDirectionsString(QString)));
+    connect(this->modeList[i].data(), SIGNAL(viewTimeChanged(double)),
+            this, SLOT(newViewTime(double)));
     }
 
 }
@@ -61,6 +66,8 @@ QString HydraInputManager::getModeName()
         return QString("Edit Objects");
     case 1:
         return QString("Edit Springs");
+    case 2:
+        return QString("Animation");
     default:
         return QString("");
     }
@@ -132,6 +139,10 @@ void HydraInputManager::setAnalogStates(const double state[]) {
 
 void HydraInputManager::setNewDirectionsString(QString str) {
     emit newDirectionsString(str);
+}
+
+void HydraInputManager::newViewTime(double time) {
+    emit viewTimeChanged(time);
 }
 
 //####################################################################################
