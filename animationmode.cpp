@@ -22,10 +22,27 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
             worldGrabbed == WORLD_NOT_GRABBED)
     {
         worldGrabbed = LEFT_GRABBED_WORLD;
-    } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX) &&
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX) &&
                worldGrabbed == WORLD_NOT_GRABBED)
     {
         worldGrabbed = RIGHT_GRABBED_WORLD;
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+        emit newDirectionsString("Move to an object and release to toggle object visibility.");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+        emit newDirectionsString("Move to an object and release to add a keyframe\nfor the current location and time.");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
+    {
+        emit newDirectionsString("Release to toggle whether invisible objects are shown.");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        emit newDirectionsString("Release to preview the animation.");
     }
 }
 
@@ -45,6 +62,7 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
             rObj->setIsVisible(!rObj->isVisible());
             project->getWorldManager()->changedVisibility(rObj);
         }
+        emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
@@ -53,6 +71,7 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
             // add keyframe
             rObj->addKeyframeForCurrentLocation(project->getViewTime());
         }
+        emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
@@ -62,11 +81,13 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
             world->hideInvisibleObjects();
         else
             world->showInvisibleObjects();
+        emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
     {
         // play sample animation
         project->startAnimation();
+        emit newDirectionsString(" ");
     }
 }
 
