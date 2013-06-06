@@ -45,6 +45,8 @@ public:
     // uses the left joystick position to apply a rotation to the camera independent
     // of the world to tracker transformation
     void useLeftJoystickToRotateViewPoint();
+    // uses the right joystick left/right to move forward/backward in animation time
+    void useRightJoystickToChangeViewTime();
     // scales based on the change in distance between trackers with the left assumed fixed
     void scaleWithLeftFixed();
     // scales based on the change in distance between trackers with the right assumed fixed

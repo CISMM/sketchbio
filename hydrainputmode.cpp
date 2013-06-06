@@ -1,6 +1,7 @@
 #include "hydrainputmode.h"
 #include "sketchproject.h"
 #include "sketchioconstants.h"
+#include <QDebug>
 
 HydraInputMode::HydraInputMode(SketchProject *proj, const bool *const b, const double *const a) :
     isButtonDown(b),
@@ -26,6 +27,33 @@ void HydraInputMode::useLeftJoystickToRotateViewPoint()
     xdegrees = 90.0 * analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)];
     ydegrees = 180.0 * analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)];
     project->getTransformManager()->setRoomEyeOrientation(xdegrees, ydegrees);
+}
+
+void HydraInputMode::useRightJoystickToChangeViewTime()
+{
+    double signal = analogStatus[ANALOG_RIGHT(LEFT_RIGHT_ANALOG_IDX)];
+    double currentTime = project->getViewTime();
+    double finalTime = currentTime;
+    int sign = (signal >= 0) ? 1 : -1;
+    if (Q_ABS(signal) > .8)
+    {
+        finalTime = currentTime + 1 * sign;
+    }
+    else if (Q_ABS(signal) > .4)
+    {
+        finalTime = currentTime + 0.1 * sign;
+    }
+    else if (Q_ABS(signal) > .2)
+    {
+        finalTime = (sign == 1) ? ceil(currentTime) : floor(currentTime) ;
+    }
+    if (finalTime < 0)
+        finalTime = 0;
+    if (finalTime != currentTime)
+    {
+        project->setViewTime(finalTime);
+        qDebug() << "Time: " << finalTime;
+    }
 }
 
 void HydraInputMode::scaleWithLeftFixed()

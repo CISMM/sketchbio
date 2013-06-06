@@ -81,6 +81,7 @@ void HydraInputManager::handleCurrentInput() {
     if (buttonsDown[HydraButtonMapping::scale_button_idx()]) {
         activeMode->scaleWithLeftFixed();
     }
+    activeMode->useRightJoystickToChangeViewTime();
 
     // handle input
     activeMode->doUpdatesForFrame();
