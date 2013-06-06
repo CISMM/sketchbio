@@ -101,7 +101,8 @@ SketchProject::SketchProject(vtkRenderer *r) :
     leftOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
     rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
     isDoingAnimation(false),
-    timeInAnimation(0.0)
+    timeInAnimation(0.0),
+    viewTime(0.0)
 {
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     renderer->SetActiveCamera(transforms->getGlobalCamera());
@@ -199,6 +200,7 @@ void SketchProject::stopAnimation() {
     // handed springs and world grab should refresh themselves too
     world->showInvisibleObjects();
     renderer->SetActiveCamera(transforms->getGlobalCamera());
+    world->setAnimationTime(viewTime);
 }
 
 bool SketchProject::goToAnimationTime(double time) {
@@ -207,6 +209,18 @@ bool SketchProject::goToAnimationTime(double time) {
     }
     timeInAnimation = time;
     return world->setAnimationTime(time);
+}
+
+double SketchProject::getViewTime() const
+{
+    return viewTime;
+}
+
+void SketchProject::setViewTime(double time)
+{
+    viewTime = time;
+    if (!isDoingAnimation)
+        world->setAnimationTime(time);
 }
 
 void SketchProject::timestep(double dt) {

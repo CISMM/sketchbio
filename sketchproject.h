@@ -46,10 +46,15 @@ public:
     // animation
     void startAnimation();
     void stopAnimation();
-    // an accessor for world->setAnimationTime.  Sets the project state correctly
+    // an setter for world->setAnimationTime.  Sets the project state correctly
     // if it is not set yet
     // Returns true if the animation is done by the time given
     bool goToAnimationTime(double time);
+
+    // returns the current time in the animation that is being viewed
+    double getViewTime() const;
+    // sets the current time in the animation that is being viewed
+    void setViewTime(double time);
 
     // physics/time related functions - timestep either updates physics or moves the animation one time frame
     void timestep(double dt);
@@ -152,6 +157,7 @@ private:
     // animation stuff
     bool isDoingAnimation; // true if the animation is happenning
     double timeInAnimation; // the animation time starting at 0
+    double viewTime;
 };
 
 inline const ModelManager *SketchProject::getModelManager() const {
