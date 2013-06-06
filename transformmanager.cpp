@@ -291,5 +291,5 @@ void TransformManager::updateCameraForFrame() {
     globalCamera->SetFocalPoint(fPoint);
     globalCamera->SetViewUp(up);
     // to keep things from going outside the focal planes so much (may need fine-tuning)
-    globalCamera->SetClippingRange(scale * SCALE_DOWN_FACTOR * 100, sqrt(scale *SCALE_DOWN_FACTOR) * 3000);
+    globalCamera->SetClippingRange(scale * SCALE_DOWN_FACTOR * 100, (scale + 40) * STARTING_CAMERA_POSITION );
 }
