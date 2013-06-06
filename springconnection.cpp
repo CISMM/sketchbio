@@ -67,8 +67,14 @@ void SpringConnection::addForce() {
     q_vec_type end1pos, end2pos, difference, f1, f2;
     double length, displacement;
 
-    object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,end1pos);
-    object2->getModelSpacePointInWorldCoordinates(object2ConnectionPosition,end2pos);
+    if (object1 != NULL)
+        object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,end1pos);
+    else
+        q_vec_copy(end1pos,object1ConnectionPosition);
+    if (object2 != NULL)
+        object2->getModelSpacePointInWorldCoordinates(object2ConnectionPosition,end2pos);
+    else
+        q_vec_copy(end2pos,object2ConnectionPosition);
     q_vec_subtract(difference,end2pos,end1pos);
     length = q_vec_magnitude(difference);
     if (length < Q_EPSILON) {
