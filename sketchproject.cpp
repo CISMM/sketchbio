@@ -576,4 +576,5 @@ void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
     vCam->SetPosition(pos);
     vCam->SetFocalPoint(fPoint);
     vCam->SetViewUp(up);
+    vCam->SetClippingRange(20,2000);
 }
