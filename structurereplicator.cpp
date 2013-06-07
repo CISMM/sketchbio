@@ -26,7 +26,7 @@ ReplicatedObject::ReplicatedObject(SketchModel *model, SketchObject *original0, 
  * Translates the force to the parent's orientation and applies a fraction of it,
  * based on how far down the chain this object is
  */
-void ReplicatedObject::addForce(q_vec_type point, const q_vec_type force) {
+void ReplicatedObject::addForce(const q_vec_type point, const q_vec_type force) {
     double divisor = (replicaNum > 0) ? replicaNum : (-replicaNum +1);
     SketchObject *original = (replicaNum > 0) ? obj1 : obj0;
     q_vec_type scaledForce;
