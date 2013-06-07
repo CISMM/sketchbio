@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 int testUseCount()
 {
     int retVal = 0;
-    QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
+    QScopedPointer< SketchModel > model(new SketchModel(1,1));
     QString filename = "models/1m1j.obj";
     // add some conformations
     model->addConformation(filename,filename);
@@ -95,7 +95,7 @@ int testUseCount()
 int testAddResolutionFileAndChangeResolutions()
 {
     int retVal = 0;
-    QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
+    QScopedPointer< SketchModel > model(new SketchModel(1,1));
     QString filename = "models/1m1j.obj";
     // add some conformations
     model->addConformation(filename,filename);
@@ -179,7 +179,7 @@ inline int testConformationAdded(SketchModel *model,int confNum)
 int testAddConformations()
 {
     int retVal = 0;
-    QScopedPointer< SketchModel > model(new SketchModel(1,1,false));
+    QScopedPointer< SketchModel > model(new SketchModel(1,1));
     QString filename = "models/1m1j.obj";
     // test initial conformation
     if (model->addConformation(filename,filename) != 0)

@@ -109,10 +109,10 @@ ${SketchBioInputMoc}
 ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})
 
 SET(SketchBioLibraries
-    SketchBioCore
+    SketchBioSubprocess
     SketchBioExport
     SketchBioInput
-    SketchBioSubprocess
+    SketchBioCore
 )
 
 # Set your files and resources here
@@ -138,13 +138,13 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
 ADD_EXECUTABLE( SketchBio ${SketchBioSrcs} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( SketchBio
+    ${SketchBioLibraries}
     QVTK
     ${VTK_LIBRARIES}
     ${VRPN_LIBRARIES}
     ${VRPN_SERVER_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     PQP
-    ${SketchBioLibraries}
 )
 IF(UNIX AND NOT APPLE)
 	TARGET_LINK_LIBRARIES( SketchBio ${LIBUSB1_LIBRARIES} )

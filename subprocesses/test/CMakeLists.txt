@@ -1,12 +1,12 @@
 SET(SUBPROCESS_TEST_LINK_LIBRARIES
+    TestSubprocess
+    SketchBioSubprocess
+    SketchBioExport
+    SketchBioCore
+    PQP
     ${QT_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QUATLIB_LIBRARIES}
-    PQP
-    SketchBioSubprocess
-    SketchBioCore
-    SketchBioExport
-    TestSubprocess
 )
 
 INCLUDE_DIRECTORIES(
