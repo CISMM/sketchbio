@@ -21,7 +21,7 @@ class ChimeraOBJMaker : public AbstractSingleProcessRunner
 public:
     // constructor
     ChimeraOBJMaker(QString pdbId, QString objFile, int threshold = 0,
-                    QObject *parent = 0);
+                    QString chainsToDelete = "", QObject *parent = 0);
     // destructor
     virtual ~ChimeraOBJMaker();
     virtual bool isValid();

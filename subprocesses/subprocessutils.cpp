@@ -1,5 +1,4 @@
 #include "subprocessutils.h"
-#include <QString>
 #include <QSettings>
 #include <QFile>
 #include <QApplication>
@@ -82,9 +81,10 @@ QString getSubprocessExecutablePath(QString executableName) {
     return executablePath;
 }
 
-SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile,int threshold)
+SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile,int threshold,
+                                    QString chainsToDelete)
 {
-    ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile,threshold);
+    ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile,threshold,chainsToDelete);
     if (!maker->isValid())
     {
         delete maker;

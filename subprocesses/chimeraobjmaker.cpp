@@ -7,7 +7,7 @@
 #include <QDebug>
 
 ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, int threshold,
-                                 QObject *parent) :
+                                 QString chainsToDelete, QObject *parent) :
     AbstractSingleProcessRunner(parent),
     cmdFile(new QTemporaryFile("XXXXXX.py",this)),
     valid(true)
@@ -23,6 +23,17 @@ ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, int threshold,
         QString line = "runCommand(\"open %1\")\n";
         cmdFile->write(line.arg(pdbId).toStdString().c_str());
         cmdFile->write("runCommand(\"~show; ~ribbon\")\n");
+        chainsToDelete = chainsToDelete.trimmed();
+        for (int i = 0; i < chainsToDelete.length(); i++)
+        {
+            char c = chainsToDelete.at(i).toUpper().toAscii();
+            if (c >= 'A' && c <= 'Z')
+            {
+                line = "runCommand(\"delete #0:.%1\")\n";
+                line = line.arg(c);
+                cmdFile->write(line.toStdString().c_str());
+            }
+        }
         // TODO - change resolution/export multiple resolutions ?
         line = "runCommand(\"sym #0 surfaces all resolution %1\")\n";
         cmdFile->write(line.arg(threshold).toStdString().c_str());

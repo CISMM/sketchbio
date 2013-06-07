@@ -1,7 +1,7 @@
 #ifndef SUBPROCESSUTILS_H
 #define SUBPROCESSUTILS_H
 
-class QString;
+#include <QString> // so that default values for QString parameters can use string constants
 class SubprocessRunner;
 class SketchProject;
 
@@ -25,7 +25,8 @@ QString getSubprocessExecutablePath(QString executableName);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile, int threshold = 0);
+SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile, int threshold = 0,
+                                    QString chainsToDelete = "");
 
 /*
  * This method returns a valid SubprocessRunner to make an obj file
