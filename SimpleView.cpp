@@ -381,9 +381,13 @@ void SimpleView::importPDBId()
     QString text = QInputDialog::getText(this, tr("Specify molecule"),
                                          tr("PDB ID:"), QLineEdit::Normal,
                                          "1M1J", &ok);
-    if (ok && !text.isEmpty()) {
+    bool ok2;
+    QString toDelete = QInputDialog::getText(this,tr("Specify chains to delete (if any)"),
+                                             tr("Unneeded Chain IDS:"), QLineEdit::Normal,
+                                             "", &ok2);
+    if (ok && ok2 && !text.isEmpty()) {
 
-        QString source = "PDB:" + text.toLower();
+        QString source = ModelUtilities::createSourceNameFor(text,toDelete);
         if (project->getModelManager()->hasModel(source))
         {
             SketchModel *model = project->getModelManager()->getModel(source);
@@ -397,7 +401,7 @@ void SimpleView::importPDBId()
             printf("Importing %s from PDB\n", text.toStdString().c_str());
             // uncomment this and comment the other to switch from using Chimera
             // to using PyMOL to surface obj files
-            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDB(project,text);
+            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDB(project,text,toDelete);
             if (objMaker == NULL)
             {
                 QMessageBox::warning(NULL, "Could not run subprocess to import molecule ", text);

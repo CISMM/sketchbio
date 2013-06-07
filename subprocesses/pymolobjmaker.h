@@ -19,7 +19,7 @@ class PymolOBJMaker : public SubprocessRunner
 {
     Q_OBJECT
 public:
-    explicit PymolOBJMaker(QString pdbId, QString dirName, QObject *parent = 0);
+    explicit PymolOBJMaker(const QString &pdbId, const QString &dirName, QObject *parent = 0);
 
     virtual ~PymolOBJMaker();
     virtual void start();

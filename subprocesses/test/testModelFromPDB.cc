@@ -50,12 +50,13 @@ TestModelFromPDB::~TestModelFromPDB()
 
 void TestModelFromPDB::setUp()
 {
-    runner = SubprocessUtils::loadFromPDB(proj,pdbId);
+    runner = SubprocessUtils::loadFromPDB(proj,pdbId,"");
 }
 
 int TestModelFromPDB::testResults()
 {
-    SketchModel *model = proj->getModelManager()->getModel("PDB:" + pdbId);
+    SketchModel *model = proj->getModelManager()->getModel(
+                ModelUtilities::createSourceNameFor(pdbId,""));
     if (model == NULL)
         return 1;
     std::vector< ModelResolution::ResolutionType > resolution;

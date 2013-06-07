@@ -19,7 +19,7 @@ class BlenderDecimationRunner : public AbstractSingleProcessRunner
 {
     Q_OBJECT
 public:
-    explicit BlenderDecimationRunner(QString objFile, DecimationType::Type type,
+    explicit BlenderDecimationRunner(const QString &objFile, DecimationType::Type type,
                                      double param, QObject *parent = 0);
 
     virtual void start();

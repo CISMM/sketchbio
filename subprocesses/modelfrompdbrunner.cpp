@@ -7,9 +7,11 @@
 
 #include <QDebug>
 
-ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, QString &pdb, QObject *parent) :
+ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
+                                       const QString &toDelete, QObject *parent) :
     SubprocessRunner(parent),
     pdbId(pdb.toLower()),
+    chainsToDelete(toDelete),
     project(proj),
     model(NULL),
     conformation(-1),
@@ -24,8 +26,11 @@ ModelFromPDBRunner::~ModelFromPDBRunner()
 
 void ModelFromPDBRunner::start()
 {
+    QString filename = (project->getProjectDir() + "/" + pdbId
+                        + (chainsToDelete.isEmpty() ? "" : "-" + chainsToDelete)
+                        + ".obj").trimmed();
     currentRunner = SubprocessUtils::makeChimeraOBJFor(
-                pdbId, project->getProjectDir() + "/" + pdbId + ".obj");
+                pdbId,filename,0,chainsToDelete);
     if (currentRunner == NULL) {
         emit finished(false);
         deleteLater();
@@ -51,16 +56,22 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
 {
     if (succeeded)
     {
-        QString simplified = (project->getProjectDir() + "/" + pdbId + "_isosurface.obj").trimmed();
+        QString filename = (project->getProjectDir() + "/" + pdbId
+                              + (chainsToDelete.isEmpty() ? "" : "-" + chainsToDelete)
+                              + ".obj").trimmed();
+        QString simplified = (project->getProjectDir() + "/" + pdbId
+                              + (chainsToDelete.isEmpty() ? QString("") : "-" + chainsToDelete)
+                              + "_isosurface.obj").trimmed();
         switch (stepNum)
         {
         case 0:
             model = project->addModelFromFile(
-                        "PDB:" + pdbId, project->getProjectDir() + "/" + pdbId + ".obj",
-                        DEFAULT_INVERSE_MASS, DEFAULT_INVERSE_MOMENT);
+                        ModelUtilities::createSourceNameFor(pdbId,chainsToDelete),
+                        filename, DEFAULT_INVERSE_MASS, DEFAULT_INVERSE_MOMENT);
             for (int conf = 0; conf < model->getNumberOfConformations(); conf++)
             {
-                if (model->getSource(conf) == QString("PDB:" + pdbId))
+                if (model->getSource(conf) ==
+                        ModelUtilities::createSourceNameFor(pdbId,chainsToDelete))
                 {
                     conformation = conf;
                     break;
@@ -68,7 +79,8 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             if (! model->hasFileNameFor(conformation,ModelResolution::SIMPLIFIED_1000))
             {
-                currentRunner = SubprocessUtils::makeChimeraOBJFor(pdbId,simplified,5);
+                currentRunner = SubprocessUtils::makeChimeraOBJFor(pdbId,simplified,
+                                                                   5,chainsToDelete);
                 if (currentRunner == NULL)
                 {
                     emit finished(true);

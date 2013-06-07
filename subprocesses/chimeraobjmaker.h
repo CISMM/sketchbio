@@ -3,6 +3,7 @@
 
 #include "abstractsingleprocessrunner.h"
 
+class QString;
 class QProcess;
 class QTemporaryFile;
 
@@ -20,8 +21,8 @@ class ChimeraOBJMaker : public AbstractSingleProcessRunner
     Q_OBJECT
 public:
     // constructor
-    ChimeraOBJMaker(QString pdbId, QString objFile, int threshold = 0,
-                    QString chainsToDelete = "", QObject *parent = 0);
+    ChimeraOBJMaker(const QString &pdbId, const QString &objFile, int threshold,
+                    const QString &chainsToDelete, QObject *parent = 0);
     // destructor
     virtual ~ChimeraOBJMaker();
     virtual bool isValid();

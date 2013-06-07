@@ -6,7 +6,7 @@
 #include <QDebug>
 #include "subprocessutils.h"
 
-PymolOBJMaker::PymolOBJMaker(QString pdbID, QString dirName, QObject *parent) :
+PymolOBJMaker::PymolOBJMaker(const QString &pdbID, const QString &dirName, QObject *parent) :
     SubprocessRunner(parent),
     pymol(new QProcess(this)),
     blender(new QProcess(this)),
@@ -16,27 +16,27 @@ PymolOBJMaker::PymolOBJMaker(QString pdbID, QString dirName, QObject *parent) :
     objFile(NULL),
     valid(true)
 {
-    pdbID = pdbID.toLower();
+    QString pdb = pdbID.toLower();
     QDir dir(dirName);
-    QFile mtlFile(dir.absoluteFilePath(pdbID + ".mtl"));
+    QFile mtlFile(dir.absoluteFilePath(pdb + ".mtl"));
     if (mtlFile.exists())
         if (!mtlFile.remove())
             valid = false;
-    QFile finalFile(dir.absoluteFilePath(pdbID + ".obj"));
+    QFile finalFile(dir.absoluteFilePath(pdb + ".obj"));
     if (finalFile.exists())
         if (!finalFile.remove())
             valid = false;
-    objFile = new QFile(dir.absoluteFilePath(pdbID + "-tmp.obj"),this);
+    objFile = new QFile(dir.absoluteFilePath(pdb + "-tmp.obj"),this);
     if (objFile->exists())
         if (!objFile->remove())
             valid = false;
     if (pmlFile->open())
     {
         QString cmd = "load http://www.pdb.org/pdb/download/downloadFile.do?fileFormat=pdb&compression=NO&structureId=%1\n";
-        cmd = cmd.arg(pdbID);
+        cmd = cmd.arg(pdb);
         pmlFile->write(cmd.toStdString().c_str());
         cmd = "save %1/%2.pdb\n";
-        cmd = cmd.arg(dirName,pdbID);
+        cmd = cmd.arg(dirName,pdb);
         pmlFile->write(cmd.toStdString().c_str());
         pmlFile->write("hide all\n");
         pmlFile->write("show surface\n");

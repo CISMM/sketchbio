@@ -6,8 +6,8 @@
 #include <QTemporaryFile>
 #include <QDebug>
 
-ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, int threshold,
-                                 QString chainsToDelete, QObject *parent) :
+ChimeraOBJMaker::ChimeraOBJMaker(const QString &pdbId, const QString &objFile, int threshold,
+                                 const QString &chainsToDelete, QObject *parent) :
     AbstractSingleProcessRunner(parent),
     cmdFile(new QTemporaryFile("XXXXXX.py",this)),
     valid(true)
@@ -23,11 +23,11 @@ ChimeraOBJMaker::ChimeraOBJMaker(QString pdbId, QString objFile, int threshold,
         QString line = "runCommand(\"open %1\")\n";
         cmdFile->write(line.arg(pdbId).toStdString().c_str());
         cmdFile->write("runCommand(\"~show; ~ribbon\")\n");
-        chainsToDelete = chainsToDelete.trimmed();
-        for (int i = 0; i < chainsToDelete.length(); i++)
+        QString cTD = chainsToDelete.trimmed();
+        for (int i = 0; i < cTD.length(); i++)
         {
-            char c = chainsToDelete.at(i).toUpper().toAscii();
-            if (c >= 'A' && c <= 'Z')
+            QChar c = cTD.at(i).toUpper();
+            if (c.isUpper())
             {
                 line = "runCommand(\"delete #0:.%1\")\n";
                 line = line.arg(c);

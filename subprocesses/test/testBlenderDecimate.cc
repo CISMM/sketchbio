@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     TestQObject *test = new TestQObject(app,b1);
     TestQObject *test2 = new TestQObject(app,b2);
 
-    SubprocessRunner *runner = SubprocessUtils::makeChimeraOBJFor("1m1j",FILENAME);
+    SubprocessRunner *runner = SubprocessUtils::makeChimeraOBJFor("1m1j",FILENAME,0,"");
 
     QObject::connect(runner, SIGNAL(finished(bool)), test, SLOT(start()));
     QObject::connect(test, SIGNAL(finished()), test2, SLOT(start()));

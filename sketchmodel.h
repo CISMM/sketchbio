@@ -42,6 +42,7 @@ vtkPolyDataAlgorithm *read(QString filename);
 QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr);
 QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr,
                                 const QDir &dir);
+QString createSourceNameFor(const QString &pdbId, const QString &chainsLeftOut);
 }
 
 /*

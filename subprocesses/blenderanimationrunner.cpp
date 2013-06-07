@@ -12,16 +12,17 @@
 #include <QSettings>
 #include <QFileDialog>
 
-BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, QString &animationFile, QObject *parent) :
+BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QString &aFile,
+                                               QObject *parent) :
     SubprocessRunner(parent),
     blender(NULL),
     ffmpeg(NULL),
     py_file(new QTemporaryFile("XXXXXX.py",this)),
-    animationFile(new QFile(animationFile,this)),
+    animationFile(new QFile(aFile,this)),
     valid(true)
 {
     // for now we only render avi files
-    if (!animationFile.endsWith(".avi",Qt::CaseInsensitive))
+    if (!aFile.endsWith(".avi",Qt::CaseInsensitive))
     {
         valid = false;
     }

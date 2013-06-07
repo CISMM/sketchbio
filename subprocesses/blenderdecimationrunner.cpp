@@ -43,7 +43,7 @@ inline void writeBlenderHelpers(QFile &file)
     file.write("\tselect_named(newName)\n\n");
 }
 
-BlenderDecimationRunner::BlenderDecimationRunner(QString objFile, DecimationType::Type type,
+BlenderDecimationRunner::BlenderDecimationRunner(const QString &objFile, DecimationType::Type type,
                                                  double param, QObject *parent) :
     AbstractSingleProcessRunner(parent),
     tempFile(new QTemporaryFile("XXXXXX.py",this)),

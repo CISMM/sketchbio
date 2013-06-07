@@ -14,7 +14,11 @@ class ModelFromPDBRunner : public SubprocessRunner
 {
     Q_OBJECT
 public:
-    ModelFromPDBRunner(SketchProject *proj, QString &pdb, QObject *parent = 0);
+    // proj - the project
+    // pdb - the 4 character pdb id
+    // toDelete - chain identifiers to delete before surfacing
+    ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
+                       const QString &toDelete, QObject *parent = 0);
     ~ModelFromPDBRunner();
 
     virtual void start();
@@ -26,8 +30,8 @@ private slots:
     // in the field stepNum
     void stepFinished(bool succeeded);
 private:
-    // PDB id
-    QString pdbId;
+    // PDB id, and the chain identifiers of chains to delete before surfacing
+    QString pdbId, chainsToDelete;
     // project to add model to
     SketchProject *project;
     // The model (once it is created, keep a reference to it)

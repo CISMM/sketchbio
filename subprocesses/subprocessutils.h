@@ -1,7 +1,7 @@
 #ifndef SUBPROCESSUTILS_H
 #define SUBPROCESSUTILS_H
 
-#include <QString> // so that default values for QString parameters can use string constants
+class QString;
 class SubprocessRunner;
 class SketchProject;
 
@@ -14,7 +14,7 @@ namespace SubprocessUtils
  * choose the executable to use.  This checks most system locations before asking
  * the user.
  */
-QString getSubprocessExecutablePath(QString executableName);
+QString getSubprocessExecutablePath(const QString &executableName);
 
 
 /*
@@ -25,8 +25,8 @@ QString getSubprocessExecutablePath(QString executableName);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile, int threshold = 0,
-                                    QString chainsToDelete = "");
+SubprocessRunner *makeChimeraOBJFor(const QString &pdbID, const QString &objFile, int threshold,
+                                    const QString &chainsToDelete);
 
 /*
  * This method returns a valid SubprocessRunner to make an obj file
@@ -36,7 +36,7 @@ SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile, int threshol
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *makePyMolOBJFor(QString pdbID, QString saveDir);
+SubprocessRunner *makePyMolOBJFor(const QString &pdbID, const QString &saveDir);
 
 /*
  * This method returns a valid SubprocessRunner to make a blender animation
@@ -46,7 +46,7 @@ SubprocessRunner *makePyMolOBJFor(QString pdbID, QString saveDir);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile);
+SubprocessRunner *createAnimationFor(SketchProject *proj, const QString &animationFile);
 
 /*
  * This method returns a valid SubprocessRunner to run Blender to decimate an
@@ -59,7 +59,7 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *simplifyObjFileByPercent(QString objFile, double percentOfOriginal);
+SubprocessRunner *simplifyObjFileByPercent(const QString &objFile, double percentOfOriginal);
 
 /*
  * This method returns a valid SubprocessRunner to run Blender to decimate an
@@ -72,7 +72,7 @@ SubprocessRunner *simplifyObjFileByPercent(QString objFile, double percentOfOrig
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *simplifyObjFile(QString objFile, int triangles);
+SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles);
 
 /*
  * This method returns a valid SubprocessRunner to run various subprocesses to
@@ -80,10 +80,12 @@ SubprocessRunner *simplifyObjFile(QString objFile, int triangles);
  * check if the returned object is valid, simply check for NULL.  Then
   *connect it to the signals/slots and call start().
  *
+ * Note: chainsToDelete - the ids (letters) of chains to delete before surfacing
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *loadFromPDB(SketchProject *proj, QString pdb);
+SubprocessRunner *loadFromPDB(SketchProject *proj, const QString &pdb,
+                              const QString &chainsToDelete);
 }
 
 #endif // SUBPROCESSUTILS_H

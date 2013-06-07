@@ -18,7 +18,8 @@ class BlenderAnimationRunner : public SubprocessRunner
     Q_OBJECT
 public:
     // constructor
-    explicit BlenderAnimationRunner(SketchProject *proj, QString &animationFile, QObject *parent = 0);
+    explicit BlenderAnimationRunner(SketchProject *proj, const QString &aFile,
+                                    QObject *parent = 0);
     // destructor
     virtual ~BlenderAnimationRunner();
     // starts the animation process

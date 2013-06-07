@@ -1,4 +1,5 @@
 #include "subprocessutils.h"
+#include <QString>
 #include <QSettings>
 #include <QFile>
 #include <QApplication>
@@ -12,7 +13,7 @@
 
 namespace SubprocessUtils {
 
-QString getSubprocessExecutablePath(QString executableName) {
+QString getSubprocessExecutablePath(const QString &executableName) {
     QSettings settings; // default parameters specified to the QCoreApplication at startup
     QString executablePath = settings.value("subprocesses/" + executableName + "/path",QString("")).toString();
     if (executablePath.length() == 0 || ! QFile(executablePath).exists()) {
@@ -81,8 +82,8 @@ QString getSubprocessExecutablePath(QString executableName) {
     return executablePath;
 }
 
-SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile,int threshold,
-                                    QString chainsToDelete)
+SubprocessRunner *makeChimeraOBJFor(const QString &pdbID, const QString &objFile,int threshold,
+                                    const QString &chainsToDelete)
 {
     ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile,threshold,chainsToDelete);
     if (!maker->isValid())
@@ -93,7 +94,7 @@ SubprocessRunner *makeChimeraOBJFor(QString pdbID, QString objFile,int threshold
     return maker;
 }
 
-SubprocessRunner *makePyMolOBJFor(QString pdbID, QString saveDir)
+SubprocessRunner *makePyMolOBJFor(const QString &pdbID, const QString &saveDir)
 {
     PymolOBJMaker *maker = new PymolOBJMaker(pdbID,saveDir);
     if (!maker->isValid())
@@ -104,7 +105,7 @@ SubprocessRunner *makePyMolOBJFor(QString pdbID, QString saveDir)
     return maker;
 }
 
-SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
+SubprocessRunner *createAnimationFor(SketchProject *proj, const QString &animationFile)
 {
     if (!animationFile.endsWith(".avi", Qt::CaseInsensitive))
     {
@@ -123,7 +124,7 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, QString animationFile)
     return runner;
 }
 
-SubprocessRunner *simplifyObjFileByPercent(QString objFile, double percentOfOriginal)
+SubprocessRunner *simplifyObjFileByPercent(const QString &objFile, double percentOfOriginal)
 {
     BlenderDecimationRunner *runner = new BlenderDecimationRunner(objFile,DecimationType::PERCENT,
                                                                   percentOfOriginal);
@@ -136,7 +137,7 @@ SubprocessRunner *simplifyObjFileByPercent(QString objFile, double percentOfOrig
     return runner;
 }
 
-SubprocessRunner *simplifyObjFile(QString objFile, int triangles)
+SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles)
 {
     BlenderDecimationRunner *runner = new BlenderDecimationRunner(
                 objFile,DecimationType::POLYGON_COUNT,triangles);
@@ -149,9 +150,10 @@ SubprocessRunner *simplifyObjFile(QString objFile, int triangles)
     return runner;
 }
 
-SubprocessRunner *loadFromPDB(SketchProject *proj, QString pdb)
+SubprocessRunner *loadFromPDB(SketchProject *proj, const QString &pdb,
+                              const QString &chainsToDelete)
 {
-    ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdb);
+    ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdb,chainsToDelete);
     if (!runner->isValid())
     {
         delete runner;
