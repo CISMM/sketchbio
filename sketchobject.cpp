@@ -337,7 +337,9 @@ void SketchObject::setPositionByAnimationTime(double t) {
         setIsVisible(f.isVisibleAfter());
         setActive(f.isActive());
     // if we happenned to land on a keyframe
-    } else if (it.peekNext().key() == t) {
+        // or if we are before the first keyframe
+    } else if (it.peekNext().key() == t ||
+               it.peekNext().key() == last) {
         Keyframe f = it.next().value();
         f.getPosition(position);
         f.getOrientation(orientation);
@@ -367,6 +369,9 @@ void SketchObject::setPositionByAnimationTime(double t) {
         // TODO -- set visibility stuff here
         setIsVisible(f1.isVisibleAfter());
         setActive(f1.isActive());
+    }
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+        it.next()->objectMoved(this);
     }
     recalculateLocalTransform();
 }
