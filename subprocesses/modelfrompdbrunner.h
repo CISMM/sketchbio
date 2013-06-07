@@ -32,8 +32,8 @@ private:
     SketchProject *project;
     // The model (once it is created, keep a reference to it)
     SketchModel *model;
-    // The configuration within the model (-1 before the model is created)
-    int configuration;
+    // The conformation within the model (-1 before the model is created)
+    int conformation;
     // The current subprocess (uses other SubprocessRunners instead of reimplementing)
     SubprocessRunner *currentRunner;
     // The step number we are on (which subprocess is running)

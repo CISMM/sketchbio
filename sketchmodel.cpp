@@ -158,6 +158,7 @@ int SketchModel::addConformation(QString src, QString fullResolutionFileName)
 void SketchModel::incrementUses(int conformation)
 {
     useCount[conformation]++;
+    setResolutionLevelByUses(conformation);
 }
 
 void SketchModel::decrementUses(int conformation)
@@ -174,9 +175,10 @@ void SketchModel::addSurfaceFileForResolution(
                 QPair< int, ModelResolution::ResolutionType >(
                     conformation, resolution),
                 filename);
+    setResolutionLevelByUses(conformation);
 }
 
-void SketchModel::setReslutionForConfiguration(
+void SketchModel::setReslutionForConformation(
         int conformation, ModelResolution::ResolutionType resolution)
 {
     QPair< int, ModelResolution::ResolutionType > key(conformation, resolution);
@@ -191,6 +193,38 @@ void SketchModel::setReslutionForConfiguration(
         ModelUtilities::makePQP_Model(collisionModelForConf[conformation],
                                       modelDataForConf[conformation]->GetOutput());
     }
+}
+
+void SketchModel::setResolutionLevelByUses(int conformation)
+{
+    int uses = useCount[conformation];
+    int res;
+    switch (resolutionLevelForConf[conformation])
+    {
+    case ModelResolution::SIMPLIFIED_1000:
+        res = 1000;
+        break;
+    case ModelResolution::SIMPLIFIED_2000:
+        res = 2000;
+        break;
+    case ModelResolution::SIMPLIFIED_5000:
+        res = 5000;
+        break;
+    case ModelResolution::SIMPLIFIED_FULL_RESOLUTION:
+        res = 50000;
+        break;
+    default:
+        res = 100000;
+        break;
+    }
+    if (uses > 15 && res > 1000)
+        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_1000);
+    else if (uses > 10 && res > 2000)
+        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_2000);
+    else if (uses > 5 && res > 5000)
+        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_5000);
+    else if (uses != 0 && res > 50000)
+        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
 }
 
 namespace ModelUtilities

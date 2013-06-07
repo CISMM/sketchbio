@@ -119,9 +119,12 @@ public slots:
                                      QString filename);
     // Tells the given conformation to use the given resolution.  If no
     // geometry file for the given resolution exists, then it does nothing.
-    void setReslutionForConfiguration(int conformation,
+    void setReslutionForConformation(int conformation,
                                       ModelResolution::ResolutionType resolution);
 private:
+    // sets the resolution level based on the number of uses of the given
+    // conformation
+    void setResolutionLevelByUses(int conformation);
     // Note: conformations are unique "models" that happen to the the same
     //       real world object in a different state.  Thus they are stored
     //       in the same SketchModel object so that conformation can be changed
