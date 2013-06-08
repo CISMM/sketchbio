@@ -41,6 +41,23 @@ inline void writeBlenderHelpers(QFile &file)
     file.write("\tnewName = filename[filename.rfind('/')+1:-4]\n");
     file.write("\tobject.name = newName # set the name to something based on the filename\n");
     file.write("\tselect_named(newName)\n\n");
+
+    // helper function to get the number of triangles
+    file.write("# gets the number of triangles in the object\n");
+    file.write("# technique may vary by blender version\n");
+    file.write("def get_triangle_count(obj):\n");
+    file.write("\ttriangle_count = 0\n");
+    file.write("\tif ('faces' in dir(obj.data)):\n");
+    file.write("\t\tfor f in myobject.data.faces:\n");
+    file.write("\t\t\tcount = len(f.vertices)\n");
+    file.write("\t\t\tif count > 2:\n");
+    file.write("\t\t\t\ttriangle_count += count - 2\n");
+    file.write("\telif ('polygons' in dir(obj.data)):\n");
+    file.write("\t\tfor p in myobject.data.polygons:\n");
+    file.write("\t\t\tcount = p.loop_total\n");
+    file.write("\t\t\tif count > 2:\n");
+    file.write("\t\t\t\ttriangle_count += count - 2\n");
+    file.write("\treturn triangle_count\n");
 }
 
 BlenderDecimationRunner::BlenderDecimationRunner(const QString &objFile, DecimationType::Type type,
@@ -84,11 +101,7 @@ BlenderDecimationRunner::BlenderDecimationRunner(const QString &objFile, Decimat
         }
         else if (type == DecimationType::POLYGON_COUNT)
         {
-            tempFile->write("triangle_count = 0\n");
-            tempFile->write("for p in myobject.data.polygons:\n");
-            tempFile->write("\tcount = p.loop_total\n");
-            tempFile->write("\tif count > 2:\n");
-            tempFile->write("\t\ttriangle_count += count - 2\n");
+            tempFile->write("triangle_count = get_triangle_count(myobject)\n");
             line = "ratio = min(%1 * 1.0 / triangle_count,1)\n";
             line = line.arg(param);
             tempFile->write(line.toStdString().c_str());
