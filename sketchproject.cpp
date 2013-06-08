@@ -257,7 +257,7 @@ SketchModel *SketchProject::addModelFromFile(QString source, QString fileName,
                                              double iMass, double iMoment) {
     QFile file(fileName);
 //    qDebug() << filename;
-    QString localname = fileName.mid(fileName.lastIndexOf("/") +1).toLower();
+    QString localname = fileName.mid(fileName.lastIndexOf("/") +1);
     QString fullpath = projectDir->absoluteFilePath(localname);
 //    qDebug() << fullpath;
     if (projectDir->entryList().contains(localname, Qt::CaseInsensitive)
@@ -280,7 +280,7 @@ SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
 SketchObject *SketchProject::addObject(QString source,QString filename) {
     QFile file(filename);
 //    qDebug() << filename;
-    QString localname = filename.mid(filename.lastIndexOf("/") +1).toLower();
+    QString localname = filename.mid(filename.lastIndexOf("/") +1);
     QString fullpath = projectDir->absoluteFilePath(localname);
     QFile localfile(fullpath);
 //    qDebug() << fullpath;
