@@ -172,7 +172,6 @@ void PymolOBJMaker::checkForFileWritten()
 
 void PymolOBJMaker::pymolFinished(int status)
 {
-    bool success = true;
     if (status != QProcess::NormalExit ||
             pymol->exitCode() != 0 ||
             ! objFile->exists() ||
@@ -182,7 +181,6 @@ void PymolOBJMaker::pymolFinished(int status)
         qDebug() << pymol->readAll();
         emit finished(false);
         deleteLater();
-        success = false;
     }
     else
     {
