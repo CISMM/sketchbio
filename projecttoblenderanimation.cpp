@@ -84,6 +84,19 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash< QPair< Sk
     return file.error() == QFile::NoError;
 }
 
+static inline void computeNewTranslate(q_vec_type pos, q_type orient, SketchObject *obj)
+{
+    q_vec_type tmp;
+    obj->getPosition(pos);
+    obj->getOrientation(orient);
+    double bb[6];
+    obj->getBoundingBox(bb);
+    q_vec_type boundsCenter = {bb[1] + bb[0], bb[3] + bb[2], bb[5] + bb[4]};
+    q_vec_scale(boundsCenter,0.5,boundsCenter);
+    q_xform(tmp,orient,boundsCenter);
+    q_vec_add(pos,tmp,pos);
+}
+
 void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
                                                   QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
                                                   SketchProject *proj, SketchObject *obj)
@@ -105,8 +118,7 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
         objectIdxs.insert(obj,objectsLen++);
         q_vec_type pos;
         q_type orient, tmp;
-        obj->getPosition(pos);
-        obj->getOrientation(orient);
+        computeNewTranslate(pos,orient,obj);
         q_from_axis_angle(tmp,0,1,0,Q_PI);
         bool isCamera = false;
         if (model->getSource(obj->getModelConformation()) == CAMERA_MODEL_KEY) {
@@ -190,8 +202,7 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
             int idx = it.next().value();
             sprintf(buf.data(), "select_object(myObjects[%d])\n", idx);
             file.write(buf.data());
-            obj->getPosition(pos);
-            obj->getOrientation(orient);
+            computeNewTranslate(pos,orient,obj);
             if (obj->getModel()->getSource(obj->getModelConformation())
                     == CAMERA_MODEL_KEY) {
                 q_type tmp;
