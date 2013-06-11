@@ -1,53 +1,63 @@
 #include "vrpnserver.h"
-#include <iostream>
+#include <QTimer>
 #include <vrpn_Connection.h>
 #include <vrpn_Tracker_RazerHydra.h>
 #include <sketchioconstants.h>
 
-/*
- * This is pretty much Cory's code from VPAW with the Phantom stuff removed
- */
-
-//----------------------------------------------------------------------------
-vrpnServer::vrpnServer()
+vrpnServer::vrpnServer() :
+    QObject(NULL),
+    timer(new QTimer(this)),
+    connection(NULL),
+    hydra(NULL)
 {
-  this->Stopped = true;
+    timer->setInterval(1);
+    QObject::connect(timer,SIGNAL(timeout()),this, SLOT(mainloopServer()));
 }
 
-//----------------------------------------------------------------------------
 vrpnServer::~vrpnServer()
 {
+    timer->stop();
+    if (hydra != NULL)
+        delete hydra;
+    if (connection != NULL)
+        delete connection;
 }
 
-//----------------------------------------------------------------------------
-void vrpnServer::Start()
+void vrpnServer::startServer()
 {
-  this->Stopped = false;
-  this->start();
+    if (timer->isActive())
+        return;
+    if (connection == NULL)
+        connection = vrpn_create_server_connection();
+    if (hydra == NULL)
+        hydra = new vrpn_Tracker_RazerHydra( VRPN_RAZER_HYDRA_DEVICE_NAME, connection);
+    timer->start();
 }
 
-//----------------------------------------------------------------------------
-void vrpnServer::Stop()
+void vrpnServer::stopServer()
 {
-  this->Stopped = true;
-  QThread::wait();
-}
-
-//----------------------------------------------------------------------------
-void vrpnServer::run()
-{
-  vrpn_Connection * connection = vrpn_create_server_connection();
-  // Create the various device objects
-  vrpn_Tracker_RazerHydra *razer =
-    new vrpn_Tracker_RazerHydra( VRPN_RAZER_HYDRA_DEVICE_NAME, connection );
-
-  while ( !this->Stopped ) {
-    razer->mainloop();
-    connection->mainloop();
-
-    QThread::msleep( 1 );
+    timer->stop();
+    if (hydra != NULL)
+    {
+        delete hydra;
+        hydra = NULL;
     }
-
-  delete razer;
-  delete connection;
+    if (connection != NULL)
+    {
+        delete connection;
+        connection = NULL;
+    }
 }
+
+void vrpnServer::restartServer()
+{
+    stopServer();
+    startServer();
+}
+
+void vrpnServer::mainloopServer()
+{
+    hydra->mainloop();
+    connection->mainloop();
+}
+

@@ -1,32 +1,43 @@
 #ifndef VRPNSERVER_H
 #define VRPNSERVER_H
 
-#include <QThread>
+#include <QObject>
+
+class QTimer;
+class vrpn_Connection;
+class vrpn_Tracker_RazerHydra;
 
 /*
- * This is pretty much a copy of Cory's code from VPAW with the
- * phantom device code removed
+ * This class is a Qt signals/slots driven vrpn server.  Ideally create a
+ * new QThread and use moveToThread to make this run in that thread.  Then
+ * use QTimer::singleShot to start/stop/restart/delete the server via its
+ * slots.
  */
-class vrpnServer : public QThread
+class vrpnServer : public QObject
 {
     Q_OBJECT
 public:
     vrpnServer();
     virtual ~vrpnServer();
 
-    // Start the thread
-    void Start();
+public slots:
+    // Initialize and start the server
+    void startServer();
 
-    // Stop the thread
-    void Stop();
+    // stop the server and remove the devices
+    void stopServer();
 
-protected slots:
-    void run();
+    // restart the server
+    void restartServer();
+
+private slots:
+    // do a timestep of the server mainloop
+    void mainloopServer();
 private:
-    vrpnServer(const vrpnServer& other); // not implemented
-    void operator =(const vrpnServer& other); // not implemented
-
-    bool Stopped;
+    QTimer *timer;
+    vrpn_Connection *connection;
+    vrpn_Tracker_RazerHydra *hydra;
 };
+
 
 #endif // VRPNSERVER_H

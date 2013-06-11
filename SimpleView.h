@@ -31,6 +31,8 @@
 class Ui_SimpleView;
 class vtkTextMapper;
 class SubprocessRunner;
+class vrpnServer;
+class QThread;
 
 /*
  * SimpleView is the main GUI class in the SketchBio project.  It also manages
@@ -109,6 +111,8 @@ private:
   // Fields
   Ui_SimpleView *ui;
   QTimer *timer;
+  vrpnServer *server;
+  QThread *serverThread;
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   vtkSmartPointer<vtkTextMapper> directionsTextMapper;

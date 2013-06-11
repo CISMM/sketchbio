@@ -14,7 +14,6 @@ int main( int argc, char** argv )
 {
   // QT Stuff
   QApplication app( argc, argv );
-  vrpnServer server;
 
   // set required fields to use QSettings API (these specify the location of the settings)
   app.setApplicationName("Sketchbio");
@@ -43,10 +42,6 @@ int main( int argc, char** argv )
 	// If we give it model names, we don't want the fibrin default.
     do_example = false;
   }
-  // start internal vrpn?
-  if (VRPN_USE_INTERNAL_SERVER) {
-    server.Start();
-  }
   QString projDir = QFileDialog::getExistingDirectory((QWidget *)NULL,
                                QString("Select Project Folder"),QString("./"));
   int retVal = 0;
@@ -58,9 +53,6 @@ int main( int argc, char** argv )
     mySimpleView.show();
  
     retVal = app.exec();
-  }
-  if (VRPN_USE_INTERNAL_SERVER) {
-    server.Stop();
   }
   return retVal;
 }

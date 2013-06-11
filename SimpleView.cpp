@@ -29,6 +29,7 @@
 #include <vtkXMLUtilities.h>
 #include <projecttoxml.h>
 #include <transformequals.h>
+#include <vrpnserver.h>
 
 #include "subprocesses/subprocessrunner.h"
 #include "subprocesses/subprocessutils.h"
@@ -44,6 +45,8 @@
 // Constructor
 SimpleView::SimpleView(QString projDir, bool load_example) :
     timer(new QTimer()),
+    server(new vrpnServer()),
+    serverThread(new QThread(this)),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
     project(new SketchProject(renderer.GetPointer())),
@@ -56,6 +59,13 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     collisionModeGroup->addAction(this->ui->actionBinary_Collision_Search);
     collisionModeGroup->addAction(this->ui->actionPose_Mode_PCA);
     this->ui->actionPose_Mode_1->setChecked(true);
+
+    if (VRPN_USE_INTERNAL_SERVER)
+    {
+        serverThread->start();
+        server->moveToThread(serverThread);
+        QTimer::singleShot(0,server,SLOT(startServer()));
+    }
 
     renderer->InteractiveOff();
     renderer->SetViewport(0,0,1,1);
@@ -175,9 +185,19 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
 }
 
 SimpleView::~SimpleView() {
+    timer->stop();
     delete inputManager;
     delete project;
     delete collisionModeGroup;
+    if (VRPN_USE_INTERNAL_SERVER)
+    {
+        QObject::connect(server,SIGNAL(destroyed()),serverThread,SLOT(quit()));
+        QTimer::singleShot(0,server,SLOT(deleteLater()));
+        while (!serverThread->isFinished())
+            QApplication::instance()->processEvents(QEventLoop::AllEvents,20);
+    }
+    else
+        delete server;
     delete timer;
 }
 
