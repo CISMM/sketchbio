@@ -26,6 +26,8 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
     file.write(buf.data());
+    file.write("bpy.ops.object.lamp_add(type='SUN')\n");
+    file.write("bpy.context.active_object.data.energy = 0.16\n");
     file.write("bpy.context.scene.render.fps_base = 1\n");
     file.write("bpy.context.scene.world.light_settings.use_ambient_occlusion = True\n");
     file.write("bpy.context.scene.world.light_settings.ao_factor = 1.0\n");
@@ -125,54 +127,32 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
             q_mult(orient,orient,tmp);
             isCamera = true;
         }
-        sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
-                pos[Q_X], pos[Q_Y], pos[Q_Z]);
-        file.write(buf.data());
+        file.write("bpy.context.active_object.location = (0,0,0)\n");
         file.write("bpy.context.active_object.rotation_mode = 'QUATERNION'\n");
-        sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
-                "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
-                orient[Q_Y], orient[Q_Z]);
-        file.write(buf.data());
+        file.write("bpy.context.active_object.rotation_quaternion = (0,0,0,0)\n");
         if (isCamera) {
             // set the far plane out enough to see all the objects (we hope)
             file.write("bpy.context.active_object.data.clip_end = 2000\n");
             // give the camera a light that will follow it around
             file.write("cam = bpy.context.active_object\n");
-            file.write("bpy.ops.object.lamp_add(type='AREA')\n");
-            sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
-                    pos[Q_X], pos[Q_Y], pos[Q_Z]);
-            file.write(buf.data());
-            file.write("bpy.context.active_object.rotation_mode = 'QUATERNION'\n");
-            sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
-                    "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
-                    orient[Q_Y], orient[Q_Z]);
-            file.write(buf.data());
-            file.write("bpy.context.active_object.data.energy = 0.7\n");
-            file.write("bpy.context.active_object.data.distance = 200\n");
-            file.write("bpy.context.active_object.data.shadow_method = 'RAY_SHADOW'\n");
-            file.write("bpy.context.active_object.data.shadow_ray_samples_x = 10\n");
-            file.write("bpy.context.active_object.data.size = 100\n");
-            file.write("lamp = bpy.context.active_object\n");
-            file.write("select_object(cam)\n");
-            file.write("lamp.select = True\n");
-            file.write("bpy.ops.object.parent_set()\n");
-            q_vec_type nPos;
-            q_vec_type up;
-            proj->getCameras()->value(obj)->GetViewUp(up);
-            q_xform(up,tmp,up);
-            q_vec_scale(up,500,up);
-            q_vec_add(nPos,pos,up);
             file.write("bpy.ops.object.lamp_add(type='POINT')\n");
-            sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
-                    nPos[Q_X], nPos[Q_Y], nPos[Q_Z]);
-            file.write(buf.data());
-            file.write("bpy.context.active_object.data.energy = 15.0\n");
-            file.write("bpy.context.active_object.data.distance = 1000.0\n");
+            file.write("bpy.context.active_object.location = (0,-80000,0)\n");
+            file.write("bpy.context.active_object.data.energy = 0.46\n");
+            file.write("bpy.context.active_object.data.falloff_type = 'CONSTANT'\n");
+            file.write("bpy.context.active_object.data.distance = 0.0\n");
+            file.write("bpy.context.active_object.data.shadow_method = 'RAY_SHADOW'\n");
             file.write("lamp = bpy.context.active_object\n");
             file.write("select_object(cam)\n");
             file.write("lamp.select = True\n");
             file.write("bpy.ops.object.parent_set()\n");
         }
+        sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
+                pos[Q_X], pos[Q_Y], pos[Q_Z]);
+        file.write(buf.data());
+        sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
+                "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
+                orient[Q_Y], orient[Q_Z]);
+        file.write(buf.data());
         // not sure if this needs modification to do something different for cameras
         if (!obj->isVisible()) {
             // hide it in the main view?
