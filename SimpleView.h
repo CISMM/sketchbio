@@ -73,6 +73,9 @@ public slots:
   // fractional polygon counts.
   void simplifyOBJFile();
 
+  // Restarts the internal vrpn server if there is one.
+  void restartVRPNServer();
+
   // Save the current project
   void saveProjectAs();
   void saveProject();
