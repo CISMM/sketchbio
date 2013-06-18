@@ -1,0 +1,32 @@
+% Shawn Waldon - This section talks about the tricks we played in the collision detection to
+%         avoid unnecessary tests.
+
+\documentclass{article} % is article right?
+\begin{document}
+% Just working on learning LaTeX
+\title{Section of SketchBio paper}
+\author{Shawn Waldon\\Department of Computer Science\\
+			UNC Chapel Hill\\\texttt{swaldon@cs.unc.edu}}
+\date{\today}
+\maketitle
+
+\section{Avoiding Unneccessary Collision Tests}
+Collision detection can be a bottleneck of interactive applications due to the large number of tests needed.  Every object that moves must be tested against every other object to determine if a collision has occurred.  Then some response must be made to the collision, but the response itself may cause other collisions which must be checked.  In a physics simulation with every object moving, every object must be checked against every other object at each frame.  This means that for a system with $n$ objects, ${n \choose 2}$ or $\mathcal{O}(n^2)$ tests must be performed at each frame.
+
+\subsection{Pose Mode Physics}
+One simplification that can be made to collision detection is to employ pose mode physics.  In this variety of physics, only those objects which are directly manipulated by the user are allowed to move.  Each other object is fixed in place and does not even move due to collision response forces.  This allows the collision tests between the objects that the user is not interacting with to be skipped so that only collisions involving the objects that the user is moving need to be checked.  Assuming that the number of objects that the user is moving at any one time is small compared to the total number of objects, the number of collision tests that need to be performed is reduced to $\mathcal{O}(n)$.
+
+\subsection{Collisions Within a Replicated Structure}
+
+% We need a section above this to explain how replication is being done before
+% this will make any sense
+
+There are two ways that the user can interact with a replicated structure: moving the entire structure as a unit, or adjusting the internal transformation to change the shape of the structure.  In the first case, only collision tests between the structure and the other objects in the scene need to be done.  Since the structure was moved as a unit, its internal geometry did not change and if there were no internal collisions to begin with, there will be none after it was moved.  In the second case, the internal structure did change and both internal and external collisions must be tested.  External collisions must test every object in the structure with every external object.   Due to the repetitive nature of the structure, only a subset of the tests for internal collisions need to be performed.  Since the transformation between any two adjacent objects in the structure is identical, if any two adjacent objects are colliding, then every pair of adjacent objects is colliding.  So only the first pair needs to be tested to determine if any/all of these collisions has occurred.  Similarly, by testing for a collision between the first and third objects in the structure any collisions between objects that whose indices within the structure differ by two can be detected. (wording?)  A similar statement can be made about any separation interval within the repetitive structure so that only one test is required.  So in this case, the first object in the structure must be tested against each other object in the structure, allowing $\mathcal{O}(n)$ tests to suffice for all internal collisions in a repetitive structure of $n$ elements.
+
+\section{Simplifying Collision Geometry}
+
+Collision detection is a problem that becomes far more complex as more triangles are added to the meshes being tested.  Thus an effort has been made to make each mesh as simple as possible while still keeping enough detail to be true to the original geometry.  This is accomplished by creating a version of each molecule's geometry at multiple resolutions.  Each molecule has its full resolution surface, the Connolly solvent excluded surface for water, which is the surface used when exporting to any rendering application.  Each molecule also has a simpler surface, which is generated using UCSF Chimera via an isosurface algorithm.  This surface is stored at its full resolution as well as a version at each 5000, 2000, and 1000 triangles.  The resolution of each surface that is currently being used is dynamically changed as more objects with that surface model are added and as the lower resolution surface models are generated.
+
+% TODO - once we decide how backgroundy the loading of additional surfaces is...
+
+\end{document}
