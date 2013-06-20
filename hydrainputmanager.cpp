@@ -1,9 +1,10 @@
 #include "hydrainputmanager.h"
-#include "sketchproject.h"
+#include <sketchproject.h>
+#include <transformmanager.h>
 #include "objecteditingmode.h"
 #include "springeditingmode.h"
 #include "animationmode.h"
-#include "sketchtests.h"
+#include <sketchtests.h>
 #include <QDebug>
 #include <QSettings>
 

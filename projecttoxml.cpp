@@ -1,6 +1,10 @@
 #include "projecttoxml.h"
 #include <ios>
 #include <sketchioconstants.h>
+#include <modelmanager.h>
+#include <transformmanager.h>
+#include <structurereplicator.h>
+#include <transformequals.h>
 #include <sketchtests.h>
 #include <QScopedPointer>
 #include <QDebug>

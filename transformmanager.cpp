@@ -1,6 +1,10 @@
 #include "transformmanager.h"
 #include "sketchioconstants.h"
 
+#include <vtkCamera.h>
+#include <vtkTransform.h>
+#include <vtkLinearTransform.h>
+
 
 TransformManager::TransformManager() {
     worldToRoom = vtkSmartPointer<vtkTransform>::New();
@@ -52,6 +56,11 @@ void TransformManager::setWorldToRoomMatrix(vtkMatrix4x4 *matrix) {
 
 const vtkMatrix4x4 *TransformManager::getRoomToEyeMatrix() const {
     return roomToEyes->GetMatrix();
+}
+
+vtkTransform *TransformManager::getRoomToEyeTransform()
+{
+    return roomToEyes;
 }
 
 void TransformManager::setRoomToEyeMatrix(vtkMatrix4x4 *matrix) {
@@ -256,6 +265,11 @@ void TransformManager::rotateWorldRelativeToRoomAboutRightTracker(const q_type q
     q_vec_invert(right,right);
     translateWorldRelativeToRoom(right);
 }
+
+vtkCamera *TransformManager::getGlobalCamera() {
+    return globalCamera;
+}
+
 
 // this updates the camera based on the current world to eye matrix using the
 // algorithm described here:

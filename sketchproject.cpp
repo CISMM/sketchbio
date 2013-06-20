@@ -1,14 +1,24 @@
 #include "sketchproject.h"
 
+#include <limits>
+
+#include <vtkRenderer.h>
+#include <vtkCamera.h>
 #include <vtkOBJReader.h>
+#include <vtkPlaneSource.h>
 #include <vtkSphereSource.h>
 #include <vtkConeSource.h>
 #include <vtkExtractEdges.h>
 #include <vtkProperty.h>
 #include <vtkPolyDataMapper.h>
-#include "sketchioconstants.h"
-#include <limits>
 #include <QDebug>
+#include <QDir>
+
+#include "sketchioconstants.h"
+#include "transformmanager.h"
+#include "modelmanager.h"
+#include "structurereplicator.h"
+#include "transformequals.h"
 
 #define NUM_COLORS (6)
 static double COLORS[][3] =
@@ -96,24 +106,53 @@ SketchProject::SketchProject(vtkRenderer *r) :
     cameras(),
     transformOps(),
     projectDir(NULL),
+    leftHand(addTracker(r)),
+    rightHand(addTracker(r)),
     leftOutlinesActor(vtkSmartPointer<vtkActor>::New()),
     rightOutlinesActor(vtkSmartPointer<vtkActor>::New()),
     leftOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
     rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
+    shadowFloorSource(vtkSmartPointer< vtkPlaneSource >::New()),
+    shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
     isDoingAnimation(false),
     timeInAnimation(0.0),
     viewTime(0.0)
 {
+    // set up initial transforms
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
+    // set up initial camera
     renderer->SetActiveCamera(transforms->getGlobalCamera());
-    leftHand = addTracker(r);
-    rightHand = addTracker(r);
+    // connect outlines mapper & actor
     leftOutlinesActor->SetMapper(leftOutlinesMapper);
     leftOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
     leftOutlinesActor->GetProperty()->SetLighting(false);
     rightOutlinesActor->SetMapper(rightOutlinesMapper);
     rightOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
     rightOutlinesActor->GetProperty()->SetLighting(false);
+    // initialize shadow floor source
+
+#define PLANE_HALF_LENGTH 700
+#define PLANE_Y -300
+
+#define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
+#define PLANE_POINT1  PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
+#define PLANE_POINT2 -PLANE_HALF_LENGTH,PLANE_Y,PLANE_HALF_LENGTH*8
+
+    shadowFloorSource->SetOrigin(PLANE_ORIGIN);
+    shadowFloorSource->SetPoint1(PLANE_POINT1);
+    shadowFloorSource->SetPoint2(PLANE_POINT2);
+    shadowFloorSource->SetResolution(1,1);
+    shadowFloorSource->Update();
+    // connect shadow floor source to its actor
+    vtkSmartPointer< vtkPolyDataMapper > floorMapper = vtkSmartPointer< vtkPolyDataMapper >::New();
+    floorMapper->SetInputConnection(shadowFloorSource->GetOutputPort());
+    floorMapper->Update();
+    shadowFloorActor->SetMapper(floorMapper);
+    // set up the actor and add it to the renderer
+    shadowFloorActor->GetProperty()->SetColor(1.0,0.3,0.3);
+    shadowFloorActor->GetProperty()->LightingOff();
+    shadowFloorActor->SetUserTransform(transforms->getRoomToEyeTransform());
+    r->AddActor(shadowFloorActor);
 }
 
 SketchProject::~SketchProject() {

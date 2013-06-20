@@ -1,6 +1,7 @@
 #include "hydrainputmode.h"
-#include "sketchproject.h"
-#include "sketchioconstants.h"
+#include <sketchproject.h>
+#include <sketchioconstants.h>
+#include <transformmanager.h>
 #include <QDebug>
 
 HydraInputMode::HydraInputMode(SketchProject *proj, const bool *const b, const double *const a) :

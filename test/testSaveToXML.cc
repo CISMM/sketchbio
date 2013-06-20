@@ -1,9 +1,13 @@
 #include <sketchioconstants.h>
 #include <projecttoxml.h>
+#include <structurereplicator.h>
+#include <transformequals.h>
 #include <sketchtests.h>
 
 #include <vtkRenderer.h>
 #include <vtkXMLUtilities.h>
+
+#include <QDir>
 
 #include <iostream>
 

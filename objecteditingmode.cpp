@@ -1,7 +1,10 @@
 #include "objecteditingmode.h"
-#include "sketchioconstants.h"
-#include "sketchtests.h"
-#include "sketchproject.h"
+#include <sketchioconstants.h>
+#include <sketchtests.h>
+#include <sketchproject.h>
+#include <transformmanager.h>
+#include <transformequals.h>
+#include <structurereplicator.h>
 #include <limits>
 
 

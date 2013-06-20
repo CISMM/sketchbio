@@ -3,10 +3,11 @@
 
 #include <quat.h>
 #include <vtkSmartPointer.h>
-#include <vtkTransform.h>
-#include <vtkCamera.h>
-#include <vtkLinearTransform.h>
 
+class vtkTransform;
+class vtkLinearTransform;
+class vtkMatrix4x4;
+class vtkCamera;
 /*
  * This class handles transformations between world space, tracker space, and camera space.
  */
@@ -42,6 +43,11 @@ public:
      * Gets the transformation between room and eye
      */
     const vtkMatrix4x4 *getRoomToEyeMatrix() const;
+
+    /*
+     * Gets the transformation between room and eye
+     */
+    vtkTransform *getRoomToEyeTransform();
 
     /*
      * Sets the transformation between room and eye
@@ -235,10 +241,6 @@ private:
 inline void q_xyz_quat_copy(q_xyz_quat_struct *dest, const q_xyz_quat_struct *src) {
     q_copy(dest->quat,src->quat);
     q_vec_copy(dest->xyz,src->xyz);
-}
-
-inline vtkCamera *TransformManager::getGlobalCamera() {
-    return globalCamera;
 }
 
 #endif // TRANSFORMMANAGER_H

@@ -1,6 +1,7 @@
 #include "springeditingmode.h"
-#include "sketchioconstants.h"
-#include "sketchproject.h"
+#include <sketchioconstants.h>
+#include <sketchproject.h>
+#include <transformmanager.h>
 #include <limits>
 
 SpringEditingMode::SpringEditingMode(SketchProject *proj, const bool *buttonState,

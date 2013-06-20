@@ -1,20 +1,31 @@
 #ifndef SKETCHPROJECT_H
 #define SKETCHPROJECT_H
 
-#include <vtkRenderer.h>
+// VTK dependencies
+class vtkRenderer;
+class vtkPlaneSource;
+class vtkActor;
+class vtkPolyDataMapper;
+class vtkCamera;
+
+// QT dependencies
 #include <QVector>
 #include <QSharedPointer>
 #include <QScopedPointer>
 #include <QWeakPointer>
 #include <QList>
 #include <QString>
-#include <QDir>
+class QDir;
 
-#include "modelmanager.h"
-#include "transformmanager.h"
+// VRPN/quatlib dependencies
+#include <quat.h>
+
+// SketchBio dependencies
+class ModelManager;
+class TransformManager;
 #include "worldmanager.h"
-#include "structurereplicator.h"
-#include "transformequals.h"
+class StructureReplicator;
+class TransformEquals;
 
 /*
  *
@@ -133,16 +144,16 @@ private:
     static void setUpVtkCamera(SketchObject *cam, vtkCamera *vCam);
 
     // fields
-    vtkSmartPointer<vtkRenderer> renderer;
+    vtkSmartPointer< vtkRenderer > renderer;
     // managers -- these are owned by the project, raw pointers may be passed to other places, but
     //              will be invalid once the project is deleted
-    QScopedPointer<ModelManager> models;
-    QScopedPointer<TransformManager> transforms;
-    QScopedPointer<WorldManager> world;
+    QScopedPointer< ModelManager > models;
+    QScopedPointer< TransformManager > transforms;
+    QScopedPointer< WorldManager > world;
     // operators on objects -- these are owned here... but not sure if I can do lists of ScopedPointers
-    QList<StructureReplicator *> replicas;
-    QHash<SketchObject *,vtkSmartPointer<vtkCamera> > cameras;
-    QVector<QSharedPointer<TransformEquals> > transformOps;
+    QList< StructureReplicator * > replicas;
+    QHash< SketchObject *, vtkSmartPointer< vtkCamera > > cameras;
+    QVector< QSharedPointer< TransformEquals > > transformOps;
 
     // project dir
     QDir *projectDir;
@@ -152,8 +163,10 @@ private:
     // outline actors are added to the renderer when the object is close enough to
     // interact with.  The outline mappers are updated whenever the closest object
     // changes (unless another one is currently grabbed).
-    vtkSmartPointer<vtkActor> leftOutlinesActor, rightOutlinesActor;
-    vtkSmartPointer<vtkPolyDataMapper> leftOutlinesMapper, rightOutlinesMapper;
+    vtkSmartPointer< vtkActor > leftOutlinesActor, rightOutlinesActor;
+    vtkSmartPointer< vtkPolyDataMapper > leftOutlinesMapper, rightOutlinesMapper;
+    vtkSmartPointer< vtkPlaneSource > shadowFloorSource;
+    vtkSmartPointer< vtkActor > shadowFloorActor;
     // animation stuff
     bool isDoingAnimation; // true if the animation is happenning
     double timeInAnimation; // the animation time starting at 0
