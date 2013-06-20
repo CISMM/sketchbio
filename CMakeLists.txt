@@ -171,6 +171,7 @@ ENDIF(APPLE)
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test)
 ADD_SUBDIRECTORY(subprocesses)
+ADD_SUBDIRECTORY(vtk_custom_filters)
 
 
 # Copied from Microscope Simulator.  Used for creating the installer.
