@@ -101,7 +101,6 @@ int main() {
     }
     pts->Modified();
     tetra->SetPoints(pts);
-    tetra->Update();
 
 
     PQP_CollideResult cr2;

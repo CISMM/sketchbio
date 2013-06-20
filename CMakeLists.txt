@@ -145,13 +145,18 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
 ADD_EXECUTABLE( SketchBio ${SketchBioSrcs} ${UISrcs} ${MOCSrcs})
 TARGET_LINK_LIBRARIES( SketchBio
     ${SketchBioLibraries}
-    QVTK
     ${VTK_LIBRARIES}
     ${VRPN_LIBRARIES}
     ${VRPN_SERVER_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     ${PQP_LIBRARIES}
 )
+
+# If using vtk 5.x, explicitly include QVTK (vtk 6 implicitly includes it)
+IF(${VTK_VERSION} VERSION_LESS "6")
+    TARGET_LINK_LIBRARIES( SketchBio QVTK )
+ENDIF(${VTK_VERSION} VERSION_LESS "6")
+
 IF(UNIX AND NOT APPLE)
 	TARGET_LINK_LIBRARIES( SketchBio ${LIBUSB1_LIBRARIES} )
 ENDIF(UNIX AND NOT APPLE)

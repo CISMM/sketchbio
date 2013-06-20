@@ -4,6 +4,7 @@
 #include <vtkPolyDataMapper.h>
 #include <QDebug>
 #include <limits>
+#include <vtkVersion.h>
 
 #define COLLISION_FORCE 5
 
@@ -31,7 +32,11 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
     tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
+#if (VTK_MAJOR_VERSION <= 5)
     tubeFilter->SetInput(springEndConnections);
+#else
+    tubeFilter->SetInputData(springEndConnections);
+#endif
     tubeFilter->SetRadius(5);
     tubeFilter->Update();
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -312,10 +317,8 @@ void WorldManager::updateSprings() {
         addSpringCells(lHand,springEndConnections);
         addSpringCells(rHand,springEndConnections);
         springEndConnections->Modified();
-        springEndConnections->Update();
         tubeFilter->Update();
     }
-    springEndConnections->Update();
 }
 
 

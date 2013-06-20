@@ -408,7 +408,6 @@ vtkPolyDataAlgorithm *read(QString filename)
                 vtkSmartPointer< vtkPolyDataReader >::New();
         reader->SetFileName(filename.toStdString().c_str());
         reader->Update();
-        reader->GetOutput()->ReleaseDataFlagOn();
         vtkTransformPolyDataFilter *identity = vtkTransformPolyDataFilter::New();
         identity->SetInputConnection(reader->GetOutputPort());
         vtkSmartPointer< vtkTransform > tfrm =
@@ -429,7 +428,6 @@ vtkPolyDataAlgorithm *read(QString filename)
     {
         throw "Unsupported file type in ModelUtilities::read()\n";
     }
-    result->GetOutput()->ReleaseDataFlagOn();
     return result;
 }
 
