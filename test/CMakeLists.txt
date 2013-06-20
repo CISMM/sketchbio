@@ -3,7 +3,7 @@ SET(Test1Srcs testTransformManager.cc)
 ADD_EXECUTABLE( TransformTest ${Test1Srcs})
 TARGET_LINK_LIBRARIES( TransformTest
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     QVTK
 )
@@ -12,7 +12,7 @@ SET(Test2Srcs testPQPDeform.cc )
 ADD_EXECUTABLE( PQPTest ${Test2Srcs})
 TARGET_LINK_LIBRARIES( PQPTest
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     QVTK
     ${QUATLIB_LIBRARIES}
 )
@@ -22,7 +22,7 @@ SET(Test3Srcs testReplicatedObjects.cc )
 ADD_EXECUTABLE( ReplicatorTest ${Test3Srcs})
 TARGET_LINK_LIBRARIES( ReplicatorTest
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     QVTK
     ${QUATLIB_LIBRARIES}
 )
@@ -54,7 +54,7 @@ ADD_EXECUTABLE( SaveTest ${Test4Srcs})
 TARGET_LINK_LIBRARIES( SaveTest
     SketchBioExport
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     QVTK
     ${QUATLIB_LIBRARIES}
 )
@@ -63,7 +63,7 @@ SET(Test5Srcs testObjectGroups.cc)
 ADD_EXECUTABLE( ObjectTest ${Test5Srcs})
 TARGET_LINK_LIBRARIES( ObjectTest
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     QVTK
     ${QUATLIB_LIBRARIES}
 )
@@ -72,7 +72,7 @@ SET(Test6Srcs testTransformEquals.cc )
 ADD_EXECUTABLE( TransformEqualsTest ${Test6Srcs})
 TARGET_LINK_LIBRARIES( TransformEqualsTest
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     QVTK
     ${QUATLIB_LIBRARIES}
 )
@@ -81,7 +81,7 @@ SET(Test7Srcs testSketchModel.cc )
 ADD_EXECUTABLE( ModelTest ${Test7Srcs})
 TARGET_LINK_LIBRARIES( ModelTest
     SketchBioCore
-    PQP
+    ${PQP_LIBRARIES}
     QVTK
     ${QUATLIB_LIBRARIES}
 )
