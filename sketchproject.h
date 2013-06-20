@@ -166,7 +166,7 @@ private:
     vtkSmartPointer< vtkActor > leftOutlinesActor, rightOutlinesActor;
     vtkSmartPointer< vtkPolyDataMapper > leftOutlinesMapper, rightOutlinesMapper;
     vtkSmartPointer< vtkPlaneSource > shadowFloorSource;
-    vtkSmartPointer< vtkActor > shadowFloorActor;
+    vtkSmartPointer< vtkActor > shadowFloorActor, floorLinesActor;
     // animation stuff
     bool isDoingAnimation; // true if the animation is happenning
     double timeInAnimation; // the animation time starting at 0

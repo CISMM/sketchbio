@@ -9,6 +9,10 @@
 #include <vtkSphereSource.h>
 #include <vtkConeSource.h>
 #include <vtkExtractEdges.h>
+#include <vtkArrayCalculator.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkColorTransferFunction.h>
+#include <vtkContourFilter.h>
 #include <vtkProperty.h>
 #include <vtkPolyDataMapper.h>
 #include <QDebug>
@@ -97,6 +101,101 @@ inline SketchObject *addTracker(vtkRenderer *r) {
     return tracker;
 }
 
+inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
+                              vtkActor *shadowFloorActor,
+                              vtkActor *floorLinesActor,
+                              TransformManager *transforms)
+{
+#define PLANE_HALF_LENGTH 700
+#define PLANE_Y -300
+#define PLANE_DEPTH PLANE_HALF_LENGTH*8
+
+#define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
+#define PLANE_POINT1  PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
+#define PLANE_POINT2 -PLANE_HALF_LENGTH,PLANE_Y,PLANE_DEPTH
+
+#define X_ARRAY_NAME "X"
+#define Z_ARRAY_NAME "Z"
+
+    shadowFloorSource->SetOrigin(PLANE_ORIGIN);
+    shadowFloorSource->SetPoint1(PLANE_POINT1);
+    shadowFloorSource->SetPoint2(PLANE_POINT2);
+    shadowFloorSource->SetResolution(1,1);
+    shadowFloorSource->Update();
+    // create contour lines
+    vtkSmartPointer< vtkArrayCalculator > xCalc =
+            vtkSmartPointer< vtkArrayCalculator >::New();
+    xCalc->SetInputConnection(shadowFloorSource->GetOutputPort());
+    xCalc->SetResultArrayName(X_ARRAY_NAME);
+    xCalc->AddCoordinateScalarVariable("coords_x",0);
+    xCalc->SetFunction("coords_x");
+    xCalc->Update();
+    vtkSmartPointer< vtkArrayCalculator > zCalc =
+            vtkSmartPointer< vtkArrayCalculator >::New();
+    zCalc->SetInputConnection(shadowFloorSource->GetOutputPort());
+    zCalc->SetResultArrayName(X_ARRAY_NAME);
+    zCalc->AddCoordinateScalarVariable("coords_z",2);
+    zCalc->SetFunction("coords_z");
+    zCalc->Update();
+    vtkSmartPointer< vtkContourFilter > xLines =
+            vtkSmartPointer< vtkContourFilter >::New();
+    xLines->SetInputConnection(xCalc->GetOutputPort());
+    xLines->GenerateValues(9,-PLANE_HALF_LENGTH+1,PLANE_HALF_LENGTH-1);
+    xLines->Update();
+    vtkSmartPointer< vtkContourFilter > zLines =
+            vtkSmartPointer< vtkContourFilter >::New();
+    zLines->SetInputConnection(zCalc->GetOutputPort());
+    zLines->GenerateValues(81,-PLANE_HALF_LENGTH+1,PLANE_HALF_LENGTH+PLANE_DEPTH-1);
+    zLines->Update();
+    vtkSmartPointer< vtkAppendPolyData > appendPolyData =
+            vtkSmartPointer< vtkAppendPolyData >::New();
+    appendPolyData->AddInputConnection(xLines->GetOutputPort());
+    appendPolyData->AddInputConnection(zLines->GetOutputPort());
+    appendPolyData->Update();
+    vtkSmartPointer< vtkTransformPolyDataFilter > transformPD =
+            vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+    transformPD->SetInputConnection(appendPolyData->GetOutputPort());
+    vtkSmartPointer< vtkTransform > transform =
+            vtkSmartPointer< vtkTransform >::New();
+    transform->Identity();
+    transform->Translate(0,1,0);
+    transformPD->SetTransform(transform);
+    transformPD->Update();
+    vtkSmartPointer< vtkPolyDataMapper > linesMapper =
+            vtkSmartPointer< vtkPolyDataMapper >::New();
+    linesMapper->SetInputConnection(transformPD->GetOutputPort());
+    vtkSmartPointer< vtkColorTransferFunction > colors =
+            vtkSmartPointer< vtkColorTransferFunction >::New();
+    colors->SetColorSpaceToLab();
+    colors->AddRGBPoint(0,0.45,0.45,0.45);
+    linesMapper->SetLookupTable(colors);
+    linesMapper->Update();
+    // set the actor for the floor lines
+    floorLinesActor->SetMapper(linesMapper);
+    floorLinesActor->GetProperty()->LightingOff();
+    floorLinesActor->SetUserTransform(transforms->getRoomToEyeTransform());
+    // connect shadow floor source to its actor
+    vtkSmartPointer< vtkPolyDataMapper > floorMapper =
+            vtkSmartPointer< vtkPolyDataMapper >::New();
+    floorMapper->SetInputConnection(shadowFloorSource->GetOutputPort());
+    floorMapper->Update();
+    shadowFloorActor->SetMapper(floorMapper);
+    // set up the actor and add it to the renderer
+    shadowFloorActor->GetProperty()->SetColor(0.3,0.3,0.3);
+    shadowFloorActor->GetProperty()->LightingOff();
+    shadowFloorActor->SetUserTransform(transforms->getRoomToEyeTransform());
+
+#undef Z_ARRAY_NAME
+#undef X_ARRAY_NAME
+
+#undef PLANE_POINT2
+#undef PLANE_POINT1
+#undef PLANE_ORIGIN
+#undef PLANE_DEPTH
+#undef PLANE_Y
+#undef PLANE_HALF_LENGTH
+}
+
 SketchProject::SketchProject(vtkRenderer *r) :
     renderer(r),
     models(new ModelManager()),
@@ -114,6 +213,7 @@ SketchProject::SketchProject(vtkRenderer *r) :
     rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
     shadowFloorSource(vtkSmartPointer< vtkPlaneSource >::New()),
     shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
+    floorLinesActor(vtkSmartPointer< vtkActor >::New()),
     isDoingAnimation(false),
     timeInAnimation(0.0),
     viewTime(0.0)
@@ -129,30 +229,13 @@ SketchProject::SketchProject(vtkRenderer *r) :
     rightOutlinesActor->SetMapper(rightOutlinesMapper);
     rightOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
     rightOutlinesActor->GetProperty()->SetLighting(false);
-    // initialize shadow floor source
 
-#define PLANE_HALF_LENGTH 700
-#define PLANE_Y -300
-
-#define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
-#define PLANE_POINT1  PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
-#define PLANE_POINT2 -PLANE_HALF_LENGTH,PLANE_Y,PLANE_HALF_LENGTH*8
-
-    shadowFloorSource->SetOrigin(PLANE_ORIGIN);
-    shadowFloorSource->SetPoint1(PLANE_POINT1);
-    shadowFloorSource->SetPoint2(PLANE_POINT2);
-    shadowFloorSource->SetResolution(1,1);
-    shadowFloorSource->Update();
-    // connect shadow floor source to its actor
-    vtkSmartPointer< vtkPolyDataMapper > floorMapper = vtkSmartPointer< vtkPolyDataMapper >::New();
-    floorMapper->SetInputConnection(shadowFloorSource->GetOutputPort());
-    floorMapper->Update();
-    shadowFloorActor->SetMapper(floorMapper);
-    // set up the actor and add it to the renderer
-    shadowFloorActor->GetProperty()->SetColor(1.0,0.3,0.3);
-    shadowFloorActor->GetProperty()->LightingOff();
-    shadowFloorActor->SetUserTransform(transforms->getRoomToEyeTransform());
-    r->AddActor(shadowFloorActor);
+    // make the floor and lines
+    makeFloorAndLines(shadowFloorSource,shadowFloorActor,floorLinesActor,
+                      transforms.data());
+    // add the floor and lines
+    renderer->AddActor(floorLinesActor);
+    renderer->AddActor(shadowFloorActor);
 }
 
 SketchProject::~SketchProject() {
