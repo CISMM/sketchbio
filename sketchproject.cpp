@@ -109,16 +109,38 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
                               vtkActor *floorLinesActor,
                               TransformManager *transforms)
 {
+// the half x-length of the plane in room units
 #define PLANE_HALF_LENGTH 30
+// the y height of the plane in room units
 #define PLANE_Y -6
+// the depth of the plane in z away from the camera
 #define PLANE_DEPTH PLANE_HALF_LENGTH*3
 
+// These have to do with how vtk defines a plane.  It is defined as
+// an origin and two points and the result is a parallelogram that
+// has those three as one corner (the origin) and the two nearest corners
+// (the other points)
+// the "origin" for the plane
 #define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,PLANE_HALF_LENGTH
+// the first point to define the plane
 #define PLANE_POINT1  PLANE_HALF_LENGTH,PLANE_Y,PLANE_HALF_LENGTH
+// the second point to define the plane
 #define PLANE_POINT2 -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_DEPTH
 
+// array names for the calculator/contour filters
 #define X_ARRAY_NAME "X"
 #define Z_ARRAY_NAME "Z"
+
+// the number of lines across in X
+#define NUM_LINES_IN_X 9
+// the offset in room space of the lines above the plane to prevent OpenGL
+// depth problems
+#define LINE_FROM_PLANE_OFFSET 0.3
+
+// The color of the lines over the plane (R, G, and B components all set to this)
+#define LINES_COLOR 0.3
+// The color of the plane itself (R, G, and B components all set to this)
+#define PLANE_COLOR 0.45
 
     shadowFloorSource->SetOrigin(PLANE_ORIGIN);
     shadowFloorSource->SetPoint1(PLANE_POINT1);
@@ -130,25 +152,26 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
             vtkSmartPointer< vtkArrayCalculator >::New();
     xCalc->SetInputConnection(shadowFloorSource->GetOutputPort());
     xCalc->SetResultArrayName(X_ARRAY_NAME);
-    xCalc->AddCoordinateScalarVariable("coords_x",0);
-    xCalc->SetFunction("coords_x");
+    xCalc->AddCoordinateScalarVariable(X_ARRAY_NAME,0);
+    xCalc->SetFunction(X_ARRAY_NAME);
     xCalc->Update();
     vtkSmartPointer< vtkArrayCalculator > zCalc =
             vtkSmartPointer< vtkArrayCalculator >::New();
     zCalc->SetInputConnection(shadowFloorSource->GetOutputPort());
-    zCalc->SetResultArrayName(X_ARRAY_NAME);
-    zCalc->AddCoordinateScalarVariable("coords_z",2);
-    zCalc->SetFunction("coords_z");
+    zCalc->SetResultArrayName(Z_ARRAY_NAME);
+    zCalc->AddCoordinateScalarVariable(Z_ARRAY_NAME,2);
+    zCalc->SetFunction(Z_ARRAY_NAME);
     zCalc->Update();
     vtkSmartPointer< vtkContourFilter > xLines =
             vtkSmartPointer< vtkContourFilter >::New();
     xLines->SetInputConnection(xCalc->GetOutputPort());
-    xLines->GenerateValues(9,-PLANE_HALF_LENGTH+1,PLANE_HALF_LENGTH-1);
+    xLines->GenerateValues(NUM_LINES_IN_X,-PLANE_HALF_LENGTH+1,PLANE_HALF_LENGTH-1);
     xLines->Update();
     vtkSmartPointer< vtkContourFilter > zLines =
             vtkSmartPointer< vtkContourFilter >::New();
     zLines->SetInputConnection(zCalc->GetOutputPort());
-    zLines->GenerateValues(9*(PLANE_DEPTH/PLANE_HALF_LENGTH),-PLANE_HALF_LENGTH+1,
+    zLines->GenerateValues(NUM_LINES_IN_X*(PLANE_DEPTH/PLANE_HALF_LENGTH +1),
+                           -PLANE_HALF_LENGTH+1,
                            PLANE_HALF_LENGTH+PLANE_DEPTH-1);
     zLines->Update();
     vtkSmartPointer< vtkAppendPolyData > appendPolyData =
@@ -162,7 +185,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkTransform > transform =
             vtkSmartPointer< vtkTransform >::New();
     transform->Identity();
-    transform->Translate(0,0.2,0);
+    transform->Translate(0,LINE_FROM_PLANE_OFFSET,0);
     transformPD->SetTransform(transform);
     transformPD->Update();
     vtkSmartPointer< vtkPolyDataMapper > linesMapper =
@@ -171,7 +194,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkColorTransferFunction > colors =
             vtkSmartPointer< vtkColorTransferFunction >::New();
     colors->SetColorSpaceToLab();
-    colors->AddRGBPoint(0,0.3,0.3,0.3);
+    colors->AddRGBPoint(0,LINES_COLOR,LINES_COLOR,LINES_COLOR);
     linesMapper->SetLookupTable(colors);
     linesMapper->Update();
     // set the actor for the floor lines
@@ -185,7 +208,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     floorMapper->Update();
     shadowFloorActor->SetMapper(floorMapper);
     // set up the actor and add it to the renderer
-    shadowFloorActor->GetProperty()->SetColor(0.45,0.45,0.45);
+    shadowFloorActor->GetProperty()->SetColor(PLANE_COLOR,PLANE_COLOR,PLANE_COLOR);
     shadowFloorActor->GetProperty()->LightingOff();
     shadowFloorActor->SetUserTransform(transforms->getRoomToWorldTransform());
 
@@ -353,7 +376,6 @@ void SketchProject::timestep(double dt) {
         //handleInput();
         world->stepPhysics(dt);
         q_vec_type point = { 0, PLANE_Y, 0}, vector = {0, 1, 0};
-        q_vec_type tmp;
         vtkLinearTransform *rTW = transforms->getRoomToWorldTransform();
         rTW->TransformPoint(point,point);
         rTW->TransformVector(vector,vector);
