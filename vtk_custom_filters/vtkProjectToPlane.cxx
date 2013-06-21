@@ -66,7 +66,7 @@ int vtkProjectToPlane::RequestData(vtkInformation *vtkNotUsed(request),
   for (vtkIdType i = 0; i < numPts; i++)
     {
     double inPoint[3], planeToPoint[3], projection[3],outPoint[3];
-    inPoints->GetPoint(i);
+    inPoints->GetPoint(i,inPoint);
 
     // compute the vector between the point on the plane and the point
     planeToPoint[0] = inPoint[0] - this->PointOnPlane[0];

@@ -102,7 +102,7 @@ int test2()
     vtkSmartPointer< vtkProjectToPlane > filter =
             vtkSmartPointer< vtkProjectToPlane >::New();
     makeInput(filter);
-    double point[3] = { 2.0, 3.0, 5.0 };
+    double point[3] = { 2.0, -300.0, 5.0 };
     double vector[3] = { 0.4, 0.6, 1.6 };
     filter->SetPointOnPlane(point);
     filter->SetPlaneNormalVector(vector);
