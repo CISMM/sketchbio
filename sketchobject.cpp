@@ -503,7 +503,7 @@ const SketchModel *ModelInstance::getModel() const {
 }
 
 //#########################################################################
-vtkPolyDataAlgorithm *ModelInstance::getTransformedGeometry()
+vtkTransformPolyDataFilter *ModelInstance::getTransformedGeometry()
 {
     return modelTransformed;
 }
@@ -626,9 +626,9 @@ const SketchModel *ObjectGroup::getModel() const {
 }
 
 //#########################################################################
-vtkPolyDataAlgorithm *ObjectGroup::getTransformedGeometry()
+vtkTransformPolyDataFilter *ObjectGroup::getTransformedGeometry()
 {
-    vtkPolyDataAlgorithm *retVal = NULL;
+    vtkTransformPolyDataFilter *retVal = NULL;
     if (numInstances() == 1) {
         for (int i = 0; i < children.length(); i++) {
             if (children[i]->numInstances() == 1)

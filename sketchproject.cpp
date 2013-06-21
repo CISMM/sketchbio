@@ -19,6 +19,8 @@
 #include <QDebug>
 #include <QDir>
 
+#include <vtk_custom_filters/vtkProjectToPlane.h>
+
 #include "sketchioconstants.h"
 #include "transformmanager.h"
 #include "modelmanager.h"
@@ -37,15 +39,25 @@ static double COLORS[][3] =
 
 class TrackerObject : public SketchObject {
 public:
-    TrackerObject() : SketchObject(), actor(vtkSmartPointer<vtkActor>::New()) {
-        vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+    TrackerObject() :
+        SketchObject(),
+        actor(vtkSmartPointer< vtkActor >::New()),
+        shadowGeometry(vtkSmartPointer< vtkTransformPolyDataFilter >::New())
+    {
+        vtkSmartPointer< vtkSphereSource > sphereSource = vtkSmartPointer< vtkSphereSource >::New();
         sphereSource->SetRadius(4 * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
         sphereSource->Update();
-        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        shadowGeometry->SetInputConnection(sphereSource->GetOutputPort());
+        vtkSmartPointer< vtkTransform > sTrans = vtkSmartPointer< vtkTransform >::New();
+        sTrans->Identity();
+        sTrans->PostMultiply();
+        shadowGeometry->SetTransform(sTrans);
+        shadowGeometry->Update();
+        vtkSmartPointer< vtkPolyDataMapper > mapper = vtkSmartPointer< vtkPolyDataMapper >::New();
         mapper->SetInputConnection(sphereSource->GetOutputPort());
         mapper->Update();
         actor->SetMapper(mapper);
-        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        vtkSmartPointer< vtkTransform > transform = vtkSmartPointer< vtkTransform >::New();
         transform->Identity();
         actor->SetUserTransform(transform);
         setLocalTransformPrecomputed(true);
@@ -86,14 +98,15 @@ public:
 
     virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
-    virtual vtkPolyDataAlgorithm *getTransformedGeometry() { return NULL; }
+    virtual vtkTransformPolyDataFilter *getTransformedGeometry() { return shadowGeometry; }
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
     virtual void getBoundingBox(double bb[]) {}
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
     virtual SketchObject *deepCopy() { return NULL; }
 
 private:
-    vtkSmartPointer<vtkActor> actor;
+    vtkSmartPointer< vtkActor > actor;
+    vtkSmartPointer< vtkTransformPolyDataFilter > shadowGeometry;
 };
 
 inline SketchObject *addTracker(vtkRenderer *r) {
@@ -137,10 +150,10 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
 // depth problems
 #define LINE_FROM_PLANE_OFFSET 0.3
 
-// The color of the lines over the plane (R, G, and B components all set to this)
-#define LINES_COLOR 0.3
-// The color of the plane itself (R, G, and B components all set to this)
-#define PLANE_COLOR 0.45
+// The color of the lines over the plane (R, G, and B components all set by this)
+#define LINES_COLOR 0.3,0.3,0.3
+// The color of the plane itself (R, G, and B components all set by this)
+#define PLANE_COLOR 0.45,0.45,0.45
 
     shadowFloorSource->SetOrigin(PLANE_ORIGIN);
     shadowFloorSource->SetPoint1(PLANE_POINT1);
@@ -194,7 +207,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkColorTransferFunction > colors =
             vtkSmartPointer< vtkColorTransferFunction >::New();
     colors->SetColorSpaceToLab();
-    colors->AddRGBPoint(0,LINES_COLOR,LINES_COLOR,LINES_COLOR);
+    colors->AddRGBPoint(0,LINES_COLOR);
     linesMapper->SetLookupTable(colors);
     linesMapper->Update();
     // set the actor for the floor lines
@@ -208,7 +221,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     floorMapper->Update();
     shadowFloorActor->SetMapper(floorMapper);
     // set up the actor and add it to the renderer
-    shadowFloorActor->GetProperty()->SetColor(PLANE_COLOR,PLANE_COLOR,PLANE_COLOR);
+    shadowFloorActor->GetProperty()->SetColor(PLANE_COLOR);
     shadowFloorActor->GetProperty()->LightingOff();
     shadowFloorActor->SetUserTransform(transforms->getRoomToWorldTransform());
 
@@ -222,6 +235,30 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
 #undef PLANE_HALF_LENGTH
 }
 
+// the tracker are so small that we need to scale their shadows up to be visible
+#define TRACKER_SHADOW_SCALE 50,50,50
+// the color of the trackers' shadows
+#define TRACKER_SHADOW_COLOR 0.0,0.0,0.0
+
+inline void makeTrackerShadow(SketchObject *hand, vtkActor *shadowActor,
+                              vtkLinearTransform *roomToWorldTransform)
+{
+    vtkSmartPointer< vtkProjectToPlane > projection =
+            vtkSmartPointer< vtkProjectToPlane >::New();
+    projection->SetInputConnection(hand->getTransformedGeometry()->GetOutputPort());
+    projection->SetPointOnPlane(0,PLANE_Y + 0.1 * LINE_FROM_PLANE_OFFSET,0);
+    projection->SetPlaneNormalVector(0,1,0);
+    projection->Update();
+    vtkSmartPointer< vtkPolyDataMapper > mapper =
+            vtkSmartPointer< vtkPolyDataMapper >::New();
+    mapper->SetInputConnection(projection->GetOutputPort());
+    mapper->Update();
+    shadowActor->SetMapper(mapper);
+    shadowActor->GetProperty()->SetColor(TRACKER_SHADOW_COLOR);
+    shadowActor->GetProperty()->LightingOff();
+    shadowActor->SetUserTransform(roomToWorldTransform);
+}
+
 SketchProject::SketchProject(vtkRenderer *r) :
     renderer(r),
     models(new ModelManager()),
@@ -233,10 +270,12 @@ SketchProject::SketchProject(vtkRenderer *r) :
     projectDir(NULL),
     leftHand(addTracker(r)),
     rightHand(addTracker(r)),
-    leftOutlinesActor(vtkSmartPointer<vtkActor>::New()),
-    rightOutlinesActor(vtkSmartPointer<vtkActor>::New()),
-    leftOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
-    rightOutlinesMapper(vtkSmartPointer<vtkPolyDataMapper>::New()),
+    leftShadowActor(vtkSmartPointer< vtkActor >::New()),
+    rightShadowActor(vtkSmartPointer< vtkActor >::New()),
+    leftOutlinesActor(vtkSmartPointer< vtkActor >::New()),
+    rightOutlinesActor(vtkSmartPointer< vtkActor >::New()),
+    leftOutlinesMapper(vtkSmartPointer< vtkPolyDataMapper >::New()),
+    rightOutlinesMapper(vtkSmartPointer< vtkPolyDataMapper >::New()),
     shadowFloorSource(vtkSmartPointer< vtkPlaneSource >::New()),
     shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
     floorLinesActor(vtkSmartPointer< vtkActor >::New()),
@@ -259,9 +298,14 @@ SketchProject::SketchProject(vtkRenderer *r) :
     // make the floor and lines
     makeFloorAndLines(shadowFloorSource,shadowFloorActor,floorLinesActor,
                       transforms.data());
+    // make shadows for the trackers
+    makeTrackerShadow(leftHand,leftShadowActor,transforms->getRoomToWorldTransform());
+    makeTrackerShadow(rightHand,rightShadowActor,transforms->getRoomToWorldTransform());
     // add the floor and lines
     renderer->AddActor(floorLinesActor);
     renderer->AddActor(shadowFloorActor);
+    renderer->AddActor(leftShadowActor);
+    renderer->AddActor(rightShadowActor);
 }
 
 SketchProject::~SketchProject() {
@@ -534,10 +578,21 @@ void SketchProject::updateTrackerPositions() {
     transforms->getLeftTrackerPosInWorldCoords(pos);
     transforms->getLeftTrackerOrientInWorldCoords(orient);
     leftHand->setPosAndOrient(pos,orient);
+    transforms->getLeftTrackerPosInRoomCoords(pos);
+    vtkSmartPointer< vtkTransform > trans =
+            vtkTransform::SafeDownCast(leftHand->getTransformedGeometry()->GetTransform());
+    trans->Identity();
+    trans->Scale(TRACKER_SHADOW_SCALE);
+    trans->Translate(pos);
     transforms->getLeftTrackerTransformInEyeCoords((vtkTransform*)leftHand->getActor()->GetUserTransform());
     transforms->getRightTrackerPosInWorldCoords(pos);
     transforms->getRightTrackerOrientInWorldCoords(orient);
     rightHand->setPosAndOrient(pos,orient);
+    transforms->getRightTrackerPosInRoomCoords(pos);
+    trans = vtkTransform::SafeDownCast(rightHand->getTransformedGeometry()->GetTransform());
+    trans->Identity();
+    trans->Scale(TRACKER_SHADOW_SCALE);
+    trans->Translate(pos);
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
 }
 

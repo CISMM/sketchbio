@@ -71,17 +71,22 @@ public:
 
     /*
      * Sets the given transform to the transform needed to put the origin at
-     * the right tracker's eye coordinates and the orientation equal to the trackers
+     * the left tracker's eye coordinates and the orientation equal to the trackers
      */
     void getLeftTrackerTransformInEyeCoords(vtkTransform *trans);
 
     /*
-     * Gets the position of the right tracker in world coordinates
+     * Gets the position of the left tracker in world coordinates
      */
     void getLeftTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
-     * Gets the former position of the right tracker in world coordinates
+     * Gets the position of the left tracker in room coordinates
+     */
+    void getLeftTrackerPosInRoomCoords(q_vec_type dest_vec);
+
+    /*
+     * Gets the former position of the left tracker in world coordinates
      */
     void getOldLeftTrackerPosInWorldCoords(q_vec_type dest_vec);
 
@@ -92,12 +97,17 @@ public:
     void getRightTrackerTransformInEyeCoords(vtkTransform *trans);
 
     /*
-     * Gets the position of the left tracker in world coordinates
+     * Gets the position of the right tracker in world coordinates
      */
     void getRightTrackerPosInWorldCoords(q_vec_type dest_vec);
 
     /*
-     * Gets the former position of the left tracker in world coordinates
+     * Gets the position of the right tracker in room coordinates
+     */
+    void getRightTrackerPosInRoomCoords(q_vec_type dest_vec);
+
+    /*
+     * Gets the former position of the right tracker in world coordinates
      */
     void getOldRightTrackerPosInWorldCoords(q_vec_type dest_vec);
 

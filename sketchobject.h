@@ -67,7 +67,7 @@ public:
     // this may return NULL if the object has no geometry itself (children may have geometry in
     // this case, but if the object has a model (numInstances==1), it should return a valid
     // vtkPolyDataAlgorithm
-    virtual vtkPolyDataAlgorithm *getTransformedGeometry() = 0;
+    virtual vtkTransformPolyDataFilter *getTransformedGeometry() = 0;
     // the conformation of the model used by this object.  If numInstances returns 1, this
     // must return a valid conformation of the model returned by getModel.  Otherwise, let
     // this default implementation return -1
@@ -193,7 +193,7 @@ public:
     // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    virtual vtkPolyDataAlgorithm *getTransformedGeometry();
+    virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual int getModelConformation() const;
     virtual vtkActor *getActor();
     // collision function that depend on data in this subclass
@@ -224,7 +224,7 @@ public:
     // if numInstances is 1, must provide model and actor, otherwise return null
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    virtual vtkPolyDataAlgorithm *getTransformedGeometry();
+    virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual vtkActor *getActor();
     // methods to add/remove objects
     // note: this method gives ObjectGroup ownership until the object is removed

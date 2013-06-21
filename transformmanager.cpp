@@ -102,6 +102,11 @@ void TransformManager::getLeftTrackerPosInWorldCoords(q_vec_type dest_vec) {
     roomToWorld->TransformPoint(temp,dest_vec);
 }
 
+void TransformManager::getLeftTrackerPosInRoomCoords(q_vec_type dest_vec)
+{
+    trackerBaseToRoom->TransformPoint(trackerBaseToLeftHand.xyz,dest_vec);
+}
+
 void TransformManager::getOldLeftTrackerPosInWorldCoords(q_vec_type dest_vec) {
     q_vec_type temp;
     trackerBaseToRoom->TransformPoint(trackerBaseToLeftHandOld.xyz,temp);
@@ -123,6 +128,11 @@ void TransformManager::getRightTrackerPosInWorldCoords(q_vec_type dest_vec) {
     q_vec_type temp;
     trackerBaseToRoom->TransformPoint(trackerBaseToRightHand.xyz,temp);
     roomToWorld->TransformPoint(temp,dest_vec);
+}
+
+void TransformManager::getRightTrackerPosInRoomCoords(q_vec_type dest_vec)
+{
+    trackerBaseToRoom->TransformPoint(trackerBaseToRightHand.xyz,dest_vec);
 }
 
 void TransformManager::getOldRightTrackerPosInWorldCoords(q_vec_type dest_vec) {

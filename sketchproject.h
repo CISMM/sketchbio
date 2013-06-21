@@ -161,6 +161,8 @@ private:
 
     // other ui stuff
     SketchObject *leftHand, *rightHand; // the objects for the left and right hand trackers
+    // the left and right trackers' shadows
+    vtkSmartPointer< vtkActor > leftShadowActor, rightShadowActor;
     // outline actors are added to the renderer when the object is close enough to
     // interact with.  The outline mappers are updated whenever the closest object
     // changes (unless another one is currently grabbed).

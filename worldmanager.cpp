@@ -8,6 +8,7 @@ using std::endl;
 #include <QDebug>
 
 #include <vtkTubeFilter.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkVersion.h>
@@ -21,6 +22,9 @@ using std::endl;
 #include "keyframe.h"
 #include "sketchobject.h"
 #include "springconnection.h"
+
+// The color used for the shadows of objects
+#define SHADOW_COLOR 0.1,0.1,0.1
 
 //##################################################################################################
 //##################################################################################################
@@ -534,7 +538,7 @@ void WorldManager::insertActors(SketchObject *obj)
                     vtkSmartPointer< vtkActor >::New();
             shadowActor->SetMapper(mapper);
             shadowActor->GetProperty()->LightingOff();
-            shadowActor->GetProperty()->SetColor(0.1,0.1,0.1);
+            shadowActor->GetProperty()->SetColor(SHADOW_COLOR);
             shadows.insert(obj,QPair< vtkSmartPointer< vtkProjectToPlane >,
                            vtkSmartPointer< vtkActor > >(projection,shadowActor));
             renderer->AddActor(shadowActor);
