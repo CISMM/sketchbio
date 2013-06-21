@@ -41,16 +41,16 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# For PQP.
-#if (WIN32)
-#    LINK_DIRECTORIES(C:/usr/local/lib)
-#endif (WIN32)
-
 FIND_PACKAGE(PQP REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${PQP_INCLUDE_DIRS}
 )
+
+ENABLE_TESTING()
+ADD_SUBDIRECTORY(test)
+ADD_SUBDIRECTORY(subprocesses)
+ADD_SUBDIRECTORY(vtk_custom_filters)
 
 
 QT4_WRAP_CPP(SketchBioCoreMoc sketchmodel.h)
@@ -119,6 +119,7 @@ SET(SketchBioLibraries
     SketchBioExport
     SketchBioInput
     SketchBioCore
+    SketchBioCustomVtkFilters
 )
 
 # Set your files and resources here
@@ -167,11 +168,6 @@ IF(APPLE)
         "-framework CoreFoundation"
     )
 ENDIF(APPLE)
-
-ENABLE_TESTING()
-ADD_SUBDIRECTORY(test)
-ADD_SUBDIRECTORY(subprocesses)
-ADD_SUBDIRECTORY(vtk_custom_filters)
 
 
 # Copied from Microscope Simulator.  Used for creating the installer.

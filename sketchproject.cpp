@@ -86,6 +86,7 @@ public:
 
     virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
+    virtual vtkPolyDataAlgorithm *getTransformedGeometry() { return NULL; }
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
     virtual void getBoundingBox(double bb[]) {}
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
@@ -202,7 +203,7 @@ SketchProject::SketchProject(vtkRenderer *r) :
     renderer(r),
     models(new ModelManager()),
     transforms(new TransformManager()),
-    world(new WorldManager(r,transforms->getWorldToEyeTransform())),
+    world(new WorldManager(r)),
     replicas(),
     cameras(),
     transformOps(),

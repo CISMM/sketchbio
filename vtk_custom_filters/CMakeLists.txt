@@ -4,7 +4,7 @@ set(vtkFilterSources
     vtkProjectToPlane.h
     )
 
-include_directories(
+INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

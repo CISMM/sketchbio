@@ -3,6 +3,7 @@ SET(SUBPROCESS_TEST_LINK_LIBRARIES
     SketchBioSubprocess
     SketchBioExport
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${QT_LIBRARIES}
     ${VTK_LIBRARIES}

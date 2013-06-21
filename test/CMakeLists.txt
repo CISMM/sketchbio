@@ -3,6 +3,7 @@ SET(Test1Srcs testTransformManager.cc)
 ADD_EXECUTABLE( TransformTest ${Test1Srcs})
 TARGET_LINK_LIBRARIES( TransformTest
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     ${VTK_LIBRARIES}
@@ -13,6 +14,7 @@ SET(Test2Srcs testPQPDeform.cc )
 ADD_EXECUTABLE( PQPTest ${Test2Srcs})
 TARGET_LINK_LIBRARIES( PQPTest
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QUATLIB_LIBRARIES}
@@ -24,6 +26,7 @@ SET(Test3Srcs testReplicatedObjects.cc )
 ADD_EXECUTABLE( ReplicatorTest ${Test3Srcs})
 TARGET_LINK_LIBRARIES( ReplicatorTest
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QT_LIBRARIES}
@@ -57,6 +60,7 @@ ADD_EXECUTABLE( SaveTest ${Test4Srcs})
 TARGET_LINK_LIBRARIES( SaveTest
     SketchBioExport
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QT_LIBRARIES}
@@ -67,6 +71,7 @@ SET(Test5Srcs testObjectGroups.cc)
 ADD_EXECUTABLE( ObjectTest ${Test5Srcs})
 TARGET_LINK_LIBRARIES( ObjectTest
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QT_LIBRARIES}
@@ -77,6 +82,7 @@ SET(Test6Srcs testTransformEquals.cc )
 ADD_EXECUTABLE( TransformEqualsTest ${Test6Srcs})
 TARGET_LINK_LIBRARIES( TransformEqualsTest
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QT_LIBRARIES}
@@ -87,6 +93,7 @@ SET(Test7Srcs testSketchModel.cc )
 ADD_EXECUTABLE( ModelTest ${Test7Srcs})
 TARGET_LINK_LIBRARIES( ModelTest
     SketchBioCore
+    SketchBioCustomVtkFilters
     ${PQP_LIBRARIES}
     ${VTK_LIBRARIES}
     ${QT_LIBRARIES}

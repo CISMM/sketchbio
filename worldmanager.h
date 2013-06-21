@@ -1,12 +1,11 @@
 #ifndef WORLDMANAGER_H
 #define WORLDMANAGER_H
 
-#include <map>
-
 #include <quat.h>
 
 #include <QList>
 #include <QVector>
+#include <QHash>
 #include <QSharedPointer>
 
 #include <vtkSmartPointer.h>
@@ -15,6 +14,8 @@ class vtkTransform;
 class vtkPoints;
 class vtkPolyData;
 class vtkTubeFilter;
+class vtkProjectToPlane;
+class vtkActor;
 
 class SketchModel;
 class ModelManager;
@@ -63,7 +64,7 @@ namespace CollisionMode {
 class WorldManager : public GroupIdGenerator
 {
 public:
-    WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform);
+    explicit WorldManager(vtkRenderer *r);
     virtual ~WorldManager();
 
     /*******************************************************************
@@ -339,42 +340,11 @@ public:
     SpringConnection *getClosestSpring(q_vec_type point, double *distOut, bool *closerToEnd1);
     /*******************************************************************
      *
-     * Computes collision response force between the two objects based on
-     * the given collision data.  Only applies collision response to the
-     * objects whose primary group numbers are in affectedGroups.  This
-     * function applies collision force along the normal of a plane fitted
-     * to the corners of all triangles that are in collision.
-     *
-     * However, if affectedGroups is empty it assumes we are doing non-pose
-     * mode physics and applies the collision response to both objects.
-     *
-     * o1 - the first object (first passed to SketchObject::collide)
-     * o2 - the second object (second passed to SketchObject::collide)
-     * cr - the result of colliding the objects (result of SketchObject::collide)
-     * affectedGroups - the group numbers that collision response should be applied to
+     * This method set the plane used to compute the shadows of objects
+     * by specifying a point on the plane and the plane's normal vector.
      *
      *******************************************************************/
-    static void applyPCACollisionResponseForce(SketchObject *o1, SketchObject *o2,
-                                            PQP_CollideResult *cr, QSet<int> &affectedGroups);
-    /*******************************************************************
-     *
-     * Computes collision response force between the two objects based on
-     * the given collision data.  Only applies collision response to the
-     * objects whose primary group numbers are in affectedGroups.  This
-     * function applies collision force along the normals of the colliding
-     * pairs of triangles
-     *
-     * However, if affectedGroups is empty it assumes we are doing non-pose
-     * mode physics and applies the collision response to both objects.
-     *
-     * o1 - the first object (first passed to SketchObject::collide)
-     * o2 - the second object (second passed to SketchObject::collide)
-     * cr - the result of colliding the objects (result of SketchObject::collide)
-     * affectedGroups - the group numbers that collision response should be applied to
-     *
-     *******************************************************************/
-    static void applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
-                                            PQP_CollideResult *cr, QSet<int> &affectedGroups);
+    void setShadowPlane(q_vec_type point, q_vec_type nVector);
 private:
     /*******************************************************************
      *
@@ -406,8 +376,17 @@ private:
      *
      *******************************************************************/
     void removeActors(SketchObject *obj);
+    /*******************************************************************
+     *
+     * This method recursively removes the shadows of a given object
+     * from the datastructure prior to the object being deleted.
+     *
+     *******************************************************************/
+    void removeShadows(SketchObject *obj);
 
     QList<SketchObject *> objects;
+    QHash<SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
+        vtkSmartPointer< vtkActor > > > shadows;
     QList<SpringConnection *> connections, lHand, rHand;
     QVector<QSharedPointer<PhysicsStrategy> > strategies;
     int nextIdx;
@@ -416,7 +395,6 @@ private:
     vtkSmartPointer<vtkPoints> springEnds;
     vtkSmartPointer<vtkPolyData> springEndConnections;
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
-    vtkSmartPointer<vtkTransform> worldEyeTransform;
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible;
     CollisionMode::Type collisionResponseMode;

@@ -1,6 +1,9 @@
 #include "worldmanager.h"
 
 #include <limits>
+#include <iostream>
+using std::cout;
+using std::endl;
 
 #include <QDebug>
 
@@ -10,42 +13,40 @@
 #include <vtkVersion.h>
 #include <vtkActor.h>
 #include <vtkRenderer.h>
-//#include <vtkTransform.h>
-//#include <vtkPoints.h>
-//#include <vtkPolyData.h>
-//#include <vtkTubeFilter.h>
+#include <vtkProperty.h>
+
+#include <vtk_custom_filters/vtkProjectToPlane.h>
 
 #include "sketchtests.h"
 #include "keyframe.h"
 #include "sketchobject.h"
 #include "springconnection.h"
 
-#define COLLISION_FORCE 5
-
 //##################################################################################################
 //##################################################################################################
-WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
+WorldManager::WorldManager(vtkRenderer *r) :
     objects(),
+    shadows(),
     connections(),
     lHand(),
     rHand(),
     strategies(),
-    maxGroupNum(0)
+    nextIdx(0),
+    renderer(r),
+    lastCapacityUpdate(1000),
+    springEnds(vtkSmartPointer< vtkPoints >::New()),
+    springEndConnections(vtkSmartPointer< vtkPolyData >::New()),
+    tubeFilter(vtkSmartPointer< vtkTubeFilter >::New()),
+    maxGroupNum(0),
+    doPhysicsSprings(true),
+    doCollisionCheck(true),
+    showInvisible(true),
+    collisionResponseMode(CollisionMode::POSE_MODE_TRY_ONE)
 {
     CollisionMode::populateStrategies(strategies);
-    renderer = r;
-    doPhysicsSprings = true;
-    doCollisionCheck = true;
-    showInvisible = true;
-    collisionResponseMode = CollisionMode::POSE_MODE_TRY_ONE;
-    nextIdx = 0;
-    lastCapacityUpdate = 1000;
-    springEnds = vtkSmartPointer<vtkPoints>::New();
     springEnds->Allocate(lastCapacityUpdate*2);
-    springEndConnections = vtkSmartPointer<vtkPolyData>::New();
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
-    tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
 #if (VTK_MAJOR_VERSION <= 5)
     tubeFilter->SetInput(springEndConnections);
 #else
@@ -58,7 +59,6 @@ WorldManager::WorldManager(vtkRenderer *r, vtkTransform *worldEyeTransform) :
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
     renderer->AddActor(actor);
-    this->worldEyeTransform = worldEyeTransform;
 }
 
 //##################################################################################################
@@ -108,6 +108,7 @@ void WorldManager::removeObject(SketchObject *object) {
     // TODO - fix this assumption later
     int index = objects.indexOf(object);
     removeActors(object);
+    removeShadows(object);
     objects.removeAt(index);
     delete object;
 }
@@ -132,6 +133,8 @@ SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
     return spring;
 }
 
+//##################################################################################################
+//##################################################################################################
 void WorldManager::clearLeftHandSprings() {
     for (QMutableListIterator<SpringConnection *> it(lHand); it.hasNext();) {
         SpringConnection *spring = it.next();
@@ -142,6 +145,8 @@ void WorldManager::clearLeftHandSprings() {
     lHand.clear();
 }
 
+//##################################################################################################
+//##################################################################################################
 void WorldManager::clearRightHandSprings() {
     for (QMutableListIterator<SpringConnection *> it(rHand); it.hasNext();) {
         SpringConnection *spring = it.next();
@@ -456,6 +461,21 @@ SpringConnection *WorldManager::getClosestSpring(q_vec_type point, double *distO
 
 //##################################################################################################
 //##################################################################################################
+void WorldManager::setShadowPlane(q_vec_type point, q_vec_type nVector)
+{
+    QHashIterator< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
+            vtkSmartPointer< vtkActor > > > itr(shadows);
+    while (itr.hasNext())
+    {
+        vtkProjectToPlane *filter = itr.next().value().first;
+        filter->SetPointOnPlane(point);
+        filter->SetPlaneNormalVector(nVector);
+        filter->Update();
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
 void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
     list->push_back(spring);
 
@@ -482,14 +502,50 @@ void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> 
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::insertActors(SketchObject *obj) {
+void WorldManager::insertActors(SketchObject *obj)
+{
     if (obj->numInstances() == 1) {
         vtkSmartPointer<vtkActor> actor = obj->getActor();
         renderer->AddActor(actor);
-    } else {
+        if (shadows.contains(obj))
+        {
+            renderer->AddActor(shadows.value(obj).second);
+        }
+        else
+        {
+            vtkSmartPointer< vtkProjectToPlane > projection =
+                    vtkSmartPointer< vtkProjectToPlane >::New();
+            projection->SetInputConnection(obj->getTransformedGeometry()->GetOutputPort());
+            projection->SetPointOnPlane(0.0,0.0,0.0);
+            projection->SetPlaneNormalVector(0.0,1.0,0.0);
+            projection->Update();
+            double bb[6];
+            projection->GetOutput()->GetBounds(bb);
+            for (int i = 0; i < 6; i++)
+            {
+                cout << bb[i] << ", ";
+            }
+            cout << endl;
+            vtkSmartPointer< vtkPolyDataMapper > mapper =
+                    vtkSmartPointer< vtkPolyDataMapper >::New();
+            mapper->SetInputConnection(projection->GetOutputPort());
+            mapper->Update();
+            vtkSmartPointer< vtkActor > shadowActor =
+                    vtkSmartPointer< vtkActor >::New();
+            shadowActor->SetMapper(mapper);
+            shadowActor->GetProperty()->LightingOff();
+            shadowActor->GetProperty()->SetColor(0.1,0.1,0.1);
+            shadows.insert(obj,QPair< vtkSmartPointer< vtkProjectToPlane >,
+                           vtkSmartPointer< vtkActor > >(projection,shadowActor));
+            renderer->AddActor(shadowActor);
+        }
+    }
+    else
+    {
         QList<SketchObject *> *children = obj->getSubObjects();
         if (children == NULL) return;
-        for (int i = 0; i < children->length(); i++) {
+        for (int i = 0; i < children->length(); i++)
+        {
             insertActors(children->at(i));
         }
     }
@@ -498,15 +554,40 @@ void WorldManager::insertActors(SketchObject *obj) {
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::removeActors(SketchObject *obj) {
-    if (obj->numInstances() == 1) {
+void WorldManager::removeActors(SketchObject *obj)
+{
+    if (obj->numInstances() == 1)
+    {
         vtkSmartPointer<vtkActor> actor = obj->getActor();
         renderer->RemoveActor(actor);
-    } else {
+        renderer->RemoveActor(shadows.value(obj).second);
+    }
+    else
+    {
         QList<SketchObject *> *children = obj->getSubObjects();
         if (children == NULL) return;
-        for (int i = 0; i < children->length(); i++) {
+        for (int i = 0; i < children->length(); i++)
+        {
             removeActors(children->at(i));
+        }
+    }
+}
+
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::removeShadows(SketchObject *obj) {
+    if (obj->numInstances() == 1)
+    {
+        shadows.remove(obj);
+    }
+    else
+    {
+        QList<SketchObject *> *children = obj->getSubObjects();
+        if (children == NULL) return;
+        for (int i = 0; i < children->length(); i++)
+        {
+            removeShadows(obj);
         }
     }
 }
