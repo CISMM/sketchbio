@@ -11,6 +11,7 @@
 #include <vtkExtractEdges.h>
 #include <vtkArrayCalculator.h>
 #include <vtkTransformPolyDataFilter.h>
+#include <vtkAppendPolyData.h>
 #include <vtkColorTransferFunction.h>
 #include <vtkContourFilter.h>
 #include <vtkProperty.h>

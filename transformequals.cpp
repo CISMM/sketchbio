@@ -1,5 +1,7 @@
 #include "transformequals.h"
 
+#include <vtkTransform.h>
+
 ObjectPair::ObjectPair(SketchObject *first, SketchObject *second) :
     o1(first), o2(second)
 {}

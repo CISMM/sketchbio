@@ -1,18 +1,25 @@
 #ifndef SKETCHOBJECT_H
 #define SKETCHOBJECT_H
 
-#include <vtkSmartPointer.h>
-#include <vtkAppendPolyData.h>
-#include <vtkTransform.h>
-#include <vtkActor.h>
 #include <quat.h>
-#include <sketchmodel.h>
+
+#include <vtkSmartPointer.h>
+class vtkAppendPolyData;
+class vtkPolyDataAlgorithm;
+class vtkTransformPolyDataFilter;
+class vtkTransform;
+class vtkLinearTransform;
+class vtkActor;
+
 #include <QList>
 #include <QScopedPointer>
 #include <QMap>
 #include <QSet>
-#include <keyframe.h>
-#include <PQP.h>
+
+class PQP_Model;
+
+class SketchModel;
+class Keyframe;
 
 // forward declarations
 class vtkPolyDataMapper;
@@ -65,7 +72,7 @@ public:
     // position and orientation
     void getPosition(q_vec_type dest) const;
     void getOrientation(q_type dest) const;
-    void getOrientation(PQP_REAL matrix[3][3]) const;
+    void getOrientation(double matrix[3][3]) const;
     void setPosition(const q_vec_type newPosition);
     void setOrientation(const q_type newOrientation);
     void setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation);
@@ -96,7 +103,7 @@ public:
     virtual void clearForces();
     // collision with other.  The physics strategy will get the data about the collision
     // and decide how to respond. The bool return value is true iff there was a collision
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS) =0;
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) =0;
     // bounding box info for grab (have to stop using PQP_Distance)
     // the bounding box is relative to the object, and should be the axis-aligned bounding
     // box of the untransformed object (so sort-of oriented bounding box)
@@ -184,7 +191,7 @@ public:
     virtual vtkActor *getActor();
     // collision function that depend on data in this subclass
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics,
-                         int pqp_flags = PQP_ALL_CONTACTS);
+                         int pqp_flags);
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual SketchObject *deepCopy();
@@ -222,7 +229,7 @@ public:
     virtual QList<SketchObject *> *getSubObjects();
     virtual const QList<SketchObject *> *getSubObjects() const;
     // collision function... have to change declaration
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags = PQP_ALL_CONTACTS);
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags);
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual void setIsVisible(bool isVisible);
@@ -247,7 +254,7 @@ public:
 };
 
 // helper function-- converts quaternion to a PQP rotation matrix
-inline void quatToPQPMatrix(const q_type quat, PQP_REAL mat[3][3]) {
+inline void quatToPQPMatrix(const q_type quat, double mat[3][3]) {
     q_matrix_type colMat;
     q_to_col_matrix(colMat,quat);
     for (int i = 0; i < 3; i++) {

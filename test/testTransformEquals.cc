@@ -1,10 +1,13 @@
-#include <transformequals.h>
-#include <sketchtests.h>
-#include <vtkCubeSource.h>
+#include <iostream>
+
 #include <QScopedPointer>
 #include <QTime>
 
-#include <iostream>
+#include <vtkCubeSource.h>
+
+#include <sketchtests.h>
+#include <sketchmodel.h>
+#include <transformequals.h>
 
 inline SketchModel *getModel() {
     vtkSmartPointer<vtkCubeSource> cube =

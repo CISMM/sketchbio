@@ -7,6 +7,8 @@
 
 #include <sketchioconstants.h>
 #include <sketchtests.h>
+#include <keyframe.h>
+#include <sketchmodel.h>
 #include <modelmanager.h>
 #include <springconnection.h>
 #include <structurereplicator.h>

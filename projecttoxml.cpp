@@ -1,14 +1,19 @@
 #include "projecttoxml.h"
+
 #include <ios>
+
+#include <QScopedPointer>
+#include <QDebug>
+
 #include <sketchioconstants.h>
+#include <keyframe.h>
+#include <sketchmodel.h>
 #include <modelmanager.h>
 #include <transformmanager.h>
 #include <springconnection.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
 #include <sketchtests.h>
-#include <QScopedPointer>
-#include <QDebug>
 
 
 #define ID_ATTRIBUTE_NAME                       "id"

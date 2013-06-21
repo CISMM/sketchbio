@@ -5,6 +5,7 @@
 #include <QDebug>
 
 #include <vtkTubeFilter.h>
+#include <vtkTransform.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkVersion.h>
 #include <vtkActor.h>
@@ -15,6 +16,7 @@
 //#include <vtkTubeFilter.h>
 
 #include "sketchtests.h"
+#include "keyframe.h"
 #include "sketchobject.h"
 #include "springconnection.h"
 

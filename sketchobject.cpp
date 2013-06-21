@@ -1,10 +1,17 @@
 #include "sketchobject.h"
-#include <physicsstrategy.h>
-#include <sketchtests.h>
+
+#include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
-#include <vtkExtractEdges.h>
 #include <vtkCubeSource.h>
+#include <vtkExtractEdges.h>
+#include <vtkAppendPolyData.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkActor.h>
+
+#include "keyframe.h"
+#include "sketchmodel.h"
+#include "physicsstrategy.h"
+#include "sketchtests.h"
 
 //#########################################################################
 SketchObject::SketchObject() :
@@ -92,7 +99,7 @@ void SketchObject::getOrientation(q_type dest) const {
     }
 }
 //#########################################################################
-void SketchObject::getOrientation(PQP_REAL matrix[3][3]) const {
+void SketchObject::getOrientation(double matrix[3][3]) const {
     q_type tmp;
     getOrientation(tmp); // simpler than duplicating case code
     quatToPQPMatrix(tmp,matrix);

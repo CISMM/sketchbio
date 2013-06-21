@@ -1,7 +1,12 @@
 #include "structurereplicator.h"
-#include "sketchobject.h"
-#include <QDebug>
+
 #include <vtkProperty.h>
+#include <vtkActor.h>
+#include <vtkTransform.h>
+
+#include <QDebug>
+
+#include "sketchobject.h"
 
 //############################################################################################
 //############################################################################################
