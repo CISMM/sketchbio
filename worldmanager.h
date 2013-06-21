@@ -2,17 +2,26 @@
 #define WORLDMANAGER_H
 
 #include <map>
+
+#include <quat.h>
+
 #include <QList>
 #include <QVector>
 #include <QSharedPointer>
-#include "sketchobject.h"
-#include "modelmanager.h"
-#include "springconnection.h"
+
+#include <vtkSmartPointer.h>
+class vtkRenderer;
+class vtkTransform;
+class vtkPoints;
+class vtkPolyData;
+class vtkTubeFilter;
+
+class SketchModel;
+class ModelManager;
+class SketchObject;
+class SpringConnection;
 #include "groupidgenerator.h"
 #include <physicsstrategy.h>
-#include <vtkSmartPointer.h>
-#include <vtkRenderer.h>
-#include <vtkTubeFilter.h>
 
 /*
  * For testing only: dynamic changing of collision response types. Each enum is a

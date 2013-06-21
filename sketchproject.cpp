@@ -21,6 +21,7 @@
 #include "sketchioconstants.h"
 #include "transformmanager.h"
 #include "modelmanager.h"
+#include "springconnection.h"
 #include "structurereplicator.h"
 #include "transformequals.h"
 
@@ -583,6 +584,18 @@ void SketchProject::setRightOutlinesVisible(bool visible) {
         renderer->AddActor(rightOutlinesActor);
     else
         renderer->RemoveActor(rightOutlinesActor);
+}
+
+SketchModel *SketchProject::getCameraModel() {
+    return models->getCameraModel(*projectDir);
+}
+
+bool SketchProject::isLeftOutlinesVisible() {
+    return renderer->HasViewProp(leftOutlinesActor);
+}
+
+bool SketchProject::isRightOutlinesVisible() {
+    return renderer->HasViewProp(rightOutlinesActor);
 }
 
 /*

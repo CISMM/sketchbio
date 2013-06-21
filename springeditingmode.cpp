@@ -1,5 +1,6 @@
 #include "springeditingmode.h"
 #include <sketchioconstants.h>
+#include <springconnection.h>
 #include <sketchproject.h>
 #include <transformmanager.h>
 #include <limits>

@@ -7,6 +7,7 @@ class vtkPlaneSource;
 class vtkActor;
 class vtkPolyDataMapper;
 class vtkCamera;
+class vtkMatrix4x4;
 
 // QT dependencies
 #include <QVector>
@@ -217,19 +218,9 @@ inline int SketchProject::getNumberOfTransformOps() const {
     return transformOps.size();
 }
 
-inline SketchModel *SketchProject::getCameraModel() {
-    return models->getCameraModel(*projectDir);
-}
 inline const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *SketchProject::getCameras() const {
     return &cameras;
 }
 
-inline bool SketchProject::isLeftOutlinesVisible() {
-    return renderer->HasViewProp(leftOutlinesActor);
-}
-
-inline bool SketchProject::isRightOutlinesVisible() {
-    return renderer->HasViewProp(rightOutlinesActor);
-}
 
 #endif // SKETCHPROJECT_H

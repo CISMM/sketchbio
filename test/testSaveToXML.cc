@@ -1,17 +1,20 @@
-#include <sketchioconstants.h>
-#include <projecttoxml.h>
-#include <structurereplicator.h>
-#include <transformequals.h>
-#include <sketchtests.h>
+#include <iostream>
+
+#include <QDir>
 
 #include <vtkRenderer.h>
 #include <vtkXMLUtilities.h>
 
-#include <QDir>
+#include <sketchioconstants.h>
+#include <sketchtests.h>
+#include <modelmanager.h>
+#include <springconnection.h>
+#include <structurereplicator.h>
+#include <transformequals.h>
+#include <projecttoxml.h>
 
-#include <iostream>
-
-using namespace std;
+using std::cout;
+using std::endl;
 
 // have to prototype these since they recursively call each other to deal with groups
 void compareObjectLists(const QList<SketchObject *> *list1, const QList<SketchObject *> *list2,

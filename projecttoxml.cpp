@@ -3,6 +3,7 @@
 #include <sketchioconstants.h>
 #include <modelmanager.h>
 #include <transformmanager.h>
+#include <springconnection.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
 #include <sketchtests.h>

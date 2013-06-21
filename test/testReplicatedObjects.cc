@@ -11,6 +11,7 @@
 #include <sketchproject.h>
 
 #include <vtkSmartPointer.h>
+#include <vtkRenderer.h>
 #include <vtkSphereSource.h>
 #include <vtkOBJReader.h>
 

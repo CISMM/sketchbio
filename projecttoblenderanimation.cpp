@@ -1,4 +1,7 @@
 #include "projecttoblenderanimation.h"
+#include <sketchmodel.h>
+#include <modelmanager.h>
+#include <sketchobject.h>
 #include <sketchproject.h>
 #include <QFile>
 #include <QScopedPointer>

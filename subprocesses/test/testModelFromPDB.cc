@@ -5,17 +5,23 @@
  */
 
 #include <vector>
+
 #include <QCoreApplication>
 #include <QFile>
 #include <QTimer>
 #include <QDir>
 #include <QDebug>
-#include "testqt.h"
-#include <subprocessutils.h>
+
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
+
+#include <modelmanager.h>
+#include <sketchmodel.h>
 #include <sketchproject.h>
 #include <subprocessrunner.h>
+#include <subprocessutils.h>
+
+#include "testqt.h"
 
 class TestModelFromPDB : public Test
 {

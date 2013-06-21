@@ -1,10 +1,22 @@
 #include "worldmanager.h"
-#include <sketchtests.h>
+
+#include <limits>
+
+#include <QDebug>
+
 #include <vtkTubeFilter.h>
 #include <vtkPolyDataMapper.h>
-#include <QDebug>
-#include <limits>
 #include <vtkVersion.h>
+#include <vtkActor.h>
+#include <vtkRenderer.h>
+//#include <vtkTransform.h>
+//#include <vtkPoints.h>
+//#include <vtkPolyData.h>
+//#include <vtkTubeFilter.h>
+
+#include "sketchtests.h"
+#include "sketchobject.h"
+#include "springconnection.h"
 
 #define COLLISION_FORCE 5
 

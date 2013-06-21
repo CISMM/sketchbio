@@ -1,4 +1,5 @@
 #include "animationmode.h"
+#include <sketchobject.h>
 #include <sketchproject.h>
 #include <sketchioconstants.h>
 #include <limits>

@@ -1,6 +1,7 @@
 #ifndef STRUCTUREREPLICATOR_H
 #define STRUCTUREREPLICATOR_H
 
+#include "sketchobject.h"
 #include "worldmanager.h"
 #include "transformmanager.h"
 #include <list>
