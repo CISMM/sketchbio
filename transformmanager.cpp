@@ -49,6 +49,11 @@ const vtkMatrix4x4 *TransformManager::getWorldToRoomMatrix() const {
     return worldToRoom->GetMatrix();
 }
 
+vtkLinearTransform *TransformManager::getRoomToWorldTransform()
+{
+    return roomToWorld;
+}
+
 void TransformManager::setWorldToRoomMatrix(vtkMatrix4x4 *matrix) {
     worldToRoom->Identity();
     worldToRoom->SetMatrix(matrix);

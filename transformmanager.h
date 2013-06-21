@@ -35,6 +35,11 @@ public:
     const vtkMatrix4x4 *getWorldToRoomMatrix() const;
 
     /*
+     * Gets the transformation between room and world
+     */
+    vtkLinearTransform *getRoomToWorldTransform();
+
+    /*
      * Sets the transformation between world and room
      */
     void setWorldToRoomMatrix(vtkMatrix4x4 *matrix);

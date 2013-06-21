@@ -109,8 +109,8 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
                               vtkActor *floorLinesActor,
                               TransformManager *transforms)
 {
-#define PLANE_HALF_LENGTH 700
-#define PLANE_Y -300
+#define PLANE_HALF_LENGTH 7
+#define PLANE_Y -3
 #define PLANE_DEPTH PLANE_HALF_LENGTH*8
 
 #define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
@@ -161,7 +161,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkTransform > transform =
             vtkSmartPointer< vtkTransform >::New();
     transform->Identity();
-    transform->Translate(0,1,0);
+    transform->Translate(0,0.02,0);
     transformPD->SetTransform(transform);
     transformPD->Update();
     vtkSmartPointer< vtkPolyDataMapper > linesMapper =
@@ -170,13 +170,13 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkColorTransferFunction > colors =
             vtkSmartPointer< vtkColorTransferFunction >::New();
     colors->SetColorSpaceToLab();
-    colors->AddRGBPoint(0,0.45,0.45,0.45);
+    colors->AddRGBPoint(0,0.3,0.3,0.3);
     linesMapper->SetLookupTable(colors);
     linesMapper->Update();
     // set the actor for the floor lines
     floorLinesActor->SetMapper(linesMapper);
     floorLinesActor->GetProperty()->LightingOff();
-    floorLinesActor->SetUserTransform(transforms->getRoomToEyeTransform());
+    floorLinesActor->SetUserTransform(transforms->getRoomToWorldTransform());
     // connect shadow floor source to its actor
     vtkSmartPointer< vtkPolyDataMapper > floorMapper =
             vtkSmartPointer< vtkPolyDataMapper >::New();
@@ -184,9 +184,9 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     floorMapper->Update();
     shadowFloorActor->SetMapper(floorMapper);
     // set up the actor and add it to the renderer
-    shadowFloorActor->GetProperty()->SetColor(0.3,0.3,0.3);
+    shadowFloorActor->GetProperty()->SetColor(0.45,0.45,0.45);
     shadowFloorActor->GetProperty()->LightingOff();
-    shadowFloorActor->SetUserTransform(transforms->getRoomToEyeTransform());
+    shadowFloorActor->SetUserTransform(transforms->getRoomToWorldTransform());
 
 #undef Z_ARRAY_NAME
 #undef X_ARRAY_NAME
