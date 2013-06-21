@@ -109,13 +109,13 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
                               vtkActor *floorLinesActor,
                               TransformManager *transforms)
 {
-#define PLANE_HALF_LENGTH 7
-#define PLANE_Y -3
-#define PLANE_DEPTH PLANE_HALF_LENGTH*8
+#define PLANE_HALF_LENGTH 30
+#define PLANE_Y -6
+#define PLANE_DEPTH PLANE_HALF_LENGTH*3
 
-#define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
-#define PLANE_POINT1  PLANE_HALF_LENGTH,PLANE_Y,-PLANE_HALF_LENGTH
-#define PLANE_POINT2 -PLANE_HALF_LENGTH,PLANE_Y,PLANE_DEPTH
+#define PLANE_ORIGIN -PLANE_HALF_LENGTH,PLANE_Y,PLANE_HALF_LENGTH
+#define PLANE_POINT1  PLANE_HALF_LENGTH,PLANE_Y,PLANE_HALF_LENGTH
+#define PLANE_POINT2 -PLANE_HALF_LENGTH,PLANE_Y,-PLANE_DEPTH
 
 #define X_ARRAY_NAME "X"
 #define Z_ARRAY_NAME "Z"
@@ -148,7 +148,8 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkContourFilter > zLines =
             vtkSmartPointer< vtkContourFilter >::New();
     zLines->SetInputConnection(zCalc->GetOutputPort());
-    zLines->GenerateValues(81,-PLANE_HALF_LENGTH+1,PLANE_HALF_LENGTH+PLANE_DEPTH-1);
+    zLines->GenerateValues(9*(PLANE_DEPTH/PLANE_HALF_LENGTH),-PLANE_HALF_LENGTH+1,
+                           PLANE_HALF_LENGTH+PLANE_DEPTH-1);
     zLines->Update();
     vtkSmartPointer< vtkAppendPolyData > appendPolyData =
             vtkSmartPointer< vtkAppendPolyData >::New();
@@ -161,7 +162,7 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
     vtkSmartPointer< vtkTransform > transform =
             vtkSmartPointer< vtkTransform >::New();
     transform->Identity();
-    transform->Translate(0,0.02,0);
+    transform->Translate(0,0.2,0);
     transformPD->SetTransform(transform);
     transformPD->Update();
     vtkSmartPointer< vtkPolyDataMapper > linesMapper =
@@ -195,7 +196,6 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
 #undef PLANE_POINT1
 #undef PLANE_ORIGIN
 #undef PLANE_DEPTH
-#undef PLANE_Y
 #undef PLANE_HALF_LENGTH
 }
 
@@ -352,6 +352,14 @@ void SketchProject::timestep(double dt) {
     if (!isDoingAnimation) {
         //handleInput();
         world->stepPhysics(dt);
+        q_vec_type point = { 0, PLANE_Y, 0}, vector = {0, 1, 0};
+        q_vec_type tmp;
+        vtkLinearTransform *rTW = transforms->getRoomToWorldTransform();
+        rTW->TransformPoint(point,point);
+        rTW->TransformVector(vector,vector);
+        q_vec_normalize(vector,vector);
+        q_vec_add(point,vector,point);
+        world->setShadowPlane(point,vector);
         transforms->copyCurrentHandTransformsToOld();
     } else {
         if (world->setAnimationTime(timeInAnimation)) {
