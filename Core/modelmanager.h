@@ -14,9 +14,8 @@
  */
 
 
-#include <vtkSmartPointer.h>
-#include <PQP.h>
-#include <QString>
+class QDir;
+class QString;
 #include <QVector>
 #include <QHash>
 
@@ -27,7 +26,6 @@ class vtkPolyDataAlgorithm;
 
 #define CAMERA_MODEL_KEY "CAMERA"
 
-class QDir;
 
 class ModelManager
 {
@@ -59,19 +57,19 @@ public:
       * scale   - the scale at which the source should be interpreted
       *
       ****************************************************************************/
-    SketchModel *modelForVTKSource(QString sourceName,
+    SketchModel *modelForVTKSource(const QString &sourceName,
                                    vtkPolyDataAlgorithm *source,
                                    double scale,
                                    QDir &dir);
-    SketchModel *makeModel(QString source, QString filename,
+    SketchModel *makeModel(const QString &source, const QString &filename,
                            double iMass, double iMoment);
 
-    SketchModel *addConformation(QString originalSource,
-                                  QString newSource,
-                                  QString newFilename);
+    SketchModel *addConformation(const QString &originalSource,
+                                 const QString &newSource,
+                                 const QString &newFilename);
     SketchModel *addConformation(SketchModel *model,
-                                 QString newSource,
-                                 QString newFilename);
+                                 const QString &newSource,
+                                 const QString &newFilename);
     void addModel(SketchModel *model);
     /*****************************************************************************
       *
@@ -85,13 +83,13 @@ public:
       * Returns true if the model manager has a model with the given source
       *
       ****************************************************************************/
-    bool hasModel(QString source) const;
+    bool hasModel(const QString &source) const;
     /*****************************************************************************
       *
       * Returns the model with the given source or NULL
       *
       ****************************************************************************/
-    SketchModel *getModel(QString source) const;
+    SketchModel *getModel(const QString &source) const;
     /*****************************************************************************
       *
       * This method returns the number of models in the model manager

@@ -6,11 +6,13 @@
 
 #include <vtkTransform.h>
 
-#include <sketchmodel.h>
-#include <sketchobject.h>
-#include <sketchioconstants.h>
-#include <springconnection.h>
-#include <modelmanager.h>  // for #define default mass and moment of inertia
+#include <PQP.h>
+
+#include "sketchmodel.h"
+#include "sketchobject.h"
+#include "sketchioconstants.h"
+#include "springconnection.h"
+#include "modelmanager.h"  // for #define default mass and moment of inertia
 
 //######################################################################################
 //######################################################################################

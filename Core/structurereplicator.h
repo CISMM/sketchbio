@@ -1,13 +1,11 @@
 #ifndef STRUCTUREREPLICATOR_H
 #define STRUCTUREREPLICATOR_H
 
-#include "sketchobject.h"
-#include "worldmanager.h"
-#include "transformmanager.h"
-#include <list>
 #include <vtkSmartPointer.h>
-#include <vtkTransform.h>
+class vtkTransform;
 
+#include "sketchobject.h"
+class WorldManager;
 
 #define STRUCTURE_REPLICATOR_MAX_COPIES 100
 

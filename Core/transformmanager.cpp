@@ -1,10 +1,10 @@
 #include "transformmanager.h"
-#include "sketchioconstants.h"
 
 #include <vtkCamera.h>
 #include <vtkTransform.h>
 #include <vtkLinearTransform.h>
 
+#include "sketchioconstants.h"
 
 TransformManager::TransformManager() {
     worldToRoom = vtkSmartPointer<vtkTransform>::New();

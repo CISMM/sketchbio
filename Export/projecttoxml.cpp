@@ -2,6 +2,8 @@
 
 #include <ios>
 
+#include <vtkMatrix4x4.h>
+
 #include <QScopedPointer>
 #include <QDebug>
 

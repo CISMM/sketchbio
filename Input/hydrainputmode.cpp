@@ -1,8 +1,12 @@
 #include "hydrainputmode.h"
+
+#include <cmath>
+
+#include <QDebug>
+
 #include <sketchproject.h>
 #include <sketchioconstants.h>
 #include <transformmanager.h>
-#include <QDebug>
 
 HydraInputMode::HydraInputMode(SketchProject *proj, const bool *const b, const double *const a) :
     isButtonDown(b),

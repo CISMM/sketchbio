@@ -1,6 +1,9 @@
 #ifndef SKETCHPROJECT_H
 #define SKETCHPROJECT_H
 
+// VRPN/quatlib dependencies
+#include <quat.h>
+
 // VTK dependencies
 class vtkRenderer;
 class vtkPlaneSource;
@@ -17,9 +20,6 @@ class vtkMatrix4x4;
 #include <QList>
 #include <QString>
 class QDir;
-
-// VRPN/quatlib dependencies
-#include <quat.h>
 
 // SketchBio dependencies
 class ModelManager;

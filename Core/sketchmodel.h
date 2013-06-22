@@ -1,18 +1,19 @@
 #ifndef SKETCHMODEL_H
 #define SKETCHMODEL_H
 
-#include <vtkSmartPointer.h>
-#include <QString>
-#include <QVector>
-#include <QHash>
 #include <quat.h>
 
-// forward declarations
-class PQP_Model;
+#include <vtkSmartPointer.h>
 class vtkPolyDataAlgorithm;
 class vtkTransformPolyDataFilter;
 class vtkPolyData;
+
+class QString;
 class QDir;
+#include <QVector>
+#include <QHash>
+
+class PQP_Model;
 
 namespace ModelResolution
 {
@@ -34,7 +35,7 @@ void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData);
 void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);
 #endif
 
-vtkPolyDataAlgorithm *read(QString filename);
+vtkPolyDataAlgorithm *read(const QString &filename);
 
 // Writes the given algorithm's output to a file whose name is based on the descr string
 // and returns the name of the file it created (file is in the current directory by
@@ -93,7 +94,7 @@ public:
     // The source is the data from which the geometry was created, such as a
     // PDB file.  If the geometry is only geometry and was not generated from
     // some other source, then this will be the full resolution geometry file
-    QString getSource(int conformation) const;
+    const QString &getSource(int conformation) const;
     // Gets the inverse mass of the model (constant across all conformations)
     double getInverseMass() const;
     // Gets the inverse moment of inertial of the model (constant across all conformations)
@@ -102,7 +103,7 @@ public:
     // Adds a new conformation with the given source and full resolution filename
     // other resolutions will be generated later.  Returns the conformation number
     // of the conformation added.
-    int addConformation(QString src, QString fullResolutionFileName);
+    int addConformation(const QString &src, const QString &fullResolutionFileName);
     // Incrementes the use count on a conformation (used to determine which
     // conformations need simplifying). This should be called whenever an
     // object is created that uses the conformation or when the conformation
@@ -117,7 +118,7 @@ public slots:
     // Sets the geometery file for the given conformation and resolution
     void addSurfaceFileForResolution(int conformation,
                                      ModelResolution::ResolutionType resolution,
-                                     QString filename);
+                                     const QString &filename);
     // Tells the given conformation to use the given resolution.  If no
     // geometry file for the given resolution exists, then it does nothing.
     void setReslutionForConformation(int conformation,

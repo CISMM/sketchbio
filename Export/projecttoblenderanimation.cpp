@@ -1,10 +1,14 @@
 #include "projecttoblenderanimation.h"
+
+#include <cmath>
+
+#include <QFile>
+#include <QScopedPointer>
+
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
 #include <sketchproject.h>
-#include <QFile>
-#include <QScopedPointer>
 
 unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, unsigned frameRate) {
     return floor(time * frameRate + 0.5);

@@ -10,12 +10,15 @@
 #include <vtkConeSource.h>
 #include <vtkExtractEdges.h>
 #include <vtkArrayCalculator.h>
+#include <vtkMatrix4x4.h>
+#include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkColorTransferFunction.h>
 #include <vtkContourFilter.h>
 #include <vtkProperty.h>
 #include <vtkPolyDataMapper.h>
+
 #include <QDebug>
 #include <QDir>
 

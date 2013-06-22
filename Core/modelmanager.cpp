@@ -7,20 +7,19 @@
  *
  */
 
-#include "modelmanager.h"
-#include "sketchmodel.h"
-#include "sketchioconstants.h"
-
+#include <vtkSmartPointer.h>
+#include <vtkConeSource.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
-#include <vtkCellArray.h>
-#include <vtkOBJReader.h>
-#include <vtkConeSource.h>
 
 #include <QDebug>
 #include <QDir>
+#include <QString>
 #include <QScopedPointer>
 
+#include "modelmanager.h"
+#include "sketchmodel.h"
+#include "sketchioconstants.h"
 
 ModelManager::ModelManager() :
     models(),
@@ -79,7 +78,7 @@ SketchModel *ModelManager::getCameraModel(QDir &projectDir) {
   * method simply returns the old one (ignores scale for now).
   *
   ****************************************************************************/
-SketchModel *ModelManager::modelForVTKSource(QString sourceName,
+SketchModel *ModelManager::modelForVTKSource(const QString &sourceName,
                                              vtkPolyDataAlgorithm *source,
                                              double scale,
                                              QDir &dir) {
@@ -113,7 +112,7 @@ SketchModel *ModelManager::modelForVTKSource(QString sourceName,
     return sModel;
 }
 
-SketchModel *ModelManager::makeModel(QString source, QString filename,
+SketchModel *ModelManager::makeModel(const QString &source, const QString &filename,
                                      double iMass, double iMoment)
 {
     if (modelSourceToIdx.contains(source))
@@ -128,9 +127,9 @@ SketchModel *ModelManager::makeModel(QString source, QString filename,
     }
 }
 
-SketchModel *ModelManager::addConformation(QString originalSource,
-                                            QString newSource,
-                                            QString newFilename)
+SketchModel *ModelManager::addConformation(const QString &originalSource,
+                                           const QString &newSource,
+                                           const QString &newFilename)
 {
     if (modelSourceToIdx.contains(originalSource))
     {
@@ -141,8 +140,8 @@ SketchModel *ModelManager::addConformation(QString originalSource,
 }
 
 SketchModel *ModelManager::addConformation(SketchModel *model,
-                                            QString newSource,
-                                            QString newFilename)
+                                           const QString &newSource,
+                                           const QString &newFilename)
 {
     if (model == NULL)
         return NULL;
@@ -170,12 +169,12 @@ QVectorIterator<SketchModel *> ModelManager::getModelIterator() const {
     return QVectorIterator<SketchModel *>(models);
 }
 
-bool ModelManager::hasModel(QString source) const
+bool ModelManager::hasModel(const QString &source) const
 {
     return modelSourceToIdx.contains(source);
 }
 
-SketchModel *ModelManager::getModel(QString source) const
+SketchModel *ModelManager::getModel(const QString &source) const
 {
     if (hasModel(source))
         return models[modelSourceToIdx.value(source)];

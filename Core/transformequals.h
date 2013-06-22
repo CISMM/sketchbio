@@ -1,9 +1,15 @@
 #ifndef TRANSFORMEQUALS_H
 #define TRANSFORMEQUALS_H
 
-#include <sketchobject.h>
-#include <groupidgenerator.h>
+#include <quat.h>
+
 #include <QVector>
+
+#include <vtkSmartPointer.h>
+class vtkTransform;
+
+#include "sketchobject.h"
+class GroupIdGenerator;
 
 /*
  * This is a simple structure to associate a pair of SketchObjects together for use with the TransformEquals class

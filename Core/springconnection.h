@@ -2,7 +2,7 @@
 #define SPRINGCONNECTION_H
 
 #include "quat.h"
-#include "sketchobject.h"
+class SketchObject;
 #include <vtkType.h>
 
 /*

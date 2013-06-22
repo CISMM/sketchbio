@@ -2,6 +2,9 @@
 
 #include <vtkTransform.h>
 
+#include "sketchobject.h"
+#include "groupidgenerator.h"
+
 ObjectPair::ObjectPair(SketchObject *first, SketchObject *second) :
     o1(first), o2(second)
 {}

@@ -3,7 +3,7 @@
 
 #include <QList>
 #include <QSet>
-#include <PQP.h>
+class PQP_CollideResult;
 
 // Forward declare spring and object... circular dependency with object
 class SketchObject;

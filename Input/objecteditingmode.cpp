@@ -1,11 +1,15 @@
 #include "objecteditingmode.h"
+
+#include <limits>
+
+#include <vtkMatrix4x4.h>
+
 #include <sketchioconstants.h>
 #include <sketchtests.h>
 #include <sketchproject.h>
 #include <transformmanager.h>
 #include <transformequals.h>
 #include <structurereplicator.h>
-#include <limits>
 
 
 inline int camera_add_button_idx() {

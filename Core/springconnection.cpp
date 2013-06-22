@@ -1,5 +1,6 @@
 #include "springconnection.h"
-#include <QDebug>
+
+#include "sketchobject.h"
 
 SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                                    double maxRestLen, double k, const q_vec_type obj1Pos,

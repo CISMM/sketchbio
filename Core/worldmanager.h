@@ -22,7 +22,7 @@ class ModelManager;
 class SketchObject;
 class SpringConnection;
 #include "groupidgenerator.h"
-#include <physicsstrategy.h>
+#include "physicsstrategy.h"
 
 /*
  * For testing only: dynamic changing of collision response types. Each enum is a

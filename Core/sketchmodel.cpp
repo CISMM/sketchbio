@@ -1,17 +1,18 @@
 #include "sketchmodel.h"
+
+#include <vtkCellArray.h>
+#include <vtkPolyDataReader.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkOBJReader.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
-#include <PQP.h>
-#include <vtkCellArray.h>
-
-#include <vtkPolyDataReader.h>
-#include <vtkPolyDataWriter.h>
-#include <vtkOBJReader.h>
 
 #include <QDir>
+#include <QString>
 
+#include <PQP.h>
 
 SketchModel::SketchModel(double iMass, double iMoment, QObject *parent) :
     QObject(parent),
@@ -73,7 +74,7 @@ QString SketchModel::getFileNameFor(int conformation,
                            ModelResolution::ResolutionType >(conformation,resolution));
 }
 
-QString SketchModel::getSource(int conformation) const
+const QString &SketchModel::getSource(int conformation) const
 {
     return source[conformation];
 }
@@ -99,7 +100,7 @@ inline void pqpMatrixToQuat(q_type quat, const PQP_REAL mat[3][3]) {
     q_from_col_matrix(quat,colMat);
 }
 
-int SketchModel::addConformation(QString src, QString fullResolutionFileName)
+int SketchModel::addConformation(const QString &src, const QString &fullResolutionFileName)
 {
     useCount.append(0);
     source.append(src);
@@ -169,7 +170,7 @@ void SketchModel::decrementUses(int conformation)
 void SketchModel::addSurfaceFileForResolution(
         int conformation,
         ModelResolution::ResolutionType resolution,
-        QString filename)
+        const QString &filename)
 {
     fileNames.insert(
                 QPair< int, ModelResolution::ResolutionType >(
@@ -399,7 +400,7 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
 #endif
 
 
-vtkPolyDataAlgorithm *read(QString filename)
+vtkPolyDataAlgorithm *read(const QString &filename)
 {
     vtkPolyDataAlgorithm *result = NULL;
     if (filename.endsWith(".vtk"))

@@ -8,6 +8,8 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 
+#include <PQP.h>
+
 #include "keyframe.h"
 #include "sketchmodel.h"
 #include "physicsstrategy.h"

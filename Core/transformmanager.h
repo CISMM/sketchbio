@@ -2,6 +2,7 @@
 #define TRANSFORMMANAGER_H
 
 #include <quat.h>
+
 #include <vtkSmartPointer.h>
 
 class vtkTransform;

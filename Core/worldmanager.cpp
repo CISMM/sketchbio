@@ -5,8 +5,6 @@
 using std::cout;
 using std::endl;
 
-#include <QDebug>
-
 #include <vtkTubeFilter.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
@@ -15,6 +13,8 @@ using std::endl;
 #include <vtkActor.h>
 #include <vtkRenderer.h>
 #include <vtkProperty.h>
+
+#include <QDebug>
 
 #include <vtkProjectToPlane.h>
 

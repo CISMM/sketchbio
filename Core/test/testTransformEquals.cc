@@ -6,6 +6,7 @@
 #include <vtkCubeSource.h>
 
 #include <sketchtests.h>
+#include <groupidgenerator.h>
 #include <sketchmodel.h>
 #include <transformequals.h>
 
