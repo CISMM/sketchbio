@@ -4,6 +4,7 @@
 
 #include <vtkRenderer.h>
 #include <vtkXMLUtilities.h>
+#include <vtkXMLDataElement.h>
 
 #include <sketchioconstants.h>
 #include <sketchtests.h>
@@ -13,6 +14,7 @@
 #include <springconnection.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
+#include <sketchproject.h>
 #include <projecttoxml.h>
 
 using std::cout;

@@ -2,8 +2,8 @@
 #define PROJECTTOBLENDERANIMATION_H
 
 #include <QHash>
-
 class QFile;
+
 class SketchProject;
 class SketchModel;
 class ModelManager;

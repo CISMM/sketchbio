@@ -1,8 +1,23 @@
 #ifndef PROJECTTOXML_H
 #define PROJECTTOXML_H
 
-#include <vtkXMLDataElement.h>
-#include "sketchproject.h"
+class vtkXMLDataElement;
+
+class QString;
+#include <QVector>
+#include <QList>
+#include <QHash>
+#include <QSharedPointer>
+
+class TransformManager;
+class SketchModel;
+class ModelManager;
+class SketchObject;
+class SpringConnection;
+class WorldManager;
+class StructureReplicator;
+class TransformEquals;
+class SketchProject;
 
 class ProjectToXML {
 public:

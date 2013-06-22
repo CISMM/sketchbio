@@ -3,16 +3,18 @@
 #include <ios>
 
 #include <vtkMatrix4x4.h>
+#include <vtkXMLDataElement.h>
 
 #include <QScopedPointer>
 #include <QDebug>
 
 #include <sketchioconstants.h>
 #include <keyframe.h>
+#include <transformmanager.h>
 #include <sketchmodel.h>
 #include <modelmanager.h>
-#include <transformmanager.h>
 #include <springconnection.h>
+#include <sketchproject.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
 #include <sketchtests.h>

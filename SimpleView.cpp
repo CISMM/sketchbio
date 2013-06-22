@@ -19,6 +19,7 @@
 #include <vtkCamera.h>
 #include <vtkProperty.h>
 #include <vtkVRMLExporter.h>
+#include <vtkXMLDataElement.h>
 #include <vtkXMLUtilities.h>
 // TODO - take out next 3 when moving text stuff
 #include <vtkTextProperty.h>
@@ -28,8 +29,9 @@
 
 #include <sketchioconstants.h>
 #include <sketchmodel.h>
-#include <transformequals.h>
+
 #include <projecttoxml.h>
+
 #include <vrpnserver.h>
 
 #include <subprocessrunner.h>
