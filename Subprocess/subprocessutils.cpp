@@ -1,10 +1,12 @@
 #include "subprocessutils.h"
+
 #include <QString>
 #include <QSettings>
 #include <QFile>
 #include <QApplication>
 #include <QDebug>
 #include <QFileDialog>
+
 #include "chimeraobjmaker.h"
 #include "pymolobjmaker.h"
 #include "blenderanimationrunner.h"

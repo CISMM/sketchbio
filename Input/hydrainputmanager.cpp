@@ -1,12 +1,15 @@
 #include "hydrainputmanager.h"
+
+#include <QDebug>
+#include <QSettings>
+
 #include <sketchproject.h>
 #include <transformmanager.h>
+#include <sketchtests.h>
+
 #include "objecteditingmode.h"
 #include "springeditingmode.h"
 #include "animationmode.h"
-#include <sketchtests.h>
-#include <QDebug>
-#include <QSettings>
 
 inline int scale_button_idx() {
     return BUTTON_LEFT(FOUR_BUTTON_IDX);

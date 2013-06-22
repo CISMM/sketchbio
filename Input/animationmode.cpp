@@ -1,8 +1,10 @@
 #include "animationmode.h"
+
+#include <limits>
+
 #include <sketchobject.h>
 #include <sketchproject.h>
 #include <sketchioconstants.h>
-#include <limits>
 
 AnimationMode::AnimationMode(SketchProject *proj, const bool * const b, const double * const a) :
     HydraInputMode(proj,b,a),

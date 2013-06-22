@@ -1,7 +1,10 @@
 #include "vrpnserver.h"
-#include <QTimer>
+
 #include <vrpn_Connection.h>
 #include <vrpn_Tracker_RazerHydra.h>
+
+#include <QTimer>
+
 #include <sketchioconstants.h>
 
 vrpnServer::vrpnServer() :

@@ -1,6 +1,5 @@
 #include "blenderanimationrunner.h"
-#include "subprocessutils.h"
-#include <projecttoblenderanimation.h>
+
 #include <QDebug>
 #include <QDir>
 #include <QMessageBox>
@@ -8,9 +7,9 @@
 #include <QFile>
 #include <QTemporaryFile>
 
-// remove when relocating getSubprocessExecutableName
-#include <QSettings>
-#include <QFileDialog>
+#include <projecttoblenderanimation.h>
+
+#include "subprocessutils.h"
 
 BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QString &aFile,
                                                QObject *parent) :

@@ -1,11 +1,12 @@
 #include "modelfrompdbrunner.h"
-#include "subprocessutils.h"
+
+#include <QDebug>
 
 #include <sketchproject.h>
 #include <sketchmodel.h>
 #include <sketchioconstants.h>
 
-#include <QDebug>
+#include "subprocessutils.h"
 
 ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
                                        const QString &toDelete, QObject *parent) :

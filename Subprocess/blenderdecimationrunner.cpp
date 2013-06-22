@@ -1,7 +1,9 @@
 #include "blenderdecimationrunner.h"
+
 #include <QProcess>
 #include <QTemporaryFile>
 #include <QDebug>
+
 #include "subprocessutils.h"
 
 inline void writeBlenderHelpers(QFile &file)

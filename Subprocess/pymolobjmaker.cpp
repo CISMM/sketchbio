@@ -1,9 +1,11 @@
 #include "pymolobjmaker.h"
+
 #include <QProcess>
 #include <QTimer>
 #include <QTemporaryFile>
 #include <QDir>
 #include <QDebug>
+
 #include "subprocessutils.h"
 
 PymolOBJMaker::PymolOBJMaker(const QString &pdbID, const QString &dirName, QObject *parent) :

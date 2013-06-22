@@ -1,10 +1,11 @@
 #include "chimeraobjmaker.h"
-#include "subprocessutils.h"
 
 #include <QScopedPointer>
 #include <QProcess>
 #include <QTemporaryFile>
 #include <QDebug>
+
+#include "subprocessutils.h"
 
 ChimeraOBJMaker::ChimeraOBJMaker(const QString &pdbId, const QString &objFile, int threshold,
                                  const QString &chainsToDelete, QObject *parent) :
