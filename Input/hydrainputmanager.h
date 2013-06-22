@@ -6,13 +6,14 @@
 #include <vrpn_Analog.h>
 #include <quat.h>
 
-#include "sketchioconstants.h"
-#include "hydrainputmode.h"
 #include <QObject>
 #include <QVector>
 #include <QSharedPointer>
 
+#include "sketchioconstants.h"
 class SketchProject;
+
+class HydraInputMode;
 
 class HydraInputManager : public QObject
 {
