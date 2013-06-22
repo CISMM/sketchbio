@@ -15,6 +15,7 @@
 #include <objectgroup.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
+#include <worldmanager.h>
 #include <sketchproject.h>
 #include <projecttoxml.h>
 

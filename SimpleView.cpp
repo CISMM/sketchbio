@@ -225,19 +225,19 @@ void SimpleView::slot_frameLoop() {
 }
 
 void SimpleView::oldCollisionMode() {
-    project->setCollisionMode(CollisionMode::ORIGINAL_COLLISION_RESPONSE);
+    project->setCollisionMode(PhysicsMode::ORIGINAL_COLLISION_RESPONSE);
 }
 
 void SimpleView::poseModeTry1() {
-    project->setCollisionMode(CollisionMode::POSE_MODE_TRY_ONE);
+    project->setCollisionMode(PhysicsMode::POSE_MODE_TRY_ONE);
 }
 
 void SimpleView::binaryCollisionSearch() {
-    project->setCollisionMode(CollisionMode::BINARY_COLLISION_SEARCH);
+    project->setCollisionMode(PhysicsMode::BINARY_COLLISION_SEARCH);
 }
 
 void SimpleView::poseModePCA() {
-    project->setCollisionMode(CollisionMode::POSE_WITH_PCA_COLLISION_RESPONSE);
+    project->setCollisionMode(PhysicsMode::POSE_WITH_PCA_COLLISION_RESPONSE);
 }
 
 void SimpleView::setWorldSpringsEnabled(bool enabled) {

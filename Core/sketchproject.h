@@ -5,6 +5,7 @@
 #include <quat.h>
 
 // VTK dependencies
+#include <vtkSmartPointer.h>
 class vtkRenderer;
 class vtkPlaneSource;
 class vtkActor;
@@ -18,15 +19,20 @@ class vtkMatrix4x4;
 #include <QScopedPointer>
 #include <QWeakPointer>
 #include <QList>
+#include <QHash>
 #include <QString>
 class QDir;
 
 // SketchBio dependencies
+class SketchModel;
 class ModelManager;
 class TransformManager;
-#include "worldmanager.h"
+class SketchObject;
+class SpringConnection;
+class WorldManager;
 class StructureReplicator;
 class TransformEquals;
+#include "physicsstrategyfactory.h"
 
 /*
  *
@@ -51,7 +57,7 @@ public:
     // sets the viewpoint
     void setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes);
     // sets the collision mode (testing only)
-    void setCollisionMode(CollisionMode::Type mode);
+    void setCollisionMode(PhysicsMode::Type mode);
     // toggle settings in the physics
     void setCollisionTestsOn(bool on);
     void setWorldSpringsEnabled(bool enabled);

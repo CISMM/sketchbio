@@ -9,6 +9,7 @@
 #include <sketchproject.h>
 #include <transformmanager.h>
 #include <transformequals.h>
+#include <worldmanager.h>
 #include <structurereplicator.h>
 
 

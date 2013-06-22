@@ -27,6 +27,7 @@
 #include "sketchioconstants.h"
 #include "transformmanager.h"
 #include "modelmanager.h"
+#include "worldmanager.h"
 #include "objectchangeobserver.h"
 #include "springconnection.h"
 #include "structurereplicator.h"
@@ -356,7 +357,7 @@ void SketchProject::setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomTo
     transforms->setRoomToEyeMatrix(roomToEyes);
 }
 
-void SketchProject::setCollisionMode(CollisionMode::Type mode) {
+void SketchProject::setCollisionMode(PhysicsMode::Type mode) {
     world->setCollisionMode(mode);
 }
 

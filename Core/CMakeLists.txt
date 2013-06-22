@@ -29,6 +29,8 @@ sketchproject.cpp
 sketchproject.h
 physicsstrategy.cpp
 physicsstrategy.h
+physicsstrategyfactory.cpp
+physicsstrategyfactory.h
 transformequals.cpp
 transformequals.h
 keyframe.cpp

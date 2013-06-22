@@ -1,10 +1,14 @@
 #include "modelfrompdbrunner.h"
 
+#include <vtkSmartPointer.h>
+
 #include <QDebug>
 
-#include <sketchproject.h>
-#include <sketchmodel.h>
 #include <sketchioconstants.h>
+#include <sketchmodel.h>
+#include <sketchobject.h>
+#include <springconnection.h>
+#include <sketchproject.h>
 
 #include "subprocessutils.h"
 

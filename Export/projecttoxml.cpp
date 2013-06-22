@@ -9,15 +9,16 @@
 #include <QDebug>
 
 #include <sketchioconstants.h>
-#include <keyframe.h>
 #include <transformmanager.h>
+#include <keyframe.h>
 #include <sketchmodel.h>
-#include <objectgroup.h>
 #include <modelmanager.h>
+#include <objectgroup.h>
 #include <springconnection.h>
-#include <sketchproject.h>
+#include <worldmanager.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
+#include <sketchproject.h>
 #include <sketchtests.h>
 
 

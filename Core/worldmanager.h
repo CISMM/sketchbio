@@ -21,39 +21,10 @@ class SketchModel;
 class ModelManager;
 class SketchObject;
 class SpringConnection;
+class PhysicsStrategy;
 #include "groupidgenerator.h"
-#include "physicsstrategy.h"
+#include "physicsstrategyfactory.h"
 
-/*
- * For testing only: dynamic changing of collision response types. Each enum is a
- * response strategy
- */
-namespace CollisionMode {
-    enum Type {
-        ORIGINAL_COLLISION_RESPONSE=0,
-        POSE_MODE_TRY_ONE=1,
-        BINARY_COLLISION_SEARCH=2,
-        POSE_WITH_PCA_COLLISION_RESPONSE=3
-    };
-    /*******************************************************************
-     *
-     * This method populates the list of collision strategies so that their
-     * index in the list is the same as the value of the Type enum that
-     * should trigger them.
-     *
-     *******************************************************************/
-    inline void populateStrategies(QVector<QSharedPointer<PhysicsStrategy> > &strategies) {
-        strategies.clear();
-        QSharedPointer<PhysicsStrategy> s1(new SimplePhysicsStrategy());
-        strategies.append(s1);
-        QSharedPointer<PhysicsStrategy> s2(new PoseModePhysicsStrategy());
-        strategies.append(s2);
-        QSharedPointer<PhysicsStrategy> s3(new BinaryCollisionSearchStrategy());
-        strategies.append(s3);
-        QSharedPointer<PhysicsStrategy> s4(new PoseModePCAPhysicsStrategy());
-        strategies.append(s4);
-    }
-}
 
 /*
  * This class contains the data that is in the modeled "world", all the objects and
@@ -256,7 +227,7 @@ public:
      * Sets the collision response mode
      *
      *******************************************************************/
-    void setCollisionMode(CollisionMode::Type mode);
+    void setCollisionMode(PhysicsMode::Type mode);
 
     /*******************************************************************
      *
@@ -397,7 +368,7 @@ private:
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible;
-    CollisionMode::Type collisionResponseMode;
+    PhysicsMode::Type collisionResponseMode;
 };
 
 inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

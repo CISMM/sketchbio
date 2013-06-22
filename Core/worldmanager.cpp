@@ -23,6 +23,7 @@ using std::endl;
 #include "sketchobject.h"
 #include "modelinstance.h"
 #include "springconnection.h"
+#include "physicsstrategy.h"
 
 // The color used for the shadows of objects
 #define SHADOW_COLOR 0.1,0.1,0.1
@@ -46,9 +47,9 @@ WorldManager::WorldManager(vtkRenderer *r) :
     doPhysicsSprings(true),
     doCollisionCheck(true),
     showInvisible(true),
-    collisionResponseMode(CollisionMode::POSE_MODE_TRY_ONE)
+    collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
 {
-    CollisionMode::populateStrategies(strategies);
+    PhysicsStrategyFactory::populateStrategies(strategies);
     springEnds->Allocate(lastCapacityUpdate*2);
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
@@ -199,7 +200,7 @@ QListIterator<SpringConnection *> WorldManager::getSpringsIterator() const {
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::setCollisionMode(CollisionMode::Type mode) {
+void WorldManager::setCollisionMode(PhysicsMode::Type mode) {
     collisionResponseMode = mode;
 }
 

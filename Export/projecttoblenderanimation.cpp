@@ -8,6 +8,7 @@
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
+#include <worldmanager.h>
 #include <sketchproject.h>
 
 unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, unsigned frameRate) {

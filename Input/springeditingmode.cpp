@@ -4,8 +4,9 @@
 
 #include <sketchioconstants.h>
 #include <springconnection.h>
-#include <sketchproject.h>
 #include <transformmanager.h>
+#include <worldmanager.h>
+#include <sketchproject.h>
 
 SpringEditingMode::SpringEditingMode(SketchProject *proj, const bool *buttonState,
                                      const double *analogState) :
