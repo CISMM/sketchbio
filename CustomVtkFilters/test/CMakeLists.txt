@@ -7,10 +7,11 @@ set( vtk_test_link_libraries
 
 # define a test-making macro
 macro( make_vtk_test name source )
-    add_executable(${name} ${source})
-    target_link_libraries(${name} ${vtk_test_link_libraries})
-    add_test( ${name} ${name} )
+    set(testname "CustomVtkFiltersTest${name}")
+    add_executable(${testname} ${source})
+    target_link_libraries(${testname} ${vtk_test_link_libraries})
+    add_test( ${testname} ${testname} )
 endmacro( make_vtk_test )
 
 # make the tests
-make_vtk_test( TestVTKProjectToPlane testProjectToPlane.cc )
+make_vtk_test( ProjectToPlane testProjectToPlane.cc )

@@ -19,7 +19,7 @@
 #include <QDebug>
 #include <QDir>
 
-#include <vtk_custom_filters/vtkProjectToPlane.h>
+#include <vtkProjectToPlane.h>
 
 #include "sketchioconstants.h"
 #include "transformmanager.h"

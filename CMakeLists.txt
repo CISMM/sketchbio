@@ -47,80 +47,22 @@ INCLUDE_DIRECTORIES(
     ${PQP_INCLUDE_DIRS}
 )
 
+# This is to add modules, note that the name of each module is the
+# name of its directory and that the name of the library created by
+# each module is SketchBioX where X is the module name.
+macro(addmodule name)
+    ADD_SUBDIRECTORY(${name})
+    INCLUDE_DIRECTORIES( "${CMAKE_SOURCE_DIR}/${name}" )
+    SET(SketchBioLibraries "SketchBio${name}" ${SketchBioLibraries} )
+endmacro()
+
 ENABLE_TESTING()
-ADD_SUBDIRECTORY(test)
-ADD_SUBDIRECTORY(subprocesses)
-ADD_SUBDIRECTORY(vtk_custom_filters)
 
-
-QT4_WRAP_CPP(SketchBioCoreMoc sketchmodel.h)
-SOURCE_GROUP("Generated" FILES ${SketchBioCoreMoc})
-
-SET(SketchBioCoreSrcs
-transformmanager.cpp
-transformmanager.h
-structurereplicator.cpp
-structurereplicator.h
-modelmanager.cpp
-modelmanager.h
-sketchobject.cpp
-sketchobject.h
-sketchmodel.cpp # h file used by Moc, no need to include here
-worldmanager.cpp
-worldmanager.h
-springconnection.cpp
-springconnection.h
-sketchproject.cpp
-sketchproject.h
-physicsstrategy.cpp
-physicsstrategy.h
-transformequals.cpp
-transformequals.h
-keyframe.cpp
-keyframe.h
-groupidgenerator.h
-sketchioconstants.h
-${SketchBioCoreMoc}
-)
-
-ADD_LIBRARY(SketchBioCore ${SketchBioCoreSrcs})
-
-SET(SketchBioExportSrcs
-projecttoxml.cpp
-projecttoxml.h
-projecttoblenderanimation.cpp
-projecttoblenderanimation.h
-)
-ADD_LIBRARY(SketchBioExport ${SketchBioExportSrcs})
-
-QT4_WRAP_CPP(SketchBioInputMoc
-vrpnserver.h
-hydrainputmanager.h
-hydrainputmode.h
-objecteditingmode.h
-springeditingmode.h
-animationmode.h
-)
-SOURCE_GROUP("Generated" FILES ${SketchBioInputMoc})
-
-SET(SketchBioInputSrcs
-vrpnserver.cpp  # h file used by Moc, no need to include here
-hydrainputmanager.cpp  # h file used by Moc, no need to include here
-hydrainputmode.cpp  # h file used by Moc, no need to include here
-objecteditingmode.cpp  # h file used by Moc, no need to include here
-springeditingmode.cpp  # h file used by Moc, no need to include here
-animationmode.cpp  # h file used by Moc, no need to include here
-${SketchBioInputMoc}
-)
-ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})
-
-SET(SketchBioLibraries
-    SketchBioSubprocess
-    SketchBioExport
-    SketchBioInput
-    SketchBioCore
-    SketchBioCustomVtkFilters
-)
+addmodule( CustomVtkFilters )
+addmodule( Core )
+addmodule( Input )
+addmodule( Export )
+addmodule( Subprocess )
 
 # Set your files and resources here
 SET(SketchBioSrcs main.cpp SimpleView.cpp
@@ -144,6 +86,12 @@ SOURCE_GROUP("Generated" FILES
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
 ADD_EXECUTABLE( SketchBio ${SketchBioSrcs} ${UISrcs} ${MOCSrcs})
+
+# If using vtk 5.x, explicitly include QVTK (vtk 6 implicitly includes it)
+IF(${VTK_VERSION} VERSION_LESS "6")
+    TARGET_LINK_LIBRARIES( SketchBio QVTK )
+ENDIF(${VTK_VERSION} VERSION_LESS "6")
+
 TARGET_LINK_LIBRARIES( SketchBio
     ${SketchBioLibraries}
     ${VTK_LIBRARIES}
@@ -152,11 +100,6 @@ TARGET_LINK_LIBRARIES( SketchBio
     ${QUATLIB_LIBRARIES}
     ${PQP_LIBRARIES}
 )
-
-# If using vtk 5.x, explicitly include QVTK (vtk 6 implicitly includes it)
-IF(${VTK_VERSION} VERSION_LESS "6")
-    TARGET_LINK_LIBRARIES( SketchBio QVTK )
-ENDIF(${VTK_VERSION} VERSION_LESS "6")
 
 IF(UNIX AND NOT APPLE)
 	TARGET_LINK_LIBRARIES( SketchBio ${LIBUSB1_LIBRARIES} )

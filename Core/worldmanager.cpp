@@ -16,7 +16,7 @@ using std::endl;
 #include <vtkRenderer.h>
 #include <vtkProperty.h>
 
-#include <vtk_custom_filters/vtkProjectToPlane.h>
+#include <vtkProjectToPlane.h>
 
 #include "sketchtests.h"
 #include "keyframe.h"

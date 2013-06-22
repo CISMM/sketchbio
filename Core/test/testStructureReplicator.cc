@@ -7,6 +7,7 @@
 #include <springconnection.h>
 #include <worldmanager.h>
 #include <structurereplicator.h>
+#include <transformequals.h>
 #include <sketchioconstants.h>
 #include <sketchproject.h>
 

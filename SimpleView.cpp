@@ -32,8 +32,8 @@
 #include <projecttoxml.h>
 #include <vrpnserver.h>
 
-#include "subprocesses/subprocessrunner.h"
-#include "subprocesses/subprocessutils.h"
+#include <subprocessrunner.h>
+#include <subprocessutils.h>
 
 // default number extra fibers
 #define NUM_EXTRA_FIBERS 14
