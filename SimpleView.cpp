@@ -1,37 +1,37 @@
 #include "ui_SimpleView.h"
 #include "SimpleView.h"
-#include <QDebug>
-#include <QInputDialog>
-#include <QFileDialog>
-#include <QProcess>
-#include <QProgressDialog>
-#include <QMessageBox>
-#include <QThread>
-#include <QTemporaryFile>
-#include <QSettings>
 
 #include <stdexcept>
 
-#include <vtkPolyDataMapper.h>
-#include <vtkOBJReader.h>
-#include <vtkSphereSource.h>
 #include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
 #include <vtkCamera.h>
 #include <vtkProperty.h>
-#include <vtkVRMLExporter.h>
 #include <vtkXMLDataElement.h>
 #include <vtkXMLUtilities.h>
 // TODO - take out next 3 when moving text stuff
 #include <vtkTextProperty.h>
 #include <vtkTextMapper.h>
 #include <vtkActor2D.h>
-#include <limits>
+
+#include <QDebug>
+#include <QInputDialog>
+#include <QFileDialog>
+#include <QProgressDialog>
+#include <QMessageBox>
+#include <QThread>
+#include <QTimer>
 
 #include <sketchioconstants.h>
+#include <transformmanager.h>
 #include <sketchmodel.h>
+#include <modelmanager.h>
+#include <sketchobject.h>
+#include <sketchproject.h>
 
 #include <projecttoxml.h>
 
+#include <hydrainputmanager.h>
 #include <vrpnserver.h>
 
 #include <subprocessrunner.h>

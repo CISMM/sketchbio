@@ -1,9 +1,8 @@
 #include <QApplication>
 #include <QFileDialog>
-#include "SimpleView.h"
 #include <QDebug>
-#include <vrpnserver.h>
-#include <sketchioconstants.h>
+
+#include "SimpleView.h"
 
 void Usage(const char *n)
 {

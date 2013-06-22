@@ -2,37 +2,30 @@
 #define SimpleViewUI_H
 
 #define SIMPLEVIEW_NUM_ACTORS 4
- 
-#include <vtkSmartPointer.h>
-#include <vtkActor.h>
-#include <vtkTransform.h>
-#include <vtkRenderer.h>
 
 #include <quat.h>
-
-#include "transformmanager.h"
-#include "modelmanager.h"
-#include "worldmanager.h"
-#include "structurereplicator.h"
-#include "sketchioconstants.h"
-#include "sketchproject.h"
-#include "transformequals.h"
-#include "hydrainputmanager.h"
+ 
+#include <vtkSmartPointer.h>
+class vtkActor2D;
+class vtkTextMapper;
+class vtkRenderer;
 
 #include <QMainWindow>
-#include <QProgressDialog>
-#include <QActionGroup>
-#include <QTimer>
-#include <QString>
-#include <QDebug>
-#include <QVector>
- 
-// Forward Qt class declarations
-class Ui_SimpleView;
-class vtkTextMapper;
-class SubprocessRunner;
-class vrpnServer;
+class QTimer;
 class QThread;
+class QActionGroup;
+#include <QString>
+
+class SketchObject;
+class SketchProject;
+
+class vrpnServer;
+class HydraInputManager;
+
+class SubprocessRunner;
+ 
+// Forward Qt class declaration (the view)
+class Ui_SimpleView;
 
 /*
  * SimpleView is the main GUI class in the SketchBio project.  It also manages
