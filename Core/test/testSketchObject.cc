@@ -12,6 +12,8 @@
 #include <keyframe.h>
 #include <sketchmodel.h>
 #include <sketchobject.h>
+#include <modelinstance.h>
+#include <objectgroup.h>
 
 // declare these -- they are at the bottom of the file, but I wanted main at the top
 //                  where I can find it

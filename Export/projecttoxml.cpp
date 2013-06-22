@@ -12,6 +12,7 @@
 #include <keyframe.h>
 #include <transformmanager.h>
 #include <sketchmodel.h>
+#include <objectgroup.h>
 #include <modelmanager.h>
 #include <springconnection.h>
 #include <sketchproject.h>

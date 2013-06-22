@@ -12,6 +12,7 @@
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <springconnection.h>
+#include <objectgroup.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
 #include <sketchproject.h>

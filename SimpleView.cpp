@@ -27,6 +27,7 @@
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
+#include <modelinstance.h>
 #include <sketchproject.h>
 
 #include <projecttoxml.h>

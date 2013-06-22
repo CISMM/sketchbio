@@ -4,7 +4,7 @@
 #include <vtkSmartPointer.h>
 class vtkTransform;
 
-#include "sketchobject.h"
+#include "modelinstance.h"
 class WorldManager;
 
 #define STRUCTURE_REPLICATOR_MAX_COPIES 100

@@ -8,7 +8,8 @@
 #include <vtkSmartPointer.h>
 class vtkTransform;
 
-#include "sketchobject.h"
+class SketchObject;
+#include "objectchangeobserver.h"
 class GroupIdGenerator;
 
 /*

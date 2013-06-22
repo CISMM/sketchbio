@@ -21,6 +21,7 @@ using std::endl;
 #include "sketchtests.h"
 #include "keyframe.h"
 #include "sketchobject.h"
+#include "modelinstance.h"
 #include "springconnection.h"
 
 // The color used for the shadows of objects

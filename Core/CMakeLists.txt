@@ -15,6 +15,11 @@ modelmanager.cpp
 modelmanager.h
 sketchobject.cpp
 sketchobject.h
+modelinstance.cpp
+modelinstance.h
+objectgroup.cpp
+objectgroup.h
+objectchangeobserver.h
 sketchmodel.cpp # h file used by Moc, no need to include here
 worldmanager.cpp
 worldmanager.h

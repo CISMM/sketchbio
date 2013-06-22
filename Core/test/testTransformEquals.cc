@@ -8,6 +8,7 @@
 #include <sketchtests.h>
 #include <groupidgenerator.h>
 #include <sketchmodel.h>
+#include <modelinstance.h>
 #include <transformequals.h>
 
 inline SketchModel *getModel() {

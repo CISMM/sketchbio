@@ -27,6 +27,7 @@
 #include "sketchioconstants.h"
 #include "transformmanager.h"
 #include "modelmanager.h"
+#include "objectchangeobserver.h"
 #include "springconnection.h"
 #include "structurereplicator.h"
 #include "transformequals.h"

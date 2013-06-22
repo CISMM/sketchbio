@@ -4,7 +4,6 @@
 #include <quat.h>
 
 #include <vtkSmartPointer.h>
-class vtkAppendPolyData;
 class vtkPolyDataAlgorithm;
 class vtkTransformPolyDataFilter;
 class vtkTransform;
@@ -16,18 +15,9 @@ class vtkActor;
 #include <QMap>
 #include <QSet>
 
-class PQP_Model;
-
 class SketchModel;
 class Keyframe;
-
-// forward declarations
-class vtkPolyDataMapper;
-
-// forward declare the collision handler so it can be passed to collide
 class PhysicsStrategy;
-// forward declare observers of object's state change so that object can have a list of observers
-// (declared at the bottom of this file)
 class ObjectChangeObserver;
 
 // used by getPrimaryCollisionGroupNum to indicate that the object has not been
@@ -178,88 +168,7 @@ private: // fields
     QScopedPointer< QMap< double, Keyframe > > keyframes;
 };
 
-/*
- * This class extends SketchObject to provide an object that is a single instance of a
- * single SketchModel's data.
- */
 
-class ModelInstance : public SketchObject {
-public:
-    // constructor
-    explicit ModelInstance(SketchModel *m, int confNum = 0);
-    virtual ~ModelInstance();
-    // specify that this is a leaf by returning 1
-    virtual int numInstances() const;
-    // getters for data this subclass holds
-    virtual SketchModel *getModel();
-    virtual const SketchModel *getModel() const;
-    virtual vtkTransformPolyDataFilter *getTransformedGeometry();
-    virtual int getModelConformation() const;
-    virtual vtkActor *getActor();
-    // collision function that depend on data in this subclass
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics,
-                         int pqp_flags);
-    virtual void getBoundingBox(double bb[]);
-    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
-    virtual SketchObject *deepCopy();
-protected:
-    virtual void localTransformUpdated();
-private:
-    vtkSmartPointer<vtkActor> actor;
-    SketchModel *model;
-    int conformation;
-    vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
-    vtkSmartPointer<vtkTransformPolyDataFilter> orientedBB;
-    vtkSmartPointer<vtkPolyDataMapper> solidMapper;
-};
-
-class ObjectGroup : public SketchObject {
-public:
-    // constructor
-    ObjectGroup();
-    // destructor
-    virtual ~ObjectGroup();
-    // specify this is not a leaf (returns -1 * number of objects)
-    virtual int numInstances() const;
-    // if numInstances is 1, must provide model and actor, otherwise return null
-    virtual SketchModel *getModel();
-    virtual const SketchModel *getModel() const;
-    virtual vtkTransformPolyDataFilter *getTransformedGeometry();
-    virtual vtkActor *getActor();
-    // methods to add/remove objects
-    // note: this method gives ObjectGroup ownership until the object is removed
-    // so these objects are cleaned up in ObjectGroup's destructor
-    void addObject(SketchObject *obj);
-    // when the object is removed it is no longer owned by ObjectGroup, the remover is responsible
-    // for ensuring it is deallocated
-    void removeObject(SketchObject *obj);
-    // get the list of child objects
-    virtual QList<SketchObject *> *getSubObjects();
-    virtual const QList<SketchObject *> *getSubObjects() const;
-    // collision function... have to change declaration
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags);
-    virtual void getBoundingBox(double bb[]);
-    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
-    virtual void setIsVisible(bool isVisible);
-    virtual SketchObject *deepCopy();
-protected:
-    virtual void localTransformUpdated();
-private:
-    QList<SketchObject *> children;
-    vtkSmartPointer<vtkAppendPolyData> orientedBBs;
-};
-
-/*
- * This class is an observer that needs to be notified when the object's state changes...
- * such as a force/torque applied, a keyframe added, or the object's position/orientation changing
- */
-class ObjectChangeObserver {
-public:
-    virtual ~ObjectChangeObserver() {}
-    virtual void objectPushed(SketchObject *obj) {}
-    virtual void objectKeyframed(SketchObject *obj, double time) {}
-    virtual void objectMoved(SketchObject *obj) {}
-};
 
 // helper function-- converts quaternion to a PQP rotation matrix
 inline void quatToPQPMatrix(const q_type quat, double mat[3][3]) {
