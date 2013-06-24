@@ -285,6 +285,7 @@ SketchProject::SketchProject(vtkRenderer *r) :
     shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
     floorLinesActor(vtkSmartPointer< vtkActor >::New()),
     isDoingAnimation(false),
+    showingShadows(true),
     timeInAnimation(0.0),
     viewTime(0.0)
 {
@@ -387,6 +388,7 @@ void SketchProject::startAnimation() {
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
     world->hideInvisibleObjects();
+    setShowShadows(false);
 }
 
 void SketchProject::stopAnimation() {
@@ -398,6 +400,7 @@ void SketchProject::stopAnimation() {
     world->showInvisibleObjects();
     renderer->SetActiveCamera(transforms->getGlobalCamera());
     world->setAnimationTime(viewTime);
+    setShowShadows(true);
 }
 
 bool SketchProject::goToAnimationTime(double time) {
@@ -406,6 +409,43 @@ bool SketchProject::goToAnimationTime(double time) {
     }
     timeInAnimation = time;
     return world->setAnimationTime(time);
+}
+
+bool SketchProject::isShowingShadows() const
+{
+    return showingShadows;
+}
+
+void SketchProject::setShowShadows(bool show)
+{
+    if (show == showingShadows)
+        return;
+    showingShadows = show;
+    if (show)
+    {
+        renderer->AddActor(shadowFloorActor);
+        renderer->AddActor(floorLinesActor);
+        renderer->AddActor(leftShadowActor);
+        renderer->AddActor(rightShadowActor);
+    }
+    else
+    {
+        renderer->RemoveActor(shadowFloorActor);
+        renderer->RemoveActor(floorLinesActor);
+        renderer->RemoveActor(leftShadowActor);
+        renderer->RemoveActor(rightShadowActor);
+    }
+    world->setShowShadows(show);
+}
+
+void SketchProject::setShadowsOn()
+{
+    setShowShadows(true);
+}
+
+void SketchProject::setShadowsOff()
+{
+    setShowShadows(false);
 }
 
 double SketchProject::getViewTime() const

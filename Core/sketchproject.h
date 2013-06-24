@@ -68,6 +68,11 @@ public:
     // if it is not set yet
     // Returns true if the animation is done by the time given
     bool goToAnimationTime(double time);
+    // turning on and off shadows
+    bool isShowingShadows() const;
+    void setShowShadows(bool show);
+    void setShadowsOn();
+    void setShadowsOff();
 
     // returns the current time in the animation that is being viewed
     double getViewTime() const;
@@ -178,6 +183,7 @@ private:
     vtkSmartPointer< vtkActor > shadowFloorActor, floorLinesActor;
     // animation stuff
     bool isDoingAnimation; // true if the animation is happenning
+    bool showingShadows; // true if shadows are currently being shown
     double timeInAnimation; // the animation time starting at 0
     double viewTime;
 };

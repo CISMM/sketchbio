@@ -244,6 +244,50 @@ bool WorldManager::setAnimationTime(double t) {
 
 //##################################################################################################
 //##################################################################################################
+bool WorldManager::isShowingShadows() const
+{
+    return showShadows;
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setShowShadows(bool show)
+{
+    if (show == showShadows)
+        return;
+    showShadows = show;
+    QHashIterator< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
+            vtkSmartPointer< vtkActor > > > itr(shadows);
+    while (itr.hasNext())
+    {
+        vtkActor *actor = itr.next().value().second;
+        if (show)
+        {
+            renderer->AddActor(actor);
+        }
+        else
+        {
+            renderer->RemoveActor(actor);
+        }
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setShadowsOn()
+{
+    setShowShadows(true);
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setShadowsOff()
+{
+    setShowShadows(false);
+}
+
+//##################################################################################################
+//##################################################################################################
 void WorldManager::changedVisibility(SketchObject *obj)
 {
     if (!showInvisible)

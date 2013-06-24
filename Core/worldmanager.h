@@ -248,6 +248,30 @@ public:
     bool setAnimationTime(double t);
     /*******************************************************************
      *
+     * Returns true if object shadows are being shown
+     *
+     *******************************************************************/
+    bool isShowingShadows() const;
+    /*******************************************************************
+     *
+     * Set whether or not to object shadows should be visible
+     *
+     *******************************************************************/
+    void setShowShadows(bool show);
+    /*******************************************************************
+     *
+     * Set object shadows visible
+     *
+     *******************************************************************/
+    void setShadowsOn();
+    /*******************************************************************
+     *
+     * Set object shadows invisible
+     *
+     *******************************************************************/
+    void setShadowsOff();
+    /*******************************************************************
+     *
      * Should be called to sync states if an object's visibility status
      * is externally modified
      *
@@ -367,7 +391,7 @@ private:
     vtkSmartPointer<vtkPolyData> springEndConnections;
     vtkSmartPointer<vtkTubeFilter> tubeFilter;
     int maxGroupNum;
-    bool doPhysicsSprings, doCollisionCheck, showInvisible;
+    bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;
     PhysicsMode::Type collisionResponseMode;
 };
 
