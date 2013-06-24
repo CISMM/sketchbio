@@ -569,13 +569,6 @@ void WorldManager::insertActors(SketchObject *obj)
             projection->SetPointOnPlane(0.0,0.0,0.0);
             projection->SetPlaneNormalVector(0.0,1.0,0.0);
             projection->Update();
-            double bb[6];
-            projection->GetOutput()->GetBounds(bb);
-            for (int i = 0; i < 6; i++)
-            {
-                cout << bb[i] << ", ";
-            }
-            cout << endl;
             vtkSmartPointer< vtkPolyDataMapper > mapper =
                     vtkSmartPointer< vtkPolyDataMapper >::New();
             mapper->SetInputConnection(projection->GetOutputPort());

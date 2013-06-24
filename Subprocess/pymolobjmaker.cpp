@@ -12,8 +12,8 @@ PymolOBJMaker::PymolOBJMaker(const QString &pdbID, const QString &dirName, QObje
     SubprocessRunner(parent),
     pymol(new QProcess(this)),
     blender(new QProcess(this)),
-    pmlFile(new QTemporaryFile("XXXXXX.pml",this)),
-    bpyFile(new QTemporaryFile("XXXXXX.py",this)),
+    pmlFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.pml",this)),
+    bpyFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
     saveDir(dirName),
     objFile(NULL),
     valid(true)

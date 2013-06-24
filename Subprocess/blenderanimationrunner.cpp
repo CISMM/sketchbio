@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QTemporaryFile>
 
+#include <sketchproject.h>
+
 #include <projecttoblenderanimation.h>
 
 #include "subprocessutils.h"
@@ -16,8 +18,9 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
     SubprocessRunner(parent),
     blender(NULL),
     ffmpeg(NULL),
-    py_file(new QTemporaryFile("XXXXXX.py",this)),
+    py_file(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
     animationFile(new QFile(aFile,this)),
+    frameDir(NULL),
     valid(true)
 {
     // for now we only render avi files
@@ -39,7 +42,7 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
     }
     py_file->close();
 
-    QDir dir = QDir(QDir::currentPath());
+    QDir dir = QDir(proj->getProjectDir());
     QDir dir2 = dir.absoluteFilePath("anim");
 
     if (!dir2.exists())
@@ -49,6 +52,7 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
             valid = false;
         }
     } else {
+        frameDir = new QDir(dir2);
         dir2.setFilter(QDir::Files | QDir::NoDotAndDotDot);
         QStringList files = dir2.entryList();
         for (int idx = 0; idx < files.length(); idx++) {
@@ -71,6 +75,7 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
 BlenderAnimationRunner::~BlenderAnimationRunner()
 {
     qDebug() << "Cleaning up from animation.";
+    delete frameDir;
 }
 
 void BlenderAnimationRunner::start()
@@ -79,7 +84,8 @@ void BlenderAnimationRunner::start()
     blender->start(SubprocessUtils::getSubprocessExecutablePath("blender"),
                    QStringList() << "-noaudio" << "-b" <<
                    "-F" << "PNG" << "-x" << "1" << "-o" <<
-                   "anim/#####.png" <<"-P" << py_file->fileName());
+                   frameDir->absolutePath() +"/#####.png" <<"-P"
+                   << py_file->fileName());
     qDebug() << "Starting blender.";
     if (!blender->waitForStarted())
     {
@@ -113,8 +119,9 @@ void BlenderAnimationRunner::firstStageDone(int exitCode)
         connect(ffmpeg, SIGNAL(finished(int)), this, SLOT(secondStageDone(int)));
 
         QStringList list;
-        list << "-r" << QString::number(BLENDER_RENDERER_FRAMERATE) << "-i" << "anim/%05d.png";
-        list << "-vcodec" << "huffyuv" << animationFile->fileName();
+        list << "-r" << QString::number(BLENDER_RENDERER_FRAMERATE) << "-i"
+             << frameDir->absolutePath() + "/%05d.png"
+             << "-vcodec" << "huffyuv" << animationFile->fileName();
 //        qDebug() << list;
         ffmpeg->start(SubprocessUtils::getSubprocessExecutablePath("ffmpeg"),list);
         qDebug() << "Starting ffmpeg.";

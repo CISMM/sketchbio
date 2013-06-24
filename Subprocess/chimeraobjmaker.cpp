@@ -3,6 +3,7 @@
 #include <QScopedPointer>
 #include <QProcess>
 #include <QTemporaryFile>
+#include <QDir>
 #include <QDebug>
 
 #include "subprocessutils.h"
@@ -10,7 +11,7 @@
 ChimeraOBJMaker::ChimeraOBJMaker(const QString &pdbId, const QString &objFile, int threshold,
                                  const QString &chainsToDelete, QObject *parent) :
     AbstractSingleProcessRunner(parent),
-    cmdFile(new QTemporaryFile("XXXXXX.py",this)),
+    cmdFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
     valid(true)
 {
     if (!cmdFile->open())

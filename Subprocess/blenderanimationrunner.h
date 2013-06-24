@@ -7,6 +7,7 @@ class SketchProject;
 class QProcess;
 class QFile;
 class QTemporaryFile;
+class QDir;
 
 /*
  * This class manages exporting animations to blender and ffmpeg so that the export will run from a single
@@ -38,6 +39,7 @@ private:
     QProcess *ffmpeg;
     QTemporaryFile *py_file;
     QFile *animationFile;
+    QDir *frameDir;
     bool valid;
     
 };

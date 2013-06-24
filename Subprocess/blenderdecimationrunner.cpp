@@ -1,6 +1,7 @@
 #include "blenderdecimationrunner.h"
 
 #include <QProcess>
+#include <QDir>
 #include <QTemporaryFile>
 #include <QDebug>
 
@@ -65,7 +66,7 @@ inline void writeBlenderHelpers(QFile &file)
 BlenderDecimationRunner::BlenderDecimationRunner(const QString &objFile, DecimationType::Type type,
                                                  double param, QObject *parent) :
     AbstractSingleProcessRunner(parent),
-    tempFile(new QTemporaryFile("XXXXXX.py",this)),
+    tempFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
     valid(true)
 {
     if (tempFile->open())
