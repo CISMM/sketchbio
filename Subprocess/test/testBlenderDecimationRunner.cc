@@ -13,7 +13,7 @@
 #include <sketchmodel.h>
 #include <PQP.h>
 
-#define FILENAME  "1m1j.obj"
+#define FILENAME  (QDir::tempPath() + "/1m1j.obj")
 
 class BlenderTest : public Test
 {
@@ -60,14 +60,15 @@ int BlenderTest::testResults()
     SketchModel m(1,1);
     m.addConformation(filename,filename);
     int nTris = m.getCollisionModel(0)->num_tris;
-    QDir dir = QDir::current();
+    QDir dir = QDir::temp();
     QStringList files = dir.entryList();
     for (int i = 0; i < files.size(); i++)
     {
-        if (files.at(i).startsWith(filename + ".decimated") &&
+        QString name = dir.absoluteFilePath(files.at(i));
+        if (name.startsWith(filename + ".decimated") &&
                 files.at(i).endsWith(".obj"))
         {
-            m.addConformation(files.at(i),files.at(i));
+            m.addConformation(files.at(i),name);
         }
     }
     if (m.getNumberOfConformations() == 1)
@@ -93,7 +94,7 @@ int BlenderTest::testResults()
             return 1;
         }
     }
-    QString file = m.getSource(1);
+    QString file = m.getFileNameFor(1,ModelResolution::FULL_RESOLUTION);
     QFile(file).remove();
     QFile(file.mid(0,file.size()-3) + "mtl").remove();
     return 0;
@@ -102,6 +103,7 @@ int BlenderTest::testResults()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc,argv);
+    qDebug() << "Temp path: " << QDir::tempPath();
 
     // set required fields to use QSettings API (these specify the location of the settings)
     // used to locate subprocess files

@@ -5,15 +5,21 @@
  *
  */
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
+#include <QTimer>
+#include <QFile>
+#include <QDir>
+#include <QtCore/QCoreApplication>
 
 #include <subprocessrunner.h>
 #include <subprocessutils.h>
-#include "testqt.h"
-#include <QTimer>
-#include <QFile>
-#include <QtCore/QCoreApplication>
 
-#define FILENAME "1m1j.obj"
+#include "testqt.h"
+
+#define FILENAME (QDir::tempPath() + "/1m1j.obj")
 
 class ChimeraTest : public Test
 {
@@ -39,7 +45,7 @@ ChimeraTest::ChimeraTest(int threshold, QString del) :
 
 void ChimeraTest::setUp()
 {
-    QFile f("1m1j.obj");
+    QFile f(FILENAME);
     if (f.exists())
         f.remove();
     runner = SubprocessUtils::makeChimeraOBJFor("1m1j",FILENAME,thresh,toDelete);
@@ -62,6 +68,7 @@ int ChimeraTest::testResults()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc,argv);
+    cout << "Temp dir: " << QDir::tempPath().toStdString() << endl;
 
     // set required fields to use QSettings API (these specify the location of the settings)
     // used to locate subprocess files
