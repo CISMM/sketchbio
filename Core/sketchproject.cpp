@@ -498,53 +498,50 @@ SketchModel *SketchProject::addModel(SketchModel *model)
 
 
 SketchModel *SketchProject::addModelFromFile(QString source, QString fileName,
-                                             double iMass, double iMoment) {
+                                             double iMass, double iMoment)
+{
     QFile file(fileName);
-//    qDebug() << filename;
+//    qDebug() << "Trying to open file: " << fileName;
     QString localname = fileName.mid(fileName.lastIndexOf("/") +1);
     QString fullpath = projectDir->absoluteFilePath(localname);
 //    qDebug() << fullpath;
-    if (projectDir->entryList().contains(localname, Qt::CaseInsensitive)
-            || file.copy(fileName,fullpath)) {
+    if ( QFile(fullpath).exists() || file.copy(fileName,fullpath))
+    {
         SketchModel *model = models->makeModel(source,fullpath,iMass, iMoment);
         return model;
-    } else {
-        throw "Cannot create local copy of model file";
+    }
+    else
+    {
+        // Can't throw, called from Qt slot
+        return NULL;
     }
 }
 
 SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
-                                       const q_type orient) {
+                                       const q_type orient)
+{
     int myIdx = world->getNumberOfObjects();
     SketchObject *object = world->addObject(model,pos,orient);
     object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
     return object;
 }
 
-SketchObject *SketchProject::addObject(QString source,QString filename) {
-    QFile file(filename);
-//    qDebug() << filename;
-    QString localname = filename.mid(filename.lastIndexOf("/") +1);
-    QString fullpath = projectDir->absoluteFilePath(localname);
-    QFile localfile(fullpath);
-//    qDebug() << fullpath;
-    if (localfile.exists() || file.copy(filename,fullpath)) {
-        SketchModel *model = models->makeModel(source,filename,DEFAULT_INVERSE_MASS,
-                                               DEFAULT_INVERSE_MOMENT);
-
-        q_vec_type pos = Q_NULL_VECTOR;
-        q_type orient = Q_ID_QUAT;
-        pos[Q_Y] = 2 * world->getNumberOfObjects() / transforms->getWorldToRoomScale();
-        return addObject(model,pos,orient);
-    } else {
-        if (!localfile.exists()) {
-            qDebug() << "File is not there" << endl;
-            if (!file.copy(filename,fullpath)) {
-                qDebug() << "Cannot create copy" << endl;
-            }
-        }
-        throw "Could not create local copy of model file";
+SketchObject *SketchProject::addObject(QString source,QString filename)
+{
+    SketchModel *model = NULL;
+    model = models->getModel(source);
+    if (model == NULL)
+    {
+        model = addModelFromFile(source,filename,DEFAULT_INVERSE_MASS,
+                                 DEFAULT_INVERSE_MOMENT);
+        if (model == NULL)
+            return NULL;
     }
+
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    pos[Q_Y] = 2 * world->getNumberOfObjects() / transforms->getWorldToRoomScale();
+    return addObject(model,pos,orient);
 }
 
 SketchObject *SketchProject::addObject(SketchObject *object) {
