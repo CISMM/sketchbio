@@ -9,10 +9,13 @@ SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double mi
     object2(o2),
     minRestLength(minRestLen),
     maxRestLength(maxRestLen),
-    stiffness(k),
+    stiffness(k)
+    #ifdef SHOW_DEBUGGING_FORCE_LINES
+  ,
     end1(-1),
     end2(-1),
     cellId(-1)
+  #endif
 {
     q_vec_copy(object1ConnectionPosition,obj1Pos);
     q_vec_copy(object2ConnectionPosition,obj2Pos);

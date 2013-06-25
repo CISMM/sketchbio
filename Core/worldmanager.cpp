@@ -40,9 +40,11 @@ WorldManager::WorldManager(vtkRenderer *r) :
     nextIdx(0),
     renderer(r),
     lastCapacityUpdate(1000),
+    #ifdef SHOW_DEBUGGING_FORCE_LINES
     springEnds(vtkSmartPointer< vtkPoints >::New()),
     springEndConnections(vtkSmartPointer< vtkPolyData >::New()),
     tubeFilter(vtkSmartPointer< vtkTubeFilter >::New()),
+    #endif
     maxGroupNum(0),
     doPhysicsSprings(true),
     doCollisionCheck(true),
@@ -50,6 +52,7 @@ WorldManager::WorldManager(vtkRenderer *r) :
     collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
 {
     PhysicsStrategyFactory::populateStrategies(strategies);
+#ifdef SHOW_DEBUGGING_FORCE_LINES
     springEnds->Allocate(lastCapacityUpdate*2);
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
@@ -65,6 +68,7 @@ WorldManager::WorldManager(vtkRenderer *r) :
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
     renderer->AddActor(actor);
+#endif
 }
 
 //##################################################################################################
@@ -144,7 +148,9 @@ SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
 void WorldManager::clearLeftHandSprings() {
     for (QMutableListIterator<SpringConnection *> it(lHand); it.hasNext();) {
         SpringConnection *spring = it.next();
+#ifdef SHOW_DEBUGGING_FORCE_LINES
         springEndConnections->DeleteCell(spring->getCellId());
+#endif
         it.setValue((SpringConnection *)NULL);
         delete spring;
     }
@@ -156,7 +162,9 @@ void WorldManager::clearLeftHandSprings() {
 void WorldManager::clearRightHandSprings() {
     for (QMutableListIterator<SpringConnection *> it(rHand); it.hasNext();) {
         SpringConnection *spring = it.next();
+#ifdef SHOW_DEBUGGING_FORCE_LINES
         springEndConnections->DeleteCell(spring->getCellId());
+#endif
         it.setValue((SpringConnection *)NULL);
         delete spring;
     }
@@ -179,8 +187,10 @@ void WorldManager::removeSpring(SpringConnection *spring) {
     int index = connections.indexOf(spring);
     connections.removeAt(index);
 
+#ifdef SHOW_DEBUGGING_FORCE_LINES
     springEndConnections->DeleteCell(spring->getCellId());
     // can't delete points...
+#endif
 
     delete spring;
 }
@@ -217,7 +227,9 @@ void WorldManager::stepPhysics(double dt) {
     strategies[collisionResponseMode]->performPhysicsStepAndCollisionDetection(
                 lHand,rHand,connections,doPhysicsSprings,objects,dt,doCollisionCheck);
 
+#ifdef SHOW_DEBUGGING_FORCE_LINES
     updateSprings();
+#endif
 }
 
 //##################################################################################################
@@ -339,6 +351,7 @@ void WorldManager::setCollisionCheckOn(bool on) {
     doCollisionCheck = on;
 }
 
+#ifdef SHOW_DEBUGGING_FORCE_LINES
 //##################################################################################################
 //##################################################################################################
 // helper function for updateSprings - updates the endpoints of the springs in the vtkPoints object
@@ -389,6 +402,7 @@ void WorldManager::updateSprings() {
         tubeFilter->Update();
     }
 }
+#endif
 
 
 //##################################################################################################
@@ -529,6 +543,7 @@ void WorldManager::setShadowPlane(q_vec_type point, q_vec_type nVector)
 void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
     list->push_back(spring);
 
+#ifdef SHOW_DEBUGGING_FORCE_LINES
     // code to draw spring as a line
     if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
         vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
@@ -548,6 +563,7 @@ void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> 
     vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
 //    springEndConnections->Update();
     spring->setCellId(cellId);
+#endif
 }
 
 //##################################################################################################
