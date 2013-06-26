@@ -140,7 +140,7 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
         file.write("bpy.context.active_object.rotation_quaternion = (0,0,0,0)\n");
         if (isCamera) {
             // set the far plane out enough to see all the objects (we hope)
-            file.write("bpy.context.active_object.data.clip_end = 2000\n");
+            file.write("bpy.context.active_object.data.clip_end = 5000\n");
             // give the camera a light that will follow it around
             file.write("cam = bpy.context.active_object\n");
             file.write("bpy.ops.object.lamp_add(type='POINT')\n");
