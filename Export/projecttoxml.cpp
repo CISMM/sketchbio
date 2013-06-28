@@ -605,8 +605,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrent(vtkXMLDataElement *
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataElement *root,int minorVersion) {
-    switch(minorVersion) {
-    }
+//    switch(minorVersion) {
+//    }
     return XML_TO_DATA_SUCCESS;
 }
 

@@ -51,12 +51,12 @@ int main() {
     uint seed = (uint) time.msec();
     cout << "Seed: " << seed << endl;
     qsrand(seed);
-    struct sigaction action;
-    action.sa_handler = &handle_segfault;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
+//    struct sigaction action;
+//    action.sa_handler = &handle_segfault;
+//    sigemptyset(&action.sa_mask);
+//    action.sa_flags = 0;
 
-    sigaction(SIGSEGV,&action,NULL);
+//    sigaction(SIGSEGV,&action,NULL);
 
     int order[4];
     for (int i = 0; i < 4; i++) {

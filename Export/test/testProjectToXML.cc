@@ -110,7 +110,7 @@ void compareModels(const SketchModel *m1, const SketchModel *m2, int &numDiffere
         numDifferences++;
         if (printDiffs) cout << "Masses are different." << endl;
     }
-    if (Q_ABS(m1->getInverseMomentOfInertia() != m2->getInverseMomentOfInertia()) > Q_EPSILON)
+    if (Q_ABS(m1->getInverseMomentOfInertia() - m2->getInverseMomentOfInertia()) > Q_EPSILON)
     {
         numDifferences++;
         if (printDiffs) cout << "Moments of inertia are different."<< endl;
