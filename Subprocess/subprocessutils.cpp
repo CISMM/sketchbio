@@ -42,19 +42,18 @@ QString getSubprocessExecutablePath(const QString &executableName) {
                             "Please run the SketchBio GUI to input the location of this program.";
             }
         }
-#elif defined(__WINDOWS__)
+#elif defined(_WIN32)
         // test default locations C:/Program Files and C:/Program Files(x86) then ask for a .exe file
-        if (QFile("C:/Program Files/" + executableName "/" + executableName + ".exe").exists()) {
+        if (QFile("C:/Program Files/" + executableName + "/" + executableName + ".exe").exists()) {
             executablePath = "C:/Program Files/" + executableName + "/" + executableName;
         }
-#ifdef _WIN64
-        else if (QFile("C:/Program Files(x86)/" + executableName + "/" + executableName + ".exe").exists()) {
-            executablePath = "C:/Program Files(x86)/" + executableName + "/" + executableName;
+        else if (QFile("C:/Program Files (x86)/" + executableName + "/" + executableName + ".exe").exists()) {
+            executablePath = "C:/Program Files (x86)/" + executableName + "/" + executableName;
         }
         else {
             if (hasGui)
             {
-                executablePath = QFileDialog::getOpenFileName(NULL, "Specify location of '" executableName + "'","C:/Program Files","",".exe");
+                executablePath = QFileDialog::getOpenFileName(NULL, "Specify location of '" + executableName + "'","C:/Program Files","Windows Execuatables (*.exe)");
             }
             else
             {
@@ -62,7 +61,6 @@ QString getSubprocessExecutablePath(const QString &executableName) {
                             "Please run the SketchBio GUI to input the location of this program.";
             }
         }
-#endif
 #elif defined(__linux__)
         // test /usr/bin then ask for the file
         if (QFile("/usr/bin/" + executableName).exists()) {
@@ -81,6 +79,7 @@ QString getSubprocessExecutablePath(const QString &executableName) {
 #endif
         settings.setValue("subprocesses/" + executableName + "/path",executablePath);
     }
+	qDebug() << "Found " << executableName << " at " << executablePath;
     return executablePath;
 }
 
