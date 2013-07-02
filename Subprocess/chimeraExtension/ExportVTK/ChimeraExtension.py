@@ -1,0 +1,12 @@
+import chimera.extension
+
+#
+#
+def write_vtk(path):
+    import ExportVTK
+    ExportVTK.write_scene_as_vtk(path)
+
+descrip = 'Export scene as an input file for the <a href="http://http://vtk.org/">Visualization Toolkit</a>.  This file contains coordinates, surfaces and associated data so that the objects can be processed and rendered with VTK.'
+
+from chimera import exports
+exports.register('VTK', '*.vtk', '.vtk', write_vtk, descrip)
