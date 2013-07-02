@@ -66,16 +66,29 @@ class DataToSave:
                 for val in self.arrays[key]:
                     vtkFile.write('%f\n' % val)
 
+# creates dummy test data for now, eventually will parse chimera's datastructures
+def populate_data_object(data):
+    data.addPoint((0,1,0), {'a': 4, 'b': 3})                        
+    data.addPoint((1,0,0), {'a': 1, 'b': -1}, normal=(0,1,0))       
+    data.addPoint((1,.5,0), {'a':3, 'b': 0}) 
+    data.addPoint((0.5,2,0), {'a':0.1, 'b': 0.5})                   
+    data.lines.append((1,2))
+    data.triangles.append((0,2,3))
 
+# writes the vtk file header
 def write_vtk_headers(vtkfile):
     vtkfile.write('# vtk DataFile Version 3.0\n')
-    vtkfile.write('vtk output\n')
+    vtkfile.write('vtk file from Shawn Waldon\'s UCSF Chimera extension\n')
     vtkfile.write('ASCII\n')
     vtkfile.write('DATASET POLYDATA\n')
 
-def write_scene_as_vtk(path, data = None):
+# writes the chimera scene to the file specified by path
+def write_scene_as_vtk(path):
     vtkFile = open(path, 'w')
     write_vtk_headers(vtkFile)
-    if data != None:
+    data = DataToSave();
+    populate_data_object(data)
+    if len(data.points) > 0:
         data.writeToFile(vtkFile)
     vtkFile.close();
+
