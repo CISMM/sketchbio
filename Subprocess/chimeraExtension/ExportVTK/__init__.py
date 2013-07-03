@@ -6,6 +6,8 @@
 # Author: Shawn Waldon
 #
 
+from numpy import *
+
 # custom exceptions for more descriptive error messages
 # for when a point with a new array is added, but there are
 # already points without that array
@@ -79,17 +81,23 @@ def parseModel(m,modelNum,data):
         atoms = m.atoms
         for atom in atoms:
             pt = atom.coord()
-            data.addPoint((pt.x, pt.y, pt.z),{ 'modelNum' : modelNum })
+            data.addPoint((pt.x, pt.y, pt.z),{ 'modelNum' : modelNum, 'atomNum' : atoms.index(atom) })
         for bond in m.bonds:
             a1, a2 = bond.atoms
             data.lines.append((atoms.index(a1) + offset, atoms.index(a2) + offset))
     elif isinstance(m, SurfaceModel):
+        atoms = m.surfacePieceAtomsAndBonds(m.surfacePieces, False)[0][0].molecule.atoms
+        pos = list()
+        for atom in atoms:
+            pos.append(atom.coord())
+        A = array(pos)
         for piece in m.surfacePieces:
             ptOffset = len(data.points)
             vertices, triangles = piece.geometry
             normals = piece.normals
             for i in range(0,len(vertices)):
-                arrays = { 'modelNum' : modelNum }
+                atomIdx = sum((A-vertices[i])**2,1).argmin()
+                arrays = { 'modelNum' : modelNum, 'atomNum' : atomIdx }
                 norm = normals[i]
                 data.addPoint(list(vertices[i]),arrays,normal = list(norm))
             for tri in triangles:
