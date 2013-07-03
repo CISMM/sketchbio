@@ -6,8 +6,6 @@
 # Author: Shawn Waldon
 #
 
-from numpy import *
-
 # custom exceptions for more descriptive error messages
 # for when a point with a new array is added, but there are
 # already points without that array
@@ -30,6 +28,13 @@ class DataToSave:
         self.arrays = dict()
         self.arrays['Normals'] = list()
     
+    # Adds a point to the datastructure with the associated values for its
+    # data arrays in the data input.  The position input should be a list or array
+    # of position data, the data input should be a dict with keys being array names
+    # and values being array values.  The only array that is treated specially is
+    # 'Normals' which is its own input to this function and has a default (the input
+    # may be left off).  Do not give a dict containing the key 'Normals' to the data
+    # input to this function
     def addPoint(self, position, data, normal=(0,0,1)):
         self.points.append(position)
         index = len(self.points) - 1
@@ -45,48 +50,113 @@ class DataToSave:
             if len(self.arrays[key]) < len(self.points):
                 raise MissingDataArray("Got no value for the %s data array" % key)
 
+    # This function writes the data in the object to the given file in the VTK ascii
+    # format.  This function contains all the logic about that format and provided that
+    # the input data is already stored in this object, the file will be written correctly
     def writeToFile(self, vtkFile):
+        # write out the header for the file
+    	vtkFile.write('# vtk DataFile Version 3.0\n')
+    	vtkFile.write('vtk file from Shawn Waldon\'s UCSF Chimera extension\n')
+    	vtkFile.write('ASCII\n')
+    	vtkFile.write('DATASET POLYDATA\n')
+        # write out the points
         vtkFile.write('POINTS %d float\n' % len(self.points) )
         for point in self.points:
             vtkFile.write('%f %f %f\n' % (point[0], point[1], point[2]))
+        # write out the lines
         if len(self.lines) > 0:
             vtkFile.write('\n\nLINES %d %d\n' % (len(self.lines), 3* len(self.lines)))
             for line in self.lines:
                 vtkFile.write('2 %d %d\n' % (line[0], line[1]))
+        # write out the triangles
         if len(self.triangles) > 0:
             vtkFile.write('\n\nPOLYGONS %d %d\n' % (len(self.triangles), 4 * len(self.triangles)))
             for tri in self.triangles:
                 vtkFile.write('3 %d %d %d\n' % (tri[0], tri[1], tri[2]) )
         vtkFile.write('\n\nPOINT_DATA %d\n' % len(self.points))
+        numStringArrays = 0
+        # write the arrays
         for key in self.arrays:
+            # write the normals (special case of vector)
             if key == 'Normals':
-                vtkFile.write('NORMALS %s %s\n' % (key, 'float'))
+                vtkFile.write('\n\nNORMALS %s %s\n' % (key, 'float'))
                 for norm in self.arrays[key]:
                     vtkFile.write('%f %f %f\n' % (norm[0], norm[1], norm[2]))
-            else:
-                vtkFile.write('SCALARS %s %s 1\n' % (key, 'float'))
+            # write a vector array
+            elif isinstance(self.arrays[key][0], list):
+                vtkFile.write('\n\nVECTORS %s %s\n' % (key, 'float'))
+                for vec in self.arrays[key]:
+                    vtkFile.write('%f %f %f\n' % (vec[0], vec[1], vec[2]))
+            # write a scalar array, testing if it should be float or int
+            # and writing the appropriate array
+            elif not isinstance(self.arrays[key][0], basestring):
+                isInt = isinstance(self.arrays[key][0], int)
+                if isInt:
+                    arrayType = 'int'
+                else:
+                    arrayType = 'float'
+                vtkFile.write('\n\nSCALARS %s %s 1\n' % (key, arrayType))
                 vtkFile.write('LOOKUP_TABLE default\n')
                 for val in self.arrays[key]:
-                    vtkFile.write('%f\n' % val)
+                    if (isInt):
+                        vtkFile.write('%d\n' % val)
+                    else:
+                        vtkFile.write('%f\n' % val)
+            # write a string array
+            else:
+                vtkFile.write('\n\nFIELD FieldData%d 1\n' % numStringArrays)
+                numStringArrays += 1
+                vtkFile.write('%s 1 %d string' % (key, len(self.arrays[key])))
+                for s in self.arrays[key]:
+                    vtkFile.write('%s\n' % s)
 
+# This function gets the list of open models from chimera
 def getModels():
     from chimera import openModels
     return openModels.list()
 
+# Parses the model and adds it to the datastructure
+# Current data arrays created:
+#    atomNum - the atom number within the model
+#    modelNum - the model number (parameter)
+#    chainPosition - the position along the chain (used for coloring in the
+#                       Chimera command rainbow).  Value is fraction of chain length
+#                       that is before this point (0 is N-terminus, 1 is C-terminus)
+#    resType - a string array with the three letter description of the residue
+#    resNum  - the residue number within the model (absolute residue id, not chain relative)
 def parseModel(m,modelNum,data):
     from _surface import SurfaceModel
     from _molecule import Molecule
     if (isinstance(m,Molecule)):
         offset = len(data.points)
+        from Midas.midas_rainbow import _getResidueRanges
+        ranges = _getResidueRanges(m)
         atoms = m.atoms
+        residues = m.residues
         for atom in atoms:
             pt = atom.coord()
-            data.addPoint((pt.x, pt.y, pt.z),{ 'modelNum' : modelNum, 'atomNum' : atoms.index(atom) })
+            arrays = { 'modelNum' : modelNum, 'atomNum' : atoms.index(atom),
+                       'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue) }
+            for r in ranges:
+                if atom.residue in r:
+                    arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
+            if 'chainPosition' not in arrays:
+                arrays['chainPosition'] = 0.5
+            data.addPoint((pt.x, pt.y, pt.z), arrays)
         for bond in m.bonds:
             a1, a2 = bond.atoms
             data.lines.append((atoms.index(a1) + offset, atoms.index(a2) + offset))
     elif isinstance(m, SurfaceModel):
-        atoms = m.surfacePieceAtomsAndBonds(m.surfacePieces, False)[0][0].molecule.atoms
+# code to compute closest atom modified from:
+# http://stackoverflow.com/questions/2641206/fastest-way-to-find-the-closest-point-to-a-given-point-in-3d-in-python
+# third answer (the one only using numpy)
+        from numpy import array
+        from numpy import sum
+        from Midas.midas_rainbow import _getResidueRanges
+        molecule = m.surfacePieceAtomsAndBonds(m.surfacePieces, False)[0][0].molecule
+        ranges = _getResidueRanges(molecule)
+        atoms = molecule.atoms
+        residues = molecule.residues
         pos = list()
         for atom in atoms:
             pos.append(atom.coord())
@@ -97,39 +167,30 @@ def parseModel(m,modelNum,data):
             normals = piece.normals
             for i in range(0,len(vertices)):
                 atomIdx = sum((A-vertices[i])**2,1).argmin()
-                arrays = { 'modelNum' : modelNum, 'atomNum' : atomIdx }
+                arrays = { 'modelNum' : modelNum, 'atomNum' : atomIdx,
+                           'resType' : atoms[atomIdx].residue.type,
+                           'resNum' : residues.index(atoms[atomIdx].residue) }
+                for r in ranges:
+                    if atoms[atomIdx].residue in r:
+                        arrays['chainPosition'] = r.index(atoms[atomIdx].residue) / float(len(r))
+                if 'chainPosition' not in arrays:
+                    arrays['chainPosition'] = 0.5
                 norm = normals[i]
                 data.addPoint(list(vertices[i]),arrays,normal = list(norm))
             for tri in triangles:
                 data.triangles.append((tri[0] + ptOffset, tri[1] + ptOffset, tri[2] + ptOffset))
-        
-        print("Surface Model")
 
-# creates dummy test data for now, eventually will parse chimera's datastructures
+# parses chimera's datastructures and adds the data from each to the data object
 def populate_data_object(data):
     modelList = getModels()
     for m in modelList:
         parseModel(m,modelList.index(m),data)
-#    data.addPoint((0,1,0),   {'a': 4, 'b': 3})                        
-#    data.addPoint((1,0,0),   {'a': 1, 'b': -1}, normal=(0,1,0))       
-#    data.addPoint((1,.5,0),  {'a': 3, 'b': 0}) 
-#    data.addPoint((0.5,2,0), {'a': 0.1, 'b': 0.5})                   
-#    data.lines.append((1,2))
-#    data.triangles.append((0,2,3))
-
-# writes the vtk file header
-def write_vtk_headers(vtkfile):
-    vtkfile.write('# vtk DataFile Version 3.0\n')
-    vtkfile.write('vtk file from Shawn Waldon\'s UCSF Chimera extension\n')
-    vtkfile.write('ASCII\n')
-    vtkfile.write('DATASET POLYDATA\n')
 
 # writes the chimera scene to the file specified by path
 def write_scene_as_vtk(path):
-    vtkFile = open(path, 'w')
-    write_vtk_headers(vtkFile)
     data = DataToSave();
     populate_data_object(data)
+    vtkFile = open(path, 'w')
     if len(data.points) > 0:
         data.writeToFile(vtkFile)
     vtkFile.close();
