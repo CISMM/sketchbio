@@ -3,6 +3,7 @@
 # This module exports the Chimera Scene as a .vtk file for
 # the input to tools using the Visualization Toolkit
 #
+# Author: Shawn Waldon
 #
 
 # custom exceptions for more descriptive error messages
@@ -53,27 +54,60 @@ class DataToSave:
         if len(self.triangles) > 0:
             vtkFile.write('\n\nPOLYGONS %d %d\n' % (len(self.triangles), 4 * len(self.triangles)))
             for tri in self.triangles:
-                vtkFile.write('3 %d %d %d\n' % tri )
+                vtkFile.write('3 %d %d %d\n' % (tri[0], tri[1], tri[2]) )
         vtkFile.write('\n\nPOINT_DATA %d\n' % len(self.points))
         for key in self.arrays:
             if key == 'Normals':
                 vtkFile.write('NORMALS %s %s\n' % (key, 'float'))
                 for norm in self.arrays[key]:
-                    vtkFile.write('%f %f %f\n' % norm)
+                    vtkFile.write('%f %f %f\n' % (norm[0], norm[1], norm[2]))
             else:
                 vtkFile.write('SCALARS %s %s 1\n' % (key, 'float'))
                 vtkFile.write('LOOKUP_TABLE default\n')
                 for val in self.arrays[key]:
                     vtkFile.write('%f\n' % val)
 
+def getModels():
+    from chimera import openModels
+    return openModels.list()
+
+def parseModel(m,modelNum,data):
+    from _surface import SurfaceModel
+    from _molecule import Molecule
+    if (isinstance(m,Molecule)):
+        offset = len(data.points)
+        atoms = m.atoms
+        for atom in atoms:
+            pt = atom.coord()
+            data.addPoint((pt.x, pt.y, pt.z),{ 'modelNum' : modelNum })
+        for bond in m.bonds:
+            a1, a2 = bond.atoms
+            data.lines.append((atoms.index(a1) + offset, atoms.index(a2) + offset))
+    elif isinstance(m, SurfaceModel):
+        for piece in m.surfacePieces:
+            ptOffset = len(data.points)
+            vertices, triangles = piece.geometry
+            normals = piece.normals
+            for i in range(0,len(vertices)):
+                arrays = { 'modelNum' : modelNum }
+                norm = normals[i]
+                data.addPoint(list(vertices[i]),arrays,normal = list(norm))
+            for tri in triangles:
+                data.triangles.append((tri[0] + ptOffset, tri[1] + ptOffset, tri[2] + ptOffset))
+        
+        print("Surface Model")
+
 # creates dummy test data for now, eventually will parse chimera's datastructures
 def populate_data_object(data):
-    data.addPoint((0,1,0), {'a': 4, 'b': 3})                        
-    data.addPoint((1,0,0), {'a': 1, 'b': -1}, normal=(0,1,0))       
-    data.addPoint((1,.5,0), {'a':3, 'b': 0}) 
-    data.addPoint((0.5,2,0), {'a':0.1, 'b': 0.5})                   
-    data.lines.append((1,2))
-    data.triangles.append((0,2,3))
+    modelList = getModels()
+    for m in modelList:
+        parseModel(m,modelList.index(m),data)
+#    data.addPoint((0,1,0),   {'a': 4, 'b': 3})                        
+#    data.addPoint((1,0,0),   {'a': 1, 'b': -1}, normal=(0,1,0))       
+#    data.addPoint((1,.5,0),  {'a': 3, 'b': 0}) 
+#    data.addPoint((0.5,2,0), {'a': 0.1, 'b': 0.5})                   
+#    data.lines.append((1,2))
+#    data.triangles.append((0,2,3))
 
 # writes the vtk file header
 def write_vtk_headers(vtkfile):
