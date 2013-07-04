@@ -118,6 +118,8 @@ def getModels():
 # Parses the model and adds it to the datastructure
 # Current data arrays created:
 #    atomNum - the atom number within the model
+#    atomType - the type of atom (string)  Just copying chimera's atom name specifier.
+#    bFactor - the atom's B-Factor
 #    modelNum - the model number (parameter)
 #    chainPosition - the position along the chain (used for coloring in the
 #                       Chimera command rainbow).  Value is fraction of chain length
@@ -136,7 +138,8 @@ def parseModel(m,modelNum,data):
         for atom in atoms:
             pt = atom.coord()
             arrays = { 'modelNum' : modelNum, 'atomNum' : atoms.index(atom),
-                       'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue) }
+                       'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue),
+                       'atomType' : atom.name, 'bFactor' : atom.bfactor }
             for r in ranges:
                 if atom.residue in r:
                     arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
@@ -149,7 +152,7 @@ def parseModel(m,modelNum,data):
     elif isinstance(m, SurfaceModel):
 # code to compute closest atom modified from:
 # http://stackoverflow.com/questions/2641206/fastest-way-to-find-the-closest-point-to-a-given-point-in-3d-in-python
-# third answer (the one only using numpy)
+# third answer (the one only using numpy and not additional libraries)
         from numpy import array
         from numpy import sum
         from Midas.midas_rainbow import _getResidueRanges
@@ -169,7 +172,9 @@ def parseModel(m,modelNum,data):
                 atomIdx = sum((A-vertices[i])**2,1).argmin()
                 arrays = { 'modelNum' : modelNum, 'atomNum' : atomIdx,
                            'resType' : atoms[atomIdx].residue.type,
-                           'resNum' : residues.index(atoms[atomIdx].residue) }
+                           'resNum' : residues.index(atoms[atomIdx].residue),
+                           'atomType' : atoms[atomIdx].name,
+                           'bFactor' : atoms[atomIdx].bfactor }
                 for r in ranges:
                     if atoms[atomIdx].residue in r:
                         arrays['chainPosition'] = r.index(atoms[atomIdx].residue) / float(len(r))
