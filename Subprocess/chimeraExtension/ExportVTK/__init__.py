@@ -119,7 +119,10 @@ def getModels():
 # Current data arrays created:
 #    atomNum - the atom number within the model
 #    atomType - the type of atom (string)  Just copying chimera's atom name specifier.
-#    bFactor - the atom's B-Factor
+#    bFactor - the atom's B-Factor (something from the PDB data, no idea)
+#    occupancy - the atom's occupancy (something from the PDB data, no idea)
+#    kdHydrophobicity - the residue's Kite-Doolittle hydrophobicity (not available on all
+#                           residues, defaults to 0.0 where no data)
 #    modelNum - the model number (parameter)
 #    chainPosition - the position along the chain (used for coloring in the
 #                       Chimera command rainbow).  Value is fraction of chain length
@@ -139,7 +142,12 @@ def parseModel(m,modelNum,data):
             pt = atom.coord()
             arrays = { 'modelNum' : modelNum, 'atomNum' : atoms.index(atom),
                        'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue),
-                       'atomType' : atom.name, 'bFactor' : atom.bfactor }
+                       'atomType' : atom.name, 'bFactor' : atom.bfactor,
+                       'occupancy' : atom.occupancy }
+            if atom.residue.kdHydrophobicity != None:
+                arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
+            else:
+                arrays['kdHydrophobicity'] = 0.0 # float('NaN')
             for r in ranges:
                 if atom.residue in r:
                     arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
@@ -170,11 +178,17 @@ def parseModel(m,modelNum,data):
             normals = piece.normals
             for i in range(0,len(vertices)):
                 atomIdx = sum((A-vertices[i])**2,1).argmin()
+                atom = atoms[atomIdx]
                 arrays = { 'modelNum' : modelNum, 'atomNum' : atomIdx,
-                           'resType' : atoms[atomIdx].residue.type,
-                           'resNum' : residues.index(atoms[atomIdx].residue),
-                           'atomType' : atoms[atomIdx].name,
-                           'bFactor' : atoms[atomIdx].bfactor }
+                           'resType' : atom.residue.type,
+                           'resNum' : residues.index(atom.residue),
+                           'atomType' : atom.name,
+                           'bFactor' : atom.bfactor,
+                           'occupancy' : atom.occupancy }
+                if atom.residue.kdHydrophobicity != None:
+                    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
+                else:
+                    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
                 for r in ranges:
                     if atoms[atomIdx].residue in r:
                         arrays['chainPosition'] = r.index(atoms[atomIdx].residue) / float(len(r))
