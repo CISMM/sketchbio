@@ -121,14 +121,17 @@ def getModels():
 #    atomType - the type of atom (string)  Just copying chimera's atom name specifier.
 #    bFactor - the atom's B-Factor (something from the PDB data, no idea)
 #    occupancy - the atom's occupancy (something from the PDB data, no idea)
-#    kdHydrophobicity - the residue's Kite-Doolittle hydrophobicity (not available on all
-#                           residues, defaults to 0.0 where no data)
 #    modelNum - the model number (parameter)
 #    chainPosition - the position along the chain (used for coloring in the
 #                       Chimera command rainbow).  Value is fraction of chain length
 #                       that is before this point (0 is N-terminus, 1 is C-terminus)
 #    resType - a string array with the three letter description of the residue
 #    resNum  - the residue number within the model (absolute residue id, not chain relative)
+# Potential data arrays:
+#   - removed due to VTK not understanding NaN in input files and no other good value for
+#       invalid data:
+#    kdHydrophobicity - the residue's Kite-Doolittle hydrophobicity (not available on all
+#                           residues, defaults to 0.0 where no data)
 def parseModel(m,modelNum,data):
     from _surface import SurfaceModel
     from _molecule import Molecule
@@ -144,10 +147,10 @@ def parseModel(m,modelNum,data):
                        'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue),
                        'atomType' : atom.name, 'bFactor' : atom.bfactor,
                        'occupancy' : atom.occupancy }
-            if atom.residue.kdHydrophobicity != None:
-                arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
-            else:
-                arrays['kdHydrophobicity'] = 0.0 # float('NaN')
+            #if atom.residue.kdHydrophobicity != None:
+            #    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
+            #else:
+            #    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
             for r in ranges:
                 if atom.residue in r:
                     arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
@@ -185,10 +188,10 @@ def parseModel(m,modelNum,data):
                            'atomType' : atom.name,
                            'bFactor' : atom.bfactor,
                            'occupancy' : atom.occupancy }
-                if atom.residue.kdHydrophobicity != None:
-                    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
-                else:
-                    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
+                #if atom.residue.kdHydrophobicity != None:
+                #    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
+                #else:
+                #    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
                 for r in ranges:
                     if atoms[atomIdx].residue in r:
                         arrays['chainPosition'] = r.index(atoms[atomIdx].residue) / float(len(r))
