@@ -74,16 +74,15 @@ class DataToSave:
             for tri in self.triangles:
                 vtkFile.write('3 %d %d %d\n' % (tri[0], tri[1], tri[2]) )
         vtkFile.write('\n\nPOINT_DATA %d\n' % len(self.points))
-        numStringArrays = 0
+        vtkFile.write('\n\nNORMALS %s %s\n' % ('Normals', 'float'))
+        for norm in self.arrays['Normals']:
+            vtkFile.write('%f %f %f\n' % (norm[0], norm[1], norm[2]))
+        self.arrays.pop('Normals')
         # write the arrays
+        vtkFile.write('\nFIELD FieldData %d\n' % len(self.arrays))
         for key in self.arrays:
-            # write the normals (special case of vector)
-            if key == 'Normals':
-                vtkFile.write('\n\nNORMALS %s %s\n' % (key, 'float'))
-                for norm in self.arrays[key]:
-                    vtkFile.write('%f %f %f\n' % (norm[0], norm[1], norm[2]))
             # write a vector array
-            elif isinstance(self.arrays[key][0], list):
+            if isinstance(self.arrays[key][0], list):
                 vtkFile.write('\n\nVECTORS %s %s\n' % (key, 'float'))
                 for vec in self.arrays[key]:
                     vtkFile.write('%f %f %f\n' % (vec[0], vec[1], vec[2]))
@@ -95,18 +94,16 @@ class DataToSave:
                     arrayType = 'int'
                 else:
                     arrayType = 'float'
-                vtkFile.write('\n\nSCALARS %s %s 1\n' % (key, arrayType))
-                vtkFile.write('LOOKUP_TABLE default\n')
+                vtkFile.write('\n\n%s 1 %d %s\n' % (key, len(self.arrays[key]), arrayType))
+                count = 0
                 for val in self.arrays[key]:
                     if (isInt):
                         vtkFile.write('%d\n' % val)
                     else:
                         vtkFile.write('%f\n' % val)
-            # write a string array
+            # store that it is a string array
             else:
-                vtkFile.write('\n\nFIELD FieldData%d 1\n' % numStringArrays)
-                numStringArrays += 1
-                vtkFile.write('%s 1 %d string' % (key, len(self.arrays[key])))
+                vtkFile.write('\n%s 1 %d string\n' % (key, len(self.arrays[key])))
                 for s in self.arrays[key]:
                     vtkFile.write('%s\n' % s)
 
