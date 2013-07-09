@@ -13,7 +13,7 @@
 #include <sketchmodel.h>
 #include <PQP.h>
 
-#define FILENAME  (QDir::tempPath() + "/1m1j.obj")
+#define FILENAME  (QDir::currentPath() + "/models/1m1j.obj")
 
 class BlenderTest : public Test
 {
@@ -60,7 +60,8 @@ int BlenderTest::testResults()
     SketchModel m(1,1);
     m.addConformation(filename,filename);
     int nTris = m.getCollisionModel(0)->num_tris;
-    QDir dir = QDir::temp();
+    qDebug() << "There are " << nTris << " triangles in the original.";
+    QDir dir(QDir::current().absoluteFilePath("models"));
     QStringList files = dir.entryList();
     for (int i = 0; i < files.size(); i++)
     {
@@ -77,6 +78,7 @@ int BlenderTest::testResults()
         return 1;
     }
     int newNTris = m.getCollisionModel(1)->num_tris;
+    qDebug() << "There are " << newNTris << " triangles in the result.";
     if (type == DecimationType::PERCENT)
     {
         double pct = static_cast<double>(newNTris) / static_cast<double>(nTris);
@@ -115,12 +117,9 @@ int main(int argc, char *argv[])
     TestQObject *test = new TestQObject(app,b1);
     TestQObject *test2 = new TestQObject(app,b2);
 
-    SubprocessRunner *runner = SubprocessUtils::makeChimeraOBJFor("1m1j",FILENAME,0,"");
-
-    QObject::connect(runner, SIGNAL(finished(bool)), test, SLOT(start()));
     QObject::connect(test, SIGNAL(finished()), test2, SLOT(start()));
     QObject::connect(test2, SIGNAL(finished()), &app, SLOT(quit()));
 
-    QTimer::singleShot(0, runner, SLOT(start()));
+    QTimer::singleShot(0, test, SLOT(start()));
     return app.exec();
 }

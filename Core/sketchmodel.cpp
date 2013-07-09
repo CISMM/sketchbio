@@ -1,5 +1,7 @@
 #include "sketchmodel.h"
 
+#include <iostream>
+
 #include <vtkCellArray.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
@@ -8,6 +10,8 @@
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+
+#include <vtkPointData.h>
 
 #include <QDir>
 #include <QString>
@@ -402,6 +406,8 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
 
 vtkPolyDataAlgorithm *read(const QString &filename)
 {
+    using std::cout;
+    using std::endl;
     vtkPolyDataAlgorithm *result = NULL;
     if (filename.endsWith(".vtk"))
     {
@@ -409,6 +415,9 @@ vtkPolyDataAlgorithm *read(const QString &filename)
                 vtkSmartPointer< vtkPolyDataReader >::New();
         reader->SetFileName(filename.toStdString().c_str());
         reader->Update();
+        std::cout << "Arrays on read: " <<
+                     reader->GetOutput()->GetPointData()->GetNumberOfArrays()
+                     << endl;
         vtkTransformPolyDataFilter *identity = vtkTransformPolyDataFilter::New();
         identity->SetInputConnection(reader->GetOutputPort());
         vtkSmartPointer< vtkTransform > tfrm =
@@ -416,6 +425,9 @@ vtkPolyDataAlgorithm *read(const QString &filename)
         tfrm->Identity();
         identity->SetTransform(tfrm);
         identity->Update();
+        std::cout << "Arrays on transform: " <<
+                     identity->GetOutput()->GetPointData()->GetNumberOfArrays()
+                     << endl;
         result = identity;
     }
     else if (filename.endsWith(".obj"))
@@ -444,7 +456,7 @@ QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &
             vtkSmartPointer< vtkPolyDataWriter >::New();
     writer->SetInputConnection(algorithm->GetOutputPort());
     writer->SetFileName(dir.absoluteFilePath(descr + ".vtk").toStdString().c_str());
-    writer->SetFileTypeToASCII();
+//    writer->SetFileTypeToBinary();
     writer->Update();
     writer->Write();
     return dir.absoluteFilePath(descr + ".vtk");
@@ -456,6 +468,28 @@ QString createSourceNameFor(const QString &pdbId, const QString &chainsLeftOut)
     if (!chainsLeftOut.trimmed().isEmpty())
         src = src + "-" + chainsLeftOut;
     return src;
+}
+
+void vtkConvertAsciiToBinary(const QString &filename)
+{
+    if (! filename.endsWith(".vtk") )
+    {
+        return;
+    }
+    else
+    {
+        vtkSmartPointer< vtkPolyDataReader > reader =
+                vtkSmartPointer< vtkPolyDataReader >::New();
+        reader->SetFileName(filename.toStdString().c_str());
+        reader->Update();
+        vtkSmartPointer< vtkPolyDataWriter > writer =
+                vtkSmartPointer< vtkPolyDataWriter >::New();
+        writer->SetFileName(filename.toStdString().c_str());
+        writer->SetInputConnection(reader->GetOutputPort());
+        writer->SetFileTypeToBinary();
+        writer->Update();
+        writer->Write();
+    }
 }
 
 }

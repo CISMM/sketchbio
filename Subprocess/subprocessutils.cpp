@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QFileDialog>
 
-#include "chimeraobjmaker.h"
+#include "chimeravtkexportrunner.h"
 #include "pymolobjmaker.h"
 #include "blenderanimationrunner.h"
 #include "blenderdecimationrunner.h"
@@ -83,10 +83,10 @@ QString getSubprocessExecutablePath(const QString &executableName) {
     return executablePath;
 }
 
-SubprocessRunner *makeChimeraOBJFor(const QString &pdbID, const QString &objFile,int threshold,
+SubprocessRunner *makeChimeraSurfaceFor(const QString &pdbID, const QString &vtkFile,int threshold,
                                     const QString &chainsToDelete)
 {
-    ChimeraOBJMaker *maker = new ChimeraOBJMaker(pdbID,objFile,threshold,chainsToDelete);
+    ChimeraVTKExportRunner *maker = new ChimeraVTKExportRunner(pdbID,vtkFile,threshold,chainsToDelete);
     if (!maker->isValid())
     {
         delete maker;

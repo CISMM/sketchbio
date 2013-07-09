@@ -14,6 +14,9 @@
 
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
+#include <vtkPolyDataAlgorithm.h>
+#include <vtkPolyData.h>
+#include <vtkPointData.h>
 
 #include <modelmanager.h>
 #include <sketchmodel.h>
@@ -72,6 +75,14 @@ int TestModelFromPDB::testResults()
     resolution.push_back(ModelResolution::SIMPLIFIED_2000);
     resolution.push_back(ModelResolution::SIMPLIFIED_1000);
 
+    int numArrays = model->getVTKSource(0)->GetOutput()->
+            GetPointData()->GetNumberOfArrays();
+    int errors = 0;
+
+    if (numArrays < 9) {
+        errors++;
+    }
+
     for (unsigned i = 0; i < resolution.size(); i++)
     {
         if (!model->hasFileNameFor(0,resolution[i]))
@@ -91,7 +102,7 @@ int TestModelFromPDB::testResults()
         f.setFileName(fName.mid(0,fName.length()-3) + "mtl");
         f.remove();
     }
-    return 0;
+    return errors;
 }
 
 int main(int argc, char *argv[])

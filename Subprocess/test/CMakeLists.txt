@@ -27,7 +27,15 @@ macro (make_subprocess_test name source)
     ADD_TEST(${testname} ${testname})
 endmacro (make_subprocess_test)
 
+# create the necessary model files for the tests to run
+FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
+)
 
-make_subprocess_test( ChimeraObjMaker testChimeraObjMaker.cc)
+SOURCE_GROUP("Resources" FILES
+    ${CMAKE_SOURCE_DIR}/models/1m1j.obj
+)
+
+make_subprocess_test( ChimeraVTKExportRunner testChimeraVTKExportRunner.cc)
 make_subprocess_test( BlenderDecimationRunner testBlenderDecimationRunner.cc)
 make_subprocess_test( ModelFromPdbRunner testModelFromPdbRunner.cc)

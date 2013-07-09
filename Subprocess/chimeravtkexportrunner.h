@@ -16,15 +16,15 @@ class QTemporaryFile;
  *
  */
 
-class ChimeraOBJMaker : public AbstractSingleProcessRunner
+class ChimeraVTKExportRunner : public AbstractSingleProcessRunner
 {
     Q_OBJECT
 public:
     // constructor
-    ChimeraOBJMaker(const QString &pdbId, const QString &objFile, int threshold,
-                    const QString &chainsToDelete, QObject *parent = 0);
+    ChimeraVTKExportRunner(const QString &pdbId, const QString &vtkFile, int threshold,
+                           const QString &chainsToDelete, QObject *parent = 0);
     // destructor
-    virtual ~ChimeraOBJMaker();
+    virtual ~ChimeraVTKExportRunner();
     virtual bool isValid();
     
     // starts the subprocess

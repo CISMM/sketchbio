@@ -44,6 +44,8 @@ QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &
 QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr,
                                 const QDir &dir);
 QString createSourceNameFor(const QString &pdbId, const QString &chainsLeftOut);
+
+void vtkConvertAsciiToBinary(const QString &filename);
 }
 
 /*

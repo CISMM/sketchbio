@@ -1,8 +1,19 @@
 #include "modelfrompdbrunner.h"
 
+#include <PQP.h>
+
 #include <vtkSmartPointer.h>
+#include <vtkDecimatePro.h>
+#include <vtkGeometryFilter.h>
+#include <vtkThreshold.h>
+#include <vtkAppendPolyData.h>
+
+#include <vtkUnstructuredGrid.h>
+#include <vtkPolyData.h>
+#include <vtkPointData.h>
 
 #include <QDebug>
+#include <QDir>
 
 #include <sketchioconstants.h>
 #include <sketchmodel.h>
@@ -33,8 +44,8 @@ void ModelFromPDBRunner::start()
 {
     QString filename = (project->getProjectDir() + "/" + pdbId
                         + (chainsToDelete.isEmpty() ? "" : "-" + chainsToDelete)
-                        + ".obj").trimmed();
-    currentRunner = SubprocessUtils::makeChimeraOBJFor(
+                        + ".vtk").trimmed();
+    currentRunner = SubprocessUtils::makeChimeraSurfaceFor(
                 pdbId,filename,0,chainsToDelete);
     if (currentRunner == NULL) {
         emit finished(false);
@@ -63,20 +74,20 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
     {
         QString filename = (project->getProjectDir() + "/" + pdbId
                               + (chainsToDelete.isEmpty() ? "" : "-" + chainsToDelete)
-                              + ".obj").trimmed();
+                              + ".vtk").trimmed();
         QString simplified = (project->getProjectDir() + "/" + pdbId
                               + (chainsToDelete.isEmpty() ? QString("") : "-" + chainsToDelete)
-                              + "_isosurface.obj").trimmed();
+                              + "_isosurface.vtk").trimmed();
+        QString sourceName = ModelUtilities::createSourceNameFor(pdbId,chainsToDelete);
         switch (stepNum)
         {
         case 0:
-            model = project->addModelFromFile(
-                        ModelUtilities::createSourceNameFor(pdbId,chainsToDelete),
+            //ModelUtilities::vtkConvertAsciiToBinary(filename);
+            model = project->addModelFromFile(sourceName,
                         filename, DEFAULT_INVERSE_MASS, DEFAULT_INVERSE_MOMENT);
             for (int conf = 0; conf < model->getNumberOfConformations(); conf++)
             {
-                if (model->getSource(conf) ==
-                        ModelUtilities::createSourceNameFor(pdbId,chainsToDelete))
+                if (model->getSource(conf) == sourceName)
                 {
                     conformation = conf;
                     break;
@@ -84,7 +95,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             if (! model->hasFileNameFor(conformation,ModelResolution::SIMPLIFIED_1000))
             {
-                currentRunner = SubprocessUtils::makeChimeraOBJFor(pdbId,simplified,
+                currentRunner = SubprocessUtils::makeChimeraSurfaceFor(pdbId,simplified,
                                                                    5,chainsToDelete);
                 if (currentRunner == NULL)
                 {
@@ -106,6 +117,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             break;
         case 1:
+            //ModelUtilities::vtkConvertAsciiToBinary(simplified);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_FULL_RESOLUTION,
                                                simplified);
@@ -116,49 +128,66 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             q_type orient = Q_ID_QUAT;
             project->addObject(model,pos,orient);
         }
+            vtkSmartPointer< vtkPolyDataAlgorithm > source =
+                    model->getVTKSource(conformation);
+            qDebug() << "Arrays at start: " <<
+                        source->GetOutput()->GetPointData()->GetNumberOfArrays();
+            vtkSmartPointer< vtkDecimatePro > decimator =
+                    vtkSmartPointer< vtkDecimatePro >::New();
+            decimator->SetInputConnection(source->GetOutputPort());
+            int numTris = model->getCollisionModel(conformation)->num_tris;
+            decimator->SetTargetReduction(std::max(0.0,1.0 - 5000.0/numTris));
+            decimator->SetFeatureAngle(60.0);
+            decimator->Update();
+            qDebug() << "Arrays after decimate: " <<
+                        decimator->GetOutput()->GetPointData()->GetNumberOfArrays();
+            vtkSmartPointer< vtkThreshold > thresh =
+                    vtkSmartPointer< vtkThreshold >::New();
+            thresh->SetInputConnection(source->GetOutputPort());
+            thresh->SetInputArrayToProcess(0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,
+                                           "modelNum");
+            thresh->ThresholdByUpper(0.0);
+            thresh->AllScalarsOn();
+            thresh->Update();
+            qDebug() << "Arrays after threshold: " <<
+                        thresh->GetOutput()->GetPointData()->GetNumberOfArrays();
+            vtkSmartPointer< vtkGeometryFilter > convertToPolyData =
+                    vtkSmartPointer< vtkGeometryFilter >::New();
+            convertToPolyData->SetInputConnection(thresh->GetOutputPort());
+            convertToPolyData->MergingOff();
+            convertToPolyData->Update();
+            qDebug() << "Arrays after geometry: " <<
+                        convertToPolyData->GetOutput()->GetPointData()->GetNumberOfArrays();
+            vtkSmartPointer< vtkAppendPolyData > appended =
+                    vtkSmartPointer< vtkAppendPolyData >::New();
+            appended->AddInputConnection(decimator->GetOutputPort());
+            appended->AddInputConnection(convertToPolyData->GetOutputPort());
+            appended->Update();
+            qDebug() << "Arrays after append: " <<
+                        appended->GetOutput()->GetPointData()->GetNumberOfArrays();
+            QString fname = ModelUtilities::createFileFromVTKSource(
+                        appended,sourceName + ".decimated.5000",
+                        QDir(project->getProjectDir()));
+            model->addSurfaceFileForResolution(conformation,
+                                               ModelResolution::SIMPLIFIED_5000,
+                                               fname);
+            decimator->SetTargetReduction(std::max(0.0,1.0 - 2000.0/numTris));
+            decimator->Update();
+            fname = ModelUtilities::createFileFromVTKSource(
+                        appended,sourceName + ".decimated.2000",
+                        QDir(project->getProjectDir()));
+            model->addSurfaceFileForResolution(conformation,
+                                               ModelResolution::SIMPLIFIED_2000,
+                                               fname);
+            decimator->SetTargetReduction(std::max(0.0,1.0 - 1000.0/numTris));
+            decimator->Update();
+            fname = ModelUtilities::createFileFromVTKSource(
+                        appended,sourceName + ".decimated.1000",
+                        QDir(project->getProjectDir()));
+            model->addSurfaceFileForResolution(conformation,
+                                               ModelResolution::SIMPLIFIED_1000,
+                                               fname);
             emit finished(true);
-            currentRunner = SubprocessUtils::simplifyObjFile(simplified,5000);
-            if (currentRunner == NULL)
-                deleteLater();
-            else
-            {
-                connect(currentRunner, SIGNAL(finished(bool)), this, SLOT(stepFinished(bool)));
-                currentRunner->start();
-                emit statusChanged("Decimating surface geometry to 5000 triangles.");
-                qDebug() << "Decimating surface geometry to 5000 triangles.";
-            }
-            break;
-        case 2:
-            model->addSurfaceFileForResolution(conformation,ModelResolution::SIMPLIFIED_5000,
-                                               simplified + ".decimated.5000.obj");
-            currentRunner = SubprocessUtils::simplifyObjFile(simplified,2000);
-            if (currentRunner == NULL)
-                deleteLater();
-            else
-            {
-                connect(currentRunner, SIGNAL(finished(bool)), this, SLOT(stepFinished(bool)));
-                currentRunner->start();
-                emit statusChanged("Decimating surface geometry to 2000 triangles.");
-                qDebug() << "Decimating surface geometry to 2000 triangles.";
-            }
-            break;
-        case 3:
-            model->addSurfaceFileForResolution(conformation,ModelResolution::SIMPLIFIED_2000,
-                                               simplified + ".decimated.2000.obj");
-            currentRunner = SubprocessUtils::simplifyObjFile(simplified,1000);
-            if (currentRunner == NULL)
-                deleteLater();
-            else
-            {
-                connect(currentRunner, SIGNAL(finished(bool)), this, SLOT(stepFinished(bool)));
-                currentRunner->start();
-                emit statusChanged("Decimating surface geometry to 1000 triangles.");
-                qDebug() << "Decimating surface geometry to 1000 triangles.";
-            }
-            break;
-        case 4:
-            model->addSurfaceFileForResolution(conformation,ModelResolution::SIMPLIFIED_1000,
-                                               simplified + ".decimated.1000.obj");
             deleteLater();
             break;
         }
@@ -166,8 +195,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
     }
     else
     {
-        if (stepNum <= 1)
-            emit finished(false);
+        emit finished(false);
         deleteLater();
     }
 }

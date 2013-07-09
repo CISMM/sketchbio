@@ -25,7 +25,7 @@ QString getSubprocessExecutablePath(const QString &executableName);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *makeChimeraOBJFor(const QString &pdbID, const QString &objFile, int threshold,
+SubprocessRunner *makeChimeraSurfaceFor(const QString &pdbID, const QString &vtkFile, int threshold,
                                     const QString &chainsToDelete);
 
 /*

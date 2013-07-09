@@ -437,8 +437,6 @@ void SimpleView::importPDBId()
         {
 
             printf("Importing %s from PDB\n", text.toStdString().c_str());
-            // uncomment this and comment the other to switch from using Chimera
-            // to using PyMOL to surface obj files
             SubprocessRunner *objMaker = SubprocessUtils::loadFromPDB(project,text,toDelete);
             if (objMaker == NULL)
             {

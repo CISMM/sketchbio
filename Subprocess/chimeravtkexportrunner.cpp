@@ -1,4 +1,4 @@
-#include "chimeraobjmaker.h"
+#include "chimeravtkexportrunner.h"
 
 #include <QScopedPointer>
 #include <QProcess>
@@ -8,7 +8,7 @@
 
 #include "subprocessutils.h"
 
-ChimeraOBJMaker::ChimeraOBJMaker(const QString &pdbId, const QString &objFile, int threshold,
+ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QString &vtkFile, int threshold,
                                  const QString &chainsToDelete, QObject *parent) :
     AbstractSingleProcessRunner(parent),
     cmdFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
@@ -39,9 +39,9 @@ ChimeraOBJMaker::ChimeraOBJMaker(const QString &pdbId, const QString &objFile, i
         // TODO - change resolution/export multiple resolutions ?
         line = "runCommand(\"sym #0 surfaces all resolution %1\")\n";
         cmdFile->write(line.arg(threshold).toStdString().c_str());
-        cmdFile->write("import ExportOBJ\n");
-        line = "ExportOBJ.write_surfaces_as_wavefront_obj(\"%1\")\n";
-        cmdFile->write(line.arg(objFile).toStdString().c_str());
+        cmdFile->write("import ExportVTK\n");
+        line = "ExportVTK.write_scene_as_vtk(\"%1\")\n";
+        cmdFile->write(line.arg(vtkFile).toStdString().c_str());
         cmdFile->write("runCommand(\"close all\")\n");
         cmdFile->write("runCommand(\"stop now\")\n");
         cmdFile->close();
@@ -50,19 +50,19 @@ ChimeraOBJMaker::ChimeraOBJMaker(const QString &pdbId, const QString &objFile, i
     }
 }
 
-ChimeraOBJMaker::~ChimeraOBJMaker()
+ChimeraVTKExportRunner::~ChimeraVTKExportRunner()
 {
     QFile f(cmdFile->fileName() + "c");
     if (f.exists())
         f.remove();
 }
 
-bool ChimeraOBJMaker::isValid()
+bool ChimeraVTKExportRunner::isValid()
 {
     return valid;
 }
 
-void ChimeraOBJMaker::start()
+void ChimeraVTKExportRunner::start()
 {
     qDebug() << "Starting Chimera";
     process->start(SubprocessUtils::getSubprocessExecutablePath("chimera"),
