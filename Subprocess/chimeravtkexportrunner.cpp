@@ -39,6 +39,10 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QStri
         // TODO - change resolution/export multiple resolutions ?
         line = "runCommand(\"sym #0 surfaces all resolution %1\")\n";
         cmdFile->write(line.arg(threshold).toStdString().c_str());
+        cmdFile->write("import sys\n");
+        line = "sys.path.insert(0,'%1')\n";
+        line = line.arg(SubprocessUtils::getChimeraVTKExtensionDir());
+        cmdFile->write(line.toStdString().c_str());
         cmdFile->write("import ExportVTK\n");
         line = "ExportVTK.write_scene_as_vtk(\"%1\")\n";
         cmdFile->write(line.arg(vtkFile).toStdString().c_str());

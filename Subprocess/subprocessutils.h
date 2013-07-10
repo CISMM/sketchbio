@@ -16,6 +16,13 @@ namespace SubprocessUtils
  */
 QString getSubprocessExecutablePath(const QString &executableName);
 
+/*
+ * This method gets the directory to add to the python path so that the ExportVTK
+ * module can be imported correctly with 'import ExportVTK'.  As this will vary by
+ * operating system, it is getting abstracted out to here.
+ */
+QString getChimeraVTKExtensionDir();
+
 
 /*
  * This method returns a valid SubprocessRunner to make an obj file

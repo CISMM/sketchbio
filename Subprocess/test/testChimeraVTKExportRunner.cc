@@ -66,6 +66,8 @@ int ChimeraTest::testResults()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc,argv);
+    QDir::setCurrent(app.applicationDirPath());
+
     cout << "Temp dir: " << QDir::tempPath().toStdString() << endl;
 
     // set required fields to use QSettings API (these specify the location of the settings)

@@ -108,6 +108,7 @@ int TestModelFromPDB::testResults()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc,argv);
+    QDir::setCurrent(app.applicationDirPath());
 
     // set required fields to use QSettings API (these specify the location of the settings)
     // used to locate subprocess files

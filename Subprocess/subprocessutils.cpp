@@ -83,6 +83,39 @@ QString getSubprocessExecutablePath(const QString &executableName) {
     return executablePath;
 }
 
+QString getChimeraVTKExtensionDir()
+{
+    QString appPath = QApplication::instance()->applicationDirPath();
+#if defined(__APPLE__) && defined(__MACH__)
+    if (appPath.endsWith("MacOS")) // If we are in an application bundle
+    {
+        return appPath.mid(0,appPath.lastIndexOf("/")).append("Resources/scripts");
+    }
+    else // development build
+    {
+        return appPath.append("/scripts");
+    }
+#elif defined(_WIN32)
+    if (appPath.contains("Program Files")) // Installed
+    {
+        return appPath.append("/scripts");
+    }
+    else // development build
+    {
+        return appPath.mid(0,appPath.lastIndexOf("/")).append("scripts");
+    }
+#elif defined(__linux__)
+    if (appPath.contains("/usr"))
+    {
+        return "/usr/local/share/sketchbio";
+    }
+    else
+    {
+        return appPath.append("/scripts");
+    }
+#endif
+}
+
 SubprocessRunner *makeChimeraSurfaceFor(const QString &pdbID, const QString &vtkFile,int threshold,
                                     const QString &chainsToDelete)
 {

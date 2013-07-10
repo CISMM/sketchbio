@@ -36,6 +36,16 @@ SOURCE_GROUP("Resources" FILES
     ${CMAKE_SOURCE_DIR}/models/1m1j.obj
 )
 
+FILE(COPY ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK/__init__.py
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/scripts/ExportVTK )
+FILE(COPY ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK/ChimeraExtension.py
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/scripts/ExportVTK )
+
+SOURCE_GROUP("Resources" FILES
+    ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK/__init__.py
+    ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK/ChimeraExtension.py
+)
+
 make_subprocess_test( ChimeraVTKExportRunner testChimeraVTKExportRunner.cc)
 make_subprocess_test( BlenderDecimationRunner testBlenderDecimationRunner.cc)
 make_subprocess_test( ModelFromPdbRunner testModelFromPdbRunner.cc)

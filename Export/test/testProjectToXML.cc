@@ -885,7 +885,7 @@ int main(int argc, char *argv[])
         val = testSave1() + testSave2() + testSave3() + testSave4() + testSave5() +
                 testSave6() + testSave7() + testSave8() + testSave9();
     }
-    catch (char *c)
+    catch (const char *c)
     {
         std::cout << c << std::endl;
         val = 1;
