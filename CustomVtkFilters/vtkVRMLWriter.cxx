@@ -125,39 +125,54 @@ void vtkVRMLWriter::WritePolyData(vtkPolyData *data)
     }
   (*this->Stream) << "          ]" << endl;
   (*this->Stream) << "        }" << endl;
-  (*this->Stream) << "        normal DEF VTKnormals Normal {" << endl;
-  (*this->Stream) << "          vector [" << endl;
   vtkPointData *pointData = data->GetPointData();
-  // export the normals
   vtkDataArray *normals = pointData->GetNormals();
-  for (int i = 0; i < points->GetNumberOfPoints(); i++)
+  if (normals != NULL)
     {
-    double norm[3];
-    norm[0] = normals->GetComponent(i,0);
-    norm[1] = normals->GetComponent(i,1);
-    norm[2] = normals->GetComponent(i,2);
-    (*this->Stream) << "            " << norm[0] << " " << norm[1]
-      << " " << norm[2] << "," << endl;
+    (*this->Stream) << "        normal DEF VTKnormals Normal {" << endl;
+    (*this->Stream) << "          vector [" << endl;
+    // export the normals
+    for (int i = 0; i < points->GetNumberOfPoints(); i++)
+      {
+      double norm[3];
+      norm[0] = normals->GetComponent(i,0);
+      norm[1] = normals->GetComponent(i,1);
+      norm[2] = normals->GetComponent(i,2);
+      (*this->Stream) << "            " << norm[0] << " " << norm[1]
+        << " " << norm[2] << "," << endl;
+      }
+    (*this->Stream) << "          ]" << endl;
+    (*this->Stream) << "        }" << endl;
     }
-  (*this->Stream) << "          ]" << endl;
-  (*this->Stream) << "        }" << endl;
-  (*this->Stream) << "        color DEF VTKcolors Color {" << endl;
-  (*this->Stream) << "          color [" << endl;
+  else
+    {
+    vtkWarningMacro(<< "Dataset has no normals.");
+    }
   // Export the point colors... if we have them
   if (this->ArrayToColorBy != NULL && this->ColorMap != NULL)
     {
     vtkDataArray *data = pointData->GetArray(this->ArrayToColorBy);
-    for (int i = 0; i < points->GetNumberOfPoints(); i++)
+    if (data != NULL)
       {
-      double val = data->GetComponent(i,0);
-      double color[3];
-      this->ColorMap->GetColor(val,color);
-      (*this->Stream) << "            " << color[0] << " " << color[1]
-        << " " << color[2] << "," << endl;
+      (*this->Stream) << "        color DEF VTKcolors Color {" << endl;
+      (*this->Stream) << "          color [" << endl;
+      for (int i = 0; i < points->GetNumberOfPoints(); i++)
+        {
+        double val = data->GetComponent(i,0);
+        double color[3];
+        this->ColorMap->GetColor(val,color);
+        (*this->Stream) << "            " << color[0] << " " << color[1]
+          << " " << color[2] << "," << endl;
+        }
+      (*this->Stream) << "          ]" << endl;
+      (*this->Stream) << "        }" << endl;
+      }
+    else
+      {
+      vtkErrorMacro(<< "Expected array '" << this->ArrayToColorBy <<
+        "' which does not exist.  No color data exported.");
       }
     }
-  (*this->Stream) << "          ]" << endl;
-  (*this->Stream) << "        }" << endl;
   (*this->Stream) << "        coordIndex [" << endl;
   // Export the faces here
   int numPolygons = data->GetNumberOfPolys();

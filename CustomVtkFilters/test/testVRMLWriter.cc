@@ -34,7 +34,11 @@ int writeVRML()
   writer->SetArrayToColorBy("X");
   writer->SetColorMap(colors);
   writer->Write();
-  return 0;
+  int err = (int) writer->GetErrorCode();
+  // TODO - this currently tests if the file is written cleanly.  There is
+  // no test to see if the data is correct, I can't figure out how to do it
+  // with only VTK and standard stuff without writing an equivalent reader...
+  return err;
 }
 
 int main()
