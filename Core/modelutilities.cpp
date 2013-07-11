@@ -241,32 +241,38 @@ vtkPolyDataAlgorithm *read(const QString &filename)
     return result;
 }
 
+#define MODEL_NUM_ARRAY_NAME "modelNum"
+#define SUFRACE_MODEL_NUM 1
+#define ATOMS_MODEL_NUM 0
+
 vtkPolyDataAlgorithm *modelSurfaceFrom(vtkPolyDataAlgorithm *rawModel)
 {
-    if (rawModel->GetOutput()->GetPointData()->HasArray("modelNum"))
+    if (rawModel->GetOutput()->GetPointData()->HasArray(MODEL_NUM_ARRAY_NAME))
     {
         vtkSmartPointer< vtkThreshold > surface =
                 vtkSmartPointer< vtkThreshold >::New();
         surface->SetInputConnection(rawModel->GetOutputPort());
         surface->AllScalarsOn();
         surface->SetInputArrayToProcess(
-                    0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,"modelNum");
-        surface->ThresholdByLower(1.0);
+                    0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,MODEL_NUM_ARRAY_NAME);
+        surface->ThresholdBetween(SUFRACE_MODEL_NUM,SUFRACE_MODEL_NUM);
         surface->Update();
         vtkSmartPointer< vtkGeometryFilter > geom =
                 vtkSmartPointer< vtkGeometryFilter >::New();
         geom->SetInputConnection(surface->GetOutputPort());
         geom->Update();
+        geom->Register(NULL);
         return geom;
     }
     else
     {
+        rawModel->Register(NULL);
         return rawModel;
     }
 }
 vtkAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel)
 {
-    if (rawModel->GetOutput()->GetPointData()->HasArray("modelNum"))
+    if (rawModel->GetOutput()->GetPointData()->HasArray(MODEL_NUM_ARRAY_NAME))
     {
 
         vtkSmartPointer< vtkThreshold > atoms =
@@ -274,9 +280,10 @@ vtkAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel)
         atoms->SetInputConnection(rawModel->GetOutputPort());
         atoms->AllScalarsOn();
         atoms->SetInputArrayToProcess(
-                    0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,"modelNum");
-        atoms->ThresholdByUpper(0.0);
+                    0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,MODEL_NUM_ARRAY_NAME);
+        atoms->ThresholdBetween(ATOMS_MODEL_NUM,ATOMS_MODEL_NUM);
         atoms->Update();
+        atoms->Register(NULL);
         return atoms;
     }
     else

@@ -135,6 +135,7 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     modelDataForConf.append(filter);
     vtkSmartPointer< vtkPolyDataAlgorithm > surface =
             ModelUtilities::modelSurfaceFrom(dataSource);
+    surface->UnRegister(NULL);
     vtkSmartPointer< vtkTransformPolyDataFilter > ifilter =
             vtkSmartPointer< vtkTransformPolyDataFilter >::New();
     ifilter->SetInputConnection(surface->GetOutputPort());
@@ -146,6 +147,8 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     surfaceDataForConf.append(ifilter);
     atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >(
                                ModelUtilities::modelAtomsFrom(dataSource)));
+    if (atomDataForConf.last())
+        atomDataForConf.last()->UnRegister(NULL);
     QScopedPointer<PQP_Model> collisionModel(new PQP_Model());
     // populate the PQP collision detection model
     ModelUtilities::makePQP_Model(collisionModel.data(),
