@@ -28,16 +28,20 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     orientedBB(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
 {
-    vtkSmartPointer<vtkCubeSource> cube = vtkSmartPointer<vtkCubeSource>::New();
-    cube->SetBounds(model->getVTKSource(conformation)->GetOutput()->GetBounds());
+    vtkSmartPointer<vtkCubeSource> cube =
+            vtkSmartPointer<vtkCubeSource>::New();
+    cube->SetBounds(model->getVTKSurface(conformation)
+                    ->GetOutput()->GetBounds());
     cube->Update();
-    vtkSmartPointer<vtkExtractEdges> cubeEdges = vtkSmartPointer<vtkExtractEdges>::New();
+    vtkSmartPointer<vtkExtractEdges> cubeEdges =
+            vtkSmartPointer<vtkExtractEdges>::New();
     cubeEdges->SetInputConnection(cube->GetOutputPort());
     cubeEdges->Update();
     orientedBB->SetInputConnection(cubeEdges->GetOutputPort());
     orientedBB->SetTransform(getLocalTransform());
     orientedBB->Update();
-    modelTransformed->SetInputConnection(model->getVTKSource(conformation)->GetOutputPort());
+    modelTransformed->SetInputConnection(model->getVTKSurface(conformation)
+                                         ->GetOutputPort());
     modelTransformed->SetTransform(getLocalTransform());
     modelTransformed->Update();
     solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
@@ -47,22 +51,26 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
 }
 
 //#########################################################################
-ModelInstance::~ModelInstance() {
+ModelInstance::~ModelInstance()
+{
     model->decrementUses(conformation);
 }
 
 //#########################################################################
-int ModelInstance::numInstances() const {
+int ModelInstance::numInstances() const
+{
     return 1;
 }
 
 //#########################################################################
-SketchModel *ModelInstance::getModel() {
+SketchModel *ModelInstance::getModel()
+{
     return model;
 }
 
 //#########################################################################
-const SketchModel *ModelInstance::getModel() const {
+const SketchModel *ModelInstance::getModel() const
+{
     return model;
 }
 
@@ -73,20 +81,27 @@ vtkTransformPolyDataFilter *ModelInstance::getTransformedGeometry()
 }
 
 //#########################################################################
-vtkActor *ModelInstance::getActor() {
+vtkActor *ModelInstance::getActor()
+{
     return actor;
 }
 
 //#########################################################################
-int ModelInstance::getModelConformation() const {
+int ModelInstance::getModelConformation() const
+{
     return conformation;
 }
 
 //#########################################################################
-bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) {
-    if (other->numInstances() != 1 || other->getModel() == NULL) {
+bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics,
+                            int pqp_flags)
+{
+    if (other->numInstances() != 1 || other->getModel() == NULL)
+    {
         return other->collide(this,physics,pqp_flags);
-    } else {
+    }
+    else
+    {
         PQP_CollideResult *cr = new PQP_CollideResult();
         PQP_REAL r1[3][3], r2[3][3], t1[3], t2[3];
         getPosition(t1);
@@ -95,7 +110,8 @@ bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int p
         other->getOrientation(r2);
         PQP_Collide(cr,r1,t1,model->getCollisionModel(conformation),r2,t2,
                     other->getModel()->getCollisionModel(conformation),pqp_flags);
-        if (cr->NumPairs() != 0) {
+        if (cr->NumPairs() != 0)
+        {
             physics->respondToCollision(this,other,cr,pqp_flags);
         }
         return cr->NumPairs() != 0;
@@ -103,22 +119,26 @@ bool ModelInstance::collide(SketchObject *other, PhysicsStrategy *physics, int p
 }
 
 //#########################################################################
-void ModelInstance::getBoundingBox(double bb[]) {
-    model->getVTKSource(conformation)->GetOutput()->GetBounds(bb);
+void ModelInstance::getBoundingBox(double bb[])
+{
+    model->getVTKSurface(conformation)->GetOutput()->GetBounds(bb);
 }
 
 //#########################################################################
-vtkPolyDataAlgorithm *ModelInstance::getOrientedBoundingBoxes() {
+vtkPolyDataAlgorithm *ModelInstance::getOrientedBoundingBoxes()
+{
     return orientedBB;
 }
 
 //#########################################################################
-void ModelInstance::localTransformUpdated() {
+void ModelInstance::localTransformUpdated()
+{
     modelTransformed->Update();
 }
 
 //#########################################################################
-SketchObject *ModelInstance::deepCopy() {
+SketchObject *ModelInstance::deepCopy()
+{
     SketchObject *nObj = new ModelInstance(model);
     q_vec_type pos;
     q_type orient;

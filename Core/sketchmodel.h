@@ -4,8 +4,8 @@
 #include <quat.h>
 
 #include <vtkSmartPointer.h>
+class vtkAlgorithm;
 class vtkPolyDataAlgorithm;
-class vtkTransformPolyDataFilter;
 class vtkPolyData;
 
 class QString;
@@ -75,12 +75,13 @@ public:
     // gets the resolution level being used for the given conformation
     ModelResolution::ResolutionType getResolutionLevel(int conformationNum) const;
     // gets the vtk "source" for the data of the given conformation
-    // note: this source will already have been passed through a transform
-    // filter to center it (translation) and put its oriented bounding box in line with
-    // its local coordinate axes (so that the axis aligned bounding box given by the
-    /// vtkPolyData's GetBounds() will be the oriented bounding box)
-    // note: rotation is only applied if shouldRotateToAxisAligned is true
+    // this is raw data with surface and atoms (if available)
     vtkPolyDataAlgorithm *getVTKSource(int conformationNum);
+    // gets the vtk "source" for the model's surface data
+    vtkPolyDataAlgorithm *getVTKSurface(int conformationNum);
+    // gets the atom data for the model and conformation (if available).
+    // this method willl return NULL if no data is available
+    vtkAlgorithm *getAtomData(int conformation);
     // Gets the collision model for the given conformation
     PQP_Model *getCollisionModel(int conformationNum);
     // Gets the number of uses for a conformation
@@ -137,9 +138,14 @@ private:
     int numConformations;
     // the resolution, indexed by the conformation
     QVector< ModelResolution::ResolutionType > resolutionLevelForConf;
-    // the data (or more exactly, the transform filter that is attached to it)
-    // indexed by conformation
-    QVector< vtkSmartPointer< vtkTransformPolyDataFilter > > modelDataForConf;
+    // the current data in use for each conformation (raw datafile read result)
+    QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > modelDataForConf;
+    // these are identity filters that can be connected to later
+    // parts of the pipeline while their inputs are switched.  The inputs
+    // are the surface at various resolutions, which may be dynamically switched
+    QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > surfaceDataForConf;
+    // this is the atom and bond data for the model (if available
+    QVector< vtkSmartPointer< vtkAlgorithm > > atomDataForConf;
     // the collision model, indexed by conformation
     QVector< PQP_Model * > collisionModelForConf;
     // the number of uses of the model, indexed by conformation

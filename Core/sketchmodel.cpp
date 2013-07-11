@@ -10,6 +10,9 @@
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+#include <vtkThreshold.h>
+#include <vtkGeometryFilter.h>
+#include <vtkUnstructuredGridGeometryFilter.h>
 
 #include <vtkPointData.h>
 
@@ -53,6 +56,16 @@ vtkPolyDataAlgorithm *SketchModel::getVTKSource(int conformationNum)
     return modelDataForConf[conformationNum];
 }
 
+vtkPolyDataAlgorithm *SketchModel::getVTKSurface(int conformationNum)
+{
+    return surfaceDataForConf[conformationNum];
+}
+
+vtkAlgorithm *SketchModel::getAtomData(int conformation)
+{
+    return atomDataForConf[conformation];
+}
+
 PQP_Model *SketchModel::getCollisionModel(int conformationNum)
 {
     return collisionModelForConf[conformationNum];
@@ -94,9 +107,11 @@ double SketchModel::getInverseMomentOfInertia() const
 }
 
 // helper function-- converts quaternion to a PQP rotation matrix
-inline void pqpMatrixToQuat(q_type quat, const PQP_REAL mat[3][3]) {
+inline void pqpMatrixToQuat(q_type quat, const PQP_REAL mat[3][3])
+{
     q_matrix_type colMat;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         colMat[i][0] = mat[i][0];
         colMat[i][1] = mat[i][1];
         colMat[i][2] = mat[i][2];
@@ -127,9 +142,60 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     filter->SetTransform(transform);
     filter->Update();
     modelDataForConf.append(filter);
+    if (dataSource->GetOutput()->GetPointData()->HasArray("modelNum"))
+    {
+        vtkSmartPointer< vtkThreshold > surface =
+                vtkSmartPointer< vtkThreshold >::New();
+        surface->SetInputConnection(dataSource->GetOutputPort());
+        surface->AllScalarsOn();
+        surface->SetInputArrayToProcess(
+                    0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,"modelNum");
+        surface->ThresholdByLower(1.0);
+        surface->Update();
+        vtkSmartPointer< vtkGeometryFilter > geom =
+                vtkSmartPointer< vtkGeometryFilter >::New();
+        geom->SetInputConnection(surface->GetOutputPort());
+        geom->Update();
+        vtkSmartPointer< vtkTransformPolyDataFilter > ifilter =
+                vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+        ifilter->SetInputConnection(geom->GetOutputPort());
+        vtkSmartPointer< vtkTransform > itransform =
+                vtkSmartPointer< vtkTransform >::New();
+        itransform->Identity();
+        ifilter->SetTransform(transform);
+        ifilter->Update();
+        surfaceDataForConf.append(ifilter);
+        vtkSmartPointer< vtkThreshold > atoms =
+                vtkSmartPointer< vtkThreshold >::New();
+        atoms->SetInputConnection(dataSource->GetOutputPort());
+        atoms->AllScalarsOn();
+        atoms->SetInputArrayToProcess(
+                    0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,"modelNum");
+        atoms->ThresholdByUpper(0.0);
+        atoms->Update();
+        vtkSmartPointer< vtkUnstructuredGridGeometryFilter > atomsId =
+                vtkSmartPointer< vtkUnstructuredGridGeometryFilter >::New();
+        atomsId->SetInputConnection(atoms->GetOutputPort());
+        atomsId->Update();
+        atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >(atomsId));
+    }
+    else
+    {
+        vtkSmartPointer< vtkTransformPolyDataFilter > ifilter =
+                vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+        ifilter->SetInputConnection(dataSource->GetOutputPort());
+        vtkSmartPointer< vtkTransform > itransform =
+                vtkSmartPointer< vtkTransform >::New();
+        itransform->Identity();
+        ifilter->SetTransform(transform);
+        ifilter->Update();
+        surfaceDataForConf.append(ifilter);
+        atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >(NULL));
+    }
     QScopedPointer<PQP_Model> collisionModel(new PQP_Model());
     // populate the PQP collision detection model
-    ModelUtilities::makePQP_Model(collisionModel.data(), filter->GetOutput());
+    ModelUtilities::makePQP_Model(collisionModel.data(),
+                                  surfaceDataForConf.last()->GetOutput());
     // get the orientation of the model
     if (collisionModel.data()->num_tris < 5000)
     {
@@ -187,16 +253,57 @@ void SketchModel::setReslutionForConformation(
         int conformation, ModelResolution::ResolutionType resolution)
 {
     QPair< int, ModelResolution::ResolutionType > key(conformation, resolution);
-    if (fileNames.contains(key) && resolutionLevelForConf[conformation] != resolution)
+    QPair< int, ModelResolution::ResolutionType > current(
+                conformation, resolutionLevelForConf[conformation]);
+    if (fileNames.contains(key)
+            && resolutionLevelForConf[conformation] != resolution
+            && fileNames.value(key) != fileNames.value(current))
     {
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
                 ModelUtilities::read(fileNames.value(key));
         dataSource->Delete();
-        modelDataForConf[conformation]->SetInputConnection(dataSource->GetOutputPort());
+        modelDataForConf[conformation]->SetInputConnection(
+                    dataSource->GetOutputPort());
         modelDataForConf[conformation]->Update();
+        if (dataSource->GetOutput()->GetPointData()->HasArray("modelNum"))
+        {
+            vtkSmartPointer< vtkThreshold > surface =
+                    vtkSmartPointer< vtkThreshold >::New();
+            surface->SetInputConnection(dataSource->GetOutputPort());
+            surface->AllScalarsOn();
+            surface->SetInputArrayToProcess(
+                        0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,"modelNum");
+            surface->ThresholdByLower(1.0);
+            surface->Update();
+            vtkSmartPointer< vtkGeometryFilter > geom =
+                    vtkSmartPointer< vtkGeometryFilter >::New();
+            geom->SetInputConnection(surface->GetOutputPort());
+            geom->Update();
+            surfaceDataForConf[conformation]->SetInputConnection(
+                        geom->GetOutputPort());
+            surfaceDataForConf[conformation]->Update();
+            vtkSmartPointer< vtkThreshold > atoms =
+                    vtkSmartPointer< vtkThreshold >::New();
+            atoms->SetInputConnection(dataSource->GetOutputPort());
+            atoms->AllScalarsOn();
+            atoms->SetInputArrayToProcess(
+                        0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,"modelNum");
+            atoms->ThresholdByUpper(0.0);
+            atoms->Update();
+            atomDataForConf[conformation]->SetInputConnection(
+                        atoms->GetOutputPort());
+            atomDataForConf[conformation]->Update();
+        }
+        else
+        {
+            surfaceDataForConf[conformation]->SetInputConnection(
+                        dataSource->GetOutputPort());
+            surfaceDataForConf[conformation]->Update();
+            atomDataForConf[conformation] = NULL;
+        }
         resolutionLevelForConf[conformation] = resolution;
         ModelUtilities::makePQP_Model(collisionModelForConf[conformation],
-                                      modelDataForConf[conformation]->GetOutput());
+                                      surfaceDataForConf[conformation]->GetOutput());
     }
 }
 
@@ -243,27 +350,31 @@ namespace ModelUtilities
   * polyData a reference parameter to a vtkPolyData to pull the model data from
   *
   ****************************************************************************/
-void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData) {
+void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData)
+{
 
     int numPoints = polyData->GetNumberOfPoints();
 
     // get points
     QScopedPointer< double, QScopedPointerArrayDeleter< double > >
             points(new double[3*numPoints]);
-    for (int i = 0; i < numPoints; i++) {
+    for (int i = 0; i < numPoints; i++)
+    {
         polyData->GetPoint(i,&points.data()[3*i]);
     }
 
     int numStrips = polyData->GetNumberOfStrips();
     int numPolygons = polyData->GetNumberOfPolys();
-    if (numStrips > 0) {  // if we have triangle strips, great, use them!
+    if (numStrips > 0)
+    {  // if we have triangle strips, great, use them!
         vtkCellArray *strips = polyData->GetStrips();
 
         m1->BeginModel();
         vtkIdType nvertices, *pvertices, loc = 0;
         PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
         int triId = 0;
-        for (int i = 0; i < numStrips; i++) {
+        for (int i = 0; i < numStrips; i++)
+        {
             strips->GetCell( loc, nvertices, pvertices );
             // todo, refactor to getNextCell for better performance
 
@@ -273,7 +384,8 @@ void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData) {
             p2[0] = points.data()[3*pvertices[1]];
             p2[1] = points.data()[3*pvertices[1]+1];
             p2[2] = points.data()[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
+            for (int j = 2; j < nvertices; j++)
+            {
                 p3[0] = points.data()[3*pvertices[j]];
                 p3[1] = points.data()[3*pvertices[j]+1];
                 p3[2] = points.data()[3*pvertices[j]+2];
@@ -290,14 +402,17 @@ void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData) {
             loc += nvertices+1;
         }
         m1->EndModel();
-    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
+    }
+    else if (numPolygons > 0)
+    { // we may not have triangle strip data, try polygons
         vtkCellArray *polys = polyData->GetPolys();
 
         m1->BeginModel();
         vtkIdType nvertices, *pvertices, loc = 0;
         PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
         int triId = 0;
-        for (int i = 0; i < numPolygons; i++) {
+        for (int i = 0; i < numPolygons; i++)
+        {
             polys->GetCell(loc,nvertices,pvertices);
             p1[0] = points.data()[3*pvertices[0]];
             p1[1] = points.data()[3*pvertices[0]+1];
@@ -305,7 +420,8 @@ void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData) {
             p2[0] = points.data()[3*pvertices[1]];
             p2[1] = points.data()[3*pvertices[1]+1];
             p2[2] = points.data()[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
+            for (int j = 2; j < nvertices; j++)
+            {
                 p3[0] = points.data()[3*pvertices[j]];
                 p3[1] = points.data()[3*pvertices[j]+1];
                 p3[2] = points.data()[3*pvertices[j]+2];
@@ -325,26 +441,30 @@ void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData) {
 #ifdef PQP_UPDATE_EPSILON
 /****************************************************************************
   ***************************************************************************/
-void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
+void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData)
+{
 
     int numPoints = polyData->GetNumberOfPoints();
 
     // get points
     QScopedPointer< double, QScopedPointerArrayDeleter< double > >
             points(new double[3*numPoints]);
-    for (int i = 0; i < numPoints; i++) {
+    for (int i = 0; i < numPoints; i++)
+    {
         polyData->GetPoint(i,&points.data()[3*i]);
     }
 
     int numStrips = polyData->GetNumberOfStrips();
     int numPolygons = polyData->GetNumberOfPolys();
-    if (numStrips > 0) {  // if we have triangle strips, great, use them!
+    if (numStrips > 0)
+    {  // if we have triangle strips, great, use them!
         vtkCellArray *strips = polyData->GetStrips();
 
         vtkIdType nvertices, *pvertices, loc = 0;
         PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
         int triId = 0;
-        for (int i = 0; i < numStrips; i++) {
+        for (int i = 0; i < numStrips; i++)
+        {
             strips->GetCell( loc, nvertices, pvertices );
             // todo, refactor to getNextCell for better performance
 
@@ -354,7 +474,8 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
             p2[0] = points.data()[3*pvertices[1]];
             p2[1] = points.data()[3*pvertices[1]+1];
             p2[2] = points.data()[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
+            for (int j = 2; j < nvertices; j++)
+            {
                 p3[0] = points.data()[3*pvertices[j]];
                 p3[1] = points.data()[3*pvertices[j]+1];
                 p3[2] = points.data()[3*pvertices[j]+2];
@@ -370,13 +491,16 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
             }
             loc += nvertices+1;
         }
-    } else if (numPolygons > 0) { // we may not have triangle strip data, try polygons
+    }
+    else if (numPolygons > 0)
+    { // we may not have triangle strip data, try polygons
         vtkCellArray *polys = polyData->GetPolys();
 
         vtkIdType nvertices, *pvertices, loc = 0;
         PQP_REAL t[3], u[3],v[3], *p1 = t, *p2 = u, *p3 = v;
         int triId = 0;
-        for (int i = 0; i < numPolygons; i++) {
+        for (int i = 0; i < numPolygons; i++)
+        {
             polys->GetCell(loc,nvertices,pvertices);
             p1[0] = points.data()[3*pvertices[0]];
             p1[1] = points.data()[3*pvertices[0]+1];
@@ -384,7 +508,8 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData) {
             p2[0] = points.data()[3*pvertices[1]];
             p2[1] = points.data()[3*pvertices[1]+1];
             p2[2] = points.data()[3*pvertices[1]+2];
-            for (int j = 2; j < nvertices; j++) {
+            for (int j = 2; j < nvertices; j++)
+            {
                 p3[0] = points.data()[3*pvertices[j]];
                 p3[1] = points.data()[3*pvertices[j]+1];
                 p3[2] = points.data()[3*pvertices[j]+2];
@@ -415,9 +540,6 @@ vtkPolyDataAlgorithm *read(const QString &filename)
                 vtkSmartPointer< vtkPolyDataReader >::New();
         reader->SetFileName(filename.toStdString().c_str());
         reader->Update();
-        std::cout << "Arrays on read: " <<
-                     reader->GetOutput()->GetPointData()->GetNumberOfArrays()
-                     << endl;
         vtkTransformPolyDataFilter *identity = vtkTransformPolyDataFilter::New();
         identity->SetInputConnection(reader->GetOutputPort());
         vtkSmartPointer< vtkTransform > tfrm =
@@ -425,9 +547,6 @@ vtkPolyDataAlgorithm *read(const QString &filename)
         tfrm->Identity();
         identity->SetTransform(tfrm);
         identity->Update();
-        std::cout << "Arrays on transform: " <<
-                     identity->GetOutput()->GetPointData()->GetNumberOfArrays()
-                     << endl;
         result = identity;
     }
     else if (filename.endsWith(".obj"))
