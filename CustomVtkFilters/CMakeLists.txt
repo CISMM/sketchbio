@@ -2,6 +2,8 @@
 set(vtkFilterSources
     vtkProjectToPlane.cxx
     vtkProjectToPlane.h
+    vtkVRMLWriter.cxx
+    vtkVRMLWriter.h
     )
 
 INCLUDE_DIRECTORIES(

@@ -15,3 +15,4 @@ endmacro( make_vtk_test )
 
 # make the tests
 make_vtk_test( ProjectToPlane testProjectToPlane.cc )
+make_vtk_test( VRMLWriter     testVRMLWriter.cc     )
