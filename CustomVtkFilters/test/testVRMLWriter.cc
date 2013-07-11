@@ -7,6 +7,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkCubeSource.h>
 #include <vtkArrayCalculator.h>
+#include <vtkColorTransferFunction.h>
 
 
 int writeVRML()
@@ -22,10 +23,16 @@ int writeVRML()
   calc->SetResultArrayName("X");
   calc->SetFunction("x");
   calc->Update();
+  vtkSmartPointer< vtkColorTransferFunction > colors =
+    vtkSmartPointer< vtkColorTransferFunction >::New();
+  colors->AddRGBPoint(-1.0,1.0,0.0,0.0);
+  colors->AddRGBPoint( 1.0,0.0,0.0,1.0);
   vtkSmartPointer< vtkVRMLWriter > writer =
     vtkSmartPointer< vtkVRMLWriter >::New();
   writer->SetInputConnection(calc->GetOutputPort());
   writer->SetFileName("test.wrl");
+  writer->SetArrayToColorBy("X");
+  writer->SetColorMap(colors);
   writer->Write();
   return 0;
 }

@@ -26,13 +26,14 @@ vtkVRMLWriter::vtkVRMLWriter()
   this->SetNumberOfOutputPorts(0);
   this->ColorMap = NULL;
   this->FileName = NULL;
+  this->ArrayToColorBy = NULL;
   this->Stream = NULL;
 }
 
 vtkVRMLWriter::~vtkVRMLWriter()
 {
   if (this->ColorMap != NULL)
-      ColorMap->Delete();
+      ColorMap->UnRegister(this);
 }
 
 void vtkVRMLWriter::SetColorMap(vtkColorTransferFunction *colorMap)
@@ -114,7 +115,7 @@ void vtkVRMLWriter::WritePolyData(vtkPolyData *data)
   (*this->Stream) << "        coord DEF VTKcoordinates Coordinate {" << endl;
   (*this->Stream) << "          point [" << endl;
   // Export the points
-  vtkSmartPointer< vtkPoints > points = data->GetPoints();
+  vtkPoints *points = data->GetPoints();
   for (int i = 0; i < points->GetNumberOfPoints(); i++)
     {
     double pt[3];
@@ -126,9 +127,9 @@ void vtkVRMLWriter::WritePolyData(vtkPolyData *data)
   (*this->Stream) << "        }" << endl;
   (*this->Stream) << "        normal DEF VTKnormals Normal {" << endl;
   (*this->Stream) << "          vector [" << endl;
-  vtkSmartPointer< vtkPointData > pointData = data->GetPointData();
+  vtkPointData *pointData = data->GetPointData();
   // export the normals
-  vtkSmartPointer< vtkDataArray > normals = pointData->GetNormals();
+  vtkDataArray *normals = pointData->GetNormals();
   for (int i = 0; i < points->GetNumberOfPoints(); i++)
     {
     double norm[3];
@@ -142,11 +143,23 @@ void vtkVRMLWriter::WritePolyData(vtkPolyData *data)
   (*this->Stream) << "        }" << endl;
   (*this->Stream) << "        color DEF VTKcolors Color {" << endl;
   (*this->Stream) << "          color [" << endl;
-  // Put in colors here
+  // Export the point colors... if we have them
+  if (this->ArrayToColorBy != NULL && this->ColorMap != NULL)
+    {
+    vtkDataArray *data = pointData->GetArray(this->ArrayToColorBy);
+    for (int i = 0; i < points->GetNumberOfPoints(); i++)
+      {
+      double val = data->GetComponent(i,0);
+      double color[3];
+      this->ColorMap->GetColor(val,color);
+      (*this->Stream) << "            " << color[0] << " " << color[1]
+        << " " << color[2] << "," << endl;
+      }
+    }
   (*this->Stream) << "          ]" << endl;
   (*this->Stream) << "        }" << endl;
   (*this->Stream) << "        coordIndex [" << endl;
-  // Put in faces here
+  // Export the faces here
   int numPolygons = data->GetNumberOfPolys();
   vtkCellArray *polygons = data->GetPolys();
   vtkIdType nvertices, *pvertices, loc = 0;

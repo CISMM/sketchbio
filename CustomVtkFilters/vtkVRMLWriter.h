@@ -20,6 +20,9 @@ public:
   vtkSetStringMacro(FileName);
   vtkGetStringMacro(FileName);
 
+  vtkSetStringMacro(ArrayToColorBy);
+  vtkGetStringMacro(ArrayToColorBy);
+
 protected:
   vtkVRMLWriter();
   virtual ~vtkVRMLWriter();
@@ -33,6 +36,7 @@ protected:
 
   vtkColorTransferFunction *ColorMap;
   char *FileName;
+  char *ArrayToColorBy;
   ostream *Stream;
 
 private:
