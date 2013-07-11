@@ -1,10 +1,12 @@
 #ifndef VTKVRMLWRITER_H
 #define VTKVRMLWRITER_H
 
+
+#include <iosfwd> // have to include this for iostream
+
 #include "vtkWriter.h"
 class vtkColorTransferFunction;
 class vtkPolyData;
-class ostream;
 
 class vtkVRMLWriter : public vtkWriter
 {
@@ -37,7 +39,7 @@ protected:
   vtkColorTransferFunction *ColorMap;
   char *FileName;
   char *ArrayToColorBy;
-  ostream *Stream;
+  std::ostream *Stream;
 
 private:
   vtkVRMLWriter(const vtkVRMLWriter &); // Not implemented
