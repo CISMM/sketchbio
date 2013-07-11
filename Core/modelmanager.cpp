@@ -18,6 +18,7 @@
 #include <QScopedPointer>
 
 #include "modelmanager.h"
+#include "modelutilities.h"
 #include "sketchmodel.h"
 #include "sketchioconstants.h"
 

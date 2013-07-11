@@ -42,6 +42,9 @@ private:
     // Writes a keyframe for each object at each frame with its position at that time from SketchBio
     static bool writeObjectKeyframes(QFile &file, QHash<SketchObject *, int> &objectIdxs, SketchProject *proj,
                                      unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
+    // Creates a VRML file for the given vtk file so that the data can be used in Blender
+    // TODO - eventually this will take an array to color by and possibly a color map
+    static QString generateVRMLFileFor(QString vtkFile);
 };
 
 #endif // PROJECTTOBLENDERANIMATION_H

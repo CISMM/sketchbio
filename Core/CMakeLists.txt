@@ -21,6 +21,8 @@ objectgroup.cpp
 objectgroup.h
 objectchangeobserver.h
 sketchmodel.cpp # h file used by Moc, no need to include here
+modelutilities.cpp
+modelutilities.h
 worldmanager.cpp
 worldmanager.h
 springconnection.cpp

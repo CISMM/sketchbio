@@ -1,5 +1,6 @@
 #include <sketchmodel.h>
 #include <sketchtests.h>
+#include <modelutilities.h>
 
 #include <vtkPolyData.h>
 #include <vtkPolyDataAlgorithm.h>

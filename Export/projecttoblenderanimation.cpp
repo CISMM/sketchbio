@@ -1,10 +1,18 @@
 #include "projecttoblenderanimation.h"
 
 #include <cmath>
+#include <iostream>
 
 #include <QFile>
 #include <QScopedPointer>
 
+#include <vtkSmartPointer.h>
+#include <vtkThreshold.h>
+#include <vtkGeometryFilter.h>
+
+#include <vtkVRMLWriter.h>
+
+#include <modelutilities.h>
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
@@ -62,10 +70,24 @@ bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash< QPair< Ske
             if (model->getSource(i) == CAMERA_MODEL_KEY) {
                 file.write("obj = getDefaultCamera()\n");
             } else {
-                file.write("obj = read_obj_model('");
-                file.write(model->getFileNameFor(
-                               i,
-                               ModelResolution::FULL_RESOLUTION).toStdString().c_str());
+                QString fname = model->getFileNameFor(i,ModelResolution::FULL_RESOLUTION);
+                if (fname.endsWith(".obj"))
+                {
+                    file.write("obj = read_obj_model('");
+                }
+                else if (fname.endsWith(".vtk"))
+                {
+                    fname = generateVRMLFileFor(fname);
+                    file.write("obj = read_wrl_model('");
+                }
+                else
+                {
+                    using std::cerr;
+                    using std::endl;
+                    cerr << "Unknown model file format" << endl;
+                    return false;
+                }
+                file.write(fname.toStdString().c_str());
                 file.write("')\n");
             }
             file.write("select_object(obj)\n");
@@ -84,7 +106,6 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash< QPair< Sk
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
     int objectsLen = 0;
-//    unsigned maxFrame = 0;
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     QListIterator<SketchObject *> it = world->getObjectIterator();
     while (it.hasNext()) {
@@ -286,6 +307,27 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file) {
     file.write("\tnewName = filename[filename.rfind('/')+1:-4]\n");
     file.write("\tobject.name = newName # set the name to something based on the filename\n");
     file.write("\tselect_named(newName)\n");
+    // helper function for reading wrl or x3d models
+    // this one I wrote myself
+    file.write("# reads in an wrl/vrml file and joins all the objects that were\n"
+               "# read out of it into a single object\n");
+    file.write("def read_wrl_model(filename):\n");
+    file.write("\toldKeys = list(bpy.data.objects.keys()) # copies the object names list\n");
+    file.write("\tbpy.ops.import_scene.x3d(filepath=filename)\n");
+    file.write("\tsomethingSelected = False\n");
+    file.write("\tobject = None\n");
+    file.write("\tfor key in bpy.data.objects.keys():\n");
+    file.write("\t\tif not (key in oldKeys):\n");
+    file.write("\t\t\tif somethingSelected:\n");
+    file.write("\t\t\t\tbpy.data.objects[key].select = True\n");
+    file.write("\t\t\telse:\n");
+    file.write("\t\t\t\tselect_named(key)\n");
+    file.write("\t\t\t\tobject = bpy.data.objects[key]\n");
+    file.write("\t\t\t\tsomethingSelected = True\n");
+    file.write("\tbpy.ops.object.join() # merge all the new objects into the first one we found\n");
+    file.write("\tnewName = filename[filename.rfind('/')+1:-4]\n");
+    file.write("\tobject.name = newName # set the name to something based on the filename\n");
+    file.write("\tselect_named(newName)\n");
     // Set the object origin to its center of geometry (done by me in ModelManager code)
     file.write("\tbpy.ops.object.origin_set(type='ORIGIN_GEOMETRY',center='BOUNDS')\n");
     file.write("\tmerge_vertices()\n");
@@ -300,4 +342,18 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file) {
     file.write("\t return bpy.data.objects['Camera']\n");
     file.write("\n\n");
     return file.error() == QFile::NoError;
+}
+
+QString ProjectToBlenderAnimation::generateVRMLFileFor(QString vtkFile)
+{
+    vtkSmartPointer< vtkPolyDataAlgorithm > model =
+            ModelUtilities::read(vtkFile.toStdString().c_str());
+    vtkSmartPointer< vtkPolyDataAlgorithm > surface =
+            ModelUtilities::modelSurfaceFrom(model);
+    vtkSmartPointer< vtkVRMLWriter > writer =
+            vtkSmartPointer< vtkVRMLWriter >::New();
+    writer->SetInputConnection(surface->GetOutputPort());
+    writer->SetFileName((vtkFile + ".wrl").toStdString().c_str());
+    writer->Write();
+    return vtkFile + ".wrl";
 }

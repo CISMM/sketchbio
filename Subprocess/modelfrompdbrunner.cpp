@@ -17,6 +17,7 @@
 
 #include <sketchioconstants.h>
 #include <sketchmodel.h>
+#include <modelutilities.h>
 #include <sketchobject.h>
 #include <springconnection.h>
 #include <sketchproject.h>

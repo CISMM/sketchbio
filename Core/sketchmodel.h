@@ -6,7 +6,6 @@
 #include <vtkSmartPointer.h>
 class vtkAlgorithm;
 class vtkPolyDataAlgorithm;
-class vtkPolyData;
 
 class QString;
 class QDir;
@@ -25,27 +24,6 @@ enum ResolutionType
     SIMPLIFIED_2000,
     SIMPLIFIED_1000
 };
-}
-
-namespace ModelUtilities
-{
-void makePQP_Model(PQP_Model *m1, vtkPolyData *polyData);
-
-#ifdef PQP_UPDATE_EPSILON
-void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);
-#endif
-
-vtkPolyDataAlgorithm *read(const QString &filename);
-
-// Writes the given algorithm's output to a file whose name is based on the descr string
-// and returns the name of the file it created (file is in the current directory by
-// default)
-QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr);
-QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &descr,
-                                const QDir &dir);
-QString createSourceNameFor(const QString &pdbId, const QString &chainsLeftOut);
-
-void vtkConvertAsciiToBinary(const QString &filename);
 }
 
 /*

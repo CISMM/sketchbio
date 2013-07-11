@@ -24,6 +24,7 @@
 
 #include <sketchioconstants.h>
 #include <transformmanager.h>
+#include <modelutilities.h>
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>

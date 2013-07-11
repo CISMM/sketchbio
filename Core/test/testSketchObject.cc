@@ -10,6 +10,7 @@
 
 #include <sketchtests.h>
 #include <keyframe.h>
+#include <modelutilities.h>
 #include <sketchmodel.h>
 #include <sketchobject.h>
 #include <modelinstance.h>

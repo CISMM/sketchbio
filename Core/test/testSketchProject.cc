@@ -15,6 +15,7 @@
 #include <QScopedPointer>
 #include <QDir>
 
+#include <modelutilities.h>
 #include <sketchmodel.h>
 #include <sketchproject.h>
 
