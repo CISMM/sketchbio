@@ -9,6 +9,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkThreshold.h>
 #include <vtkGeometryFilter.h>
+#include <vtkColorTransferFunction.h>
 
 #include <vtkVRMLWriter.h>
 
@@ -36,7 +37,6 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("myObjects = list()\n");
     QHash< QPair< SketchModel *, int >, int> modelIdxs;
     QHash<SketchObject *, int> objectIdxs;
-    success &= writeCreateModels(file,modelIdxs,proj->getModelManager());
     success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj);
     success &= writeObjectKeyframes(file,objectIdxs, proj);
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
@@ -56,47 +56,47 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     return success && file.error() == QFile::NoError;
 }
 
-bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
-                                                  const ModelManager *models) {
-    file.write("\n\n");
-    file.write("# Create template objects for each model\n");
-    int modelObjectsLen = 0;
-    QVectorIterator<SketchModel *> it = models->getModelIterator();
-    while (it.hasNext()) {
-        SketchModel *model = it.next();
-        for (int i = 0; i < model->getNumberOfConformations(); i++)
-        {
-            modelIdxs.insert(QPair< SketchModel *, int >(model,i),modelObjectsLen++);
-            if (model->getSource(i) == CAMERA_MODEL_KEY) {
-                file.write("obj = getDefaultCamera()\n");
-            } else {
-                QString fname = model->getFileNameFor(i,ModelResolution::FULL_RESOLUTION);
-                if (fname.endsWith(".obj"))
-                {
-                    file.write("obj = read_obj_model('");
-                }
-                else if (fname.endsWith(".vtk"))
-                {
-                    fname = generateVRMLFileFor(fname);
-                    file.write("obj = read_wrl_model('");
-                }
-                else
-                {
-                    std::cerr << "Unknown model file format: " <<
-                                 fname.toStdString().c_str() << std::endl;
-                    return false;
-                }
-                file.write(fname.toStdString().c_str());
-                file.write("')\n");
-            }
-            file.write("select_object(obj)\n");
-            // throw them way out in space
-            file.write("bpy.ops.object.shade_smooth()\n");
-            file.write("bpy.context.active_object.location = (float(50000), float(50000), float(50000))\n");
-            file.write("modelObjects.append(obj)\n");
-        }
+void ProjectToBlenderAnimation::writeCreateModel(
+        QFile &file, QHash< QPair< SketchModel *, int>, int > &modelIdxs,
+        SketchModel *model, int conformation)
+{
+    modelIdxs.insert(QPair< SketchModel *, int >(model,conformation),
+                     modelIdxs.size());
+    if (model->getSource(conformation) == CAMERA_MODEL_KEY)
+    {
+        file.write("obj = getDefaultCamera()\n");
     }
-    return file.error() == QFile::NoError;
+    else
+    {
+        QString fname = model->getFileNameFor(conformation,
+                                              ModelResolution::FULL_RESOLUTION);
+        if (fname.endsWith(".obj"))
+        {
+            file.write("obj = read_obj_model('");
+        }
+        else if (fname.endsWith(".vtk"))
+        {
+            vtkSmartPointer< vtkColorTransferFunction > colors =
+                    vtkSmartPointer< vtkColorTransferFunction >::New();
+            colors->AddRGBPoint(1.0,1.0,0.25,0.25);
+            fname = generateVRMLFileFor(fname, "modelNum",colors);
+            file.write("obj = read_wrl_model('");
+        }
+        else
+        {
+            std::cerr << "Unknown model file format: " <<
+                         fname.toStdString().c_str() << std::endl;
+            return;
+        }
+        file.write(fname.toStdString().c_str());
+        file.write("')\n");
+    }
+    file.write("select_object(obj)\n");
+    // throw them way out in space
+    file.write("bpy.ops.object.shade_smooth()\n");
+    file.write("bpy.context.active_object.location = (float(50000),"
+               "float(50000), float(50000))\n");
+    file.write("modelObjects.append(obj)\n");
 }
 
 bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
@@ -107,7 +107,8 @@ bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash< QPair< Sk
     int objectsLen = 0;
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     QListIterator<SketchObject *> it = world->getObjectIterator();
-    while (it.hasNext()) {
+    while (it.hasNext())
+    {
         writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
     }
     file.write("\n\n");
@@ -131,16 +132,25 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
                                                   QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
                                                   SketchProject *proj, SketchObject *obj)
 {
-    if (obj->numInstances() != 1) {
+    if (obj->numInstances() != 1)
+    {
         QListIterator<SketchObject *> it(*obj->getSubObjects());
-        while (it.hasNext()) {
+        while (it.hasNext())
+        {
             writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
         }
-    } else {
+    }
+    else
+    {
         QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
         SketchModel *model  = obj->getModel();
-        int idx = modelIdxs.value(
-                    QPair< SketchModel *, int >(model,obj->getModelConformation()));
+        int conformation = obj->getModelConformation();
+        QPair< SketchModel *, int > key(model,conformation);
+        if (!modelIdxs.contains(key))
+        {
+            ProjectToBlenderAnimation::writeCreateModel(file,modelIdxs,model,conformation);
+        }
+        int idx = modelIdxs.value(key);
         sprintf(buf.data(),"select_object(modelObjects[%u])\n",idx);
         file.write(buf.data());
         file.write("bpy.ops.object.duplicate(linked=True)\n");
@@ -151,14 +161,16 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
         computeNewTranslate(pos,orient,obj);
         q_from_axis_angle(tmp,0,1,0,Q_PI);
         bool isCamera = false;
-        if (model->getSource(obj->getModelConformation()) == CAMERA_MODEL_KEY) {
+        if (model->getSource(obj->getModelConformation()) == CAMERA_MODEL_KEY)
+        {
             q_mult(orient,orient,tmp);
             isCamera = true;
         }
         file.write("bpy.context.active_object.location = (0,0,0)\n");
         file.write("bpy.context.active_object.rotation_mode = 'QUATERNION'\n");
         file.write("bpy.context.active_object.rotation_quaternion = (0,0,0,0)\n");
-        if (isCamera) {
+        if (isCamera)
+        {
             // set the far plane out enough to see all the objects (we hope)
             file.write("bpy.context.active_object.data.clip_end = 5000\n");
             // give the camera a light that will follow it around
@@ -182,13 +194,15 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
                 orient[Q_Y], orient[Q_Z]);
         file.write(buf.data());
         // not sure if this needs modification to do something different for cameras
-        if (!obj->isVisible()) {
+        if (!obj->isVisible())
+        {
             // hide it in the main view?
             file.write("bpy.context.active_object.hide = True\n");
             // hide it during rendering
             file.write("bpy.context.active_object.hide_render = True\n");
         }
-        if (obj->isActive()) {
+        if (obj->isActive())
+        {
             file.write("bpy.context.scene.camera = bpy.context.active_object\n");
         }
     }
@@ -200,19 +214,22 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
     QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     unsigned frame = 0;
     double time = static_cast<double>(frame) / static_cast<double>(frameRate);
-    while (!proj->goToAnimationTime(time)) {
+    while (!proj->goToAnimationTime(time))
+    {
         q_vec_type pos;
         q_type orient;
         sprintf(buf.data(), "\nbpy.context.scene.frame_set(%u)\n", frame);
         file.write(buf.data());
-        for (QHashIterator<SketchObject *, int> it(objectIdxs); it.hasNext();) {
+        for (QHashIterator<SketchObject *, int> it(objectIdxs); it.hasNext();)
+        {
             SketchObject * obj = it.peekNext().key();
             int idx = it.next().value();
             sprintf(buf.data(), "select_object(myObjects[%d])\n", idx);
             file.write(buf.data());
             computeNewTranslate(pos,orient,obj);
             if (obj->getModel()->getSource(obj->getModelConformation())
-                    == CAMERA_MODEL_KEY) {
+                    == CAMERA_MODEL_KEY)
+            {
                 q_type tmp;
                 q_from_axis_angle(tmp,0,1,0,Q_PI);
                 q_mult(orient,orient,tmp);
@@ -237,7 +254,8 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
     return file.error() == QFile::NoError;
 }
 
-bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file) {
+bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file)
+{
     // make sure we have a clean tab context for helper functions
     file.write("\n\n");
     // helper functions for material creation and assignment
@@ -308,8 +326,6 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file) {
     file.write("\tselect_named(newName)\n");
     // helper function for reading wrl or x3d models
     // this one I wrote myself
-    file.write("# reads in an wrl/vrml file and joins all the objects that were\n"
-               "# read out of it into a single object\n");
     file.write("def read_wrl_model(filename):\n");
     file.write("\toldKeys = list(bpy.data.objects.keys()) # copies the object names list\n");
     file.write("\tbpy.ops.import_scene.x3d(filepath=filename)\n");
@@ -343,7 +359,8 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file) {
     return file.error() == QFile::NoError;
 }
 
-QString ProjectToBlenderAnimation::generateVRMLFileFor(QString vtkFile)
+QString ProjectToBlenderAnimation::generateVRMLFileFor(
+        QString vtkFile, const char *arrayName, vtkColorTransferFunction *colorMap)
 {
     vtkSmartPointer< vtkPolyDataAlgorithm > model =
             vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
@@ -355,6 +372,14 @@ QString ProjectToBlenderAnimation::generateVRMLFileFor(QString vtkFile)
             vtkSmartPointer< vtkVRMLWriter >::New();
     writer->SetInputConnection(surface->GetOutputPort());
     writer->SetFileName((vtkFile + ".wrl").toStdString().c_str());
+    if (arrayName != NULL)
+    {
+        writer->SetArrayToColorBy(arrayName);
+    }
+    if (colorMap != NULL)
+    {
+        writer->SetColorMap(colorMap);
+    }
     writer->Write();
     return vtkFile + ".wrl";
 }

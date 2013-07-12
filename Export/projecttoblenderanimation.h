@@ -10,6 +10,8 @@ class ModelManager;
 class SketchObject;
 class WorldManager;
 
+class vtkColorTransferFunction;
+
 #define BLENDER_RENDERER_FRAMERATE 30
 
 /*
@@ -26,10 +28,13 @@ public:
 private:
     // Writes some python helper function definitions to the file
     static bool writeHelperFunctions(QFile &file);
-    // Writes code to create a base object to copy for each model and assigns them to the list modelObjects
+    // Writes code to create a base object to copy for the model and adds it to the list modelObjects
     // with indices that populate the given QHash so that a model's value in the map is its base object's
     // index in the list
-    static bool writeCreateModels(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs, const ModelManager *models);
+    static void writeCreateModel(QFile &file,
+                                 QHash< QPair< SketchModel *, int >, int> &modelIdx,
+                                 SketchModel *model,
+                                 int conformation);
     // Writes code to create an object in Blender for each SketchObject (for now assumes no groups)
     // stores the index of each object in the myObjects list in the objectIdxs QHash
     static bool writeCreateObjects(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
@@ -44,7 +49,8 @@ private:
                                      unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
     // Creates a VRML file for the given vtk file so that the data can be used in Blender
     // TODO - eventually this will take an array to color by and possibly a color map
-    static QString generateVRMLFileFor(QString vtkFile);
+    static QString generateVRMLFileFor(QString vtkFile, char const *arrayName = "modelNum",
+                                       vtkColorTransferFunction *colorMap = NULL);
 };
 
 #endif // PROJECTTOBLENDERANIMATION_H
