@@ -32,6 +32,8 @@ vtkVRMLWriter::vtkVRMLWriter()
 
 vtkVRMLWriter::~vtkVRMLWriter()
 {
+  this->SetFileName(NULL);
+  this->SetArrayToColorBy(NULL);
   if (this->ColorMap != NULL)
       ColorMap->UnRegister(this);
 }
