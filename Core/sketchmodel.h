@@ -102,7 +102,7 @@ public slots:
                                      const QString &filename);
     // Tells the given conformation to use the given resolution.  If no
     // geometry file for the given resolution exists, then it does nothing.
-    void setReslutionForConformation(int conformation,
+    void setResolutionForConformation(int conformation,
                                       ModelResolution::ResolutionType resolution);
 private:
     // sets the resolution level based on the number of uses of the given

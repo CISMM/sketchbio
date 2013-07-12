@@ -348,9 +348,10 @@ QString ProjectToBlenderAnimation::generateVRMLFileFor(QString vtkFile)
 {
     vtkSmartPointer< vtkPolyDataAlgorithm > model =
             ModelUtilities::read(vtkFile.toStdString().c_str());
+    model->Delete();
     vtkSmartPointer< vtkPolyDataAlgorithm > surface =
             ModelUtilities::modelSurfaceFrom(model);
-    surface->UnRegister(NULL);
+    surface->Delete();
     vtkSmartPointer< vtkVRMLWriter > writer =
             vtkSmartPointer< vtkVRMLWriter >::New();
     writer->SetInputConnection(surface->GetOutputPort());

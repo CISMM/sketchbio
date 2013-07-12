@@ -135,7 +135,7 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     modelDataForConf.append(filter);
     vtkSmartPointer< vtkPolyDataAlgorithm > surface =
             ModelUtilities::modelSurfaceFrom(dataSource);
-    surface->UnRegister(NULL);
+    surface->Delete();
     vtkSmartPointer< vtkTransformPolyDataFilter > ifilter =
             vtkSmartPointer< vtkTransformPolyDataFilter >::New();
     ifilter->SetInputConnection(surface->GetOutputPort());
@@ -148,7 +148,7 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >(
                                ModelUtilities::modelAtomsFrom(dataSource)));
     if (atomDataForConf.last())
-        atomDataForConf.last()->UnRegister(NULL);
+        atomDataForConf.last()->Delete();
     QScopedPointer<PQP_Model> collisionModel(new PQP_Model());
     // populate the PQP collision detection model
     ModelUtilities::makePQP_Model(collisionModel.data(),
@@ -206,7 +206,7 @@ void SketchModel::addSurfaceFileForResolution(
     setResolutionLevelByUses(conformation);
 }
 
-void SketchModel::setReslutionForConformation(
+void SketchModel::setResolutionForConformation(
         int conformation, ModelResolution::ResolutionType resolution)
 {
     QPair< int, ModelResolution::ResolutionType > key(conformation, resolution);
@@ -224,8 +224,11 @@ void SketchModel::setReslutionForConformation(
         modelDataForConf[conformation]->Update();
         vtkSmartPointer< vtkPolyDataAlgorithm > surface =
                 ModelUtilities::modelSurfaceFrom(dataSource);
+        surface->Delete();
         vtkSmartPointer< vtkAlgorithm > atoms =
                 ModelUtilities::modelAtomsFrom(dataSource);
+        if (atoms.GetPointer() != NULL)
+            atoms->Delete();
         surfaceDataForConf[conformation]->SetInputConnection(
                     surface->GetOutputPort());
         atomDataForConf[conformation] = atoms;
@@ -258,12 +261,12 @@ void SketchModel::setResolutionLevelByUses(int conformation)
         break;
     }
     if (uses > 15 && res > 1000)
-        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_1000);
+        setResolutionForConformation(conformation,ModelResolution::SIMPLIFIED_1000);
     else if (uses > 10 && res > 2000)
-        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_2000);
+        setResolutionForConformation(conformation,ModelResolution::SIMPLIFIED_2000);
     else if (uses > 5 && res > 5000)
-        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_5000);
+        setResolutionForConformation(conformation,ModelResolution::SIMPLIFIED_5000);
     else if (uses != 0 && res > 50000)
-        setReslutionForConformation(conformation,ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
+        setResolutionForConformation(conformation,ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
 }
 

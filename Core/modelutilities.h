@@ -37,6 +37,9 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);
 /*
  * Reads the given file and returns the resulting vtkPolyDataAlgorithm or throws
  * a const char * if it does not know how to read the file.
+ *
+ * Note: the returned algorithm has a reference count of 1, you will have to call
+ * Delete() or Unregister() on it.
  */
 vtkPolyDataAlgorithm *read(const QString &filename);
 /*

@@ -122,7 +122,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_FULL_RESOLUTION,
                                                simplified);
-            model->setReslutionForConformation(conformation,
+            model->setResolutionForConformation(conformation,
                                                 ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
         {
             q_vec_type pos = Q_NULL_VECTOR;

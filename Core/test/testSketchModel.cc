@@ -110,20 +110,20 @@ int testAddResolutionFileAndChangeResolutions()
     filename = ModelUtilities::createFileFromVTKSource(cube,"models/cube_for_model_test");
     model->addSurfaceFileForResolution(0,ModelResolution::SIMPLIFIED_1000,filename);
     int points1 = model->getVTKSource(0)->GetOutput()->GetNumberOfPoints();
-    model->setReslutionForConformation(0,ModelResolution::SIMPLIFIED_1000);
+    model->setResolutionForConformation(0,ModelResolution::SIMPLIFIED_1000);
     int points2 = model->getVTKSource(0)->GetOutput()->GetNumberOfPoints();
     if (points1 == points2)
     {
         retVal++;
         qDebug() << "Switching model resolutions failed.";
     }
-    model->setReslutionForConformation(0,ModelResolution::SIMPLIFIED_2000);
+    model->setResolutionForConformation(0,ModelResolution::SIMPLIFIED_2000);
     if (model->getVTKSource(0)->GetOutput()->GetNumberOfPoints() != points2)
     {
         retVal++;
         qDebug() << "Resolution changed even though no file for given resolution.";
     }
-    model->setReslutionForConformation(0,ModelResolution::FULL_RESOLUTION);
+    model->setResolutionForConformation(0,ModelResolution::FULL_RESOLUTION);
     if (points1 != model->getVTKSource(0)->GetOutput()->GetNumberOfPoints())
     {
         retVal++;
