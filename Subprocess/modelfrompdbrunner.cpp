@@ -131,8 +131,6 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
         }
             vtkSmartPointer< vtkPolyDataAlgorithm > source =
                     model->getVTKSource(conformation);
-            qDebug() << "Arrays at start: " <<
-                        source->GetOutput()->GetPointData()->GetNumberOfArrays();
             vtkSmartPointer< vtkDecimatePro > decimator =
                     vtkSmartPointer< vtkDecimatePro >::New();
             decimator->SetInputConnection(source->GetOutputPort());
@@ -140,8 +138,6 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             decimator->SetTargetReduction(std::max(0.0,1.0 - 5000.0/numTris));
             decimator->SetFeatureAngle(60.0);
             decimator->Update();
-            qDebug() << "Arrays after decimate: " <<
-                        decimator->GetOutput()->GetPointData()->GetNumberOfArrays();
             vtkSmartPointer< vtkThreshold > thresh =
                     vtkSmartPointer< vtkThreshold >::New();
             thresh->SetInputConnection(source->GetOutputPort());
@@ -150,22 +146,16 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             thresh->ThresholdByUpper(0.0);
             thresh->AllScalarsOn();
             thresh->Update();
-            qDebug() << "Arrays after threshold: " <<
-                        thresh->GetOutput()->GetPointData()->GetNumberOfArrays();
             vtkSmartPointer< vtkGeometryFilter > convertToPolyData =
                     vtkSmartPointer< vtkGeometryFilter >::New();
             convertToPolyData->SetInputConnection(thresh->GetOutputPort());
             convertToPolyData->MergingOff();
             convertToPolyData->Update();
-            qDebug() << "Arrays after geometry: " <<
-                        convertToPolyData->GetOutput()->GetPointData()->GetNumberOfArrays();
             vtkSmartPointer< vtkAppendPolyData > appended =
                     vtkSmartPointer< vtkAppendPolyData >::New();
             appended->AddInputConnection(decimator->GetOutputPort());
             appended->AddInputConnection(convertToPolyData->GetOutputPort());
             appended->Update();
-            qDebug() << "Arrays after append: " <<
-                        appended->GetOutput()->GetPointData()->GetNumberOfArrays();
             QString fname = ModelUtilities::createFileFromVTKSource(
                         appended,sourceName + ".decimated.5000",
                         QDir(project->getProjectDir()));
