@@ -120,10 +120,10 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
                 fullResolutionFileName);
     resolutionLevelForConf.append(ModelResolution::FULL_RESOLUTION);
     vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
-            ModelUtilities::read(fullResolutionFileName);
+            vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                ModelUtilities::read(fullResolutionFileName));
     double bb[6];
     dataSource->GetOutput()->GetBounds(bb);
-    dataSource->Delete();
     vtkSmartPointer< vtkTransformPolyDataFilter > filter =
             vtkSmartPointer< vtkTransformPolyDataFilter >::New();
     filter->SetInputConnection(dataSource->GetOutputPort());
@@ -134,8 +134,8 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     filter->Update();
     modelDataForConf.append(filter);
     vtkSmartPointer< vtkPolyDataAlgorithm > surface =
-            ModelUtilities::modelSurfaceFrom(dataSource);
-    surface->Delete();
+            vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                ModelUtilities::modelSurfaceFrom(dataSource));
     vtkSmartPointer< vtkTransformPolyDataFilter > ifilter =
             vtkSmartPointer< vtkTransformPolyDataFilter >::New();
     ifilter->SetInputConnection(surface->GetOutputPort());
@@ -145,10 +145,8 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     ifilter->SetTransform(transform);
     ifilter->Update();
     surfaceDataForConf.append(ifilter);
-    atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >(
+    atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >::Take(
                                ModelUtilities::modelAtomsFrom(dataSource)));
-    if (atomDataForConf.last())
-        atomDataForConf.last()->Delete();
     QScopedPointer<PQP_Model> collisionModel(new PQP_Model());
     // populate the PQP collision detection model
     ModelUtilities::makePQP_Model(collisionModel.data(),
@@ -217,18 +215,17 @@ void SketchModel::setResolutionForConformation(
             && fileNames.value(key) != fileNames.value(current))
     {
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
-                ModelUtilities::read(fileNames.value(key));
-        dataSource->Delete();
+                vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                    ModelUtilities::read(fileNames.value(key)));
         modelDataForConf[conformation]->SetInputConnection(
                     dataSource->GetOutputPort());
         modelDataForConf[conformation]->Update();
         vtkSmartPointer< vtkPolyDataAlgorithm > surface =
-                ModelUtilities::modelSurfaceFrom(dataSource);
-        surface->Delete();
+                vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                    ModelUtilities::modelSurfaceFrom(dataSource));
         vtkSmartPointer< vtkAlgorithm > atoms =
-                ModelUtilities::modelAtomsFrom(dataSource);
-        if (atoms.GetPointer() != NULL)
-            atoms->Delete();
+                vtkSmartPointer< vtkAlgorithm >::Take(
+                    ModelUtilities::modelAtomsFrom(dataSource));
         surfaceDataForConf[conformation]->SetInputConnection(
                     surface->GetOutputPort());
         atomDataForConf[conformation] = atoms;

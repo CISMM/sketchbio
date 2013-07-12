@@ -82,9 +82,8 @@ bool ProjectToBlenderAnimation::writeCreateModels(QFile &file, QHash< QPair< Ske
                 }
                 else
                 {
-                    using std::cerr;
-                    using std::endl;
-                    cerr << "Unknown model file format" << endl;
+                    std::cerr << "Unknown model file format: " <<
+                                 fname.toStdString().c_str() << std::endl;
                     return false;
                 }
                 file.write(fname.toStdString().c_str());
@@ -347,11 +346,11 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file) {
 QString ProjectToBlenderAnimation::generateVRMLFileFor(QString vtkFile)
 {
     vtkSmartPointer< vtkPolyDataAlgorithm > model =
-            ModelUtilities::read(vtkFile.toStdString().c_str());
-    model->Delete();
+            vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                ModelUtilities::read(vtkFile.toStdString().c_str()));
     vtkSmartPointer< vtkPolyDataAlgorithm > surface =
-            ModelUtilities::modelSurfaceFrom(model);
-    surface->Delete();
+            vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                ModelUtilities::modelSurfaceFrom(model));
     vtkSmartPointer< vtkVRMLWriter > writer =
             vtkSmartPointer< vtkVRMLWriter >::New();
     writer->SetInputConnection(surface->GetOutputPort());

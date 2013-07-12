@@ -257,15 +257,14 @@ vtkPolyDataAlgorithm *modelSurfaceFrom(vtkPolyDataAlgorithm *rawModel)
                     0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,MODEL_NUM_ARRAY_NAME);
         surface->ThresholdBetween(SUFRACE_MODEL_NUM,SUFRACE_MODEL_NUM);
         surface->Update();
-        vtkSmartPointer< vtkGeometryFilter > geom =
-                vtkSmartPointer< vtkGeometryFilter >::New();
+        vtkGeometryFilter *geom = vtkGeometryFilter::New();
         geom->SetInputConnection(surface->GetOutputPort());
         geom->Update();
-        geom->Register(NULL);
         return geom;
     }
     else
     {
+        // increment reference count by 1 if returning same model
         rawModel->Register(NULL);
         return rawModel;
     }
@@ -275,15 +274,13 @@ vtkAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel)
     if (rawModel->GetOutput()->GetPointData()->HasArray(MODEL_NUM_ARRAY_NAME))
     {
 
-        vtkSmartPointer< vtkThreshold > atoms =
-                vtkSmartPointer< vtkThreshold >::New();
+        vtkThreshold *atoms = vtkThreshold::New();
         atoms->SetInputConnection(rawModel->GetOutputPort());
         atoms->AllScalarsOn();
         atoms->SetInputArrayToProcess(
                     0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,MODEL_NUM_ARRAY_NAME);
         atoms->ThresholdBetween(ATOMS_MODEL_NUM,ATOMS_MODEL_NUM);
         atoms->Update();
-        atoms->Register(NULL);
         return atoms;
     }
     else

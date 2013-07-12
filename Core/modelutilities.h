@@ -38,23 +38,23 @@ void updatePQP_Model(PQP_Model &model,vtkPolyData &polyData);
  * Reads the given file and returns the resulting vtkPolyDataAlgorithm or throws
  * a const char * if it does not know how to read the file.
  *
- * Note: the returned algorithm has a reference count of 1, you will have to call
- * Delete() or Unregister() on it.
+ * Note: the returned algorithm has a reference count of 1, you should use
+ * vtkSmartPointer::Take() to grab the reference returned by this function
  */
 vtkPolyDataAlgorithm *read(const QString &filename);
 /*
  * Returns a vtkPolyDataAlgorithm whose output is the surface part of the model
  *
- * Note: the returned algorithm has a reference count of 1, you will have to call
- * Delete() or Unregister() on it.
+ * Note: the returned algorithm has a reference count of 1, you should use
+ * vtkSmartPointer::Take() to grab the reference returned by this function
  */
 vtkPolyDataAlgorithm *modelSurfaceFrom(vtkPolyDataAlgorithm *rawModel);
 /*
  * Returns a vtkAlgorithm whose output is the atoms and bonds of the model, if
  * available (or NULL if no atom data is available).
  *
- * Note: the returned algorithm has a reference count of 1, you will have to call
- * Delete() or Unregister() on it.
+ * Note: the returned algorithm has a reference count of 1, you should use
+ * vtkSmartPointer::Take() to grab the reference returned by this function
  */
 vtkAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel);
 
