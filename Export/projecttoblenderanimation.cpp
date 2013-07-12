@@ -62,40 +62,19 @@ void ProjectToBlenderAnimation::writeCreateModel(
 {
     modelIdxs.insert(QPair< SketchModel *, int >(model,conformation),
                      modelIdxs.size());
-    if (model->getSource(conformation) == CAMERA_MODEL_KEY)
+    QString source = model->getSource(conformation);
+    QString fname = model->getFileNameFor(conformation,
+                                          ModelResolution::FULL_RESOLUTION);
+    if (fname.endsWith(".vtk"))
     {
-        file.write("obj = getDefaultCamera()\n");
+        vtkSmartPointer< vtkColorTransferFunction > colors =
+                vtkSmartPointer< vtkColorTransferFunction >::New();
+        colors->AddRGBPoint(1.0,1.0,0.25,0.25);
+        fname = generateVRMLFileFor(fname, "modelNum",colors);
     }
-    else
-    {
-        QString fname = model->getFileNameFor(conformation,
-                                              ModelResolution::FULL_RESOLUTION);
-        if (fname.endsWith(".obj"))
-        {
-            file.write("obj = read_obj_model('");
-        }
-        else if (fname.endsWith(".vtk"))
-        {
-            vtkSmartPointer< vtkColorTransferFunction > colors =
-                    vtkSmartPointer< vtkColorTransferFunction >::New();
-            colors->AddRGBPoint(1.0,1.0,0.25,0.25);
-            fname = generateVRMLFileFor(fname, "modelNum",colors);
-            file.write("obj = read_wrl_model('");
-        }
-        else
-        {
-            std::cerr << "Unknown model file format: " <<
-                         fname.toStdString().c_str() << std::endl;
-            return;
-        }
-        file.write(fname.toStdString().c_str());
-        file.write("')\n");
-    }
-    file.write("select_object(obj)\n");
-    // throw them way out in space
-    file.write("bpy.ops.object.shade_smooth()\n");
-    file.write("bpy.context.active_object.location = (float(50000),"
-               "float(50000), float(50000))\n");
+    QString line = "obj = makeDefaultObject('%1','%2')\n";
+    line = line.arg(source,fname);
+    file.write(line.toStdString().c_str());
     file.write("modelObjects.append(obj)\n");
 }
 
@@ -224,8 +203,6 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
         {
             SketchObject * obj = it.peekNext().key();
             int idx = it.next().value();
-            sprintf(buf.data(), "select_object(myObjects[%d])\n", idx);
-            file.write(buf.data());
             computeNewTranslate(pos,orient,obj);
             if (obj->getModel()->getSource(obj->getModelConformation())
                     == CAMERA_MODEL_KEY)
@@ -234,15 +211,10 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
                 q_from_axis_angle(tmp,0,1,0,Q_PI);
                 q_mult(orient,orient,tmp);
             }
-            sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
-                    pos[Q_X], pos[Q_Y], pos[Q_Z]);
+            sprintf(buf.data(),"makeKeyframe(myObjects[%d], (%g, %g, %g), (%g, %g, %g, %g))\n",
+                    idx, pos[Q_X], pos[Q_Y], pos[Q_Z], orient[Q_W], orient[Q_X], orient[Q_Y],
+                    orient[Q_Z]);
             file.write(buf.data());
-            file.write("bpy.context.active_object.keyframe_insert(data_path='location')\n");
-            sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
-                    "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
-                    orient[Q_Y], orient[Q_Z]);
-            file.write(buf.data());
-            file.write("bpy.context.active_object.keyframe_insert(data_path='rotation_quaternion')\n");
             // TODO - visibility and active camera stuff
         }
         frame++;
@@ -356,6 +328,39 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file)
     file.write("def getDefaultCamera():\n");
     file.write("\t return bpy.data.objects['Camera']\n");
     file.write("\n\n");
+    // custom exception to use
+    file.write("# an exception for unknown file type\n");
+    file.write("class UnknownFileTypeException(Exception):\n");
+    file.write("\tpass\n");
+    // helper function to create the default object for a model
+    file.write("# Make the default object for a model\n");
+    file.write("def makeDefaultObject(source,filename):\n");
+    file.write("\tif source == \'");
+    file.write(CAMERA_MODEL_KEY);
+    file.write("\':\n");
+    file.write("\t\tobj = getDefaultCamera()\n");
+    file.write("\telif filename.endswith('obj'):\n");
+    file.write("\t\tobj = read_obj_model(filename)\n");
+    file.write("\telif filename.endswith('wrl'):\n");
+    file.write("\t\tobj = read_wrl_model(filename)\n");
+    file.write("\telse:\n");
+    file.write("\t\traise UnknownFileTypeException(filename)\n");
+    file.write("\tselect_object(obj)\n");
+    // throw them way out in space
+    file.write("\tbpy.ops.object.shade_smooth()\n");
+    file.write("\tbpy.context.active_object.location = (float(50000),"
+               "float(50000), float(50000))\n");
+    file.write("\treturn obj\n\n");
+    // helper function to set keyframes on objects
+    file.write("# Make a keyframe at the current time on the object\n");
+    file.write("def makeKeyframe(obj,location,quaternion):\n");
+    file.write("\tselect_object(obj)\n");
+    file.write("\tbpy.context.active_object.location = location\n");
+    file.write("\tbpy.context.active_object.keyframe_insert(data_path='location')\n");
+    file.write("\tbpy.context.active_object.rotation_quaternion = quaternion\n");
+    file.write("\tbpy.context.active_object.keyframe_insert(data_path='rotation_quaternion')\n");
+    file.write("\n\n");
+
     return file.error() == QFile::NoError;
 }
 

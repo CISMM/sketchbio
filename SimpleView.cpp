@@ -456,6 +456,8 @@ void SimpleView::exportBlenderAnimation() {
                                               tr("Select Save Location"),
                                               "./",
                                               tr("AVI Files (*.avi)"));
+    if (fn.isEmpty())
+        return;
     QFile f(fn);
     if (f.exists()) {
         if (!f.remove()) {
