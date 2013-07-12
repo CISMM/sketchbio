@@ -144,6 +144,7 @@ SubprocessRunner *createAnimationFor(SketchProject *proj, const QString &animati
     if (!animationFile.endsWith(".avi", Qt::CaseInsensitive))
     {
         // we don't know how to render other formats than avi right now
+        qDebug() << "Illegal file format" << animationFile.toStdString().c_str();
         return NULL;
     }
     // this object will automatically delete itself when the subprocess finishes with

@@ -49,6 +49,7 @@ WorldManager::WorldManager(vtkRenderer *r) :
     doPhysicsSprings(true),
     doCollisionCheck(true),
     showInvisible(true),
+    showShadows(true),
     collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
 {
     PhysicsStrategyFactory::populateStrategies(strategies);
