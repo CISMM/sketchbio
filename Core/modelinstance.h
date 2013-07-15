@@ -1,6 +1,8 @@
 #ifndef MODELINSTANCE_H
 #define MODELINSTANCE_H
 
+#include <QString>
+
 #include <vtkSmartPointer.h>
 class vtkActor;
 class vtkTransformPolyDataFilter;
@@ -24,6 +26,10 @@ public:
     // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
+    virtual SketchObject::ColorMapType::Type getColorMapType() const;
+    virtual void setColorMapType(ColorMapType::Type cmap);
+    virtual const QString &getArrayToColorBy() const;
+    virtual void setArrayToColorBy(QString &arrayName);
     virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual int getModelConformation() const;
     virtual vtkActor *getActor();
@@ -35,9 +41,12 @@ public:
     virtual SketchObject *deepCopy();
 protected:
     virtual void localTransformUpdated();
+    virtual void updateColorMap();
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
+    SketchObject::ColorMapType::Type colorMap;
+    QString arrayToColorBy;
     int conformation;
     vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
     vtkSmartPointer<vtkTransformPolyDataFilter> orientedBB;

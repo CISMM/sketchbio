@@ -1,11 +1,16 @@
 #include "modelinstance.h"
 
+#include <iostream>
+
 #include <vtkCubeSource.h>
 #include <vtkExtractEdges.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
+#include <vtkColorTransferFunction.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkPointData.h>
 #include <vtkActor.h>
+#include <vtkProperty.h>
 
 #include <PQP.h>
 
@@ -24,6 +29,8 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
     conformation(confNum),
+    colorMap(ColorMapType::SOLID_COLOR_RED),
+    arrayToColorBy("modelNum"),
     modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     orientedBB(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
@@ -45,6 +52,7 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     modelTransformed->SetTransform(getLocalTransform());
     modelTransformed->Update();
     solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
+    updateColorMap();
     solidMapper->Update();
     actor->SetMapper(solidMapper);
     model->incrementUses(conformation);
@@ -72,6 +80,32 @@ SketchModel *ModelInstance::getModel()
 const SketchModel *ModelInstance::getModel() const
 {
     return model;
+}
+
+//#########################################################################
+SketchObject::ColorMapType::Type ModelInstance::getColorMapType() const
+{
+    return colorMap;
+}
+
+//#########################################################################
+void ModelInstance::setColorMapType(ColorMapType::Type cmap)
+{
+    colorMap = cmap;
+    updateColorMap();
+}
+
+//#########################################################################
+const QString &ModelInstance::getArrayToColorBy() const
+{
+    return arrayToColorBy;
+}
+
+//#########################################################################
+void ModelInstance::setArrayToColorBy(QString &arrayName)
+{
+    arrayToColorBy = arrayName;
+    updateColorMap();
 }
 
 //#########################################################################
@@ -147,4 +181,33 @@ SketchObject *ModelInstance::deepCopy()
     nObj->setPosAndOrient(pos,orient);
     // TODO -- keyframes, etc...
     return nObj;
+}
+
+void ModelInstance::updateColorMap()
+{
+    vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();
+    double range[2] = { 0.0, 1.0};
+    if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
+    {
+        pointData->GetArray(arrayToColorBy.toStdString().c_str())->GetRange(range);
+    }
+    vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+            vtkSmartPointer< vtkColorTransferFunction >::Take(
+                SketchObject::getColorMap(colorMap,range[0],range[1])
+            );
+    if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
+    {
+        solidMapper->ScalarVisibilityOn();
+        solidMapper->SetColorModeToMapScalars();
+        solidMapper->SetScalarModeToUsePointFieldData();
+        solidMapper->SelectColorArray(arrayToColorBy.toStdString().c_str());
+        solidMapper->SetLookupTable(colorFunc);
+        solidMapper->Update();
+    }
+    else
+    {
+        double rgb[3];
+        colorFunc->GetColor(range[0],rgb);
+        actor->GetProperty()->SetColor(rgb);
+    }
 }

@@ -1,11 +1,64 @@
 #include "sketchobject.h"
 
 #include <vtkTransform.h>
+#include <vtkColorTransferFunction.h>
 
 #include "keyframe.h"
 #include "objectchangeobserver.h"
 
-
+vtkColorTransferFunction *SketchObject::getColorMap(
+        SketchObject::ColorMapType::Type cmapType,
+        double low,
+        double high)
+{
+    vtkColorTransferFunction *ctf = vtkColorTransferFunction::New();
+    ctf->SetScaleToLinear();
+    switch (cmapType)
+    {
+    case ColorMapType::SOLID_COLOR_RED:
+        ctf->AddRGBPoint(low,1.0,0.7,0.7);
+        break;
+    case ColorMapType::SOLID_COLOR_GREEN:
+        ctf->AddRGBPoint(low,0.7,1.0,0.8);
+        break;
+    case ColorMapType::SOLID_COLOR_BLUE:
+        ctf->AddRGBPoint(low,0.7,0.7,1.0);
+        break;
+    case ColorMapType::SOLID_COLOR_YELLOW:
+        ctf->AddRGBPoint(low,1.0,1.0,0.7);
+        break;
+    case ColorMapType::SOLID_COLOR_PURPLE:
+        ctf->AddRGBPoint(low,1.0,0.7,1.0);
+        break;
+    case ColorMapType::SOLID_COLOR_CYAN:
+        ctf->AddRGBPoint(low,0.7,1.0,1.0);
+        break;
+    case ColorMapType::DIM_SOLID_COLOR_RED:
+        ctf->AddRGBPoint(low,0.5,0.35,0.35);
+        break;
+    case ColorMapType::DIM_SOLID_COLOR_GREEN:
+        ctf->AddRGBPoint(low,0.35,0.5,0.4);
+        break;
+    case ColorMapType::DIM_SOLID_COLOR_BLUE:
+        ctf->AddRGBPoint(low,0.35,0.35,0.5);
+        break;
+    case ColorMapType::DIM_SOLID_COLOR_YELLOW:
+        ctf->AddRGBPoint(low,0.5,0.5,0.35);
+        break;
+    case ColorMapType::DIM_SOLID_COLOR_PURPLE:
+        ctf->AddRGBPoint(low,0.5,0.35,0.5);
+        break;
+    case ColorMapType::DIM_SOLID_COLOR_CYAN:
+        ctf->AddRGBPoint(low,0.35,0.5,0.5);
+        break;
+    case ColorMapType::BLUE_TO_RED:
+        ctf->SetColorSpaceToDiverging();
+        ctf->AddRGBPoint(low,59.0/256.0,76.0/256.0,192.0/256.0);
+        ctf->AddRGBPoint(high,180.0/256.0,4.0/256.0,38.0/256.0);
+        break;
+    }
+    return ctf;
+}
 //#########################################################################
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
@@ -29,41 +82,60 @@ SketchObject::SketchObject() :
 }
 
 //#########################################################################
-SketchObject::~SketchObject() {}
+SketchObject::~SketchObject()
+{
+}
 
 //#########################################################################
-SketchObject *SketchObject::getParent() {
+SketchObject *SketchObject::getParent()
+{
     return parent;
 }
 
 //#########################################################################
-const SketchObject *SketchObject::getParent() const {
+const SketchObject *SketchObject::getParent() const
+{
     return parent;
 }
 
 //#########################################################################
-void SketchObject::setParent(SketchObject *p) {
+void SketchObject::setParent(SketchObject *p)
+{
     parent = p;
     recalculateLocalTransform();
 }
 
 //#########################################################################
-QList<SketchObject *> *SketchObject::getSubObjects() {
+QList<SketchObject *> *SketchObject::getSubObjects()
+{
     return NULL;
 }
 
 //#########################################################################
-const QList<SketchObject *> *SketchObject::getSubObjects() const {
+const QList<SketchObject *> *SketchObject::getSubObjects() const
+{
     return NULL;
 }
 
 //#########################################################################
-SketchModel *SketchObject::getModel() {
+SketchModel *SketchObject::getModel()
+{
     return NULL;
 }
 //#########################################################################
-const SketchModel *SketchObject::getModel() const {
+const SketchModel *SketchObject::getModel() const
+{
     return NULL;
+}
+//#########################################################################
+SketchObject::ColorMapType::Type SketchObject::getColorMapType() const
+{
+    return ColorMapType::SOLID_COLOR_RED;
+}
+//#########################################################################
+const QString &SketchObject::getArrayToColorBy() const
+{
+    throw "Object does not have array to color by.";
 }
 //#########################################################################
 int SketchObject::getModelConformation() const {
@@ -74,150 +146,190 @@ vtkActor *SketchObject::getActor() {
     return NULL;
 }
 //#########################################################################
-void SketchObject::getPosition(q_vec_type dest) const {
-    if (parent != NULL || localTransformDefiningPosition) {
+void SketchObject::getPosition(q_vec_type dest) const
+{
+    if (parent != NULL || localTransformDefiningPosition)
+    {
         localTransform->GetPosition(dest);
-    } else {
+    }
+    else
+    {
         q_vec_copy(dest,position);
     }
 }
 //#########################################################################
-void SketchObject::getOrientation(q_type dest) const {
-    if (parent != NULL || localTransformDefiningPosition) {
+void SketchObject::getOrientation(q_type dest) const
+{
+    if (parent != NULL || localTransformDefiningPosition)
+    {
         double wxyz[4];
         localTransform->GetOrientationWXYZ(wxyz);
         q_from_axis_angle(dest,wxyz[1],wxyz[2],wxyz[3],wxyz[0]*Q_PI/180.0);
-    } else {
+    }
+    else
+    {
         q_copy(dest,orientation);
     }
 }
 //#########################################################################
-void SketchObject::getOrientation(double matrix[3][3]) const {
+void SketchObject::getOrientation(double matrix[3][3]) const
+{
     q_type tmp;
     getOrientation(tmp); // simpler than duplicating case code
     quatToPQPMatrix(tmp,matrix);
 }
 
 //#########################################################################
-void SketchObject::setPosition(const q_vec_type newPosition) {
+void SketchObject::setPosition(const q_vec_type newPosition)
+{
     q_vec_copy(position,newPosition);
     recalculateLocalTransform();
-    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();)
+    {
         it.next()->objectMoved(this);
     }
 }
 
 //#########################################################################
-void SketchObject::setOrientation(const q_type newOrientation) {
+void SketchObject::setOrientation(const q_type newOrientation)
+{
     q_copy(orientation,newOrientation);
     recalculateLocalTransform();
-    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();)
+    {
         it.next()->objectMoved(this);
     }
 }
 
 //#########################################################################
-void SketchObject::setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation) {
+void SketchObject::setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation)
+{
     q_vec_copy(position,newPosition);
     q_copy(orientation,newOrientation);
     recalculateLocalTransform();
-    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();)
+    {
         it.next()->objectMoved(this);
     }
 }
 
 //#########################################################################
-void SketchObject::getLastPosition(q_vec_type dest) const {
+void SketchObject::getLastPosition(q_vec_type dest) const
+{
     q_vec_copy(dest,lastPosition);
 }
 //#########################################################################
-void SketchObject::getLastOrientation(q_type dest) const {
+void SketchObject::getLastOrientation(q_type dest) const
+{
     q_copy(dest,lastOrientation);
 }
 //#########################################################################
-void SketchObject::setLastLocation() {
+void SketchObject::setLastLocation()
+{
     getPosition(lastPosition);
     getOrientation(lastOrientation);
 }
 
 //#########################################################################
-void SketchObject::restoreToLastLocation() {
+void SketchObject::restoreToLastLocation()
+{
     setPosAndOrient(lastPosition,lastOrientation);
 }
 
 //#########################################################################
-int SketchObject::getPrimaryCollisionGroupNum() {
-    if (parent != NULL) {
+int SketchObject::getPrimaryCollisionGroupNum()
+{
+    if (parent != NULL)
+    {
         return parent->getPrimaryCollisionGroupNum();
     }
-    if (collisionGroups.empty()) {
+    if (collisionGroups.empty())
+    {
         return OBJECT_HAS_NO_GROUP;
-    } else {
+    }
+    else
+    {
         return collisionGroups[0];
     }
 }
 
 //#########################################################################
-void SketchObject::setPrimaryCollisionGroupNum(int num) {
-    if (collisionGroups.contains(num)) {
+void SketchObject::setPrimaryCollisionGroupNum(int num)
+{
+    if (collisionGroups.contains(num))
+    {
         collisionGroups.removeOne(num);
     }
     collisionGroups.prepend(num);
 }
 //#########################################################################
-void SketchObject::addToCollisionGroup(int num) {
+void SketchObject::addToCollisionGroup(int num)
+{
     if (collisionGroups.contains(num) || num == OBJECT_HAS_NO_GROUP)
         return;
     collisionGroups.append(num);
 }
 
 //#########################################################################
-bool SketchObject::isInCollisionGroup(int num) const {
-    if (parent != NULL) {
+bool SketchObject::isInCollisionGroup(int num) const
+{
+    if (parent != NULL)
+    {
         return parent->isInCollisionGroup(num);
     }
     return collisionGroups.contains(num);
 }
 //#########################################################################
-void SketchObject::removeFromCollisionGroup(int num) {
+void SketchObject::removeFromCollisionGroup(int num)
+{
     collisionGroups.removeAll(num);
 }
 //#########################################################################
-vtkTransform *SketchObject::getLocalTransform() {
+vtkTransform *SketchObject::getLocalTransform()
+{
     return localTransform;
 }
 //#########################################################################
-vtkLinearTransform *SketchObject::getInverseLocalTransform() {
+vtkLinearTransform *SketchObject::getInverseLocalTransform()
+{
     return invLocalTransform;
 }
 
 //#########################################################################
 void SketchObject::getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint,
-                                                        q_vec_type worldCoordsOut) const {
+                                                        q_vec_type worldCoordsOut) const
+{
     localTransform->TransformPoint(modelPoint,worldCoordsOut);
 }
 //#########################################################################
 void SketchObject::getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint,
-                                                        q_vec_type modelCoordsOut) const {
+                                                        q_vec_type modelCoordsOut) const
+{
     invLocalTransform->TransformPoint(worldPoint, modelCoordsOut);
 }
 //#########################################################################
-void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
+void SketchObject::getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const
+{
     invLocalTransform->TransformVector(worldVec,modelVecOut);
 }
 //#########################################################################
-void SketchObject::getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const {
+void SketchObject::getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const
+{
     localTransform->TransformVector(modelVec,worldVecOut);
 }
 //#########################################################################
-void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
-    if (parent == NULL) {
+void SketchObject::addForce(const q_vec_type point, const q_vec_type force)
+{
+    if (parent == NULL)
+    {
         q_vec_add(forceAccum,forceAccum,force);
         q_vec_type tmp, torque;
         getWorldVectorInModelSpace(force,tmp);
         q_vec_cross_product(torque,point,tmp);
         q_vec_add(torqueAccum,torqueAccum,torque);
-    } else { // if we have a parent, then we are not moving ourself, the parent
+    }
+    else
+    { // if we have a parent, then we are not moving ourself, the parent
                 // should be doing the moving.  The object should be rigid relative
                 // to the parent.
         q_vec_type tmp;
@@ -229,95 +341,118 @@ void SketchObject::addForce(const q_vec_type point, const q_vec_type force) {
 }
 
 //#########################################################################
-void SketchObject::getForce(q_vec_type out) const {
+void SketchObject::getForce(q_vec_type out) const
+{
     q_vec_copy(out,forceAccum);
 }
 //#########################################################################
-void SketchObject::getTorque(q_vec_type out) const {
+void SketchObject::getTorque(q_vec_type out) const
+{
     q_vec_copy(out,torqueAccum);
 }
 //#########################################################################
-void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque) {
+void SketchObject::setForceAndTorque(const q_vec_type force, const q_vec_type torque)
+{
     q_vec_copy(forceAccum,force);
     q_vec_copy(torqueAccum,torque);
     notifyForceObservers();
 }
 
 //#########################################################################
-void SketchObject::clearForces() {
+void SketchObject::clearForces()
+{
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
 }
 
 //#########################################################################
-void SketchObject::setLocalTransformPrecomputed(bool isComputed) {
+void SketchObject::setLocalTransformPrecomputed(bool isComputed)
+{
     localTransformPrecomputed = isComputed;
-    if (!isComputed) {
+    if (!isComputed)
+    {
         recalculateLocalTransform();
     }
 }
 
 //#########################################################################
-bool SketchObject::isLocalTransformPrecomputed() {
+bool SketchObject::isLocalTransformPrecomputed()
+{
     return localTransformPrecomputed;
 }
 
 //#########################################################################
-void SketchObject::setLocalTransformDefiningPosition(bool isDefining) {
+void SketchObject::setLocalTransformDefiningPosition(bool isDefining)
+{
     localTransformDefiningPosition = isDefining;
 }
 
 //#########################################################################
-bool SketchObject::isLocalTransformDefiningPosition() {
+bool SketchObject::isLocalTransformDefiningPosition()
+{
     return localTransformDefiningPosition;
 }
 
 //#########################################################################
-bool SketchObject::hasKeyframes() const {
+bool SketchObject::hasKeyframes() const
+{
     return !(keyframes.isNull() || keyframes->empty());
 }
 
 //#########################################################################
-int SketchObject::getNumKeyframes() const {
-    if (keyframes.isNull()) {
+int SketchObject::getNumKeyframes() const
+{
+    if (keyframes.isNull())
+    {
         return 0;
-    } else {
+    }
+    else
+    {
         return keyframes->size();
     }
 }
 
 //#########################################################################
-const QMap< double, Keyframe > *SketchObject::getKeyframes() const {
+const QMap< double, Keyframe > *SketchObject::getKeyframes() const
+{
     return keyframes.data();
 }
 
 //#########################################################################
-void SketchObject::addKeyframeForCurrentLocation(double t) {
-    if (t < 0) { // no negative times allowed
+void SketchObject::addKeyframeForCurrentLocation(double t)
+{
+    if (t < 0)
+    { // no negative times allowed
         return;
     }
     Keyframe frame(position, orientation,visible,active);
-    if (keyframes.isNull()) {
+    if (keyframes.isNull())
+    {
         keyframes.reset(new QMap< double, Keyframe >());
     }
     keyframes->insert(t,frame);
-    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext();) {
+    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext();)
+    {
         it.next()->objectKeyframed(this,t);
     }
 }
 
 //#########################################################################
-void SketchObject::removeKeyframeForTime(double t) {
-    if (keyframes->contains(t)) {
+void SketchObject::removeKeyframeForTime(double t)
+{
+    if (keyframes->contains(t))
+    {
         keyframes->remove(t);
     }
 }
 
 //#########################################################################
-void SketchObject::setPositionByAnimationTime(double t) {
+void SketchObject::setPositionByAnimationTime(double t)
+{
     // we don't support negative times and if the object has no keyframes, then
     // no need to do anything
-    if (t < 0 || !hasKeyframes()) {
+    if (t < 0 || !hasKeyframes())
+    {
         return;
     }
     QMapIterator< double, Keyframe > it(*keyframes.data());
@@ -326,11 +461,13 @@ void SketchObject::setPositionByAnimationTime(double t) {
     // go until the next one is greater than the time (the last one
     // will be less than the time unless the time is less than the first
     // time in the keyframes list
-    while (it.hasNext() && it.peekNext().key() < t) {
+    while (it.hasNext() && it.peekNext().key() < t)
+    {
         last = it.next().key();
     }
     // if we are after the end of the last keyframe defined
-    if (!it.hasNext()) {
+    if (!it.hasNext())
+    {
         Keyframe f = keyframes->value(last);
         f.getPosition(position);
         f.getOrientation(orientation);
@@ -338,14 +475,18 @@ void SketchObject::setPositionByAnimationTime(double t) {
         setActive(f.isActive());
     // if we happenned to land on a keyframe
         // or if we are before the first keyframe
-    } else if (it.peekNext().key() == t ||
-               it.peekNext().key() == last) {
+    }
+    else if (it.peekNext().key() == t ||
+               it.peekNext().key() == last)
+    {
         Keyframe f = it.next().value();
         f.getPosition(position);
         f.getOrientation(orientation);
         setIsVisible(f.isVisibleAfter());
         setActive(f.isActive());
-    } else {
+    }
+    else
+    {
         // if we have a next keyframe that is greater than the time
         double next = it.peekNext().key();
         // note, if the first keyframe is after the time given, these will
@@ -370,25 +511,30 @@ void SketchObject::setPositionByAnimationTime(double t) {
         setIsVisible(f1.isVisibleAfter());
         setActive(f1.isActive());
     }
-    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();) {
+    for (QSetIterator< ObjectChangeObserver * > it(observers); it.hasNext();)
+    {
         it.next()->objectMoved(this);
     }
     recalculateLocalTransform();
 }
 
 //#########################################################################
-void SketchObject::addObserver(ObjectChangeObserver *obs) {
+void SketchObject::addObserver(ObjectChangeObserver *obs)
+{
         observers.insert(obs);
 }
 
 //#########################################################################
-void SketchObject::removeObserver(ObjectChangeObserver *obs) {
+void SketchObject::removeObserver(ObjectChangeObserver *obs)
+{
     observers.remove(obs);
 }
 
 //#########################################################################
-void SketchObject::recalculateLocalTransform()  {
-    if (isLocalTransformPrecomputed()) {
+void SketchObject::recalculateLocalTransform()
+{
+    if (isLocalTransformPrecomputed())
+    {
         localTransformUpdated();
         return;
     }
@@ -399,7 +545,8 @@ void SketchObject::recalculateLocalTransform()  {
     localTransform->Identity();
     localTransform->RotateWXYZ(angle,x,y,z);
     localTransform->Translate(position);
-    if (parent != NULL) {
+    if (parent != NULL)
+    {
         localTransform->Concatenate(parent->getLocalTransform());
     }
     localTransform->Update();
@@ -407,37 +554,46 @@ void SketchObject::recalculateLocalTransform()  {
 }
 
 //#########################################################################
-void SketchObject::localTransformUpdated() {}
+void SketchObject::localTransformUpdated()
+{
+}
 
 //#########################################################################
-void SketchObject::localTransformUpdated(SketchObject *obj) {
+void SketchObject::localTransformUpdated(SketchObject *obj)
+{
     obj->localTransformUpdated();
 }
 
 //#########################################################################
-void SketchObject::notifyForceObservers() {
-    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext(); ) {
+void SketchObject::notifyForceObservers()
+{
+    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext(); )
+    {
         it.next()->objectPushed(this);
     }
 }
 
 //#########################################################################
-void SketchObject::setIsVisible(bool isVisible) {
+void SketchObject::setIsVisible(bool isVisible)
+{
     visible = isVisible;
 }
 
 //#########################################################################
-bool SketchObject::isVisible() const {
+bool SketchObject::isVisible() const
+{
     return visible;
 }
 
 //#########################################################################
-void SketchObject::setActive(bool isActive) {
+void SketchObject::setActive(bool isActive)
+{
     active = isActive;
 }
 
 //#########################################################################
-bool SketchObject::isActive() const {
+bool SketchObject::isActive() const
+{
     return active;
 }
 

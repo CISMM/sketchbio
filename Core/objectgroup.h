@@ -24,6 +24,10 @@ public:
     // if numInstances is 1, must provide model and actor, otherwise return null
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
+    virtual ColorMapType::Type getColorMapType() const;
+    virtual void setColorMapType(ColorMapType::Type cmap);
+    virtual const QString &getArrayToColorBy() const;
+    virtual void setArrayToColorBy(QString &arrayName);
     virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual vtkActor *getActor();
     // methods to add/remove objects

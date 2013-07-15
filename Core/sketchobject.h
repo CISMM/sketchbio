@@ -6,6 +6,7 @@
 #include <vtkSmartPointer.h>
 class vtkPolyDataAlgorithm;
 class vtkTransformPolyDataFilter;
+class vtkColorTransferFunction;
 class vtkTransform;
 class vtkLinearTransform;
 class vtkActor;
@@ -14,6 +15,7 @@ class vtkActor;
 #include <QScopedPointer>
 #include <QMap>
 #include <QSet>
+class QString;
 
 class SketchModel;
 class Keyframe;
@@ -36,6 +38,38 @@ class ObjectChangeObserver;
 
 class SketchObject {
 public:
+    /*
+     * This inner class contains an enum that holds the color map types that are available
+     *
+     */
+    class ColorMapType {
+    public:
+        enum Type {
+            SOLID_COLOR_RED,
+            SOLID_COLOR_GREEN,
+            SOLID_COLOR_BLUE,
+            SOLID_COLOR_YELLOW,
+            SOLID_COLOR_PURPLE,
+            SOLID_COLOR_CYAN,
+            DIM_SOLID_COLOR_RED,
+            DIM_SOLID_COLOR_GREEN,
+            DIM_SOLID_COLOR_BLUE,
+            DIM_SOLID_COLOR_YELLOW,
+            DIM_SOLID_COLOR_PURPLE,
+            DIM_SOLID_COLOR_CYAN,
+            BLUE_TO_RED
+        };
+    };
+
+    // This function takes a color map type and constructs the color map as
+    // a vtkColorTransferFunction.  The returned vtkColorTransferFunction should
+    // recieved with vtkSmartPointer<...>::Take()
+    // low and high are the lowest and highest values in the interval that the
+    // color map should map over.
+    static vtkColorTransferFunction *getColorMap(ColorMapType::Type cmapType,
+                                                 double low, double high);
+
+public:
     // constructor
     SketchObject();
     virtual ~SketchObject();
@@ -52,6 +86,15 @@ public:
     // however, these must be implemented to return a valid SketchModel if numInstances returns 1
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
+    // gets the color map for this object (only a valid call if the numInstances() == 1)
+    virtual ColorMapType::Type getColorMapType() const;
+    // sets the color map for this object (or all child objects if numInstances() > 1)
+    virtual void setColorMapType(ColorMapType::Type cmap) = 0;
+    // gets the array that is currently being used for coloring (default: modelNum)
+    // only useful when numInstances == 1
+    virtual const QString &getArrayToColorBy() const;
+    // sets the array that is being used for coloring (on the object or all subobjects)
+    virtual void setArrayToColorBy(QString &arrayName) = 0;
     // gets the transformed polygonal data of the object (do not modify the return value, but
     // you may use it as input to other filters)
     // this may return NULL if the object has no geometry itself (children may have geometry in

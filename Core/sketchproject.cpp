@@ -34,6 +34,7 @@
 #include "transformequals.h"
 
 #define NUM_COLORS (6)
+/*
 static double COLORS[][3] =
   {  { 1.0, 0.7, 0.7 },
      { 0.7, 1.0, 0.8 },
@@ -41,6 +42,16 @@ static double COLORS[][3] =
      { 1.0, 1.0, 0.7 },
      { 1.0, 0.7, 1.0 },
      { 0.7, 1.0, 1.0 } };
+     */
+static SketchObject::ColorMapType::Type COLORS[] =
+{
+    SketchObject::ColorMapType::SOLID_COLOR_RED,
+    SketchObject::ColorMapType::SOLID_COLOR_GREEN,
+    SketchObject::ColorMapType::SOLID_COLOR_BLUE,
+    SketchObject::ColorMapType::SOLID_COLOR_YELLOW,
+    SketchObject::ColorMapType::SOLID_COLOR_PURPLE,
+    SketchObject::ColorMapType::SOLID_COLOR_CYAN,
+};
 
 class TrackerObject : public SketchObject {
 public:
@@ -101,6 +112,8 @@ public:
         q_xform(worldVecOut,orient,modelVec);
     }
 
+    virtual void setColorMapType(ColorMapType::Type) {}
+    virtual void setArrayToColorBy(QString &) {}
     virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
     virtual vtkTransformPolyDataFilter *getTransformedGeometry() { return shadowGeometry; }
@@ -522,7 +535,8 @@ SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
 {
     int myIdx = world->getNumberOfObjects();
     SketchObject *object = world->addObject(model,pos,orient);
-    object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+    //object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+    object->setColorMapType(COLORS[myIdx%NUM_COLORS]);
     return object;
 }
 
@@ -547,7 +561,8 @@ SketchObject *SketchProject::addObject(QString source,QString filename)
 SketchObject *SketchProject::addObject(SketchObject *object) {
     int myIdx = world->getNumberOfObjects();
     if (object->numInstances() == 1) {
-        object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+    //    object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
+        object->setColorMapType(COLORS[myIdx%NUM_COLORS]);
     }
     world->addObject(object);
     // this is for when the object is read in from a file, this method is called
