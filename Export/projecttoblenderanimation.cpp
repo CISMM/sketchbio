@@ -10,6 +10,8 @@
 #include <vtkThreshold.h>
 #include <vtkGeometryFilter.h>
 #include <vtkColorTransferFunction.h>
+#include <vtkPointData.h>
+#include <vtkDataArray.h>
 
 #include <vtkVRMLWriter.h>
 
@@ -20,6 +22,42 @@
 #include <worldmanager.h>
 #include <sketchproject.h>
 
+/*
+ * This object is the combined key for the model and color to vrml file hash.
+ */
+struct ModelColorMapKey
+{
+    SketchModel *model;
+    int conformation;
+    SketchObject::ColorMapType::Type cmap;
+    QString arrayToColorBy;
+    ModelColorMapKey(SketchModel *m, int c, SketchObject::ColorMapType::Type cm,
+                     const QString &a)
+        :
+          model(m),
+          conformation(c),
+          cmap(cm),
+          arrayToColorBy(a)
+    {
+    }
+};
+
+// make sure equal keys compare as equal
+inline bool operator ==(const ModelColorMapKey &m1, const ModelColorMapKey &m2)
+{
+    return (m1.model == m2.model) && (m1.conformation == m2.conformation) &&
+            (m1.cmap == m2.cmap) && (m1.arrayToColorBy == m2.arrayToColorBy);
+}
+
+// make sure we can hash the key
+inline uint qHash(const ModelColorMapKey &key)
+{
+    return qHash(key.model) ^ qHash(key.conformation) * qHash(key.cmap) ^
+            qHash(key.arrayToColorBy);
+}
+
+//#########################################################################################
+//#########################################################################################
 unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, unsigned frameRate) {
     return floor(time * frameRate + 0.5);
 }
@@ -35,9 +73,8 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("bpy.ops.object.delete()\n");
     file.write("modelObjects = list()\n");
     file.write("myObjects = list()\n");
-    QHash< QPair< SketchModel *, int >, int> modelIdxs;
     QHash<SketchObject *, int> objectIdxs;
-    success &= writeCreateObjects(file,modelIdxs,objectIdxs, proj);
+    success &= writeCreateObjects(file,objectIdxs, proj);
     success &= writeObjectKeyframes(file,objectIdxs, proj);
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
@@ -56,42 +93,41 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     return success && file.error() == QFile::NoError;
 }
 
-void ProjectToBlenderAnimation::writeCreateModel(
-        QFile &file, QHash< QPair< SketchModel *, int>, int > &modelIdxs,
-        SketchModel *model, int conformation)
+// Writes code to create a base object to copy for the model and adds it to the list modelObjects
+// with indices that populate the given QHash so that a model's value in the map is its base object's
+// index in the list
+static inline void writeCreateModel(
+        QFile &file, QHash< ModelColorMapKey, int > &modelIdxs,
+        ModelColorMapKey &model)
 {
-    modelIdxs.insert(QPair< SketchModel *, int >(model,conformation),
-                     modelIdxs.size());
-    QString source = model->getSource(conformation);
-    QString fname = model->getFileNameFor(conformation,
-                                          ModelResolution::FULL_RESOLUTION);
-    if (fname.endsWith(".vtk"))
+    modelIdxs.insert(model, modelIdxs.size());
+    QString source = model.model->getSource(model.conformation);
+    QString fname = model.model->getFileNameFor(model.conformation,
+                                                ModelResolution::FULL_RESOLUTION);
+    if (source != CAMERA_MODEL_KEY)
     {
-        vtkSmartPointer< vtkColorTransferFunction > colors =
-                vtkSmartPointer< vtkColorTransferFunction >::New();
-        colors->AddRGBPoint(1.0,1.0,0.25,0.25);
-        fname = generateVRMLFileFor(fname, "modelNum",colors);
+        if (fname.endsWith(".vtk"))
+        {
+            double range[2] = {0.0, 1.0};
+            vtkPointData *pointData = model.model->getVTKSurface(model.conformation)
+                    ->GetOutput()->GetPointData();
+            if (pointData->HasArray(model.arrayToColorBy.toStdString().c_str()))
+            {
+                pointData->GetArray(model.arrayToColorBy.toStdString().c_str())
+                        ->GetRange(range);
+            }
+            vtkSmartPointer< vtkColorTransferFunction > colors =
+                    vtkSmartPointer< vtkColorTransferFunction >::Take(
+                        SketchObject::getColorMap(model.cmap,range[0],range[1])
+                    );
+            fname = ProjectToBlenderAnimation::generateVRMLFileFor(
+                        fname, model.arrayToColorBy.toStdString().c_str(),colors);
+        }
     }
     QString line = "obj = makeDefaultObject('%1','%2')\n";
     line = line.arg(source,fname);
     file.write(line.toStdString().c_str());
     file.write("modelObjects.append(obj)\n");
-}
-
-bool ProjectToBlenderAnimation::writeCreateObjects(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
-                                                   QHash<SketchObject *, int> &objectIdxs, SketchProject *proj) {
-    WorldManager *world = proj->getWorldManager();
-    file.write("\n\n");
-    file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
-    int objectsLen = 0;
-    QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
-    QListIterator<SketchObject *> it = world->getObjectIterator();
-    while (it.hasNext())
-    {
-        writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
-    }
-    file.write("\n\n");
-    return file.error() == QFile::NoError;
 }
 
 static inline void computeNewTranslate(q_vec_type pos, q_type orient, SketchObject *obj)
@@ -107,9 +143,12 @@ static inline void computeNewTranslate(q_vec_type pos, q_type orient, SketchObje
     q_vec_add(pos,tmp,pos);
 }
 
-void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< SketchModel *, int >, int> &modelIdxs,
-                                                  QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
-                                                  SketchProject *proj, SketchObject *obj)
+// Writes code to create a single object and recurse on groups (only objects with the an individual model
+// are keyframed, groups are ignored and each object within them is added)
+static inline void writeCreateObject(
+        QFile &file, QHash< ModelColorMapKey, int> &modelIdxs,
+        QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
+        SketchProject *proj, SketchObject *obj)
 {
     if (obj->numInstances() != 1)
     {
@@ -124,10 +163,12 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
         QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
         SketchModel *model  = obj->getModel();
         int conformation = obj->getModelConformation();
-        QPair< SketchModel *, int > key(model,conformation);
+        ModelColorMapKey key(model,conformation,
+                             obj->getColorMapType(),
+                             obj->getArrayToColorBy());
         if (!modelIdxs.contains(key))
         {
-            ProjectToBlenderAnimation::writeCreateModel(file,modelIdxs,model,conformation);
+            writeCreateModel(file,modelIdxs,key);
         }
         int idx = modelIdxs.value(key);
         sprintf(buf.data(),"select_object(modelObjects[%u])\n",idx);
@@ -186,6 +227,26 @@ void ProjectToBlenderAnimation::writeCreateObject(QFile &file, QHash< QPair< Ske
         }
     }
 }
+
+bool ProjectToBlenderAnimation::writeCreateObjects(
+        QFile &file,
+        QHash<SketchObject *, int> &objectIdxs, SketchProject *proj)
+{
+    QHash< ModelColorMapKey, int > modelIdxs;
+    WorldManager *world = proj->getWorldManager();
+    file.write("\n\n");
+    file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
+    int objectsLen = 0;
+    QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
+    QListIterator<SketchObject *> it = world->getObjectIterator();
+    while (it.hasNext())
+    {
+        writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
+    }
+    file.write("\n\n");
+    return file.error() == QFile::NoError;
+}
+
 
 bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchObject *, int> &objectIdxs,
                                                      SketchProject *proj, unsigned frameRate)
