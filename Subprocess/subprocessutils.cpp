@@ -96,14 +96,22 @@ QString getChimeraVTKExtensionDir()
         return appPath.append("/scripts");
     }
 #elif defined(_WIN32)
+	QString result;
     if (appPath.contains("Program Files")) // Installed
     {
-        return appPath.append("/scripts");
+        result = appPath.append("/scripts");
     }
-    else // development build
+    else if (appPath.contains("Subprocess")) // development build test programs
     {
-        return appPath.mid(0,appPath.lastIndexOf("/")).append("scripts");
+        result = appPath.mid(0,appPath.lastIndexOf("/Subprocess") + 1).append("scripts");
     }
+	else // development build
+	{
+		result = appPath.mid(0,appPath.lastIndexOf("/")).append("/scripts");
+	}
+	result = result.replace("/","\\\\");
+	qDebug() << "Found chimera scripts at: " << result;
+	return result;
 #elif defined(__linux__)
     if (appPath.contains("/usr"))
     {

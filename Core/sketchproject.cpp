@@ -526,6 +526,10 @@ SketchModel *SketchProject::addModelFromFile(QString source, QString fileName,
     else
     {
         // Can't throw, called from Qt slot
+		if (!QFile(fullpath).exists() )
+		{
+			qDebug() << "Failed to create file: " << fullpath;
+		}
         return NULL;
     }
 }

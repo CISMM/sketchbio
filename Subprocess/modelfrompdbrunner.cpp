@@ -86,6 +86,13 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             //ModelUtilities::vtkConvertAsciiToBinary(filename);
             model = project->addModelFromFile(sourceName,
                         filename, DEFAULT_INVERSE_MASS, DEFAULT_INVERSE_MOMENT);
+			if (model == NULL)
+			{
+				qDebug() << "Failed to generate model!";
+				emit finished(false);
+				deleteLater();
+				return;
+			}
             for (int conf = 0; conf < model->getNumberOfConformations(); conf++)
             {
                 if (model->getSource(conf) == sourceName)
