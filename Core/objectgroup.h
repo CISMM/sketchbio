@@ -27,7 +27,7 @@ public:
     virtual ColorMapType::Type getColorMapType() const;
     virtual void setColorMapType(ColorMapType::Type cmap);
     virtual const QString &getArrayToColorBy() const;
-    virtual void setArrayToColorBy(QString &arrayName);
+    virtual void setArrayToColorBy(const QString &arrayName);
     virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual vtkActor *getActor();
     // methods to add/remove objects

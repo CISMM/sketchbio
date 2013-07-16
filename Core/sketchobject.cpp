@@ -6,6 +6,75 @@
 #include "keyframe.h"
 #include "objectchangeobserver.h"
 
+const char *SketchObject::ColorMapType::stringFromColorMap(
+        SketchObject::ColorMapType::Type cmap)
+{
+    switch (cmap)
+    {
+    case SketchObject::ColorMapType::SOLID_COLOR_RED:
+        return "solid_red";
+    case SketchObject::ColorMapType::SOLID_COLOR_GREEN:
+        return "solid_green";
+    case SketchObject::ColorMapType::SOLID_COLOR_BLUE:
+        return "solid_blue";
+    case SketchObject::ColorMapType::SOLID_COLOR_YELLOW:
+        return "solid_yellow";
+    case SketchObject::ColorMapType::SOLID_COLOR_PURPLE:
+        return "solid_purple";
+    case SketchObject::ColorMapType::SOLID_COLOR_CYAN:
+        return "solid_cyan";
+    case SketchObject::ColorMapType::DIM_SOLID_COLOR_RED:
+        return "dim_red";
+    case SketchObject::ColorMapType::DIM_SOLID_COLOR_GREEN:
+        return "dim_green";
+    case SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE:
+        return "dim_blue";
+    case SketchObject::ColorMapType::DIM_SOLID_COLOR_YELLOW:
+        return "dim_yellow";
+    case SketchObject::ColorMapType::DIM_SOLID_COLOR_PURPLE:
+        return "dim_purple";
+    case SketchObject::ColorMapType::DIM_SOLID_COLOR_CYAN:
+        return "dim_cyan";
+    case SketchObject::ColorMapType::BLUE_TO_RED:
+        return "blue_to_red";
+    default:
+        throw "No string for color map: " + QString::number(cmap);
+    }
+}
+
+SketchObject::ColorMapType::Type SketchObject::ColorMapType::colorMapFromString(
+        const char *str)
+{
+    QString s(str);
+    if (s == "solid_red")
+        return SketchObject::ColorMapType::SOLID_COLOR_RED;
+    if (s ==  "solid_green")
+        return SketchObject::ColorMapType::SOLID_COLOR_GREEN;
+    if (s ==  "solid_blue")
+        return SketchObject::ColorMapType::SOLID_COLOR_BLUE;
+    if (s ==  "solid_yellow")
+        return SketchObject::ColorMapType::SOLID_COLOR_YELLOW;
+    if (s ==  "solid_purple")
+        return SketchObject::ColorMapType::SOLID_COLOR_PURPLE;
+    if (s ==  "solid_cyan")
+        return SketchObject::ColorMapType::SOLID_COLOR_CYAN;
+    if (s ==  "dim_red")
+        return SketchObject::ColorMapType::DIM_SOLID_COLOR_RED;
+    if (s ==  "dim_green")
+        return SketchObject::ColorMapType::DIM_SOLID_COLOR_GREEN;
+    if (s ==  "dim_blue")
+        return SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE;
+    if (s ==  "dim_yellow")
+        return SketchObject::ColorMapType::DIM_SOLID_COLOR_YELLOW;
+    if (s ==  "dim_purple")
+        return SketchObject::ColorMapType::DIM_SOLID_COLOR_PURPLE;
+    if (s ==  "dim_cyan")
+        return SketchObject::ColorMapType::DIM_SOLID_COLOR_CYAN;
+    if (s ==  "blue_to_red")
+        return SketchObject::ColorMapType::BLUE_TO_RED;
+    throw "Unknown color map.";
+}
+
 vtkColorTransferFunction *SketchObject::getColorMap(
         SketchObject::ColorMapType::Type cmapType,
         double low,

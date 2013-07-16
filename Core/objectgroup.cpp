@@ -114,7 +114,7 @@ const QString &ObjectGroup::getArrayToColorBy() const
 }
 
 //#########################################################################
-void ObjectGroup::setArrayToColorBy(QString &arrayName)
+void ObjectGroup::setArrayToColorBy(const QString &arrayName)
 {
     for (int i = 0; i < children.length(); i++)
     {

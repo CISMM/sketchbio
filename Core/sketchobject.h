@@ -59,6 +59,11 @@ public:
             DIM_SOLID_COLOR_CYAN,
             BLUE_TO_RED
         };
+        // gets the color map corresponding to one of the strings
+        // returned by stringFromColorMap
+        static Type colorMapFromString(const char *str);
+        // gets a string representation of the color map
+        static const char *stringFromColorMap(Type cmap);
     };
 
     // This function takes a color map type and constructs the color map as
@@ -94,7 +99,7 @@ public:
     // only useful when numInstances == 1
     virtual const QString &getArrayToColorBy() const;
     // sets the array that is being used for coloring (on the object or all subobjects)
-    virtual void setArrayToColorBy(QString &arrayName) = 0;
+    virtual void setArrayToColorBy(const QString &arrayName) = 0;
     // gets the transformed polygonal data of the object (do not modify the return value, but
     // you may use it as input to other filters)
     // this may return NULL if the object has no geometry itself (children may have geometry in

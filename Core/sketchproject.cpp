@@ -113,7 +113,7 @@ public:
     }
 
     virtual void setColorMapType(ColorMapType::Type) {}
-    virtual void setArrayToColorBy(QString &) {}
+    virtual void setArrayToColorBy(const QString &) {}
     virtual int numInstances() const { return 0; }
     virtual vtkActor *getActor() { return actor; }
     virtual vtkTransformPolyDataFilter *getTransformedGeometry() { return shadowGeometry; }

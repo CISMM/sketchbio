@@ -102,7 +102,7 @@ const QString &ModelInstance::getArrayToColorBy() const
 }
 
 //#########################################################################
-void ModelInstance::setArrayToColorBy(QString &arrayName)
+void ModelInstance::setArrayToColorBy(const QString &arrayName)
 {
     arrayToColorBy = arrayName;
     updateColorMap();

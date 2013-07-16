@@ -55,6 +55,8 @@
 #define OBJECTLIST_ELEMENT_NAME                 "objectlist"
 #define OBJECT_ELEMENT_NAME                     "object"
 #define OBJECT_MODELID_ATTRIBUTE_NAME           "modelid"
+#define OBJECT_COLOR_MAP_ATTRIBUTE_NAME         "colorMap"
+#define OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME      "arrayToColorBy"
 #define OBJECT_MODEL_CONF_NUM_ATTR_NAME         "conformation"
 #define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME     "numInstances"
 #define OBJECT_VISIBILITY_ATTRIBUTE_NAME        "visibility"
@@ -87,6 +89,7 @@
 #define TRANSFORM_OP_PAIR_ELEMENT_NAME          "objectPair"
 #define TRANSFORM_OP_PAIR_FIRST_ATTRIBUTE_NAME  "firstObject"
 #define TRANSFORM_OP_PAIR_SECOND_ATTRIBUTE_NAME "secondObject"
+
 
 inline void setPreciseVectorAttribute(vtkXMLDataElement *elem, const double *vect, int len, const char *attrName) {
     QString data;
@@ -361,6 +364,11 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
         QString idx = itr.value();
         modelId = modelId.append(idx);
         child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,modelId.toStdString().c_str());
+        SketchObject::ColorMapType::Type cmap = object->getColorMapType();
+        const QString &array = object->getArrayToColorBy();
+        child->SetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME,
+                            SketchObject::ColorMapType::stringFromColorMap(cmap));
+        child->SetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME,array.toStdString().c_str());
     }
     child->SetIntAttribute(OBJECT_MODEL_CONF_NUM_ATTR_NAME,object->getModelConformation());
     // Current thoughts: collision groups should be recreated from effects placed on objects being recreated.
@@ -955,6 +963,18 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
             // modelInstace
             object.reset(new ModelInstance(modelIds.value(mId),confNum));
             object->setPosAndOrient(pos,orient);
+            if (props->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME))
+            {
+                QString array(props->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME));
+                object->setArrayToColorBy(array);
+            }
+            if (props->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME))
+            {
+                const char *ch = props->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
+                SketchObject::ColorMapType::Type cmap;
+                cmap = SketchObject::ColorMapType::colorMapFromString(ch);
+                object->setColorMapType(cmap);
+            }
         } else {
             // group
             QScopedPointer<ObjectGroup> group(new ObjectGroup());
@@ -1002,7 +1022,9 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj,
         return XML_TO_DATA_FAILURE;
     }
     for (int i = 0; i < objects.size(); i++) {
+        SketchObject::ColorMapType::Type cmap = objects[i]->getColorMapType();
         proj->addObject(objects[i]);
+        objects[i]->setColorMapType(cmap);
     }
     return XML_TO_DATA_SUCCESS;
 }

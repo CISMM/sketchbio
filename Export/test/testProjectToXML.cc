@@ -198,6 +198,16 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
         {
             compareModels(o1->getModel(), o2->getModel(), numDifferences, printDiffs);
         }
+        if (o1->getColorMapType() != o2->getColorMapType())
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Color map changed" << endl;
+        }
+        if (o1->getArrayToColorBy() != o2->getArrayToColorBy())
+        {
+            numDifferences++;
+            if (printDiffs) cout << "Array to color by changed" << endl;
+        }
     } else { // test group specific stuff
         compareObjectLists(o1->getSubObjects(),o2->getSubObjects(),numDifferences,printDiffs);
     }
@@ -492,10 +502,13 @@ int testSave2() {
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
     q_type orient1;
     q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    proj1->addObject(m1,pos1,orient1);
+    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
+    o1->setColorMapType(SketchObject::ColorMapType::BLUE_TO_RED);
     pos1[Q_X] += 2 * Q_PI;
     q_mult(orient1,orient1,orient1);
-    proj1->addObject(m1,pos1,orient1);
+    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
+    o2->setColorMapType(SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE);
+    o2->setArrayToColorBy("myarray");
     proj1->addCamera(pos1,orient1);
 
     vtkXMLDataElement *root = ProjectToXML::projectToXML(proj1.data());
