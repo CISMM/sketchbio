@@ -7,7 +7,7 @@
 #include <transformmanager.h>
 #include <sketchtests.h>
 
-#include "objecteditingmode.h"
+#include "transformeditingmode.h"
 #include "springeditingmode.h"
 #include "animationmode.h"
 
@@ -50,7 +50,7 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
 
     // set up modes
     modeList.append(QSharedPointer< HydraInputMode >(
-                        new ObjectEditingMode(project,buttonsDown,analogStatus)));
+                        new TransformEditingMode(project,buttonsDown,analogStatus)));
     modeList.append(QSharedPointer< HydraInputMode >(
                         new SpringEditingMode(project,buttonsDown,analogStatus)));
     modeList.append(QSharedPointer< HydraInputMode >(
