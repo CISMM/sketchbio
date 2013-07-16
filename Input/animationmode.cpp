@@ -79,4 +79,5 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
 
 void AnimationMode::analogsUpdated()
 {
+    useLeftJoystickToRotateViewPoint();
 }

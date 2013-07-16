@@ -301,7 +301,7 @@ QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &
             vtkSmartPointer< vtkPolyDataWriter >::New();
     writer->SetInputConnection(algorithm->GetOutputPort());
     writer->SetFileName(dir.absoluteFilePath(descr + ".vtk").toStdString().c_str());
-//    writer->SetFileTypeToBinary();
+    writer->SetFileTypeToBinary();
     writer->Update();
     writer->Write();
     return dir.absoluteFilePath(descr + ".vtk");

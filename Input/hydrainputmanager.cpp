@@ -10,6 +10,7 @@
 #include "transformeditingmode.h"
 #include "springeditingmode.h"
 #include "animationmode.h"
+#include "coloreditingmode.h"
 
 inline int scale_button_idx() {
     return BUTTON_LEFT(FOUR_BUTTON_IDX);
@@ -55,6 +56,8 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
                         new SpringEditingMode(project,buttonsDown,analogStatus)));
     modeList.append(QSharedPointer< HydraInputMode >(
                         new AnimationMode(project,buttonsDown,analogStatus)));
+    modeList.append(QSharedPointer< HydraInputMode >(
+                        new ColorEditingMode(project,buttonsDown,analogStatus)));
     activeMode = modeList[modeIndex];
 
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
@@ -63,10 +66,10 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
 
     for (int i = 0; i < modeList.size(); i++)
     {
-    connect(this->modeList[i].data(), SIGNAL(newDirectionsString(QString)),
-            this, SLOT(setNewDirectionsString(QString)));
-    connect(this->modeList[i].data(), SIGNAL(viewTimeChanged(double)),
-            this, SLOT(newViewTime(double)));
+        connect(this->modeList[i].data(), SIGNAL(newDirectionsString(QString)),
+                this, SLOT(setNewDirectionsString(QString)));
+        connect(this->modeList[i].data(), SIGNAL(viewTimeChanged(double)),
+                this, SLOT(newViewTime(double)));
     }
 
 }
@@ -85,6 +88,8 @@ QString HydraInputManager::getModeName()
         return QString("Edit Springs");
     case 2:
         return QString("Animation");
+    case 3:
+        return QString("Edit Colors");
     default:
         return QString("");
     }

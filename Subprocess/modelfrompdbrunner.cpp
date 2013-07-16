@@ -137,6 +137,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             int numTris = model->getCollisionModel(conformation)->num_tris;
             decimator->SetTargetReduction(std::max(0.0,1.0 - 5000.0/numTris));
             decimator->SetFeatureAngle(60.0);
+            decimator->BoundaryVertexDeletionOn();
             decimator->Update();
             vtkSmartPointer< vtkThreshold > thresh =
                     vtkSmartPointer< vtkThreshold >::New();
