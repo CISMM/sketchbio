@@ -25,6 +25,7 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QStri
         QString line = "runCommand(\"open %1\")\n";
         cmdFile->write(line.arg(pdbId).toStdString().c_str());
         cmdFile->write("runCommand(\"~show; ~ribbon\")\n");
+        cmdFile->write("runCommand(\"delete solvent\")\n");
         QString cTD = chainsToDelete.trimmed();
         for (int i = 0; i < cTD.length(); i++)
         {
