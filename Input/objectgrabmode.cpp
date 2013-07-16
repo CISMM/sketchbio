@@ -1,5 +1,7 @@
 #include "objectgrabmode.h"
 
+#include <limits>
+
 #include <sketchioconstants.h>
 #include <sketchobject.h>
 #include <worldmanager.h>
