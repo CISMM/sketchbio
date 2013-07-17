@@ -95,6 +95,7 @@ ENDIF(${VTK_VERSION} VERSION_LESS "6")
 TARGET_LINK_LIBRARIES( SketchBio
     ${SketchBioLibraries}
     ${VTK_LIBRARIES}
+    ${QT_LIBRARIES}
     ${VRPN_LIBRARIES}
     ${VRPN_SERVER_LIBRARIES}
     ${QUATLIB_LIBRARIES}
@@ -135,3 +136,7 @@ INSTALL(TARGETS SketchBio
 
 # This must always be last (according to Cory's code in MicroscopeSimulator)
 INCLUDE( CPack )
+
+# make a program to clear the settings to test what will happen on a clean install
+ADD_EXECUTABLE( ClearSettings clearsettings.cpp )
+TARGET_LINK_LIBRARIES( ClearSettings ${QT_LIBRARIES} )
