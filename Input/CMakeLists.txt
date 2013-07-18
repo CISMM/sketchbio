@@ -9,6 +9,7 @@ hydrainputmanager.h
 hydrainputmode.h
 objectgrabmode.h
 coloreditingmode.h
+groupeditingmode.h
 transformeditingmode.h
 springeditingmode.h
 animationmode.h
@@ -21,6 +22,7 @@ hydrainputmanager.cpp  # h file used by Moc, no need to include here
 hydrainputmode.cpp  # h file used by Moc, no need to include here
 objectgrabmode.cpp  # h file used by Moc, no need to include here
 coloreditingmode.cpp  # h file used by Moc, no need to include here
+groupeditingmode.cpp  # h file used by Moc, no need to include here
 transformeditingmode.cpp  # h file used by Moc, no need to include here
 springeditingmode.cpp  # h file used by Moc, no need to include here
 animationmode.cpp  # h file used by Moc, no need to include here

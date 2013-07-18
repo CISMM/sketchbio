@@ -121,6 +121,11 @@ void WorldManager::removeObject(SketchObject *object) {
     removeActors(object);
     removeShadows(object);
     objects.removeAt(index);
+}
+//##################################################################################################
+//##################################################################################################
+void WorldManager::deleteObject(SketchObject *object) {
+    removeObject(object);
     delete object;
 }
 

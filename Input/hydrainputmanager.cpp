@@ -11,6 +11,7 @@
 #include "springeditingmode.h"
 #include "animationmode.h"
 #include "coloreditingmode.h"
+#include "groupeditingmode.h"
 
 inline int scale_button_idx() {
     return BUTTON_LEFT(FOUR_BUTTON_IDX);
@@ -58,6 +59,8 @@ HydraInputManager::HydraInputManager(SketchProject *proj) :
                         new AnimationMode(project,buttonsDown,analogStatus)));
     modeList.append(QSharedPointer< HydraInputMode >(
                         new ColorEditingMode(project,buttonsDown,analogStatus)));
+    modeList.append(QSharedPointer< HydraInputMode >(
+                        new GroupEditingMode(project,buttonsDown,analogStatus)));
     activeMode = modeList[modeIndex];
 
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
@@ -90,8 +93,10 @@ QString HydraInputManager::getModeName()
         return QString("Animation");
     case 3:
         return QString("Edit Colors");
+    case 4:
+        return QString("Edit Groups");
     default:
-        return QString("");
+        return QString("Unknown");
     }
 }
 

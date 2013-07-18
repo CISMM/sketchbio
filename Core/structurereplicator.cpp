@@ -109,7 +109,7 @@ void StructureReplicator::setNumShown(int num) {
         }
     } else {
         for (; numShown > num; numShown--) {
-            world->removeObject(copies.at(copies.size()-1));
+            world->deleteObject(copies.at(copies.size()-1));
             copies.removeLast();
         }
     }

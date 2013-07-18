@@ -72,12 +72,24 @@ public:
 
     /*******************************************************************
      *
-     * Removes the SketchObject identified by the given index from the world
+     * Removes the SketchObject identified by the given index from the world.
+     * This method does not delete the object, instead ownership of the object
+     * is transferred to the caller
      *
      * object - the object, returned by addObject
      *
      *******************************************************************/
     void removeObject(SketchObject *object);
+
+    /*******************************************************************
+     *
+     * Removes the SketchObject identified by the given index from the world.
+     * This method also deletes the object.
+     *
+     * object - the object, returned by addObject
+     *
+     *******************************************************************/
+    void deleteObject(SketchObject *object);
 
     /*******************************************************************
      *
