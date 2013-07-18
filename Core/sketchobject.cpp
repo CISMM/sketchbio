@@ -666,3 +666,23 @@ bool SketchObject::isActive() const
     return active;
 }
 
+//#########################################################################
+void SketchObject::notifyObjectAdded(SketchObject *child)
+{
+    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext(); )
+    {
+        it.next()->subobjectAdded(this,child);
+    }
+    if (parent != NULL)
+        parent->notifyObjectAdded(child);
+}
+//#########################################################################
+void SketchObject::notifyObjectRemoved(SketchObject *child)
+{
+    for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext(); )
+    {
+        it.next()->subobjectRemoved(this,child);
+    }
+    if (parent != NULL)
+        parent->notifyObjectRemoved(child);
+}

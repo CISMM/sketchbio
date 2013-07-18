@@ -13,6 +13,8 @@ public:
     virtual void objectPushed(SketchObject *obj) {}
     virtual void objectKeyframed(SketchObject *obj, double time) {}
     virtual void objectMoved(SketchObject *obj) {}
+    virtual void subobjectAdded(SketchObject *parent,SketchObject *child) {}
+    virtual void subobjectRemoved(SketchObject *parent, SketchObject *child) {}
 };
 
 #endif

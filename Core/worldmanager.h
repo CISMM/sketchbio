@@ -23,6 +23,7 @@ class SketchObject;
 class SpringConnection;
 class PhysicsStrategy;
 #include "groupidgenerator.h"
+#include "objectchangeobserver.h"
 #include "physicsstrategyfactory.h"
 
 
@@ -32,7 +33,7 @@ class PhysicsStrategy;
  * collision tests.
  */
 
-class WorldManager : public GroupIdGenerator
+class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
 {
 public:
     explicit WorldManager(vtkRenderer *r);
@@ -325,15 +326,27 @@ public:
     /*******************************************************************
      *
      * Returns the closest object to the given object, and the distance
-     * between the two objects.  Note: only "real" objects are tested, i.e.
-     * only objects with doPhysics() = true are checked.
+     * between the two objects.
      *
      * subj - the subject object (the one we are comparing to the others)
      * distOut - a pointer to the location where the distance will be stored
      *              when the function exits
      *
      *******************************************************************/
-    SketchObject *getClosestObject(SketchObject *subj,double *distOut);
+    SketchObject *getClosestObject(SketchObject *subj,double &distOut);
+    /*******************************************************************
+     *
+     * Returns the closest object in the list to the subject object.  This
+     * method also returns the distance between the closest and the subject
+     * to the last parameter
+     *
+     * subj - the subject object (the one we are comparing to the others)
+     * distOut - a pointer to the location where the distance will be stored
+     *              when the function exits
+     *
+     *******************************************************************/
+    static SketchObject *getClosestObject(QList<SketchObject *> &objects,
+                                          SketchObject *subj,double &distOut);
     /*******************************************************************
      *
      * Returns the closest spring to the given point, and the 'distance'
@@ -352,6 +365,22 @@ public:
      *
      *******************************************************************/
     void setShadowPlane(q_vec_type point, q_vec_type nVector);
+    /*******************************************************************
+     *
+     * This method is called whenever a subobject is added to a group
+     * in the world and is used to keep the graphics state consistent with
+     * the model state.
+     *
+     *******************************************************************/
+    virtual void subobjectAdded(SketchObject *parent, SketchObject *child);
+    /*******************************************************************
+     *
+     * This method is called whenever a subobject is removed from a group
+     * in the world and is used to keep the graphics state consistent with
+     * the model state.
+     *
+     *******************************************************************/
+    virtual void subobjectRemoved(SketchObject *parent, SketchObject *child);
 private:
     /*******************************************************************
      *
@@ -418,6 +447,11 @@ inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject 
 
 inline const QList<SketchObject *> *WorldManager::getObjects() const {
     return &objects;
+}
+
+inline SketchObject *WorldManager::getClosestObject(SketchObject *subj, double &distOut)
+{
+    return getClosestObject(objects,subj,distOut);
 }
 
 

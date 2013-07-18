@@ -35,15 +35,31 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
         if (lDist < DISTANCE_THRESHOLD && rDist < DISTANCE_THRESHOLD)
         {
             ObjectGroup *grp = dynamic_cast<ObjectGroup *>(lObj);
-            if (grp == NULL)
+            if (lObj == rObj)
             {
-                grp = new ObjectGroup();
-                world->removeObject(lObj);
-                grp->addObject(lObj);
-                world->addObject(grp);
+                if (grp == NULL)
+                    return;
+                SketchObject *rHand = project->getRightHandObject();
+                SketchObject *obj = WorldManager::getClosestObject(
+                            *grp->getSubObjects(),rHand,rDist);
+                if (rDist < DISTANCE_THRESHOLD)
+                {
+                    grp->removeObject(obj);
+                    world->addObject(obj);
+                }
             }
-            world->removeObject(rObj);
-            grp->addObject(rObj);
+            else
+            {
+                if (grp == NULL)
+                {
+                    grp = new ObjectGroup();
+                    world->removeObject(lObj);
+                    grp->addObject(lObj);
+                    world->addObject(grp);
+                }
+                world->removeObject(rObj);
+                grp->addObject(rObj);
+            }
         }
         emit newDirectionsString(" ");
     }

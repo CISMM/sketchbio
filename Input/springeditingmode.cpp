@@ -140,7 +140,7 @@ void SpringEditingMode::doUpdatesForFrame()
         {
             // if we have grabbed a spring, move that spring's end
             double objectDist = 0;
-            SketchObject *closestObject = world->getClosestObject(leftHand,&objectDist);
+            SketchObject *closestObject = world->getClosestObject(leftHand,objectDist);
             if (objectDist > DISTANCE_THRESHOLD)
             {
                 closestObject = NULL;
@@ -193,7 +193,7 @@ void SpringEditingMode::doUpdatesForFrame()
         {
             // if we have grabbed a spring, move that spring's end
             double objectDist = 0;
-            SketchObject *closestObject = world->getClosestObject(rightHand,&objectDist);
+            SketchObject *closestObject = world->getClosestObject(rightHand,objectDist);
             if (objectDist > DISTANCE_THRESHOLD)
             {
                 closestObject = NULL;

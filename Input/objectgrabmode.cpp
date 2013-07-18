@@ -83,7 +83,7 @@ void ObjectGrabMode::doUpdatesForFrame()
 
       if (world->getLeftSprings()->size() == 0 ) {
           oldShown = project->isLeftOutlinesVisible();
-          closest = world->getClosestObject(leftHand,&lDist);
+          closest = world->getClosestObject(leftHand,lDist);
 
           if (lObj != closest) {
               project->setLeftOutlineObject(closest);
@@ -100,7 +100,7 @@ void ObjectGrabMode::doUpdatesForFrame()
 
       if (world->getRightSprings()->size() == 0 ) {
           oldShown = project->isRightOutlinesVisible();
-          closest = world->getClosestObject(rightHand,&rDist);
+          closest = world->getClosestObject(rightHand,rDist);
 
           if (rObj != closest) {
               project->setRightOutlineObject(closest);

@@ -190,6 +190,10 @@ protected: // methods
     void recalculateLocalTransform();
     // to be overridden as a template method if something needs to occur when the transform is updated
     virtual void localTransformUpdated();
+    // notifies change observers that the given object has been added as a child
+    void notifyObjectAdded(SketchObject *child);
+    // notifies change observers that the given object has been removed as a child
+    void notifyObjectRemoved(SketchObject *child);
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
     vtkSmartPointer<vtkLinearTransform> invLocalTransform;

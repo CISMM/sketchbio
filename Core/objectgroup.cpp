@@ -202,11 +202,14 @@ void ObjectGroup::addObject(SketchObject *obj)
     children.append(obj);
     orientedBBs->AddInputConnection(0,obj->getOrientedBoundingBoxes()->GetOutputPort(0));
     orientedBBs->Update();
+    notifyObjectAdded(obj);
 }
 
 //#########################################################################
 void ObjectGroup::removeObject(SketchObject *obj)
 {
+    if (!children.contains(obj))
+        return;
     q_vec_type pos, nPos, oPos;
     q_type oOrient, idQ = Q_ID_QUAT;
     // get inital positions/orientations
@@ -235,6 +238,7 @@ void ObjectGroup::removeObject(SketchObject *obj)
     }
     // reset the group's center and orientation
     setPosAndOrient(nPos,idQ);
+    notifyObjectRemoved(obj);
 }
 
 //#########################################################################

@@ -109,6 +109,7 @@ SketchObject *WorldManager::addObject(SketchObject *object) {
     if (object->isVisible() || showInvisible) {
         insertActors(object);
     }
+    object->addObserver(this);
     return object;
 }
 
@@ -121,6 +122,7 @@ void WorldManager::removeObject(SketchObject *object) {
     removeActors(object);
     removeShadows(object);
     objects.removeAt(index);
+    object->removeObserver(this);
 }
 //##################################################################################################
 //##################################################################################################
@@ -465,7 +467,9 @@ inline double distOutsideAABB(q_vec_type point, double bb[6]) {
 
 //##################################################################################################
 //##################################################################################################
-SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut) {
+SketchObject *WorldManager::getClosestObject(QList<SketchObject *> &objects,
+                                             SketchObject *subj, double &distOut)
+{
     SketchObject *closest = NULL;
     double distance = std::numeric_limits<double>::max();
     q_vec_type pos1;
@@ -484,7 +488,7 @@ SketchObject *WorldManager::getClosestObject(SketchObject *subj, double *distOut
             closest = obj;
         }
     }
-    *distOut = distance;
+    distOut = distance;
     return closest;
 }
 
@@ -542,6 +546,22 @@ void WorldManager::setShadowPlane(q_vec_type point, q_vec_type nVector)
         filter->SetPlaneNormalVector(nVector);
         filter->Update();
     }
+}
+//##################################################################################################
+//##################################################################################################
+void WorldManager::subobjectAdded(SketchObject *parent, SketchObject *child)
+{
+    if (child->isVisible() || isShowingInvisible())
+    {
+        insertActors(child);
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
+{
+    removeActors(child);
 }
 
 //##################################################################################################
