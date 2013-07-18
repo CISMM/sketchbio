@@ -1,0 +1,85 @@
+<sketchbio version="1.0">
+  <models>
+    <model id="M0"
+           numConformations="1">
+      <properties inverseMass="1"
+                  inverseMomentOfInertia="4e-05"></properties>
+      <conformation confNum="0">
+        <source>PDB:1qkr-a</source>
+        <resolution id="full_resolution"
+                    filename="1qkr-a.vtk"></resolution>
+        <resolution id="simplified_full_resolution"
+                    filename="1qkr-a_isosurface.vtk"></resolution>
+        <resolution id="5000_tris"
+                    filename="1qkr-a_isosurface.vtk"></resolution>
+        <resolution id="2000_tris"
+                    filename="1qkr-a_isosurface.vtk"></resolution>
+        <resolution id="1000_tris"
+                    filename="1qkr-a_isosurface.vtk"></resolution>
+      </conformation>
+    </model>
+    <model id="M1"
+           numConformations="1">
+      <properties inverseMass="1"
+                  inverseMomentOfInertia="4e-05"></properties>
+      <conformation confNum="0">
+        <source>CAMERA</source>
+        <resolution id="full_resolution"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="simplified_full_resolution"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="5000_tris"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="2000_tris"
+                    filename="CAMERA.vtk"></resolution>
+        <resolution id="1000_tris"
+                    filename="CAMERA.vtk"></resolution>
+      </conformation>
+    </model>
+  </models>
+  <viewpoint>
+    <worldToRoom matrix="0.116754978725277763774 0.00830085392546458904 0.0015184019255379054 -15.634032448 -0.0024755012791 0.01355515893070666049 0.116245706747473837028 3.17778144833262921054029 0.00806731762832739278 -0.11597537785 0.01369543339264201777 5.349015018438059598793188 0 0 0 1"></worldToRoom>
+    <roomToEye matrix="-1 0 1.2246467991e-16 -6.1232339957e-15 0 1 0 0 -1.2246467991e-16 0 -1 50 0 0 0 1"></roomToEye>
+  </viewpoint>
+  <objectlist>
+    <object id="O0"
+            numInstances="1">
+      <properties modelid="#M0"
+                  colorMap="blue_to_red"
+                  arrayToColorBy="chainPosition"
+                  conformation="0"
+                  visibility="true"
+                  active="false"></properties>
+      <transform position="120.841362036638230392782134 101.0743660612536842791087111 -19.437113348"
+                 orientation="0.165964924703834226793 -0.16924456565 -0.044011759523 0.9705023883478413049275"></transform>
+      <keyframeList>
+        <keyframe time="0">
+          <transform position="-165.88764408 -112.74725159 112.6433746828742386014710064"
+                     orientation="0.189594316558607506318 -0.086086736537 -0.030565046774 0.97760362460291339026242"></transform>
+          <properties visibility="true"
+                      active="false"></properties>
+        </keyframe>
+        <keyframe time="2">
+          <transform position="120.841362036638230392782134 101.0743660612536842791087111 -19.437113348"
+                     orientation="0.165964924703834226793 -0.16924456565 -0.044011759523 0.9705023883478413049275"></transform>
+          <properties visibility="true"
+                      active="false"></properties>
+        </keyframe>
+      </keyframeList>
+    </object>
+    <object id="O1"
+            numInstances="1">
+      <properties modelid="#M1"
+                  colorMap="solid_green"
+                  arrayToColorBy="modelNum"
+                  conformation="0"
+                  visibility="false"
+                  active="true"></properties>
+      <transform position="32.8483029916091240352216118 -39.95228263 417.91835652176126814083545469"
+                 orientation="0.97203304908554954977262 -0.19039855158 -0.10810981305 -0.084925916918"></transform>
+    </object>
+  </objectlist>
+  <replicatorList></replicatorList>
+  <springList></springList>
+  <transformOpList></transformOpList>
+</sketchbio>

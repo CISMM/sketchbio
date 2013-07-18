@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QProcess>
+#include <QCoreApplication>
 #include <QFile>
 #include <QTemporaryFile>
 
@@ -91,6 +92,7 @@ void BlenderAnimationRunner::start()
     {
         emit finished(false);
         qDebug() << "Blender failed to start";
+        QCoreApplication::processEvents(QEventLoop::AllEvents,100);
         deleteLater();
     }
     else

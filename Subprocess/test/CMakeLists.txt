@@ -31,6 +31,18 @@ endmacro (make_subprocess_test)
 FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
 )
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/project.xml
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/projects/animation
+)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/CAMERA.vtk
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/projects/animation
+)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/1qkr-a.vtk
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/projects/animation
+)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/1qkr-a_isosurface.vtk
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/projects/animation
+)
 
 SOURCE_GROUP("Resources" FILES
     ${CMAKE_SOURCE_DIR}/models/1m1j.obj
@@ -49,3 +61,4 @@ SOURCE_GROUP("Resources" FILES
 make_subprocess_test( ChimeraVTKExportRunner testChimeraVTKExportRunner.cc)
 make_subprocess_test( BlenderDecimationRunner testBlenderDecimationRunner.cc)
 make_subprocess_test( ModelFromPdbRunner testModelFromPdbRunner.cc)
+make_subprocess_test( BlenderAnimationRunner testBlenderAnimationRunner.cc)
