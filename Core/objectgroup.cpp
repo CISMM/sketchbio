@@ -275,6 +275,16 @@ void ObjectGroup::getBoundingBox(double bb[])
     {
         bb[0] = bb[1] = bb[2] = bb[3] = bb[4] = bb[5] = 0;
     }
+    else if (numInstances() == 1)
+    {
+        for (int i = 0; i < children.length(); i++)
+        {
+            if (children[i]->numInstances() == 1)
+            {
+                children[i]->getBoundingBox(bb);
+            }
+        }
+    }
     else
     {
         orientedBBs->GetOutput()->GetBounds(bb);
