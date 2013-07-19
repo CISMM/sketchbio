@@ -128,7 +128,57 @@ int test2()
     return errors;
 }
 
+/*
+ * Test replication with rotation and translation (180 degree rotation)
+ */
+int test3()
+{
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchModel > model(getModel());
+    QScopedPointer< WorldManager > world(new WorldManager(renderer));
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    SketchObject *obj1 = world->addObject(model.data(),pos,orient);
+    q_vec_set(pos,0,0,5);
+    q_from_axis_angle(orient,1,0,0,Q_PI);
+    SketchObject *obj2 = world->addObject(model.data(),pos,orient);
+    QScopedPointer< StructureReplicator > rep(
+                new StructureReplicator(obj1, obj2, world.data()));
+    rep->setNumShown(5);
+    int errors = 0;
+    QListIterator< SketchObject * > itr = rep->getReplicaIterator();
+    int num = 2;
+    q_vec_type temp1, temp2;
+    q_type resultOr, increment;
+    q_copy(increment,orient);
+    q_vec_copy(temp2,pos);
+    while (itr.hasNext())
+    {
+        q_xform(temp1,orient,pos);
+        q_vec_add(temp2,temp1,temp2);
+        q_mult(orient,increment,orient);
+        SketchObject *replica = itr.next();
+        replica->getPosition(temp1);
+        replica->getOrientation(resultOr);
+        if (!q_equals(resultOr, orient, Q_EPSILON * num))
+        {
+            errors++;
+            cout << "Result orientation is wrong for rotation and translation test." << endl;
+        }
+        if (!q_vec_equals(temp1, temp2, Q_EPSILON * num))
+        {
+            errors++;
+            cout << "Result position is wrong for rotationn and translation test." << endl;
+            q_vec_print(temp1);
+            q_vec_print(temp2);
+        }
+        num++;
+    }
+    return errors;
+}
+
 int main()
 {
-    return test1() + test2();
+    return test1() + test2() + test3();
 }
