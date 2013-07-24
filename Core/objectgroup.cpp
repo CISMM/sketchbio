@@ -163,14 +163,15 @@ void ObjectGroup::addObject(SketchObject *obj)
         p = p->getParent();
     }
     // calculate new position & orientation
-    if (children.empty())
+    if (numInstances() == 0)
     { // special case when first thing is added
         q_vec_type pos, idV = Q_NULL_VECTOR;
-        q_type idQ = Q_ID_QUAT;
+        q_type orient, idQ = Q_ID_QUAT;
         obj->getPosition(pos);
-        setPosAndOrient(pos,idQ);
+        obj->getOrientation(orient);
+        setPosAndOrient(pos,orient);
         // object gets position equal to group center, orientation is not messed with
-        obj->setPosition(idV);
+        obj->setPosAndOrient(idV,idQ);
     }
     else
     { // if we already have some items in the list...
@@ -210,7 +211,7 @@ void ObjectGroup::removeObject(SketchObject *obj)
 {
     if (!children.contains(obj))
         return;
-    q_vec_type pos, nPos, oPos;
+    q_vec_type pos, nPos, oPos, idV = Q_NULL_VECTOR;
     q_type oOrient, idQ = Q_ID_QUAT;
     // get inital positions/orientations
     getPosition(pos);
@@ -238,6 +239,21 @@ void ObjectGroup::removeObject(SketchObject *obj)
     }
     // reset the group's center and orientation
     setPosAndOrient(nPos,idQ);
+    // if there is only one thing left in the group
+    if (numInstances() == 1)
+    {
+        SketchObject *child = NULL;
+        for (int i = 0; i < children.length(); i++)
+        {
+            if (children[i]->numInstances() == 1)
+                child = children[i];
+        }
+        q_vec_type cPos, cOrient;
+        child->getPosition(cPos);
+        child->getOrientation(cOrient);
+        child->setPosAndOrient(idV,idQ);
+        setPosAndOrient(cPos,cOrient);
+    }
     notifyObjectRemoved(obj);
 }
 

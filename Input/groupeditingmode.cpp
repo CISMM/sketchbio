@@ -34,7 +34,7 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
     {
         if (lDist < DISTANCE_THRESHOLD && rDist < DISTANCE_THRESHOLD)
         {
-            ObjectGroup *grp = dynamic_cast<ObjectGroup *>(lObj);
+            ObjectGroup *grp = dynamic_cast< ObjectGroup * >(lObj);
             if (lObj == rObj)
             {
                 if (grp == NULL)
@@ -50,7 +50,9 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
             }
             else
             {
-                if (grp == NULL)
+                if (grp == NULL ||
+                        (grp != NULL &&
+                         dynamic_cast< ObjectGroup * >(rObj) != NULL ))
                 {
                     grp = new ObjectGroup();
                     world->removeObject(lObj);
@@ -67,4 +69,45 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void GroupEditingMode::analogsUpdated()
 {
+}
+
+void GroupEditingMode::doUpdatesForFrame()
+{
+    ObjectGrabMode::doUpdatesForFrame();
+    bool givenNewDirections = false;
+    if (lDist < DISTANCE_THRESHOLD && rDist < DISTANCE_THRESHOLD &&
+            isButtonDown[BUTTON_RIGHT(ONE_BUTTON_IDX)])
+    {
+        ObjectGroup *lGrp = dynamic_cast< ObjectGroup * >(lObj);
+        ObjectGroup *rGrp = dynamic_cast< ObjectGroup * >(rObj);
+        if (lObj == rObj && lGrp != NULL)
+        {
+            SketchObject *obj = WorldManager::getClosestObject(
+                        *rGrp->getSubObjects(),
+                        project->getRightHandObject(),rDist);
+            if (rDist < DISTANCE_THRESHOLD)
+            {
+                emit newDirectionsString("Release to remove object from group");
+                givenNewDirections = true;
+            }
+        }
+        else if (lObj != rObj)
+        {
+            if (lGrp != NULL && rGrp != NULL)
+            {
+                emit newDirectionsString("Release to join groups into one");
+                givenNewDirections = true;
+            }
+            else
+            {
+                emit newDirectionsString("Release to join objects into group");
+                givenNewDirections = true;
+            }
+        }
+    }
+    if ( isButtonDown[BUTTON_RIGHT(ONE_BUTTON_IDX)] && !givenNewDirections )
+    {
+        emit newDirectionsString("Select the group with the left hand\n"
+                                 "and the object to add/remove with the right hand");
+    }
 }
