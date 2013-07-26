@@ -277,6 +277,7 @@ inline void makeTrackerShadow(SketchObject *hand, vtkActor *shadowActor,
     shadowActor->SetUserTransform(roomToWorldTransform);
 }
 
+#define OUTLINES_COLOR 0.7,0.7,0.7
 SketchProject::SketchProject(vtkRenderer *r) :
     renderer(r),
     models(new ModelManager()),
@@ -308,10 +309,10 @@ SketchProject::SketchProject(vtkRenderer *r) :
     renderer->SetActiveCamera(transforms->getGlobalCamera());
     // connect outlines mapper & actor
     leftOutlinesActor->SetMapper(leftOutlinesMapper);
-    leftOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
+    leftOutlinesActor->GetProperty()->SetColor(OUTLINES_COLOR);
     leftOutlinesActor->GetProperty()->SetLighting(false);
     rightOutlinesActor->SetMapper(rightOutlinesMapper);
-    rightOutlinesActor->GetProperty()->SetColor(0.7,0.7,0.7);
+    rightOutlinesActor->GetProperty()->SetColor(OUTLINES_COLOR);
     rightOutlinesActor->GetProperty()->SetLighting(false);
 
     // make the floor and lines
@@ -691,6 +692,14 @@ void SketchProject::setLeftOutlineSpring(SpringConnection *conn, bool end1Large)
 void SketchProject::setRightOutlineObject(SketchObject *obj) {
     rightOutlinesMapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
     rightOutlinesMapper->Update();
+    if (obj->getParent() != NULL)
+    {
+        rightOutlinesActor->GetProperty()->SetColor(1,0,0);
+    }
+    else
+    {
+        rightOutlinesActor->GetProperty()->SetColor(OUTLINES_COLOR);
+    }
 }
 
 void SketchProject::setRightOutlineSpring(SpringConnection *conn, bool end1Large) {

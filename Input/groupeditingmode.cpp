@@ -89,6 +89,7 @@ void GroupEditingMode::doUpdatesForFrame()
             {
                 emit newDirectionsString("Release to remove object from group");
                 givenNewDirections = true;
+                project->setRightOutlineObject(obj);
             }
         }
         else if (lObj != rObj)
