@@ -750,30 +750,59 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(SketchProject *proj, vt
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
-        SketchProject *proj, vtkXMLDataElement *elem)
+        SketchProject *proj, vtkXMLDataElement *elem,
+        double *newPos)
 {
-    if (QString(elem->GetName()) == QString(ROOT_ELEMENT_NAME)) {
-        if (convertToCurrent(elem) == XML_TO_DATA_FAILURE) {
+    if (QString(elem->GetName()) == QString(ROOT_ELEMENT_NAME))
+    {
+        if (convertToCurrent(elem) == XML_TO_DATA_FAILURE)
+        {
             // if failed to convert file to readable format version, exit we cannot do any more
             return XML_TO_DATA_FAILURE;
         }
         vtkXMLDataElement *models = elem->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
-        if (models == NULL) {
+        if (models == NULL)
+        {
             return XML_TO_DATA_FAILURE;
         }
         QHash<QString,SketchModel *> modelIds;
-        if (xmlToModelManager(proj,models,modelIds) == XML_TO_DATA_FAILURE) {
+        if (xmlToModelManager(proj,models,modelIds) == XML_TO_DATA_FAILURE)
+        {
             return XML_TO_DATA_FAILURE;
         }
         QHash<QString,SketchObject *> objectIds;
         vtkXMLDataElement *objs = elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
-        if (objs == NULL) {
+        if (objs == NULL)
+        {
             return XML_TO_DATA_FAILURE;
         }
-        if (xmlToObjectList(proj,objs,modelIds,objectIds) == XML_TO_DATA_FAILURE) {
+        QList<SketchObject *> objList;
+        if (readObjectList(objList,objs,modelIds,objectIds) == XML_TO_DATA_FAILURE)
+        {
             return XML_TO_DATA_FAILURE;
         }
-    } else {
+        else
+        {
+            for (int i = 0; i < objList.size(); i++) {
+                double bb[6];
+                q_vec_type center, pos, dir;
+                SketchObject::ColorMapType::Type cmap = objList[i]->getColorMapType();
+                proj->addObject(objList[i]);
+                objList[i]->setColorMapType(cmap);
+                objList[i]->getBoundingBox(bb);
+                center[0] = (bb[1] + bb[0]) * 0.5;
+                center[1] = (bb[3] + bb[2]) * 0.5;
+                center[2] = (bb[5] + bb[4]) * 0.5;
+                objList[i]->getModelSpacePointInWorldCoordinates(center,center);
+                objList[i]->getPosition(pos);
+                q_vec_subtract(dir,center,pos);
+                q_vec_subtract(pos,newPos,dir);
+                objList[i]->setPosition(pos);
+            }
+        }
+    }
+    else
+    {
         return XML_TO_DATA_FAILURE;
     }
     return XML_TO_DATA_SUCCESS;

@@ -43,7 +43,8 @@ public:
     // xml into an existing project (this assumes the xml contains only the information
     // written in objectToClipboardXML)
     static XML_Read_Status objectFromClipboardXML(SketchProject *proj,
-                                                  vtkXMLDataElement *elem);
+                                                  vtkXMLDataElement *elem,
+                                                  double *newPos);
 
 private: // no other code should call these (this is the reason for making this a class
     static vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &dir,

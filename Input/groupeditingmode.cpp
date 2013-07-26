@@ -10,6 +10,7 @@
 #include <vtkXMLUtilities.h>
 
 #include <sketchioconstants.h>
+#include <transformmanager.h>
 #include <sketchobject.h>
 #include <objectgroup.h>
 #include <worldmanager.h>
@@ -103,14 +104,15 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
         std::stringstream ss;
         QClipboard *clipboard = QApplication::clipboard();
         ss.str(clipboard->text().toStdString());
-        std::cout << ss.str() << std::endl;
         vtkSmartPointer< vtkXMLDataElement > elem =
                 vtkSmartPointer< vtkXMLDataElement >::Take(
                     vtkXMLUtilities::ReadElementFromStream(ss)
                     );
         if (elem)
         {
-            if (ProjectToXML::objectFromClipboardXML(project,elem) ==
+            q_vec_type rpos;
+            project->getTransformManager()->getRightTrackerPosInWorldCoords(rpos);
+            if (ProjectToXML::objectFromClipboardXML(project,elem,rpos) ==
                     ProjectToXML::XML_TO_DATA_FAILURE)
             {
                 std::cout << "Read xml correctly, but reading object failed."
