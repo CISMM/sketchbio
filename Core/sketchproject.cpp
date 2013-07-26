@@ -388,6 +388,35 @@ QString SketchProject::getProjectDir() const {
     return projectDir->absolutePath();
 }
 
+QString SketchProject::getFileInProjDir(QString filename)
+{
+    QString result;
+    if (QFile(projectDir->absolutePath() + "/" + filename).exists())
+    {
+        result = projectDir->absolutePath() + "/" + filename;
+    }
+    else if (filename.startsWith(projectDir->absolutePath()))
+    {
+        result = filename;
+    }
+    else
+    {
+        QString localname = filename.mid(filename.lastIndexOf("/") +1);
+        QString fullpath = projectDir->absoluteFilePath(localname);
+        QFile file(filename);
+        if ( QFile(fullpath).exists() || file.copy(filename,fullpath))
+        {
+            result = fullpath;
+        }
+        else
+        {
+            qDebug() << "Failed to copy file to project directory!";
+            result = filename;
+        }
+    }
+    return result;
+}
+
 void SketchProject::startAnimation() {
     isDoingAnimation = true;
     timeInAnimation = 0.0;
@@ -506,7 +535,7 @@ void SketchProject::timestep(double dt) {
 
 SketchModel *SketchProject::addModel(SketchModel *model)
 {
-    models->addModel(model);
+    model = models->addModel(model);
     return model;
 }
 

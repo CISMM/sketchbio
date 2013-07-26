@@ -150,14 +150,35 @@ SketchModel *ModelManager::addConformation(SketchModel *model,
     return model;
 }
 
-void ModelManager::addModel(SketchModel *model)
+SketchModel *ModelManager::addModel(SketchModel *model)
 {
+    QString src = model->getSource(0);
+    if (modelSourceToIdx.contains(src))
+    {
+        SketchModel *other = models.at(modelSourceToIdx.value(src));
+        if (other->getNumberOfConformations() == model->getNumberOfConformations())
+        {
+            bool same = true;
+            for (int i = 0; i < other->getNumberOfConformations(); i++)
+            {
+                if (other->getSource(i) != model->getSource(i))
+                {
+                    same = false;
+                }
+            }
+            if (same)
+            {
+                return other;
+            }
+        }
+    }
     int idx = models.size();
     models.append(model);
     for (int i = 0; i < model->getNumberOfConformations(); i++)
     {
         modelSourceToIdx.insert(model->getSource(i),idx);
     }
+    return model;
 }
 
 /*****************************************************************************

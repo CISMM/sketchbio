@@ -70,7 +70,14 @@ public:
     SketchModel *addConformation(SketchModel *model,
                                  const QString &newSource,
                                  const QString &newFilename);
-    void addModel(SketchModel *model);
+    /*****************************************************************************
+      *
+      * This method adds the model to the ModelManger, unless the model manager has
+      * a model that has the exact same sources in the same order, in which case the
+      * old one is used.
+      *
+      ****************************************************************************/
+    SketchModel *addModel(SketchModel *model);
     /*****************************************************************************
       *
       * This method returns an iterator that may be used to examine each of the

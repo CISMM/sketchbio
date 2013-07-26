@@ -1,10 +1,20 @@
 #include "groupeditingmode.h"
 
+#include <string>
+#include <sstream>
+
+#include <QApplication>
+#include <QClipboard>
+
+#include <vtkXMLDataElement.h>
+#include <vtkXMLUtilities.h>
+
 #include <sketchioconstants.h>
 #include <sketchobject.h>
 #include <objectgroup.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
+#include <projecttoxml.h>
 
 GroupEditingMode::GroupEditingMode(SketchProject *proj, bool const * const b,
                                    double const * const a) :
@@ -23,6 +33,14 @@ void GroupEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
         emit newDirectionsString("Select the group with the left hand\n"
                                  "and the object to add/remove with the right hand");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+        emit newDirectionsString("Select an object and release the button to copy");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        emit newDirectionsString("Release the button to paste");
     }
 }
 
@@ -62,6 +80,46 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
                 world->removeObject(rObj);
                 grp->addObject(rObj);
             }
+        }
+        emit newDirectionsString(" ");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+        if (rDist < DISTANCE_THRESHOLD)
+        {
+            vtkSmartPointer< vtkXMLDataElement > elem =
+                    vtkSmartPointer< vtkXMLDataElement >::Take(
+                        ProjectToXML::objectToClipboardXML(rObj)
+                    );
+            std::stringstream ss;
+            vtkXMLUtilities::FlattenElement(elem,ss);
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->setText(ss.str().c_str());
+        }
+        emit newDirectionsString(" ");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        std::stringstream ss;
+        QClipboard *clipboard = QApplication::clipboard();
+        ss.str(clipboard->text().toStdString());
+        std::cout << ss.str() << std::endl;
+        vtkSmartPointer< vtkXMLDataElement > elem =
+                vtkSmartPointer< vtkXMLDataElement >::Take(
+                    vtkXMLUtilities::ReadElementFromStream(ss)
+                    );
+        if (elem)
+        {
+            if (ProjectToXML::objectFromClipboardXML(project,elem) ==
+                    ProjectToXML::XML_TO_DATA_FAILURE)
+            {
+                std::cout << "Read xml correctly, but reading object failed."
+                          << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "Failed to read object." << std::endl;
         }
         emit newDirectionsString(" ");
     }

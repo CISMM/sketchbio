@@ -105,6 +105,10 @@ public:
     int getNumberOfTransformOps() const;
     // gets the directory path for this project (absolute path)
     QString getProjectDir() const;
+    // gets the file in the project directory that matches the given file
+    // this will copy the file to the project directory if it can, and if
+    // that fails will return the file as-is if it is outside the project directory
+    QString getFileInProjDir(QString filename);
     // gets the camera model
     SketchModel *getCameraModel();
 

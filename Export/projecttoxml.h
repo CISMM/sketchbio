@@ -28,6 +28,10 @@ public:
 
     static vtkXMLDataElement *projectToXML(const SketchProject *project);
 
+    // creates a simplified version of the save to xml state that only encapsulates
+    // the information needed to recreate the given object
+    static vtkXMLDataElement *objectToClipboardXML(const SketchObject *object);
+
     // assumes proj is a NEW SketchProject with nothing in it
     // if there is an insufficient data error at any point in the tree,
     // the methods return immediately and whatever halfway state they were in is
@@ -35,9 +39,17 @@ public:
     // there is bad xml
     static XML_Read_Status xmlToProject(SketchProject *proj, vtkXMLDataElement *elem);
 
+    // performs the inverse operation ot objectToClipboardXML and reads the given
+    // xml into an existing project (this assumes the xml contains only the information
+    // written in objectToClipboardXML)
+    static XML_Read_Status objectFromClipboardXML(SketchProject *proj,
+                                                  vtkXMLDataElement *elem);
+
 private: // no other code should call these (this is the reason for making this a class
     static vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &dir,
                                                 QHash<const SketchModel *, QString> &modelIds);
+    static vtkXMLDataElement *modelsToXML(const SketchObject *object,
+                                          QHash<const SketchModel *, QString> &modelIds);
     static vtkXMLDataElement *modelToXML(const SketchModel *model, const QString &dir,
                                          const QString &id);
 
