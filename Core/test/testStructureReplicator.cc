@@ -1,97 +1,134 @@
-#include <QTime>
-#include <signal.h>
-
-#include <sketchmodel.h>
-#include <modelmanager.h>
-#include <sketchobject.h>
-#include <springconnection.h>
-#include <worldmanager.h>
-#include <structurereplicator.h>
-#include <transformequals.h>
-#include <sketchioconstants.h>
-#include <sketchproject.h>
-
-#include <vtkSmartPointer.h>
-#include <vtkRenderer.h>
-#include <vtkSphereSource.h>
-#include <vtkOBJReader.h>
-
 #include <iostream>
 
-using namespace std;
+#include <quat.h>
 
-static bool cont = true;
+#include <QTime>
+#include <QString>
+#include <QDir>
+#include <QScopedPointer>
 
-void handle_segfault(int num) {
-    cont = false;
+#include <vtkSmartPointer.h>
+#include <vtkCubeSource.h>
+#include <vtkRenderer.h>
+
+#include <sketchioconstants.h>
+#include <modelutilities.h>
+#include <sketchmodel.h>
+#include <sketchobject.h>
+#include <worldmanager.h>
+#include <structurereplicator.h>
+#include <sketchtests.h>
+
+using std::cout;
+using std::endl;
+
+
+/*
+ * Generates the model used for these tests
+ */
+SketchModel *getModel()
+{
+    vtkSmartPointer< vtkCubeSource > cube =
+        vtkSmartPointer< vtkCubeSource >::New();
+    cube->SetBounds(-1,1,-1,1,-1,1);
+    cube->Update();
+    QString fname = ModelUtilities::createFileFromVTKSource(cube, "replicated_cube");
+    SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
+                                         DEFAULT_INVERSE_MOMENT);
+    model->addConformation(fname, fname);
+    return model;
 }
 
-int main() {
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> project(new SketchProject(renderer));
-    project->setProjectDir("test/testModels/replicatorTest");
-
-    QString filename = "models/1m1j.obj";
-
-    SketchObject *o1 = project->addObject(filename,filename);
-    SketchObject *o2 = project->addObject(filename,filename);
-    SketchObject *o3 = project->addObject(filename,filename);
-    SketchObject *o4 = project->addObject(filename,filename);
-
-    project->addReplication(o1,o2,5);
-    QWeakPointer<TransformEquals> equals = project->addTransformEquals(o1,o2);
-    QSharedPointer<TransformEquals> eq = equals.toStrongRef();
-    project->setCollisionTestsOn(false);
-    q_vec_type p1 = {2, 0, -1}, p2 = {3, -2, 4}, tv1;
-
-//    if (project->getWorldManager()->getNumberOfObjects() != 7) {
-//        cout << "There are " << project->getWorldManager()->getNumberOfObjects() << " objects!" << endl;
-//    }
-    QTime time = QTime::currentTime();
-    uint seed = (uint) time.msec();
-    cout << "Seed: " << seed << endl;
-    qsrand(seed);
-//    struct sigaction action;
-//    action.sa_handler = &handle_segfault;
-//    sigemptyset(&action.sa_mask);
-//    action.sa_flags = 0;
-
-//    sigaction(SIGSEGV,&action,NULL);
-
-    int order[4];
-    for (int i = 0; i < 4; i++) {
-        order[i] = i;
-    }
-    for (int i = 0; i < 40000 && cont; i++) {
-        for (int j = 3; j >= 0; j--) {
-            int r = qrand() % (j+1);
-            int tmp = order[j];
-            order[j] = order[r];
-            order[r] = tmp;
+/*
+ * Tests replication with translation only
+ */
+int test1()
+{
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchModel > model(getModel());
+    QScopedPointer< WorldManager > world(new WorldManager(renderer));
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    SketchObject *obj1 = world->addObject(model.data(),pos,orient);
+    double distance_moved = 1;
+    pos[0] = distance_moved;
+    SketchObject *obj2 = world->addObject(model.data(),pos,orient);
+    QScopedPointer< StructureReplicator > rep(
+                new StructureReplicator(obj1, obj2, world.data()));
+    rep->setNumShown(5);
+    int errors = 0;
+    QListIterator< SketchObject * > itr = rep->getReplicaIterator();
+    int num = 2;
+    q_vec_type offset, temp1;
+    q_type resultOr;
+    q_vec_copy(offset,pos);
+    while (itr.hasNext())
+    {
+        q_vec_add(pos,offset,pos);
+        SketchObject *replica = itr.next();
+        replica->getPosition(temp1);
+        replica->getOrientation(resultOr);
+        if (!q_equals(resultOr, orient, Q_EPSILON * num))
+        {
+            errors++;
+            cout << "Result orientation is wrong for linear test." << endl;
         }
-        for (int j = 0; j < 3 && cont; j++) {
-            SketchObject *obj = NULL;
-            switch(order[j]) {
-            case 0:
-                obj = o1;
-                break;
-            case 1:
-                obj = o2;
-                break;
-            case 2:
-                obj = o3;
-                break;
-            case 3:
-                obj = o4;
-                break;
-            }
-            if (obj != NULL) {
-                obj->addForce(p1,p2);
-                obj->getPosition(tv1);
-            }
+        if (!q_vec_equals(temp1, pos, Q_EPSILON * num))
+        {
+            errors++;
+            cout << "Result position is wrong for linear test." << endl;
         }
-        project->timestep(0.016);
+        num++;
     }
+    return errors;
+}
 
-    return 0;
+/*
+ * Test replication with rotation only
+ */
+int test2()
+{
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchModel > model(getModel());
+    QScopedPointer< WorldManager > world(new WorldManager(renderer));
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    SketchObject *obj1 = world->addObject(model.data(),pos,orient);
+    q_from_axis_angle(orient,1,0,0,.5);
+    SketchObject *obj2 = world->addObject(model.data(),pos,orient);
+    QScopedPointer< StructureReplicator > rep(
+                new StructureReplicator(obj1, obj2, world.data()));
+    rep->setNumShown(5);
+    int errors = 0;
+    QListIterator< SketchObject * > itr = rep->getReplicaIterator();
+    int num = 2;
+    q_vec_type temp1;
+    q_type resultOr, increment;
+    q_copy(increment,orient);
+    while (itr.hasNext())
+    {
+        q_mult(orient,increment,orient);
+        SketchObject *replica = itr.next();
+        replica->getPosition(temp1);
+        replica->getOrientation(resultOr);
+        if (!q_equals(resultOr, orient, Q_EPSILON * num))
+        {
+            errors++;
+            cout << "Result orientation is wrong for rotation test." << endl;
+        }
+        if (!q_vec_equals(temp1, pos, Q_EPSILON * num))
+        {
+            errors++;
+            cout << "Result position is wrong for rotation test." << endl;
+        }
+        num++;
+    }
+    return errors;
+}
+
+int main()
+{
+    return test1() + test2();
 }
