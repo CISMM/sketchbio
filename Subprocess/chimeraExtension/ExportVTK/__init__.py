@@ -4,6 +4,8 @@
 # the input to tools using the Visualization Toolkit
 #
 # Author: Shawn Waldon
+# Written as part of the SketchBio project, which is funded
+# by the NIH (award number 50-P41-EB002025).
 #
 
 # custom exceptions for more descriptive error messages
