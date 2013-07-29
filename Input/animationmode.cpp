@@ -3,6 +3,8 @@
 #include <limits>
 
 #include <sketchioconstants.h>
+#include <sketchtests.h>
+#include <keyframe.h>
 #include <sketchobject.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
@@ -55,7 +57,32 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
         if (rDist < DISTANCE_THRESHOLD)
         {
             // add keyframe
-            rObj->addKeyframeForCurrentLocation(project->getViewTime());
+            double time = project->getViewTime();
+            bool newFrame = true;
+            q_vec_type pos, fpos;
+            q_type orient, forient;
+            rObj->getPosition(pos);
+            rObj->getOrientation(orient);
+            if (rObj->hasKeyframes() && rObj->getKeyframes()->contains(time))
+            {
+                Keyframe frame = rObj->getKeyframes()->value(time);
+                frame.getPosition(fpos);
+                frame.getOrientation(forient);
+                if (q_vec_equals(pos,fpos) && q_equals(forient,orient))
+                    newFrame = false;
+            }
+            if (newFrame)
+            {
+                rObj->addKeyframeForCurrentLocation(time);
+            }
+            else
+            {
+                rObj->removeKeyframeForTime(time);
+                // make sure the object doesn't move just because we removed
+                // the keyframe... principle of least astonishment.
+                rObj->setPosAndOrient(pos,orient);
+            }
+            project->getWorldManager()->setAnimationTime(time);
         }
         emit newDirectionsString(" ");
     }

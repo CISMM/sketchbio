@@ -14,8 +14,10 @@ class vtkTransform;
 class vtkPoints;
 class vtkPolyData;
 class vtkTubeFilter;
-class vtkProjectToPlane;
 class vtkActor;
+class vtkAppendPolyData;
+
+class vtkProjectToPlane;
 
 class SketchModel;
 class ModelManager;
@@ -422,18 +424,22 @@ private:
      *******************************************************************/
     void removeShadows(SketchObject *obj);
 
-    QList<SketchObject *> objects;
-    QHash<SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
+    QList< SketchObject * > objects;
+    QHash< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
         vtkSmartPointer< vtkActor > > > shadows;
-    QList<SpringConnection *> connections, lHand, rHand;
-    QVector<QSharedPointer<PhysicsStrategy> > strategies;
+    QList< SpringConnection * > connections, lHand, rHand;
+    QVector< QSharedPointer< PhysicsStrategy > > strategies;
+
+    vtkSmartPointer< vtkRenderer > renderer;
+    vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;
+    vtkSmartPointer< vtkActor > halfPlanesActor;
+
     //int nextIdx;
-    vtkSmartPointer<vtkRenderer> renderer;
     //int lastCapacityUpdate;
 #ifdef SHOW_DEBUGGING_FORCE_LINES
-    vtkSmartPointer<vtkPoints> springEnds;
-    vtkSmartPointer<vtkPolyData> springEndConnections;
-    vtkSmartPointer<vtkTubeFilter> tubeFilter;
+    vtkSmartPointer< vtkPoints > springEnds;
+    vtkSmartPointer< vtkPolyData > springEndConnections;
+    vtkSmartPointer< vtkTubeFilter > tubeFilter;
 #endif
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;

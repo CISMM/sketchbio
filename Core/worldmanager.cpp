@@ -13,6 +13,7 @@ using std::endl;
 #include <vtkActor.h>
 #include <vtkRenderer.h>
 #include <vtkProperty.h>
+#include <vtkAppendPolyData.h>
 
 #include <QDebug>
 
@@ -27,6 +28,7 @@ using std::endl;
 
 // The color used for the shadows of objects
 #define SHADOW_COLOR 0.1,0.1,0.1
+#define HALFPLANE_COLOR 0.9,0.3,0.3
 
 //##################################################################################################
 //##################################################################################################
@@ -37,8 +39,10 @@ WorldManager::WorldManager(vtkRenderer *r) :
     lHand(),
     rHand(),
     strategies(),
-//  nextIdx(0),
     renderer(r),
+    orientedHalfPlaneOutlines(vtkSmartPointer< vtkAppendPolyData >::New()),
+    halfPlanesActor(vtkSmartPointer< vtkActor >::New()),
+//  nextIdx(0),
 //  lastCapacityUpdate(1000),
     #ifdef SHOW_DEBUGGING_FORCE_LINES
     springEnds(vtkSmartPointer< vtkPoints >::New()),
@@ -53,6 +57,12 @@ WorldManager::WorldManager(vtkRenderer *r) :
     collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
 {
     PhysicsStrategyFactory::populateStrategies(strategies);
+    vtkSmartPointer< vtkPolyDataMapper > mapper =
+            vtkSmartPointer< vtkPolyDataMapper >::New();
+    mapper->SetInputConnection(orientedHalfPlaneOutlines->GetOutputPort());
+    mapper->Update();
+    halfPlanesActor->SetMapper(mapper);
+    halfPlanesActor->GetProperty()->SetColor(HALFPLANE_COLOR);
 #ifdef SHOW_DEBUGGING_FORCE_LINES
     springEnds->Allocate(lastCapacityUpdate*2);
     springEndConnections->Allocate();
@@ -109,6 +119,9 @@ SketchObject *WorldManager::addObject(SketchObject *object) {
     if (object->isVisible() || showInvisible) {
         insertActors(object);
     }
+    orientedHalfPlaneOutlines->AddInputConnection(
+                0,object->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
+    orientedHalfPlaneOutlines->Update();
     object->addObserver(this);
     return object;
 }
@@ -122,6 +135,8 @@ void WorldManager::removeObject(SketchObject *object) {
     removeActors(object);
     removeShadows(object);
     objects.removeAt(index);
+    orientedHalfPlaneOutlines->RemoveInputConnection(
+                0,object->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
     object->removeObserver(this);
 }
 //##################################################################################################
@@ -243,6 +258,10 @@ void WorldManager::stepPhysics(double dt) {
 //##################################################################################################
 //##################################################################################################
 bool WorldManager::setAnimationTime(double t) {
+    int numberWithKeyframeNow = 0;
+    bool isShowingHalfPlaneOutlines =
+            orientedHalfPlaneOutlines->GetNumberOfInputConnections(0);
+    orientedHalfPlaneOutlines->RemoveAllInputs();
     bool isDone = true;
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
@@ -252,12 +271,25 @@ bool WorldManager::setAnimationTime(double t) {
             if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
                 isDone = false;
             }
+            if (obj->getKeyframes()->contains(t)) {
+                orientedHalfPlaneOutlines->AddInputConnection(
+                            0,obj->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
+                ++numberWithKeyframeNow;
+            }
         }
         if (obj->isVisible() && !wasVisible) {
             insertActors(obj);
         } else if (!obj->isVisible() && wasVisible) {
             removeActors(obj);
         }
+    }
+    if (isShowingHalfPlaneOutlines && numberWithKeyframeNow == 0)
+    {
+        renderer->RemoveActor(halfPlanesActor);
+    }
+    else if (!isShowingHalfPlaneOutlines && numberWithKeyframeNow > 0)
+    {
+        renderer->AddActor(halfPlanesActor);
     }
     return isDone;
 }
@@ -290,6 +322,10 @@ void WorldManager::setShowShadows(bool show)
             renderer->RemoveActor(actor);
         }
     }
+    if (show)
+        renderer->AddActor(halfPlanesActor);
+    else
+        renderer->RemoveActor(halfPlanesActor);
 }
 
 //##################################################################################################

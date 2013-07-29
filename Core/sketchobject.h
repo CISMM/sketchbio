@@ -4,6 +4,7 @@
 #include <quat.h>
 
 #include <vtkSmartPointer.h>
+class vtkAlgorithm;
 class vtkPolyDataAlgorithm;
 class vtkTransformPolyDataFilter;
 class vtkColorTransferFunction;
@@ -156,6 +157,9 @@ public:
     // this returns the box(es) that contain the lowest-level objects in whatever heirarchy
     // group should do an AppendPolyData to combine these
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() = 0;
+    // this returns the indicator lines that show status information about the object
+    // (for now they will show whether or not it is keyframed)
+    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines() = 0;
     // to deal with keyframe observers
     void addObserver(ObjectChangeObserver *obs);
     void removeObserver(ObjectChangeObserver *obs);

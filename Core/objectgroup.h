@@ -44,13 +44,15 @@ public:
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags);
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
+    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
     virtual void setIsVisible(bool isVisible);
     virtual SketchObject *deepCopy();
 protected:
     virtual void localTransformUpdated();
 private:
-    QList<SketchObject *> children;
-    vtkSmartPointer<vtkAppendPolyData> orientedBBs;
+    QList< SketchObject * > children;
+    vtkSmartPointer< vtkAppendPolyData > orientedBBs;
+    vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;
 };
 
 #endif

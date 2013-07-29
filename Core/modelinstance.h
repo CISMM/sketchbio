@@ -38,6 +38,7 @@ public:
                          int pqp_flags);
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
+    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
     virtual SketchObject *deepCopy();
 protected:
     virtual void localTransformUpdated();
@@ -48,9 +49,10 @@ private:
     SketchObject::ColorMapType::Type colorMap;
     QString arrayToColorBy;
     int conformation;
-    vtkSmartPointer<vtkTransformPolyDataFilter> modelTransformed;
-    vtkSmartPointer<vtkTransformPolyDataFilter> orientedBB;
-    vtkSmartPointer<vtkPolyDataMapper> solidMapper;
+    vtkSmartPointer< vtkTransformPolyDataFilter > modelTransformed;
+    vtkSmartPointer< vtkTransformPolyDataFilter > orientedBB;
+    vtkSmartPointer< vtkTransformPolyDataFilter > orientedHalfPlaneOutlines;
+    vtkSmartPointer< vtkPolyDataMapper > solidMapper;
 };
 
 #endif

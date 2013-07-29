@@ -120,6 +120,8 @@ public:
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
     virtual void getBoundingBox(double bb[]) {}
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
+    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines() { return NULL; }
+    virtual void setOrientedHalfPlaneData(double) {}
     virtual SketchObject *deepCopy() { return NULL; }
 
 private:

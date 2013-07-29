@@ -17,7 +17,8 @@
 ObjectGroup::ObjectGroup() :
     SketchObject(),
     children(),
-    orientedBBs(vtkSmartPointer<vtkAppendPolyData>::New())
+    orientedBBs(vtkSmartPointer< vtkAppendPolyData >::New()),
+    orientedHalfPlaneOutlines(vtkSmartPointer< vtkAppendPolyData >::New())
 {
 }
 
@@ -203,6 +204,9 @@ void ObjectGroup::addObject(SketchObject *obj)
     children.append(obj);
     orientedBBs->AddInputConnection(0,obj->getOrientedBoundingBoxes()->GetOutputPort(0));
     orientedBBs->Update();
+    orientedHalfPlaneOutlines->AddInputConnection(
+                0,obj->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
+    orientedHalfPlaneOutlines->Update();
     notifyObjectAdded(obj);
 }
 
@@ -227,6 +231,8 @@ void ObjectGroup::removeObject(SketchObject *obj)
     obj->setPosAndOrient(oPos,oOrient);
     orientedBBs->RemoveInputConnection(0,obj->getOrientedBoundingBoxes()->GetOutputPort(0));
     orientedBBs->Update();
+    orientedHalfPlaneOutlines->RemoveInputConnection(
+                0,obj->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
     // apply the change to the group's children
     for (int i = 0; i < children.length(); i++)
     {
@@ -311,6 +317,12 @@ void ObjectGroup::getBoundingBox(double bb[])
 vtkPolyDataAlgorithm *ObjectGroup::getOrientedBoundingBoxes()
 {
     return orientedBBs;
+}
+
+//#########################################################################
+vtkAlgorithm *ObjectGroup::getOrientedHalfPlaneOutlines()
+{
+    return orientedHalfPlaneOutlines;
 }
 
 //#########################################################################

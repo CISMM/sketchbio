@@ -14,6 +14,8 @@
 
 #include <PQP.h>
 
+#include <vtkGiftRibbonSource.h>
+
 #include "sketchmodel.h"
 #include "physicsstrategy.h"
 
@@ -31,22 +33,30 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     colorMap(ColorMapType::SOLID_COLOR_RED),
     arrayToColorBy("modelNum"),
     conformation(confNum),
-    modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
-    orientedBB(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
-    solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New())
+    modelTransformed(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
+    orientedBB(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
+    orientedHalfPlaneOutlines(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
+    solidMapper(vtkSmartPointer< vtkPolyDataMapper >::New())
 {
-    vtkSmartPointer<vtkCubeSource> cube =
-            vtkSmartPointer<vtkCubeSource>::New();
+    vtkSmartPointer< vtkCubeSource > cube =
+            vtkSmartPointer< vtkCubeSource >::New();
     cube->SetBounds(model->getVTKSurface(conformation)
                     ->GetOutput()->GetBounds());
     cube->Update();
-    vtkSmartPointer<vtkExtractEdges> cubeEdges =
-            vtkSmartPointer<vtkExtractEdges>::New();
+    vtkSmartPointer< vtkExtractEdges > cubeEdges =
+            vtkSmartPointer< vtkExtractEdges >::New();
     cubeEdges->SetInputConnection(cube->GetOutputPort());
     cubeEdges->Update();
     orientedBB->SetInputConnection(cubeEdges->GetOutputPort());
     orientedBB->SetTransform(getLocalTransform());
     orientedBB->Update();
+    vtkSmartPointer< vtkGiftRibbonSource > ribbons =
+            vtkSmartPointer< vtkGiftRibbonSource >::New();
+    ribbons->SetBounds(cube->GetOutput()->GetBounds());
+    ribbons->Update();
+    orientedHalfPlaneOutlines->SetInputConnection(ribbons->GetOutputPort());
+    orientedHalfPlaneOutlines->SetTransform(getLocalTransform());
+    orientedHalfPlaneOutlines->Update();
     modelTransformed->SetInputConnection(model->getVTKSurface(conformation)
                                          ->GetOutputPort());
     modelTransformed->SetTransform(getLocalTransform());
@@ -162,6 +172,12 @@ void ModelInstance::getBoundingBox(double bb[])
 vtkPolyDataAlgorithm *ModelInstance::getOrientedBoundingBoxes()
 {
     return orientedBB;
+}
+
+//#########################################################################
+vtkAlgorithm *ModelInstance::getOrientedHalfPlaneOutlines()
+{
+    return orientedHalfPlaneOutlines;
 }
 
 //#########################################################################
