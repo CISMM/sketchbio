@@ -4,6 +4,8 @@ set(vtkFilterSources
     vtkProjectToPlane.h
     vtkVRMLWriter.cxx
     vtkVRMLWriter.h
+    vtkGiftRibbonSource.cxx
+    vtkGiftRibbonSource.h
     )
 
 INCLUDE_DIRECTORIES(
