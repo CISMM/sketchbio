@@ -427,9 +427,9 @@ private:
         vtkSmartPointer< vtkActor > > > shadows;
     QList<SpringConnection *> connections, lHand, rHand;
     QVector<QSharedPointer<PhysicsStrategy> > strategies;
-    int nextIdx;
+    //int nextIdx;
     vtkSmartPointer<vtkRenderer> renderer;
-    int lastCapacityUpdate;
+    //int lastCapacityUpdate;
 #ifdef SHOW_DEBUGGING_FORCE_LINES
     vtkSmartPointer<vtkPoints> springEnds;
     vtkSmartPointer<vtkPolyData> springEndConnections;

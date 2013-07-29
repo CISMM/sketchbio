@@ -37,7 +37,7 @@ int vtkGiftRibbonSource::RequestData(vtkInformation *vtkNotUsed(request),
 
     double x[3];
     int numLines = 12, numPts = 12;
-    int i, j, k;
+    int i, j;
     vtkIdType pts[2];
     vtkSmartPointer< vtkPoints > newPoints =
       vtkSmartPointer< vtkPoints >::New();

@@ -27,7 +27,6 @@ private:
     SubprocessRunner *runner;
     DecimationType::Type type;
     double amount;
-    bool fileCreated;
 };
 
 BlenderTest::BlenderTest(DecimationType::Type t, double amt) :

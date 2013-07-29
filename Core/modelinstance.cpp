@@ -28,9 +28,9 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     SketchObject(),
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
-    conformation(confNum),
     colorMap(ColorMapType::SOLID_COLOR_RED),
     arrayToColorBy("modelNum"),
+    conformation(confNum),
     modelTransformed(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     orientedBB(vtkSmartPointer<vtkTransformPolyDataFilter>::New()),
     solidMapper(vtkSmartPointer<vtkPolyDataMapper>::New())

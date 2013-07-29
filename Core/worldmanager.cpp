@@ -37,9 +37,9 @@ WorldManager::WorldManager(vtkRenderer *r) :
     lHand(),
     rHand(),
     strategies(),
-    nextIdx(0),
+//  nextIdx(0),
     renderer(r),
-    lastCapacityUpdate(1000),
+//  lastCapacityUpdate(1000),
     #ifdef SHOW_DEBUGGING_FORCE_LINES
     springEnds(vtkSmartPointer< vtkPoints >::New()),
     springEndConnections(vtkSmartPointer< vtkPolyData >::New()),
