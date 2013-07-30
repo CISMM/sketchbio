@@ -657,6 +657,7 @@ int testSave6() {
     pos1[Q_Z] += 4 * Q_PI;
     q_mult(orient1,orient1,orient1);
     o5->setPosAndOrient(pos1,orient1);
+    o5->setColorMapType(SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE);
     ObjectGroup *grp = new ObjectGroup();
     grp->addObject(o3);
     grp->addObject(o4);
