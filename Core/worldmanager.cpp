@@ -13,6 +13,8 @@ using std::endl;
 #include <vtkActor.h>
 #include <vtkRenderer.h>
 #include <vtkProperty.h>
+#include <vtkPoints.h>
+#include <vtkPolyData.h>
 #include <vtkAppendPolyData.h>
 
 #include <QDebug>
@@ -57,6 +59,13 @@ WorldManager::WorldManager(vtkRenderer *r) :
     collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
 {
     PhysicsStrategyFactory::populateStrategies(strategies);
+    vtkSmartPointer< vtkPoints > pts =
+            vtkSmartPointer< vtkPoints >::New();
+    pts->InsertNextPoint(0.0,0.0,0.0);
+    vtkSmartPointer< vtkPolyData > pdata =
+            vtkSmartPointer< vtkPolyData >::New();
+    pdata->SetPoints(pts);
+    orientedHalfPlaneOutlines->AddInputData(pdata);
     vtkSmartPointer< vtkPolyDataMapper > mapper =
             vtkSmartPointer< vtkPolyDataMapper >::New();
     mapper->SetInputConnection(orientedHalfPlaneOutlines->GetOutputPort());

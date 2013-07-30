@@ -1,5 +1,7 @@
 #include "objectgroup.h"
 
+#include <vtkPolyData.h>
+#include <vtkPoints.h>
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkAppendPolyData.h>
 
@@ -20,6 +22,14 @@ ObjectGroup::ObjectGroup() :
     orientedBBs(vtkSmartPointer< vtkAppendPolyData >::New()),
     orientedHalfPlaneOutlines(vtkSmartPointer< vtkAppendPolyData >::New())
 {
+    vtkSmartPointer< vtkPoints > pts =
+            vtkSmartPointer< vtkPoints >::New();
+    pts->InsertNextPoint(0.0,0.0,0.0);
+    vtkSmartPointer< vtkPolyData > pdata =
+            vtkSmartPointer< vtkPolyData >::New();
+    pdata->SetPoints(pts);
+    orientedBBs->AddInputData(pdata);
+    orientedHalfPlaneOutlines->AddInputData(pdata);
 }
 
 //#########################################################################
