@@ -708,7 +708,7 @@ void WorldManager::removeShadows(SketchObject *obj) {
         if (children == NULL) return;
         for (int i = 0; i < children->length(); i++)
         {
-            removeShadows(obj);
+            removeShadows(children->at(i));
         }
     }
 }
