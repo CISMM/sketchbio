@@ -1,43 +1,23 @@
 #ifndef STRUCTUREREPLICATOR_H
 #define STRUCTUREREPLICATOR_H
 
+#include <QList>
+
 #include <vtkSmartPointer.h>
 class vtkTransform;
 
-#include "modelinstance.h"
+class SketchObject;
+class ObjectGroup;
 class WorldManager;
+#include "objectchangeobserver.h"
 
 #define STRUCTURE_REPLICATOR_MAX_COPIES 100
-
-/*
- * This class is a bit of a cheat, it allows replicated objects to transfer any forces
- * applied to them back to the original objects so that it appears that the force was applied
- * to the replica.  The forces applied to the original objects are scaled based on how many
- * copies away the force is coming from.
- */
-class ReplicatedObject : public ModelInstance {
-public:
-    ReplicatedObject(SketchModel *model,
-                     SketchObject *original0, SketchObject *original1, int num);
-    virtual void addForce(const q_vec_type point, const q_vec_type force);
-    inline  int  getReplicaNum() const { return replicaNum; }
-    virtual void addKeyframeForCurrentLocation(double t);
-private:
-    // need original(s) here
-    SketchObject *obj0; // first original
-    SketchObject *obj1; // second original
-    int replicaNum; // how far down the chain we are indexed as follows:
-                    // -1 is first copy in negative direction
-                    // 0 is first original
-                    // 1 is second original
-                    // 2 is first copy in positive direction
-};
 
 /*
  * This class replicates the transformation between the given two objects to a number of copies.
  * The number of copies can be changed dynamically.  Each copy will be of class ReplicatedObject.
  */
-class StructureReplicator
+class StructureReplicator : public ObjectChangeObserver
 {
 public:
     /*
@@ -80,16 +60,24 @@ public:
      */
     void updateTransform();
 
+    /*
+     * Makes sure the objects that define position are keyframed correctly when
+     * the replication chain is keyframed
+     */
+    virtual void objectKeyframed(SketchObject *obj, double time);
+
+    /*
+     * Gets the group that contains all the replicas
+     */
+    ObjectGroup *getReplicaGroup();
+
 private:
     int numShown;
     SketchObject *obj1, *obj2;
+    ObjectGroup *replicas;
     WorldManager *world;
-    QList<SketchObject *> copies;
     vtkSmartPointer<vtkTransform> transform;
 };
 
-inline QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
-    return QListIterator<SketchObject *>(copies);
-}
 
 #endif // STRUCTUREREPLICATOR_H

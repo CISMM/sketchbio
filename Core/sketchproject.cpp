@@ -27,6 +27,7 @@
 #include "sketchioconstants.h"
 #include "transformmanager.h"
 #include "modelmanager.h"
+#include "sketchobject.h"
 #include "worldmanager.h"
 #include "objectchangeobserver.h"
 #include "springconnection.h"
@@ -572,7 +573,10 @@ SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
     int myIdx = world->getNumberOfObjects();
     SketchObject *object = world->addObject(model,pos,orient);
     //object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-    object->setColorMapType(COLORS[myIdx%NUM_COLORS]);
+    if (object->numInstances() == 1)
+    {
+        object->setColorMapType(COLORS[myIdx%NUM_COLORS]);
+    }
     return object;
 }
 

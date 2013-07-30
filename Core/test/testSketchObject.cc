@@ -574,9 +574,9 @@ inline int testObjectGroupActions() {
     ObjectGroup grp, grp2;
     int errors = testSketchObjectActions(&grp2);
     ModelInstance *a = new ModelInstance(m.data()), *b = new ModelInstance(m.data()), *c = new ModelInstance(m.data());
-    q_vec_type va = {2,0,0}, vb = {0,4,0}, vc = {0,-1,-5};
+    q_vec_type va = {2,0,0}, vb = {0,4,0}, vc = {0,-1,-5}, vi = Q_NULL_VECTOR;
     q_vec_type v1 = {0,0,1}, v2, v3;
-    q_type q1, q2, q3, qtmp;
+    q_type q1, q2, q3, qtmp, qid = Q_ID_QUAT;
     q_from_axis_angle(q1,1,0,0,Q_PI/4);
     q_from_axis_angle(q2,0,1,0,Q_PI/2);
     a->setPosition(va);
@@ -597,7 +597,7 @@ inline int testObjectGroupActions() {
     }
     // test group position
     grp.getPosition(v2);
-    if (!q_vec_equals(v2,va)) {
+    if (!q_vec_equals(v2,vi)) {
         errors++;
         qDebug() << "Group position wrong with one item";
     }
@@ -632,9 +632,7 @@ inline int testObjectGroupActions() {
     }
     // test group position (should be average of item positions)
     grp.getPosition(v2);
-    q_vec_add(v3,va,vb);
-    q_vec_scale(v3,.5,v3);
-    if (!q_vec_equals(v2,v3)) {
+    if (!q_vec_equals(v2,vi)) {
         errors++;
         qDebug() << "Group position wrong with two item";
         q_vec_print(v3);
@@ -669,17 +667,12 @@ inline int testObjectGroupActions() {
     }
     // test group position (should be average position of members)
     grp.getPosition(v2);
-    q_vec_add(v3,va,vb);
-    q_vec_add(v3,v3,vc);
-    q_vec_scale(v3,1/3.0,v3);
-    if (!q_vec_equals(v2,v3)) {
+    if (!q_vec_equals(v2,vi)) {
         errors++;
         qDebug() << "Group position wrong with three item";
     }
     // check position of group members after group translation
-    grp.getPosition(v2);
-    q_vec_add(v2,v1,v2);
-    grp.setPosition(v2);
+    grp.setPosition(v1);
     q_vec_add(v2,v1,vb);
     b->getPosition(v3);
     if (!q_vec_equals(v2,v3)) {
@@ -708,9 +701,6 @@ inline int testObjectGroupActions() {
     // check combination of move, rotate, add (group orientation should reset, but net rotation of
     //         objects should not change)
     ModelInstance *d = new ModelInstance(m.data());
-    q_type idQ = Q_ID_QUAT;
-    q_vec_type oldCtr;
-    grp.getPosition(oldCtr);
     d->setPosition(va);
     a->getPosition(v2);
     a->getOrientation(qtmp);
@@ -731,23 +721,22 @@ inline int testObjectGroupActions() {
     if (!q_vec_equals(v2,va)) {
         errors++;
         qDebug() << "Object changed position when added to group";
+        q_vec_print(va);
+        q_vec_print(v2);
     }
     d->getOrientation(qtmp);
-    if (!q_equals(qtmp,idQ)) {
+    if (!q_equals(qtmp,qid)) {
         errors++;
         qDebug() << "Object changed orientation when added to group";
     }
     // check resulting position/orientation of group
     grp.getPosition(v2);
-    q_vec_scale(v3,3,oldCtr);
-    q_vec_add(v3,v3,va);
-    q_vec_scale(v3,.25,v3);
-    if (!q_vec_equals(v3,v2)) {
+    if (!q_vec_equals(v1,v2)) {
         errors++;
         qDebug() << "Group position not set correctly when new object added";
     }
     grp.getOrientation(qtmp);
-    if (!q_equals(qtmp,idQ)) {
+    if (!q_equals(qtmp,q2)) {
         errors++;
         qDebug() << "Group orientation set incorrectly after new object added";
     }
@@ -759,7 +748,6 @@ inline int testObjectGroupActions() {
     a->getOrientation(qtmp);
     b->getPosition(vbtmp);
     b->getOrientation(qbtmp);
-    grp.getPosition(oldCtr);
     grp.removeObject(b);
     // check net position/orientation of object still in group to ensure it didn't change
     a->getPosition(v3);
@@ -784,18 +772,15 @@ inline int testObjectGroupActions() {
         qDebug() << "Object orientation changed when removed from group";
     }
     // check group center and orientation after removal
-    q_vec_scale(oldCtr,4,oldCtr);
-    q_vec_subtract(oldCtr,oldCtr,v3);
-    q_vec_scale(oldCtr,1/3.0,oldCtr);
     grp.getPosition(v3);
-    if (!q_vec_equals(oldCtr,v3)) {
+    if (!q_vec_equals(v1,v3)) {
         errors++;
         qDebug() << "Group position wrong after removal.";
-        q_vec_print(oldCtr);
+        q_vec_print(v1);
         q_vec_print(v3);
     }
     grp.getOrientation(qtmp);
-    if (!q_equals(qtmp,idQ)) {
+    if (!q_equals(qtmp,q1)) {
         errors++;
         qDebug() << "Group orientation wrong after removal.";
     }

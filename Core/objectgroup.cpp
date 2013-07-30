@@ -3,6 +3,7 @@
 #include <vtkPolyData.h>
 #include <vtkPoints.h>
 #include <vtkPolyDataAlgorithm.h>
+#include <vtkTransform.h>
 #include <vtkAppendPolyData.h>
 
 #include <PQP.h>
@@ -173,42 +174,20 @@ void ObjectGroup::addObject(SketchObject *obj)
         if (obj == p) return;
         p = p->getParent();
     }
-    // calculate new position & orientation
-    if (numInstances() == 0)
-    { // special case when first thing is added
-        q_vec_type pos, idV = Q_NULL_VECTOR;
-        q_type orient, idQ = Q_ID_QUAT;
-        obj->getPosition(pos);
-        obj->getOrientation(orient);
-        setPosAndOrient(pos,orient);
-        // object gets position equal to group center, orientation is not messed with
-        obj->setPosAndOrient(idV,idQ);
-    }
-    else
-    { // if we already have some items in the list...
-        q_vec_type pos, nPos, oPos;
-        q_type idQ = Q_ID_QUAT;
-        getPosition(pos);
-        obj->getPosition(oPos);
-        q_vec_scale(nPos,children.length(),pos);
-        q_vec_add(nPos,oPos,nPos);
-        q_vec_scale(nPos,1.0/(children.length()+1),nPos);
-        // calculate change and apply it to children
-        for (int i = 0; i < children.length(); i++)
-        {
-            q_vec_type cPos;
-            q_type cOrient;
-            children[i]->getPosition(cPos);
-            children[i]->getOrientation(cOrient);
-            q_vec_subtract(cPos,cPos,nPos);
-            children[i]->setPosAndOrient(cPos,cOrient);
-        }
-        // set group's new position and orientation
-        setPosAndOrient(nPos,idQ);
-        // set the new object's position
-        q_vec_subtract(oPos,oPos,nPos);
-        obj->setPosition(oPos);
-    }
+    // compute and set the position of the object relative to the group
+    vtkSmartPointer< vtkTransform > tfrm =
+            vtkSmartPointer< vtkTransform >::New();
+    tfrm->Identity();
+    tfrm->PostMultiply();
+    tfrm->Concatenate(obj->getLocalTransform());
+    tfrm->Concatenate(getInverseLocalTransform());
+    q_vec_type relPos;
+    q_type relOrient;
+    double wxyz[4];
+    tfrm->GetPosition(relPos);
+    tfrm->GetOrientationWXYZ(wxyz);
+    q_from_axis_angle(relOrient,wxyz[1],wxyz[2],wxyz[3],Q_PI/180.0 * wxyz[0]);
+    obj->setPosAndOrient(relPos,relOrient);
     // set parent and child relation for new object
     obj->setParent(this);
     children.append(obj);
@@ -225,51 +204,21 @@ void ObjectGroup::removeObject(SketchObject *obj)
 {
     if (!children.contains(obj))
         return;
-    q_vec_type pos, nPos, oPos, idV = Q_NULL_VECTOR;
-    q_type oOrient, idQ = Q_ID_QUAT;
+    q_vec_type oPos;
+    q_type oOrient;
     // get inital positions/orientations
-    getPosition(pos);
     obj->getPosition(oPos);
     obj->getOrientation(oOrient);
-    // compute new group position...
-    q_vec_scale(nPos,children.length(),pos);
-    q_vec_subtract(nPos,nPos,oPos);
-    q_vec_scale(nPos,1.0/(children.length()-1),nPos);
     // remove the item
     children.removeOne(obj);
     obj->setParent((SketchObject *)NULL);
+    // ensure the object doesn't move on removal
     obj->setPosAndOrient(oPos,oOrient);
+    // fix bounding boxes and stuff
     orientedBBs->RemoveInputConnection(0,obj->getOrientedBoundingBoxes()->GetOutputPort(0));
     orientedBBs->Update();
     orientedHalfPlaneOutlines->RemoveInputConnection(
                 0,obj->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
-    // apply the change to the group's children
-    for (int i = 0; i < children.length(); i++)
-    {
-        q_vec_type cPos;
-        q_type cOrient;
-        children[i]->getPosition(cPos);
-        children[i]->getOrientation(cOrient);
-        q_vec_subtract(cPos,cPos,nPos);
-        children[i]->setPosAndOrient(cPos,cOrient);
-    }
-    // reset the group's center and orientation
-    setPosAndOrient(nPos,idQ);
-    // if there is only one thing left in the group
-    if (numInstances() == 1)
-    {
-        SketchObject *child = NULL;
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                child = children[i];
-        }
-        q_vec_type cPos, cOrient;
-        child->getPosition(cPos);
-        child->getOrientation(cOrient);
-        child->setPosAndOrient(idV,idQ);
-        setPosAndOrient(cPos,cOrient);
-    }
     notifyObjectRemoved(obj);
 }
 

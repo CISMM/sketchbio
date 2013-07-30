@@ -5,45 +5,9 @@
 #include <vtkTransform.h>
 
 #include "sketchobject.h"
+#include "modelinstance.h"
+#include "objectgroup.h"
 #include "worldmanager.h"
-
-//############################################################################################
-//############################################################################################
-// Replicated Object class
-//############################################################################################
-//############################################################################################
-
-ReplicatedObject::ReplicatedObject(SketchModel *model, SketchObject *original0, SketchObject *original1,
-                                   int num):
-    ModelInstance(model)
-{
-    obj0 = original0;
-    obj1 = original1;
-    replicaNum = num;
-    setLocalTransformPrecomputed(true);
-    setLocalTransformDefiningPosition(true);
-    setPrimaryCollisionGroupNum((replicaNum > 0 ? obj1 : obj0)->getPrimaryCollisionGroupNum());
-    addToCollisionGroup((replicaNum > 0 ? obj0 : obj1)->getPrimaryCollisionGroupNum());
-}
-
-/*
- * Translates the force to the parent's orientation and applies a fraction of it,
- * based on how far down the chain this object is
- */
-void ReplicatedObject::addForce(const q_vec_type point, const q_vec_type force) {
-    double divisor = (replicaNum > 0) ? replicaNum : (-replicaNum +1);
-    SketchObject *original = (replicaNum > 0) ? obj1 : obj0;
-    q_vec_type scaledForce;
-    getWorldVectorInModelSpace(force,scaledForce);
-    q_vec_scale(scaledForce, 1/divisor, scaledForce);
-    original->getLocalTransform()->TransformVector(scaledForce,scaledForce);
-    original->addForce(point,scaledForce);
-}
-
-void ReplicatedObject::addKeyframeForCurrentLocation(double t) {
-    obj0->addKeyframeForCurrentLocation(t);
-    obj1->addKeyframeForCurrentLocation(t);
-}
 
 //############################################################################################
 //############################################################################################
@@ -57,14 +21,20 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     numShown(0),
     obj1(object1),
     obj2(object2),
-    world(w),
-    copies()
+    replicas(new ObjectGroup()),
+    world(w)
 {
     transform = vtkSmartPointer<vtkTransform>::New();
     transform->Identity();
     transform->PostMultiply();
     transform->Concatenate(obj1->getInverseLocalTransform());
     transform->Concatenate(obj2->getLocalTransform());
+    world->removeObject(obj1);
+    replicas->addObject(obj1);
+    world->removeObject(obj2);
+    replicas->addObject(obj2);
+    replicas->addObserver(this);
+    world->addObject(replicas);
 }
 
 StructureReplicator::~StructureReplicator() {
@@ -76,19 +46,18 @@ void StructureReplicator::setNumShown(int num) {
     if (num < 0) {
         num = 0;
     }
+    QList< SketchObject *> *objList = replicas->getSubObjects();
     if (num > numShown) {
         SketchObject *previous;
         if (numShown == 0) {
             previous = obj2;
         } else {
-            previous = copies.at(copies.size()-1);
+            previous = objList->last();
         }
         for (; numShown < num; numShown++) {
             SketchModel *modelId = previous->getModel();
-            ReplicatedObject *obj = new ReplicatedObject(modelId,
-                                                         obj1,obj2,numShown+2);
-            SketchObject *next = world->addObject(obj);
-            copies.append(next);
+            ModelInstance *next = new ModelInstance(modelId);
+            replicas->addObject(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
             tform->PostMultiply();
@@ -109,8 +78,9 @@ void StructureReplicator::setNumShown(int num) {
         }
     } else {
         for (; numShown > num; numShown--) {
-            world->deleteObject(copies.at(copies.size()-1));
-            copies.removeLast();
+            SketchObject *removed = objList->last();
+            replicas->removeObject(removed);
+            delete removed;
         }
     }
 }
@@ -121,4 +91,19 @@ int StructureReplicator::getNumShown() const {
 
 void StructureReplicator::updateTransform() {
     transform->Update();
+}
+
+QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
+    return QListIterator<SketchObject *>(*replicas->getSubObjects());
+}
+
+void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
+{
+    obj1->addKeyframeForCurrentLocation(time);
+    obj2->addKeyframeForCurrentLocation(time);
+}
+
+ObjectGroup *StructureReplicator::getReplicaGroup()
+{
+    return replicas;
 }

@@ -8,6 +8,7 @@
 #include <sketchtests.h>
 #include <sketchproject.h>
 #include <transformmanager.h>
+#include <sketchobject.h>
 #include <transformequals.h>
 #include <worldmanager.h>
 #include <structurereplicator.h>

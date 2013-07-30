@@ -12,6 +12,7 @@
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <springconnection.h>
+#include <modelinstance.h>
 #include <objectgroup.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
@@ -117,7 +118,9 @@ void compareModels(const SketchModel *m1, const SketchModel *m2, int &numDiffere
     }
 }
 
-void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDifferences, bool printDiffs) {
+void compareObjects(const SketchObject *o1, const SketchObject *o2,
+                    int &numDifferences, bool printDiffs)
+{
     if (o1 == NULL || o2 == NULL) {
         if (o1 == o2) {
             return;
@@ -132,26 +135,11 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
         if (printDiffs) cout << "Different numbers of objects contained in groups!" << endl;
         return;
     }
-    const ReplicatedObject *r1 = dynamic_cast<const ReplicatedObject *>(o1);
-    const ReplicatedObject *r2 = dynamic_cast<const ReplicatedObject *>(o2);
     double epsilon = Q_EPSILON;
     const SketchObject *p = o1->getParent();
     while (p != NULL) {
-        epsilon *= 4;
+        epsilon *= 8;
         p = p->getParent();
-    }
-    if (r1 != NULL && r2 != NULL) {
-        if (r1->getReplicaNum() != r2->getReplicaNum()) {
-            numDifferences++;
-            if (printDiffs) cout << "Replicas with different replica nums" << endl;
-            return;
-        } else {
-            epsilon *= r1->getReplicaNum();
-        }
-    } else if ((r1 == NULL) ^ (r2 == NULL)) {
-        numDifferences++;
-        if (printDiffs) cout << "One is a replica, the other is not" << endl;
-        return;
     }
     q_vec_type pos1, pos2;
     q_type orient1, orient2;
@@ -168,14 +156,17 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             cout << "P2: ";
             q_vec_print(pos2);
         }
+        return;
     }
     if (o1->isVisible() != o2->isVisible()) {
         numDifferences++;
         if (printDiffs) cout << "Visibility state of objects is different." << endl;
+        return;
     }
     if (o1->isActive() != o2->isActive()) {
         numDifferences++;
         if (printDiffs) cout << "Active state of objects is different." << endl;
+        return;
     }
     if (o1->numInstances() == 1) { // test single instance things... orientation of a group is tested by
                                     // position of group memebers in recursion
@@ -188,11 +179,13 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
                 cout << "O2: ";
                 q_print(orient2);
             }
+            return;
         }
         if (o2->getModelConformation() != o1->getModelConformation())
         {
             numDifferences++;
             if (printDiffs) cout << "Model conformation changed" << endl;
+            return;
         }
         else
         {
@@ -202,11 +195,13 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
         {
             numDifferences++;
             if (printDiffs) cout << "Color map changed" << endl;
+            return;
         }
         if (o1->getArrayToColorBy() != o2->getArrayToColorBy())
         {
             numDifferences++;
             if (printDiffs) cout << "Array to color by changed" << endl;
+            return;
         }
     } else { // test group specific stuff
         compareObjectLists(o1->getSubObjects(),o2->getSubObjects(),numDifferences,printDiffs);
@@ -218,6 +213,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             cout << "Object 1 has: " << o1->getNumKeyframes() << endl;
             cout << "Object 2 has: " << o2->getNumKeyframes() << endl;
         }
+        return;
     } else if (o1->getNumKeyframes() > 0) {
         QMapIterator<double,Keyframe> it(*o1->getKeyframes());
         while (it.hasNext()) {
@@ -226,6 +222,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
             if (!o2->getKeyframes()->contains(time)) {
                 numDifferences++;
                 if (printDiffs) cout << "Keyframe for time " << time << " missing in object 2." << endl;
+                return;
             } else {
                 const Keyframe &frame2 = o2->getKeyframes()->value(time);
                 q_vec_type p1, p2;
@@ -237,18 +234,22 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2, int &numDiff
                 if (!q_vec_equals(p1,p2,epsilon)) {
                     numDifferences++;
                     if (printDiffs) cout << "Keyframe positions are different at time " << time << endl;
+                    return;
                 }
                 if (!q_equals(o1,o2,epsilon)) {
                     numDifferences++;
                     if (printDiffs) cout << "Keyframe orientations are different at time " << time << endl;
+                    return;
                 }
                 if (frame1.isVisibleAfter() != frame2.isVisibleAfter()) {
                     numDifferences++;
                     if (printDiffs) cout << "Keyframe visibility is different at time " << time << endl;
+                    return;
                 }
                 if (frame1.isActive() != frame2.isActive()) {
                     numDifferences++;
                     if (printDiffs) cout << "Keyframe active state is different at time " << time << endl;
+                    return;
                 }
             }
         }
@@ -368,6 +369,7 @@ void compareReplications(const StructureReplicator *rep1, const StructureReplica
 
 void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
                     int &diffs, bool printDiffs = false) {
+    int mydiffs = 0;
     int v = 0;
     q_vec_type pos1, pos2;
     compareObjects(sp1->getObject1(),sp2->getObject1(),v,printDiffs);
@@ -375,25 +377,25 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
         v = 0;
         compareObjects(sp1->getObject1(),sp2->getObject2(),v,printDiffs);
         if (v != 0) {
-            diffs++;
+            mydiffs++;
             if (printDiffs) cout << "Cannot match objects in 2-obj spring." << endl;
         } else {
             sp1->getObject1ConnectionPosition(pos1);
             sp2->getObject2ConnectionPosition(pos2);
             if (!q_vec_equals(pos1,pos2)) {
-                diffs++;
+                mydiffs++;
                 if (printDiffs) cout << "Object connection positions don't match" << endl;
             }
             v = 0;
             compareObjects(sp1->getObject2(),sp2->getObject1(),v,printDiffs);
             if (v != 0) {
-                diffs++;
+                mydiffs++;
                 if (printDiffs) cout << "Cannot match objects in 2-obj spring." << endl;
             } else {
                 sp1->getObject2ConnectionPosition(pos1);
                 sp2->getObject1ConnectionPosition(pos2);
                 if (!q_vec_equals(pos1,pos2)) {
-                    diffs++;
+                    mydiffs++;
                     if (printDiffs) cout << "Object connection positions don't match" << endl;
                 }
             }
@@ -402,39 +404,40 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
         sp1->getObject1ConnectionPosition(pos1);
         sp2->getObject1ConnectionPosition(pos2);
         if (!q_vec_equals(pos1,pos2)) {
-            diffs++;
+            mydiffs++;
             if (printDiffs) cout << "Object connection positions don't match" << endl;
         }
         v = 0;
         compareObjects(sp1->getObject2(),sp2->getObject2(),v,printDiffs);
         if (v != 0) {
-            diffs++;
+            mydiffs++;
             if (printDiffs) cout << "Unable to match objects in 2-obj spring" << endl;
         } else { // if the second objects match
             sp1->getObject2ConnectionPosition(pos1);
             sp2->getObject2ConnectionPosition(pos2);
             if (!q_vec_equals(pos1,pos2)) {
-                diffs++;
+                mydiffs++;
                 if (printDiffs) cout << "Object connection positions don't match" << endl;
             }
-            if (diffs && printDiffs) {
+            if (mydiffs && printDiffs) {
                 q_vec_print(pos1);
                 q_vec_print(pos2);
             }
         }
     }
     if (Q_ABS(sp1->getStiffness()-sp2->getStiffness()) > Q_EPSILON) {
-        diffs++;
+        mydiffs++;
         if (printDiffs) cout << "Stiffness is different" << endl;
     }
     if (Q_ABS(sp1->getMinRestLength() - sp2->getMinRestLength()) > Q_EPSILON) {
-        diffs++;
+        mydiffs++;
         if (printDiffs) cout << "Minimum rest length changed" << endl;
     }
     if (Q_ABS(sp1->getMaxRestLength() - sp2->getMaxRestLength()) > Q_EPSILON) {
-        diffs++;
+        mydiffs++;
         if (printDiffs) cout << "Maximum rest length changed" << endl;
     }
+    diffs += mydiffs;
 }
 
 int testSave1() {
@@ -477,7 +480,7 @@ int testSave1() {
         compareWorldObjects(proj1.data(),proj2.data(),retVal);
 
         if (retVal == 0) {
-            cout << "Passed test 1" << endl;
+            cout << "\nPassed test 1\n" << endl;
         }
         root->Delete();
 
@@ -523,7 +526,7 @@ int testSave2() {
     compareCameras(proj1.data(), proj2.data(), retVal);
 
     if (retVal == 0) {
-        cout << "Passed test 2" << endl;
+        cout << "\nPassed test 2\n" << endl;
     }
 
     root->Delete();
@@ -565,7 +568,7 @@ int testSave3() {
     compareReplications(proj1->getReplicas()->at(0),proj2->getReplicas()->at(0),retVal);
 
     if (retVal == 0) {
-        cout << "Passed test 3" << endl;
+        cout << "\nPassed test 3\n" << endl;
     }
 
     root->Delete();
@@ -615,7 +618,7 @@ int testSave4() {
                    proj2->getWorldManager()->getSpringsIterator().next(),retVal,true);
 
     if (retVal == 0) {
-        cout << "Passed test 4" << endl;
+        cout << "\nPassed test 4\n" << endl;
     }
 
     root->Delete();
@@ -686,7 +689,7 @@ int testSave6() {
                    proj2->getWorldManager()->getSpringsIterator().next(),retVal,true);
 
     if (retVal == 0) {
-        cout << "Passed test 6" << endl;
+        cout << "\nPassed test 6\n" << endl;
     }
 
     root->Delete();
@@ -704,7 +707,7 @@ int testSave9() {
     vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
 
     if (ProjectToXML::xmlToProject(project.data(),root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
-        cout << "Passed test 9" << endl;
+        cout << "\nPassed test 9\n" << endl;
     } else {
         cout << "Failed to load" << endl;
         root->Delete();
@@ -753,7 +756,7 @@ int testSave5() {
     vtkXMLDataElement *root = vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str());
 
     if (ProjectToXML::xmlToProject(project2.data(),root) == ProjectToXML::XML_TO_DATA_SUCCESS) {
-        cout << "Passed test 5" << endl;
+        cout << "\nPassed test 5\n" << endl;
     } else {
         cout << "Failed to load" << endl;
         root->Delete();
@@ -819,7 +822,7 @@ int testSave7() {
                         proj2->getTransformOps()->first(),retVal,true);
 
     if (retVal == 0) {
-        cout << "Passed test 7" << endl;
+        cout << "\nPassed test 7\n" << endl;
     }
 
     root->Delete();
@@ -875,7 +878,7 @@ int testSave8() {
     compareWorldObjects(proj1.data(),proj2.data(),retVal);
 
     if (retVal == 0) {
-        cout << "Passed test 8" << endl;
+        cout << "\nPassed test 8\n" << endl;
     }
 
     root->Delete();
