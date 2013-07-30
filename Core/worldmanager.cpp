@@ -128,9 +128,6 @@ SketchObject *WorldManager::addObject(SketchObject *object) {
     if (object->isVisible() || showInvisible) {
         insertActors(object);
     }
-    orientedHalfPlaneOutlines->AddInputConnection(
-                0,object->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
-    orientedHalfPlaneOutlines->Update();
     object->addObserver(this);
     return object;
 }
@@ -144,8 +141,6 @@ void WorldManager::removeObject(SketchObject *object) {
     removeActors(object);
     removeShadows(object);
     objects.removeAt(index);
-    orientedHalfPlaneOutlines->RemoveInputConnection(
-                0,object->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
     object->removeObserver(this);
 }
 //##################################################################################################
@@ -269,8 +264,15 @@ void WorldManager::stepPhysics(double dt) {
 bool WorldManager::setAnimationTime(double t) {
     int numberWithKeyframeNow = 0;
     bool isShowingHalfPlaneOutlines =
-            orientedHalfPlaneOutlines->GetNumberOfInputConnections(0);
+            orientedHalfPlaneOutlines->GetNumberOfInputConnections(0) > 1;
     orientedHalfPlaneOutlines->RemoveAllInputs();
+    vtkSmartPointer< vtkPoints > pts =
+            vtkSmartPointer< vtkPoints >::New();
+    pts->InsertNextPoint(0.0,0.0,0.0);
+    vtkSmartPointer< vtkPolyData > pdata =
+            vtkSmartPointer< vtkPolyData >::New();
+    pdata->SetPoints(pts);
+    orientedHalfPlaneOutlines->AddInputData(pdata);
     bool isDone = true;
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
