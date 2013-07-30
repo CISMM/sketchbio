@@ -83,14 +83,17 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     QDir pd(project->getProjectDir());
     QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
     QFile f(file);
-    if (f.exists()) {
+    if (f.exists())
+    {
         vtkSmartPointer< vtkXMLDataElement > root =
                 vtkSmartPointer< vtkXMLDataElement >::Take(
                     vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str())
                     );
         ProjectToXML::xmlToProject(project,root);
-        project->goToAnimationTime(0.0);
-    } else if (load_example) {
+        project->setViewTime(0.0);
+    }
+    else if (load_example)
+    {
         // eventually we will just load the example from a project directory...
         // example of keyframes this time
 
@@ -382,7 +385,7 @@ void SimpleView::loadProject() {
                     vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str())
                     );
         ProjectToXML::xmlToProject(project,root);
-        project->goToAnimationTime(0.0);
+        project->setViewTime(0.0);
     }
 }
 
