@@ -17,6 +17,7 @@
 #include <QDebug>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QCloseEvent>
 #include <QProgressDialog>
 #include <QMessageBox>
 #include <QThread>
@@ -200,21 +201,40 @@ SimpleView::~SimpleView() {
     delete inputManager;
     delete project;
     delete collisionModeGroup;
-    if (VRPN_USE_INTERNAL_SERVER)
-    {
-        QObject::connect(server,SIGNAL(destroyed()),serverThread,SLOT(quit()));
-        QTimer::singleShot(0,server,SLOT(deleteLater()));
-        while (!serverThread->isFinished())
-            QApplication::instance()->processEvents(QEventLoop::AllEvents,20);
-    }
-    else
+    if (server != NULL)
         delete server;
     delete timer;
 }
 
+void SimpleView::closeEvent(QCloseEvent *event)
+{
+    timer->stop();
+    if (VRPN_USE_INTERNAL_SERVER)
+    {
+        QObject::connect(server,SIGNAL(destroyed()),serverThread,SLOT(quit()));
+        QTimer::singleShot(0,server,SLOT(deleteLater()));
+        server = NULL;
+        while (!serverThread->isFinished())
+        {
+            QApplication::instance()->processEvents(QEventLoop::AllEvents,20);
+        }
+    }
+    event->accept();
+}
+
 void SimpleView::slotExit() 
 {
-    qApp->exit();
+    if (VRPN_USE_INTERNAL_SERVER)
+    {
+        QObject::connect(server, SIGNAL(destroyed()),serverThread,SLOT(quit()));
+        QTimer::singleShot(0,server,SLOT(deleteLater()));
+        server = NULL;
+        QObject::connect(serverThread, SIGNAL(finished()),qApp,SLOT(quit()));
+    }
+    else
+    {
+        qApp->exit();
+    }
 }
 
 

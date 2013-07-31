@@ -88,6 +88,7 @@ public slots:
   // Load a project
   void loadProject();
 
+  virtual void closeEvent(QCloseEvent *);
   virtual void slotExit();
   void slot_frameLoop();
 
