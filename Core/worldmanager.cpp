@@ -44,13 +44,10 @@ WorldManager::WorldManager(vtkRenderer *r) :
     renderer(r),
     orientedHalfPlaneOutlines(vtkSmartPointer< vtkAppendPolyData >::New()),
     halfPlanesActor(vtkSmartPointer< vtkActor >::New()),
-//  nextIdx(0),
-//  lastCapacityUpdate(1000),
-    #ifdef SHOW_DEBUGGING_FORCE_LINES
+    lastCapacityUpdate(1000),
     springEnds(vtkSmartPointer< vtkPoints >::New()),
     springEndConnections(vtkSmartPointer< vtkPolyData >::New()),
     tubeFilter(vtkSmartPointer< vtkTubeFilter >::New()),
-    #endif
     maxGroupNum(0),
     doPhysicsSprings(true),
     doCollisionCheck(true),
@@ -66,13 +63,13 @@ WorldManager::WorldManager(vtkRenderer *r) :
             vtkSmartPointer< vtkPolyData >::New();
     pdata->SetPoints(pts);
     orientedHalfPlaneOutlines->AddInputData(pdata);
-    vtkSmartPointer< vtkPolyDataMapper > mapper =
+    vtkSmartPointer< vtkPolyDataMapper > orientedHalfPlanesMapper =
             vtkSmartPointer< vtkPolyDataMapper >::New();
-    mapper->SetInputConnection(orientedHalfPlaneOutlines->GetOutputPort());
-    mapper->Update();
-    halfPlanesActor->SetMapper(mapper);
+    orientedHalfPlanesMapper->SetInputConnection(
+                orientedHalfPlaneOutlines->GetOutputPort());
+    orientedHalfPlanesMapper->Update();
+    halfPlanesActor->SetMapper(orientedHalfPlanesMapper);
     halfPlanesActor->GetProperty()->SetColor(HALFPLANE_COLOR);
-#ifdef SHOW_DEBUGGING_FORCE_LINES
     springEnds->Allocate(lastCapacityUpdate*2);
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
@@ -83,12 +80,12 @@ WorldManager::WorldManager(vtkRenderer *r) :
 #endif
     tubeFilter->SetRadius(5);
     tubeFilter->Update();
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(tubeFilter->GetOutputPort());
+    vtkSmartPointer<vtkPolyDataMapper> tubesMapper =
+            vtkSmartPointer<vtkPolyDataMapper>::New();
+    tubesMapper->SetInputConnection(tubeFilter->GetOutputPort());
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(mapper);
+    actor->SetMapper(tubesMapper);
     renderer->AddActor(actor);
-#endif
 }
 
 //##################################################################################################
@@ -214,10 +211,8 @@ void WorldManager::removeSpring(SpringConnection *spring) {
     int index = connections.indexOf(spring);
     connections.removeAt(index);
 
-#ifdef SHOW_DEBUGGING_FORCE_LINES
     springEndConnections->DeleteCell(spring->getCellId());
     // can't delete points...
-#endif
 
     delete spring;
 }
@@ -254,9 +249,7 @@ void WorldManager::stepPhysics(double dt) {
     strategies[collisionResponseMode]->performPhysicsStepAndCollisionDetection(
                 lHand,rHand,connections,doPhysicsSprings,objects,dt,doCollisionCheck);
 
-#ifdef SHOW_DEBUGGING_FORCE_LINES
     updateSprings();
-#endif
 }
 
 //##################################################################################################
@@ -406,7 +399,6 @@ void WorldManager::setCollisionCheckOn(bool on) {
     doCollisionCheck = on;
 }
 
-#ifdef SHOW_DEBUGGING_FORCE_LINES
 //##################################################################################################
 //##################################################################################################
 // helper function for updateSprings - updates the endpoints of the springs in the vtkPoints object
@@ -440,8 +432,10 @@ inline void addSpringCells(QList<SpringConnection *> &list, vtkPolyData *data) {
 void WorldManager::updateSprings() {
     // set spring ends to new positions
     updatePoints(connections,springEnds);
+#ifdef SHOW_DEBUGGING_FORCE_LINES
     updatePoints(lHand,springEnds);
     updatePoints(rHand,springEnds);
+#endif
     springEnds->Modified();
     int num = springEndConnections->GetNumberOfLines(), num2;
     springEndConnections->RemoveDeletedCells();
@@ -451,13 +445,14 @@ void WorldManager::updateSprings() {
         }
         springEndConnections->RemoveDeletedCells();
         addSpringCells(connections,springEndConnections);
+#ifdef SHOW_DEBUGGING_FORCE_LINES
         addSpringCells(lHand,springEndConnections);
         addSpringCells(rHand,springEndConnections);
+#endif
         springEndConnections->Modified();
         tubeFilter->Update();
     }
 }
-#endif
 
 
 //##################################################################################################
@@ -616,27 +611,28 @@ void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
     list->push_back(spring);
 
-#ifdef SHOW_DEBUGGING_FORCE_LINES
-    // code to draw spring as a line
-    if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
-        vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
-        springEnds->Allocate(newCapacity*4);
-        springEndConnections->Allocate(newCapacity*2);
-        lastCapacityUpdate = newCapacity *2;
+    if (list == &connections)
+    {
+        // code to draw spring as a line
+        if (springEndConnections->GetNumberOfCells() > lastCapacityUpdate) {
+            vtkIdType newCapacity = springEndConnections->GetNumberOfCells();
+            springEnds->Allocate(newCapacity*4);
+            springEndConnections->Allocate(newCapacity*2);
+            lastCapacityUpdate = newCapacity *2;
+        }
+        q_vec_type endOfSpring;
+        spring->getEnd1WorldPosition(endOfSpring);
+        vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
+        spring->setEnd1Id(end1Id);
+        spring->getEnd2WorldPosition(endOfSpring);
+        vtkIdType end2Id = springEnds->InsertNextPoint(endOfSpring);
+        spring->setEnd2Id(end2Id);
+        //    springEnds->Modified();
+        vtkIdType pts[2] = { end1Id, end2Id };
+        vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
+        //    springEndConnections->Update();
+        spring->setCellId(cellId);
     }
-    q_vec_type endOfSpring;
-    spring->getEnd1WorldPosition(endOfSpring);
-    vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
-    spring->setEnd1Id(end1Id);
-    spring->getEnd2WorldPosition(endOfSpring);
-    vtkIdType end2Id = springEnds->InsertNextPoint(endOfSpring);
-    spring->setEnd2Id(end2Id);
-//    springEnds->Modified();
-    vtkIdType pts[2] = { end1Id, end2Id };
-    vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
-//    springEndConnections->Update();
-    spring->setCellId(cellId);
-#endif
 }
 
 //##################################################################################################

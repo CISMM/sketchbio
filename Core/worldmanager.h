@@ -392,7 +392,6 @@ private:
      *******************************************************************/
     void addSpring(SpringConnection *spring, QList<SpringConnection *> *list);
 
-#ifdef SHOW_DEBUGGING_FORCE_LINES
     /*******************************************************************
      *
      * This method updates the spring endpoints and removes springs that
@@ -400,7 +399,6 @@ private:
      *
      *******************************************************************/
     void updateSprings();
-#endif
 
     /*******************************************************************
      *
@@ -434,13 +432,11 @@ private:
     vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;
     vtkSmartPointer< vtkActor > halfPlanesActor;
 
-    //int nextIdx;
-    //int lastCapacityUpdate;
-#ifdef SHOW_DEBUGGING_FORCE_LINES
+    int lastCapacityUpdate;
     vtkSmartPointer< vtkPoints > springEnds;
     vtkSmartPointer< vtkPolyData > springEndConnections;
     vtkSmartPointer< vtkTubeFilter > tubeFilter;
-#endif
+
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;
     PhysicsMode::Type collisionResponseMode;

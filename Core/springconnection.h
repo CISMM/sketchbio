@@ -57,14 +57,12 @@ public:
     void getEnd2WorldPosition(q_vec_type out) const;
     void setEnd2WorldPosition(const q_vec_type newPos);
 
-#ifdef SHOW_DEBUGGING_FORCE_LINES
     inline vtkIdType getEnd1Id() const { return end1;}
     inline void setEnd1Id(vtkIdType id) { end1 = id;}
     inline vtkIdType getEnd2Id() const { return end2;}
     inline void setEnd2Id(vtkIdType id) { end2 = id;}
     inline vtkIdType getCellId() const { return cellId; }
     inline void setCellId(vtkIdType id) { cellId = id;}
-#endif
 
     void addForce();
 
@@ -73,9 +71,7 @@ private:
     double minRestLength, maxRestLength;
     double stiffness;
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
-#ifdef SHOW_DEBUGGING_FORCE_LINES
     vtkIdType end1, end2, cellId;
-#endif
 public: // static factories
     /*******************************************************************
      *

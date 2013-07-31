@@ -152,7 +152,6 @@ void SpringEditingMode::doUpdatesForFrame()
             }
             if (lAtEnd1)
             {
-                std::cout << ((closestObject == NULL) ? "NULL" : "OBJECT") << endl;
                 if (closestObject != lSpring->getObject1())
                     lSpring->setObject1(closestObject);
                 lSpring->setEnd1WorldPosition(leftTrackerPos);
