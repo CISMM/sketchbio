@@ -294,10 +294,7 @@ SketchProject::SketchProject(vtkRenderer *r) :
     rightHand(addTracker(r)),
     leftShadowActor(vtkSmartPointer< vtkActor >::New()),
     rightShadowActor(vtkSmartPointer< vtkActor >::New()),
-    leftOutlinesActor(vtkSmartPointer< vtkActor >::New()),
-    rightOutlinesActor(vtkSmartPointer< vtkActor >::New()),
-    leftOutlinesMapper(vtkSmartPointer< vtkPolyDataMapper >::New()),
-    rightOutlinesMapper(vtkSmartPointer< vtkPolyDataMapper >::New()),
+    outlines(),
     shadowFloorSource(vtkSmartPointer< vtkPlaneSource >::New()),
     shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
     floorLinesActor(vtkSmartPointer< vtkActor >::New()),
@@ -311,12 +308,16 @@ SketchProject::SketchProject(vtkRenderer *r) :
     // set up initial camera
     renderer->SetActiveCamera(transforms->getGlobalCamera());
     // connect outlines mapper & actor
-    leftOutlinesActor->SetMapper(leftOutlinesMapper);
-    leftOutlinesActor->GetProperty()->SetColor(OUTLINES_COLOR);
-    leftOutlinesActor->GetProperty()->SetLighting(false);
-    rightOutlinesActor->SetMapper(rightOutlinesMapper);
-    rightOutlinesActor->GetProperty()->SetColor(OUTLINES_COLOR);
-    rightOutlinesActor->GetProperty()->SetLighting(false);
+    for (int i = 0; i < 2; i++)
+    {
+        QPair< vtkSmartPointer< vtkPolyDataMapper >, vtkSmartPointer< vtkActor > >
+                pair(vtkSmartPointer< vtkPolyDataMapper >::New(),
+                     vtkSmartPointer< vtkActor >::New());
+        pair.second->SetMapper(pair.first);
+        pair.second->GetProperty()->SetLighting(false);
+        pair.second->GetProperty()->SetColor(OUTLINES_COLOR);
+        outlines.append(pair);
+    }
 
     // make the floor and lines
     makeFloorAndLines(shadowFloorSource,shadowFloorActor,floorLinesActor,
@@ -425,11 +426,12 @@ void SketchProject::startAnimation() {
     timeInAnimation = 0.0;
     renderer->RemoveActor(leftHand->getActor());
     renderer->RemoveActor(rightHand->getActor());
-    if (renderer->HasViewProp(leftOutlinesActor)) {
-        renderer->RemoveActor(leftOutlinesActor);
-    }
-    if (renderer->HasViewProp(rightOutlinesActor)) {
-        renderer->RemoveActor(rightOutlinesActor);
+    for (int i = 0; i < outlines.size(); i++)
+    {
+        if (renderer->HasViewProp(outlines[i].second))
+        {
+            renderer->RemoveViewProp(outlines[i].second);
+        }
     }
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
@@ -693,51 +695,27 @@ void SketchProject::updateTrackerPositions() {
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
 }
 
-void SketchProject::setLeftOutlineObject(SketchObject *obj) {
-    leftOutlinesMapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
-    leftOutlinesMapper->Update();
-}
-
-void SketchProject::setLeftOutlineSpring(SpringConnection *conn, bool end1Large) {
-    q_vec_type end1, end2, midpoint, direction;
-    conn->getEnd1WorldPosition(end1);
-    conn->getEnd2WorldPosition(end2);
-    q_vec_add(midpoint,end1,end2);
-    q_vec_scale(midpoint, .5, midpoint);
-    q_vec_subtract(direction,end2,end1);
-    double length = q_vec_magnitude(direction);
-    if (!end1Large) {
-        q_vec_invert(direction,direction);
-    }
-    vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
-    cone->SetCenter(midpoint);
-    cone->SetDirection(direction);
-    cone->SetHeight(length);
-    cone->SetRadius(50);
-    cone->SetResolution(4);
-    cone->Update();
-
-    vtkSmartPointer<vtkExtractEdges> edges = vtkSmartPointer<vtkExtractEdges>::New();
-    edges->SetInputConnection(cone->GetOutputPort());
-    edges->Update();
-
-    leftOutlinesMapper->SetInputConnection(edges->GetOutputPort());
-}
-
-void SketchProject::setRightOutlineObject(SketchObject *obj) {
-    rightOutlinesMapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
-    rightOutlinesMapper->Update();
+void SketchProject::setOutlineObject(int outlineIdx, SketchObject *obj)
+{
+    vtkPolyDataMapper *mapper = outlines[outlineIdx].first;
+    vtkActor *actor = outlines[outlineIdx].second;
+    mapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
+    mapper->Update();
+    // TODO - fix this
     if (obj->getParent() != NULL)
     {
-        rightOutlinesActor->GetProperty()->SetColor(1,0,0);
+        actor->GetProperty()->SetColor(1,0,0);
     }
     else
     {
-        rightOutlinesActor->GetProperty()->SetColor(OUTLINES_COLOR);
+        actor->GetProperty()->SetColor(OUTLINES_COLOR);
     }
 }
 
-void SketchProject::setRightOutlineSpring(SpringConnection *conn, bool end1Large) {
+void SketchProject::setOutlineSpring(int outlineIdx, SpringConnection *conn, bool end1Large)
+{
+    vtkPolyDataMapper *mapper = outlines[outlineIdx].first;
+    vtkActor *actor = outlines[outlineIdx].second;
     q_vec_type end1, end2, midpoint, direction;
     conn->getEnd1WorldPosition(end1);
     conn->getEnd2WorldPosition(end2);
@@ -760,34 +738,32 @@ void SketchProject::setRightOutlineSpring(SpringConnection *conn, bool end1Large
     edges->SetInputConnection(cone->GetOutputPort());
     edges->Update();
 
-    rightOutlinesMapper->SetInputConnection(edges->GetOutputPort());
+    mapper->SetInputConnection(edges->GetOutputPort());
+    mapper->Update();
+
+    actor->GetProperty()->SetColor(OUTLINES_COLOR);
 }
 
-
-void SketchProject::setLeftOutlinesVisible(bool visible) {
+void SketchProject::setOutlineVisible(int outlineIdx, bool visible)
+{
+    vtkActor *actor = outlines[outlineIdx].second;
     if (visible)
-        renderer->AddActor(leftOutlinesActor);
+    {
+        renderer->AddActor(actor);
+    }
     else
-        renderer->RemoveActor(leftOutlinesActor);
+    {
+        renderer->RemoveActor(actor);
+    }
 }
 
-void SketchProject::setRightOutlinesVisible(bool visible) {
-    if (visible)
-        renderer->AddActor(rightOutlinesActor);
-    else
-        renderer->RemoveActor(rightOutlinesActor);
+bool SketchProject::isOutlineVisible(int outlineIdx)
+{
+    return renderer->HasViewProp(outlines[outlineIdx].second);
 }
 
 SketchModel *SketchProject::getCameraModel() {
     return models->getCameraModel(*projectDir);
-}
-
-bool SketchProject::isLeftOutlinesVisible() {
-    return renderer->HasViewProp(leftOutlinesActor);
-}
-
-bool SketchProject::isRightOutlinesVisible() {
-    return renderer->HasViewProp(rightOutlinesActor);
 }
 
 /*

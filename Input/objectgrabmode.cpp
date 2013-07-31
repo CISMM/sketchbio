@@ -1,6 +1,7 @@
 #include "objectgrabmode.h"
 
 #include <limits>
+#include <cmath>
 
 #include <sketchioconstants.h>
 #include <sketchobject.h>
@@ -65,6 +66,73 @@ void ObjectGrabMode::buttonReleased(int vrpn_ButtonNum)
   }
 }
 
+inline void computeClosestObject(SketchProject *proj,
+                                 SketchObject * & obj, // reference to pointer
+                                 SketchObject * & baseObj, // reference to pointer
+                                 double &distance,
+                                 int &level,
+                                 SketchObject *trackerObject,
+                                 int side)
+{
+    bool oldOutlinesShown = proj->isOutlineVisible(side);
+    SketchObject *closest = proj->getWorldManager()->getClosestObject(
+                trackerObject,distance);
+
+    if (baseObj != closest) {
+        proj->setOutlineObject(side,closest);
+        baseObj = obj = closest;
+        level = 0;
+    }
+    else
+    {
+        SketchObject *levelObj = baseObj;
+        double dist = distance;
+        if (distance < DISTANCE_THRESHOLD)
+        {
+            for (int i = 1; i <= level; i++)
+            {
+                QList<SketchObject *> *subObjs = levelObj->getSubObjects();
+                if (subObjs != NULL)
+                {
+                    closest = WorldManager::getClosestObject(
+                                *subObjs,trackerObject,dist);
+                }
+                else
+                {
+                    level = i - 1;
+                    break;
+                }
+                if (dist < DISTANCE_THRESHOLD)
+                {
+                    levelObj = closest;
+                }
+                else
+                {
+                    level = i;
+                    break;
+                }
+            }
+            if (obj != levelObj)
+            {
+                proj->setOutlineObject(side,levelObj);
+            }
+            obj = levelObj;
+            distance = dist;
+        }
+        else
+        {
+            level = 0;
+        }
+    }
+    if (distance < DISTANCE_THRESHOLD) {
+        if (!oldOutlinesShown) {
+            proj->setOutlineVisible(side,true);
+        }
+    } else if (oldOutlinesShown) {
+        proj->setOutlineVisible(side,false);
+    }
+}
+
 void ObjectGrabMode::doUpdatesForFrame()
 {
   if (worldGrabbed == LEFT_GRABBED_WORLD)
@@ -77,42 +145,15 @@ void ObjectGrabMode::doUpdatesForFrame()
 
   // we don't want to show bounding boxes during animation
   if (world->getNumberOfObjects() > 0) {
-      bool oldShown = false;
-
-      SketchObject *closest = NULL;
 
       if (world->getLeftSprings()->size() == 0 ) {
-          oldShown = project->isLeftOutlinesVisible();
-          closest = world->getClosestObject(leftHand,lDist);
-
-          if (lObj != closest) {
-              project->setLeftOutlineObject(closest);
-              lObj = closest;
-          }
-          if (lDist < DISTANCE_THRESHOLD) {
-              if (!oldShown) {
-                  project->setLeftOutlinesVisible(true);
-              }
-          } else if (oldShown) {
-              project->setLeftOutlinesVisible(false);
-          }
+          computeClosestObject(project,lObj,lBase,lDist,
+                               leftLevel,leftHand,LEFT_SIDE_OUTLINE);
       }
 
       if (world->getRightSprings()->size() == 0 ) {
-          oldShown = project->isRightOutlinesVisible();
-          closest = world->getClosestObject(rightHand,rDist);
-
-          if (rObj != closest) {
-              project->setRightOutlineObject(closest);
-              rObj = closest;
-          }
-          if (rDist < DISTANCE_THRESHOLD) {
-              if (!oldShown) {
-                  project->setRightOutlinesVisible(true);
-              }
-          } else if (oldShown) {
-              project->setRightOutlinesVisible(false);
-          }
+          computeClosestObject(project,rObj,rBase,rDist,
+                               rightLevel,rightHand,RIGHT_SIDE_OUTLINE);
       }
   }
 }
@@ -122,4 +163,30 @@ void ObjectGrabMode::clearStatus()
   worldGrabbed = WORLD_NOT_GRABBED;
   lDist = rDist = std::numeric_limits<double>::max();
   lObj = rObj = NULL;
+}
+
+void ObjectGrabMode::analogsUpdated()
+{
+    if (!bumpLevels && std::abs(analogStatus[ANALOG_RIGHT(UP_DOWN_ANALOG_IDX)]) < 0.25)
+    {
+        bumpLevels = true;
+    }
+    else if (bumpLevels && analogStatus[ANALOG_RIGHT(UP_DOWN_ANALOG_IDX)] > 0.25)
+    {
+        bumpLevels = false;
+        leftLevel++;
+        rightLevel++;
+    }
+    else if (bumpLevels && analogStatus[ANALOG_RIGHT(UP_DOWN_ANALOG_IDX)] < -0.25)
+    {
+        bumpLevels = false;
+        if (leftLevel > 0)
+        {
+            leftLevel--;
+        }
+        if (rightLevel > 0)
+        {
+            rightLevel--;
+        }
+    }
 }

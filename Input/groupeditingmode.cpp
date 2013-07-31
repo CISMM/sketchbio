@@ -129,6 +129,7 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void GroupEditingMode::analogsUpdated()
 {
+    ObjectGrabMode::analogsUpdated();
 }
 
 void GroupEditingMode::doUpdatesForFrame()
@@ -149,7 +150,7 @@ void GroupEditingMode::doUpdatesForFrame()
             {
                 emit newDirectionsString("Release to remove object from group");
                 givenNewDirections = true;
-                project->setRightOutlineObject(obj);
+                project->setOutlineObject(RIGHT_SIDE_OUTLINE,obj);
             }
         }
         else if (lObj != rObj)

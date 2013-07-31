@@ -23,12 +23,16 @@ public:
     virtual void buttonReleased(int vrpn_ButtonNum);
     virtual void doUpdatesForFrame();
     virtual void clearStatus();
+    virtual void analogsUpdated();
 
 protected:
     int worldGrabbed; // state of world grabbing
     double lDist, rDist; // the distance to the closest object to the (left/right) hand
     SketchObject *lObj, *rObj; // the objects in the world that are closest to the left
                                 // and right hands respectively
+    SketchObject *lBase, *rBase;
+    int leftLevel, rightLevel;
+    bool bumpLevels;
 
 };
 

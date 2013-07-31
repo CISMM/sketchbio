@@ -15,6 +15,7 @@ class vtkMatrix4x4;
 
 // QT dependencies
 #include <QVector>
+#include <QPair>
 #include <QSharedPointer>
 #include <QScopedPointer>
 #include <QWeakPointer>
@@ -33,6 +34,11 @@ class WorldManager;
 class StructureReplicator;
 class TransformEquals;
 #include "physicsstrategyfactory.h"
+
+// constants to use with the setOutlineXXX and isOutlineVisible functions
+// for the value of the side variable
+#define LEFT_SIDE_OUTLINE 0
+#define RIGHT_SIDE_OUTLINE 1
 
 /*
  *
@@ -115,16 +121,13 @@ public:
     // update locations of tracker objects
     void updateTrackerPositions();
     // update the object used for the outlines
-    void setLeftOutlineObject(SketchObject *obj);
-    void setLeftOutlineSpring(SpringConnection *conn, bool end1Large);
-    void setRightOutlineObject(SketchObject *obj);
-    void setRightOutlineSpring(SpringConnection *conn, bool end1Large);
+    void setOutlineObject(int outlineIdx, SketchObject *obj);
+    // update the spring used for the outlines
+    void setOutlineSpring(int outlineIdx, SpringConnection *conn, bool end1Large);
     // show/hide the outlines of objects
-    void setLeftOutlinesVisible(bool visible);
-    void setRightOutlinesVisible(bool visible);
+    void setOutlineVisible(int outlineIdx, bool visible);
     // tell if the outlines for a particular side are visible
-    bool isLeftOutlinesVisible();
-    bool isRightOutlinesVisible();
+    bool isOutlineVisible(int outlineIdx);
 
     // causes the given object to be connected to one of the tracker objects with springs to allow
     // the user to manipulate its position and orientation.
@@ -180,9 +183,11 @@ private:
     vtkSmartPointer< vtkActor > leftShadowActor, rightShadowActor;
     // outline actors are added to the renderer when the object is close enough to
     // interact with.  The outline mappers are updated whenever the closest object
-    // changes (unless another one is currently grabbed).
-    vtkSmartPointer< vtkActor > leftOutlinesActor, rightOutlinesActor;
-    vtkSmartPointer< vtkPolyDataMapper > leftOutlinesMapper, rightOutlinesMapper;
+    // changes (unless another one is currently grabbed). Note: left is 0, right is 1
+    QVector< QPair< vtkSmartPointer< vtkPolyDataMapper >,
+        vtkSmartPointer< vtkActor > > > outlines;
+//    vtkSmartPointer< vtkActor > leftOutlinesActor, rightOutlinesActor;
+//    vtkSmartPointer< vtkPolyDataMapper > leftOutlinesMapper, rightOutlinesMapper;
     vtkSmartPointer< vtkPlaneSource > shadowFloorSource;
     vtkSmartPointer< vtkActor > shadowFloorActor, floorLinesActor;
     // animation stuff
