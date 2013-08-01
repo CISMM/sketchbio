@@ -491,8 +491,6 @@ static inline void applyPoseModeCollisionResponse(QList< SketchObject * > &list,
             return;
         }
     }
-    // if we fixed the collision or there were none, finalize new positions
-    PhysicsUtilities::setLastLocation(list,affectedGroups);
 }
 
 //##################################################################################################
@@ -530,6 +528,7 @@ static inline void applyBinaryCollisionSearch(QList< SketchObject * > &list,
                                               bool testCollisions,
                                               PhysicsStrategy *strategy)
 {
+    PhysicsUtilities::setLastLocation(list,affectedGroups);
     PhysicsUtilities::applyEulerToListAndGroups(list,affectedGroups,dt,false);
     if (testCollisions) {
         int times = 1;
@@ -543,7 +542,6 @@ static inline void applyBinaryCollisionSearch(QList< SketchObject * > &list,
             times++;
         }
     }
-    PhysicsUtilities::setLastLocation(list,affectedGroups);
 }
 
 
@@ -561,6 +559,7 @@ static inline void binaryCollisionSearch(QList< SpringConnection * > &springs,
                     springs,affectedCollisionGroups,affectedGroups);
         applyBinaryCollisionSearch(objs,affectedCollisionGroups,affectedGroups,
                                    dt,doCollisionCheck, strategy);
+        PhysicsUtilities::clearForces(objs,affectedGroups);
     }
 }
 
@@ -653,6 +652,7 @@ void PoseModePhysicsStrategy::poseModeForSprings(QList< SpringConnection * > &sp
     if (!springs.empty()) {
         PhysicsUtilities::springForcesFromList(
                     springs,affectedGroups,affectedObjectGroups);
+        PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
         PhysicsUtilities::applyEulerToListAndGroups(
                     objs,affectedObjectGroups,dt,true);
         if (doCollisionCheck)
@@ -738,6 +738,7 @@ void PoseModePCAPhysicsStrategy::poseModePCAForSprings(QList< SpringConnection *
     if (!springs.empty()) {
         PhysicsUtilities::springForcesFromList(
                     springs,affectedGroups,affectedObjectGroups);
+        PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
         PhysicsUtilities::applyEulerToListAndGroups(
                     objs,affectedObjectGroups,dt,true);
         if (doCollisionCheck)

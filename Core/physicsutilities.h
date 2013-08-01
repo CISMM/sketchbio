@@ -53,6 +53,10 @@ void setLastLocation(QList< SketchObject * > &list,
 void applyEulerToListAndGroups(QList< SketchObject * > &list,
                                QSet< SketchObject * > &affectedGroups,
                                double dt, bool clearForces);
+// Clears force and torque from the objects in the list and the children
+// of the objects in the set
+void clearForces(QList< SketchObject * > &list,
+                 QSet< SketchObject * > &affectedGroups);
 }
 
 #endif // PHYSICSUTILITIES_H

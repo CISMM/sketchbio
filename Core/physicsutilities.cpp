@@ -194,10 +194,23 @@ void applyEulerToListAndGroups(QList< SketchObject * > &list,
                                QSet< SketchObject * > &affectedGroups,
                                double dt, bool clearForces)
 {
-    PhysicsUtilities::applyEuler(list,dt);
+    applyEuler(list,dt);
     for (QSetIterator< SketchObject * > it(affectedGroups); it.hasNext(); )
     {
-        PhysicsUtilities::applyEuler(*it.next()->getSubObjects(),dt,clearForces);
+        applyEuler(*it.next()->getSubObjects(),dt,clearForces);
+    }
+}
+
+void clearForces(QList< SketchObject * > &list,
+                 QSet< SketchObject * > &affectedGroups)
+{
+    for (int i = 0; i < list.size(); i++)
+    {
+        list.at(i)->clearForces();
+        if (affectedGroups.contains(list.at(i)))
+        {
+            clearForces(*list.at(i)->getSubObjects(),affectedGroups);
+        }
     }
 }
 
