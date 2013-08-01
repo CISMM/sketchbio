@@ -30,15 +30,21 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     transform->PostMultiply();
     transform->Concatenate(obj1->getInverseLocalTransform());
     transform->Concatenate(obj2->getLocalTransform());
-    QMapIterator< double, Keyframe > it(*obj1->getKeyframes());
-    while (it.hasNext())
+    if (obj1->hasKeyframes())
     {
-        replicas->addKeyframeForCurrentLocation(it.next().key());
+        QMapIterator< double, Keyframe > it(*obj1->getKeyframes());
+        while (it.hasNext())
+        {
+            replicas->addKeyframeForCurrentLocation(it.next().key());
+        }
     }
-    it = QMapIterator< double, Keyframe >(*obj2->getKeyframes());
-    while (it.hasNext())
+    if (obj2->hasKeyframes())
     {
-        replicas->addKeyframeForCurrentLocation(it.next().key());
+        QMapIterator< double, Keyframe > it = QMapIterator< double, Keyframe >(*obj2->getKeyframes());
+        while (it.hasNext())
+        {
+            replicas->addKeyframeForCurrentLocation(it.next().key());
+        }
     }
     world->removeObject(obj1);
     replicas->addObject(obj1);

@@ -29,6 +29,8 @@ springconnection.cpp
 springconnection.h
 sketchproject.cpp
 sketchproject.h
+physicsutilities.cpp
+physicsutilities.h
 physicsstrategy.cpp
 physicsstrategy.h
 physicsstrategyfactory.cpp

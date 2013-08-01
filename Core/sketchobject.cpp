@@ -1,6 +1,7 @@
 #include "sketchobject.h"
 
 #include <vtkTransform.h>
+#include <vtkNew.h>
 #include <vtkColorTransferFunction.h>
 
 #include "keyframe.h"
@@ -128,6 +129,29 @@ vtkColorTransferFunction *SketchObject::getColorMap(
     }
     return ctf;
 }
+
+void SketchObject::setParentRelativePositionForAbsolutePosition(
+        SketchObject *obj, SketchObject *parent,
+        const q_vec_type absPos, const q_type abs_orient)
+{
+    double angle, x, y, z;
+    q_to_axis_angle(&x, &y, &z, &angle, abs_orient);
+    angle = angle * 180.0 / Q_PI;
+    vtkNew< vtkTransform > trans;
+    trans->Identity();
+    trans->PostMultiply();
+    trans->RotateWXYZ(angle,x,y,z);
+    trans->Translate(absPos);
+    trans->Concatenate(parent->getInverseLocalTransform());
+    q_vec_type relPos;
+    q_type relOrient;
+    double wxyz[4];
+    trans->GetPosition(relPos);
+    trans->GetOrientationWXYZ(wxyz);
+    q_from_axis_angle(relOrient,wxyz[1],wxyz[2],wxyz[3],Q_PI/180.0 * wxyz[0]);
+    obj->setPosAndOrient(relPos,relOrient);
+}
+
 //#########################################################################
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),
@@ -135,6 +159,7 @@ SketchObject::SketchObject() :
     parent(NULL),
     visible(true),
     active(false),
+    propagateForce(false),
     collisionGroups(),
     localTransformPrecomputed(false),
     localTransformDefiningPosition(false),
@@ -302,7 +327,15 @@ void SketchObject::setLastLocation()
 //#########################################################################
 void SketchObject::restoreToLastLocation()
 {
-    setPosAndOrient(lastPosition,lastOrientation);
+    if (parent == NULL)
+    {
+        setPosAndOrient(lastPosition,lastOrientation);
+    }
+    else
+    {
+        setParentRelativePositionForAbsolutePosition(
+                    this,parent,lastPosition,lastOrientation);
+    }
 }
 
 //#########################################################################
@@ -389,7 +422,7 @@ void SketchObject::getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_t
 //#########################################################################
 void SketchObject::addForce(const q_vec_type point, const q_vec_type force)
 {
-    if (parent == NULL)
+    if (!propagateForce || parent == NULL)
     {
         q_vec_add(forceAccum,forceAccum,force);
         q_vec_type tmp, torque;
@@ -398,12 +431,10 @@ void SketchObject::addForce(const q_vec_type point, const q_vec_type force)
         q_vec_add(torqueAccum,torqueAccum,torque);
     }
     else
-    { // if we have a parent, then we are not moving ourself, the parent
-                // should be doing the moving.  The object should be rigid relative
-                // to the parent.
+    {
         q_vec_type tmp;
-        q_xform(tmp,orientation,point);
-        q_vec_add(tmp,position,tmp); // get point in parent coordinate system
+        // get point in parent coordinate system
+        getModelSpacePointInWorldCoordinates(point,tmp);
         parent->addForce(tmp,force);
     }
     notifyForceObservers();
@@ -672,6 +703,18 @@ void SketchObject::setActive(bool isActive)
 bool SketchObject::isActive() const
 {
     return active;
+}
+
+//#########################################################################
+void SketchObject::setPropagateForceToParent(bool propagate)
+{
+    propagateForce = propagate;
+}
+
+//#########################################################################
+bool SketchObject::isPropagatingForceToParent()
+{
+    return propagateForce;
 }
 
 //#########################################################################

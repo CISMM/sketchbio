@@ -75,6 +75,10 @@ public:
     static vtkColorTransferFunction *getColorMap(ColorMapType::Type cmapType,
                                                  double low, double high);
 
+    static void setParentRelativePositionForAbsolutePosition(
+            SketchObject *obj, SketchObject *parent,
+            const q_vec_type absPos, const q_type abs_orient);
+
 public:
     // constructor
     SketchObject();
@@ -186,6 +190,9 @@ public:
     // set/get active status (only has meaning on cameras)
     void setActive(bool isActive);
     bool isActive() const;
+    // set/get the 'propagate-force-to-parent' status
+    void setPropagateForceToParent(bool propagate);
+    bool isPropagatingForceToParent();
     // copy the object and its sub-objects
     virtual SketchObject *deepCopy() = 0;
 protected: // methods
@@ -209,7 +216,7 @@ private: // fields
     q_vec_type position, lastPosition;
     q_type orientation, lastOrientation;
     // visibility for animations:
-    bool visible, active;
+    bool visible, active, propagateForce;
     // this list is the collision groups. If it is empty, then the object has no collision group and
     // getPrimaryCollisionGroup will return OBJECT_HAS_NO_GROUP.  Else, the primary collision group
     // is ther first element in the list.  setPrimaryCollisionGroup will move the given group to the

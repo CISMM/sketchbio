@@ -175,19 +175,11 @@ void ObjectGroup::addObject(SketchObject *obj)
         p = p->getParent();
     }
     // compute and set the position of the object relative to the group
-    vtkSmartPointer< vtkTransform > tfrm =
-            vtkSmartPointer< vtkTransform >::New();
-    tfrm->Identity();
-    tfrm->PostMultiply();
-    tfrm->Concatenate(obj->getLocalTransform());
-    tfrm->Concatenate(getInverseLocalTransform());
-    q_vec_type relPos;
-    q_type relOrient;
-    double wxyz[4];
-    tfrm->GetPosition(relPos);
-    tfrm->GetOrientationWXYZ(wxyz);
-    q_from_axis_angle(relOrient,wxyz[1],wxyz[2],wxyz[3],Q_PI/180.0 * wxyz[0]);
-    obj->setPosAndOrient(relPos,relOrient);
+    q_vec_type pos;
+    q_type orient;
+    obj->getPosition(pos);
+    obj->getOrientation(orient);
+    SketchObject::setParentRelativePositionForAbsolutePosition(obj,this,pos,orient);
     // set parent and child relation for new object
     obj->setParent(this);
     children.append(obj);
