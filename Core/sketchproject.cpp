@@ -527,8 +527,8 @@ void SketchProject::timestep(double dt) {
         } else {
             for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
                 SketchObject *cam = it.peekNext().key();
+                vtkSmartPointer< vtkCamera > vCam = it.next().value();
                 if (cam->isActive()) {
-                    vtkSmartPointer<vtkCamera> vCam = it.next().value();
                     setUpVtkCamera(cam,vCam);
                     renderer->SetActiveCamera(vCam);
                 }
