@@ -364,6 +364,10 @@ static inline void computeCollisonPointCovariance(PQP_REAL mean[3], PQP_CollideR
 // the result1 and result2 parameters are references to pointers.  These
 // will be set to the objects to add the forces to or NULL if no force
 // should be added on that side
+//
+// this function also handles the case where affectedGroups is empty by
+// picking the highest level that is not in the other hierarchy as the level
+// to add force at
 static inline void computeObjectsToAddForce(SketchObject *o1, SketchObject *o2,
                                             QSet< int > affectedGroups,
                                             SketchObject * & result1,
@@ -383,25 +387,49 @@ static inline void computeObjectsToAddForce(SketchObject *o1, SketchObject *o2,
         p = p->getParent();
     }
     int idx1 = 0, idx2 = 0;
-    while (idx1 < parents1.size() &&
-           !affectedGroups.contains(
-               parents1[idx1]->getPrimaryCollisionGroupNum()))
+    if (!affectedGroups.empty())
     {
-        idx1++;
+        while (idx1 < parents1.size() &&
+               !affectedGroups.contains(
+                   parents1[idx1]->getPrimaryCollisionGroupNum()))
+        {
+            idx1++;
+        }
+        if (idx1 >= parents1.size() || parents2.contains(parents1[idx1]))
+        {
+            idx1 = -1;
+        }
+        while (idx2 < parents2.size() &&
+               !affectedGroups.contains(
+                   parents2[idx2]->getPrimaryCollisionGroupNum()))
+        {
+            idx2++;
+        }
+        if (idx2 >= parents2.size() || parents1.contains(parents2[idx2]))
+        {
+            idx2 = -1;
+        }
     }
-    if (idx1 >= parents1.size() || parents2.contains(parents1[idx1]))
+    else
     {
-        idx1 = -1;
-    }
-    while (idx2 < parents2.size() &&
-           !affectedGroups.contains(
-               parents2[idx2]->getPrimaryCollisionGroupNum()))
-    {
-        idx2++;
-    }
-    if (idx2 >= parents2.size() || parents1.contains(parents2[idx2]))
-    {
-        idx2 = -1;
+        while (idx1 < parents1.size() &&
+               !parents2.contains(parents1[idx1]))
+        {
+            idx1++;
+        }
+        if (idx1 >= parents1.size())
+        {
+            idx1 = parents1.size()-1;
+        }
+        while (idx2 < parents2.size() &&
+               !parents2.contains(parents2[idx2]))
+        {
+            idx2++;
+        }
+        if (idx2 >= parents2.size())
+        {
+            idx2 = parents2.size()-1;
+        }
     }
     if (idx1 == -1)
     {
