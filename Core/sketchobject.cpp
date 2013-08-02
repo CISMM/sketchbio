@@ -341,10 +341,6 @@ void SketchObject::restoreToLastLocation()
 //#########################################################################
 int SketchObject::getPrimaryCollisionGroupNum()
 {
-    if (parent != NULL)
-    {
-        return parent->getPrimaryCollisionGroupNum();
-    }
     if (collisionGroups.empty())
     {
         return OBJECT_HAS_NO_GROUP;
@@ -375,10 +371,6 @@ void SketchObject::addToCollisionGroup(int num)
 //#########################################################################
 bool SketchObject::isInCollisionGroup(int num) const
 {
-    if (parent != NULL)
-    {
-        return parent->isInCollisionGroup(num);
-    }
     return collisionGroups.contains(num);
 }
 //#########################################################################

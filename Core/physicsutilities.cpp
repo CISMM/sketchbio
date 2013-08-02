@@ -111,6 +111,23 @@ bool collideAndComputeResponse(QList< SketchObject * > &list,
     return foundCollision;
 }
 
+bool collideWithinGroupAndComputeResponse(QSet< SketchObject * > &affectedGroups,
+                                          QSet< int > affectedCollisionGroups,
+                                          bool find_all_collisions,
+                                          PhysicsStrategy *strategy)
+{
+    bool hasCollision = false;
+    for (QSet< SketchObject * >::iterator it = affectedGroups.begin();
+         it != affectedGroups.end() && (find_all_collisions || !hasCollision);
+         it++)
+    {
+        hasCollision = hasCollision || collideAndComputeResponse(
+                    *(*it)->getSubObjects(),affectedCollisionGroups,
+                    find_all_collisions,strategy);
+    }
+    return hasCollision;
+}
+
 
 void springForcesFromList(QList<SpringConnection *> &list,
                           QSet<int> &affectedCollisionGroups,
@@ -131,6 +148,8 @@ void springForcesFromList(QList<SpringConnection *> &list,
                 while (p != NULL)
                 {
                     affectedGroups.insert(p);
+                    affectedCollisionGroups.insert(
+                                p->getPrimaryCollisionGroupNum());
                     p = p->getParent();
                 }
             }
@@ -150,6 +169,8 @@ void springForcesFromList(QList<SpringConnection *> &list,
                 while (p != NULL)
                 {
                     affectedGroups.insert(p);
+                    affectedCollisionGroups.insert(
+                                p->getPrimaryCollisionGroupNum());
                     p = p->getParent();
                 }
             }

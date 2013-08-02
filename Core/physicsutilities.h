@@ -30,6 +30,12 @@ bool collideAndComputeResponse(QList< SketchObject * > &list,
                                QSet< int > &affectedCollisionGroups,
                                bool find_all_collisions,
                                PhysicsStrategy *strategy);
+// Test internal collisions for groups whose members moved.  The first parameter
+// is the set of groups to test, the rest are the same as collideAndComputeResponse
+bool collideWithinGroupAndComputeResponse(QSet< SketchObject * > &affectedGroups,
+                                          QSet< int > affectedCollisionGroups,
+                                          bool find_all_collisions,
+                                          PhysicsStrategy *strategy);
 // Adds the spring forces from the list of springs to the objects that springs
 // are attached to.  Output values are placed in the two QSet objects.  The
 // affectedCollisionGroups set will contain the primary collision groups

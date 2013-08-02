@@ -409,18 +409,56 @@ static inline void applyPCACollisionResponseForce(SketchObject *o1, SketchObject
     }
 
     q_vec_type dir1W, dir2W;
-    q_vec_type mean1W, mean2W;
-    o1->getModelSpacePointInWorldCoordinates(mean1,mean1W);
-    o2->getModelSpacePointInWorldCoordinates(mean2,mean2W);
+    q_vec_type p1, p2;
     o1->getLocalTransform()->TransformVector(dir1,dir1W);
     o2->getLocalTransform()->TransformVector(dir2,dir2W);
     q_vec_scale(dir1W,COLLISION_FORCE*30,dir1W);
     q_vec_scale(dir2W,COLLISION_FORCE*30,dir2W);
-    if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryCollisionGroupNum())) {
-        o1->addForce(mean1W,dir1W);
+    QList< SketchObject * > parents1, parents2;
+    SketchObject *p = o1;
+    o1->getModelSpacePointInWorldCoordinates(p1,mean1);
+    while (p != NULL)
+    {
+        parents1.append(p);
+        p = p->getParent();
     }
-    if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryCollisionGroupNum())) {
-        o2->addForce(mean2W,dir2W);
+    p = o2;
+    o2->getModelSpacePointInWorldCoordinates(p2,mean2);
+    while (p != NULL)
+    {
+        parents2.append(p);
+        p = p->getParent();
+    }
+    int idx1 = 0, idx2 = 0;
+    while ( idx1 < parents1.size() &&
+            !affectedGroups.contains(
+                parents1[idx1]->getPrimaryCollisionGroupNum()))
+    {
+        idx1++;
+    }
+    if (idx1 >= parents1.size() || parents2.contains(parents1[idx1]))
+    {
+        idx1 = -1;
+    }
+    while ( idx2 < parents2.size() &&
+            !affectedGroups.contains(
+                parents2[idx2]->getPrimaryCollisionGroupNum()))
+    {
+        idx2++;
+    }
+    if (idx2 >= parents2.size() || parents1.contains(parents2[idx2]))
+    {
+        idx2 = -1;
+    }
+    if (idx1 != -1)
+    {
+        parents1[idx1]->getWorldSpacePointInModelCoordinates(p1,p1);
+        parents1[idx1]->addForce(p1,dir1W);
+    }
+    if (idx2 != -1)
+    {
+        parents2[idx2]->getWorldSpacePointInModelCoordinates(p2,p2);
+        parents2[idx2]->addForce(p2,dir2W);
     }
 }
 
@@ -463,8 +501,42 @@ static inline void applyCollisionResponseForce(SketchObject *o1, SketchObject *o
         if (affectedGroups.empty() || affectedGroups.contains(o1->getPrimaryCollisionGroupNum())) {
             (o1)->addForce(p1,f1);
         }
+        else
+        {
+            SketchObject *p = o1->getParent();
+            o1->getModelSpacePointInWorldCoordinates(p1,p1);
+            while (p != NULL && !affectedGroups.contains(p->getPrimaryCollisionGroupNum()))
+            {
+                p = p->getParent();
+                if (p != NULL)
+                {
+                    p->getModelSpacePointInWorldCoordinates(p1,p1);
+                }
+            }
+            if (p != NULL) // the loop stopped because this is the right level to apply force
+            {
+                p->addForce(p1,f1);
+            }
+        }
         if (affectedGroups.empty() || affectedGroups.contains(o2->getPrimaryCollisionGroupNum())) {
             (o2)->addForce(p2,f2);
+        }
+        else
+        {
+            SketchObject *p = o2->getParent();
+            o2->getModelSpacePointInWorldCoordinates(p2,p2);
+            while (p != NULL && !affectedGroups.contains(p->getPrimaryCollisionGroupNum()))
+            {
+                p = p->getParent();
+                if (p != NULL)
+                {
+                    p->getModelSpacePointInWorldCoordinates(p2,p2);
+                }
+            }
+            if (p != NULL) // the loop stopped because this is the right level to apply force
+            {
+                p->addForce(p2,f2);
+            }
         }
     }
 }
@@ -480,11 +552,15 @@ static inline void applyPoseModeCollisionResponse(QList< SketchObject * > &list,
                                                   QSet< SketchObject * > &affectedGroups,
                                            double dt, PhysicsStrategy *strategy) {
     bool appliedResponse = PhysicsUtilities::collideAndComputeResponse(
-                list,affectedCollisionGroups,true,strategy);
+                list,affectedCollisionGroups,true,strategy)
+            || PhysicsUtilities::collideWithinGroupAndComputeResponse(
+                affectedGroups,affectedCollisionGroups,true,strategy);
     PhysicsUtilities::applyEulerToListAndGroups(list,affectedGroups,dt,true);
     if (appliedResponse) {
         bool stillColliding = PhysicsUtilities::collideAndComputeResponse(
-                    list,affectedCollisionGroups,false,strategy);
+                    list,affectedCollisionGroups,false,strategy)
+                || PhysicsUtilities::collideWithinGroupAndComputeResponse(
+                    affectedGroups,affectedCollisionGroups,false,strategy);
         if (stillColliding) {
             // if we couldn't fix collisions, undo the motion and return
             PhysicsUtilities::restoreToLastLocation(list,affectedGroups);
@@ -532,8 +608,10 @@ static inline void applyBinaryCollisionSearch(QList< SketchObject * > &list,
     PhysicsUtilities::applyEulerToListAndGroups(list,affectedGroups,dt,false);
     if (testCollisions) {
         int times = 1;
-        while (PhysicsUtilities::collideAndComputeResponse(
+        while ((PhysicsUtilities::collideAndComputeResponse(
                    list,affectedCollisionGroups,false,strategy)
+                || PhysicsUtilities::collideWithinGroupAndComputeResponse(
+                    affectedGroups,affectedCollisionGroups,false,strategy))
                && times < 10)
         {
             PhysicsUtilities::restoreToLastLocation(list,affectedGroups);
@@ -595,6 +673,8 @@ void SimplePhysicsStrategy::performPhysicsStepAndCollisionDetection(
     {
         PhysicsUtilities::collideAndComputeResponse(
                     objects,affectedCollisionGroups,true,this);
+        PhysicsUtilities::collideWithinGroupAndComputeResponse(
+                    affectedGroups,affectedCollisionGroups,true,this);
         PhysicsUtilities::applyEulerToListAndGroups(objects,affectedGroups,dt,true);
     }
 }
