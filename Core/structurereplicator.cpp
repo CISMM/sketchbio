@@ -6,7 +6,6 @@
 
 #include "keyframe.h"
 #include "sketchobject.h"
-#include "modelinstance.h"
 #include "objectgroup.h"
 #include "worldmanager.h"
 
@@ -52,6 +51,7 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     replicas->addObject(obj2);
     replicas->addObserver(this);
     world->addObject(replicas);
+    transform->Update();
 }
 
 StructureReplicator::~StructureReplicator() {
@@ -72,14 +72,16 @@ void StructureReplicator::setNumShown(int num) {
             previous = objList->last();
         }
         for (; numShown < num; numShown++) {
-            SketchModel *modelId = previous->getModel();
-            ModelInstance *next = new ModelInstance(modelId);
+            SketchObject *next = (numShown % 2 == 0) ?
+                        obj1->deepCopy() : obj2->deepCopy();
             replicas->addObject(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
             tform->PostMultiply();
             tform->Concatenate(previous->getLocalTransform());
             tform->Concatenate(transform);
+            next->setLocalTransformPrecomputed(true);
+            next->setPropagateForceToParent(true);
             vtkSmartPointer<vtkActor> actor = next->getActor();
             if (numShown % 2 == 0) {
                 actor->GetProperty()->SetColor(obj1->getActor()->GetProperty()->GetColor());
