@@ -95,6 +95,7 @@ public slots:
   void setTextMapperString(QString str);
   void updateStatusText();
   void updateViewTime(double time);
+  void goToViewTime();
 
 protected:
  

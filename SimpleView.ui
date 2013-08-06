@@ -83,6 +83,8 @@
     <addaction name="actionWorld_Springs_On"/>
     <addaction name="actionCollision_Tests_On"/>
     <addaction name="separator"/>
+    <addaction name="actionSet_View_Time"/>
+    <addaction name="separator"/>
     <addaction name="actionReset_Device"/>
    </widget>
    <addaction name="menuFile"/>
@@ -229,6 +231,11 @@
   <action name="actionReset_Device">
    <property name="text">
     <string>Reset Device</string>
+   </property>
+  </action>
+  <action name="actionSet_View_Time">
+   <property name="text">
+    <string>Set View Time</string>
    </property>
   </action>
  </widget>
@@ -449,6 +456,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSet_View_Time</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>goToViewTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -465,5 +488,6 @@
   <slot>setCollisionTestsOn(bool)</slot>
   <slot>exportBlenderAnimation()</slot>
   <slot>restartVRPNServer()</slot>
+  <slot>goToViewTime()</slot>
  </slots>
 </ui>

@@ -315,6 +315,19 @@ void SimpleView::updateViewTime(double time)
     timeTextMapper->SetInput(t.arg(time,8,'f',1).toStdString().c_str());
 }
 
+void SimpleView::goToViewTime()
+{
+    bool ok = true;
+    double time = QInputDialog::getDouble(this,tr("Set Time to View"),tr("Time: "),
+                                          0,0,std::numeric_limits<double>::max(),1,
+                                          &ok);
+    if (ok)
+    {
+        project->setViewTime(time);
+        updateViewTime(time);
+    }
+}
+
 void SimpleView::openOBJFile()
 {
     // Ask the user for the name of the file to open.
@@ -406,6 +419,7 @@ void SimpleView::loadProject() {
                     );
         ProjectToXML::xmlToProject(project,root);
         project->setViewTime(0.0);
+        updateViewTime(0.0);
     }
 }
 
