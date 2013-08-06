@@ -20,6 +20,14 @@ AnimationMode::~AnimationMode()
 
 void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 {
+    if (project->isShowingAnimation())
+    {
+        if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+        {
+            emit newDirectionsString("Release to stop the animation preview.");
+        }
+        return;
+    }
     ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
@@ -41,6 +49,15 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 
 void AnimationMode::buttonReleased(int vrpn_ButtonNum)
 {
+    if (project->isShowingAnimation())
+    {
+        if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+        {
+            project->stopAnimation();
+            emit newDirectionsString(" ");
+        }
+        return;
+    }
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
@@ -104,8 +121,30 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
     }
 }
 
+void AnimationMode::doUpdatesForFrame()
+{
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
+    ObjectGrabMode::doUpdatesForFrame();
+}
+
 void AnimationMode::analogsUpdated()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     ObjectGrabMode::analogsUpdated();
     useLeftJoystickToRotateViewPoint();
+}
+
+void AnimationMode::clearStatus()
+{
+    if (project->isShowingAnimation())
+    {
+        project->stopAnimation();
+    }
+    ObjectGrabMode::clearStatus();
 }

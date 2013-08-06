@@ -70,6 +70,8 @@ public:
     // animation
     void startAnimation();
     void stopAnimation();
+    // returns true if the animation preview is being played
+    bool isShowingAnimation();
     // an setter for world->setAnimationTime.  Sets the project state correctly
     // if it is not set yet
     // Returns true if the animation is done by the time given

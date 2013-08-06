@@ -421,7 +421,8 @@ QString SketchProject::getFileInProjDir(QString filename)
     return result;
 }
 
-void SketchProject::startAnimation() {
+void SketchProject::startAnimation()
+{
     isDoingAnimation = true;
     timeInAnimation = 0.0;
     renderer->RemoveActor(leftHand->getActor());
@@ -439,7 +440,8 @@ void SketchProject::startAnimation() {
     setShowShadows(false);
 }
 
-void SketchProject::stopAnimation() {
+void SketchProject::stopAnimation()
+{
     isDoingAnimation = false;
     renderer->AddActor(leftHand->getActor());
     renderer->AddActor(rightHand->getActor());
@@ -451,7 +453,13 @@ void SketchProject::stopAnimation() {
     setShowShadows(true);
 }
 
-bool SketchProject::goToAnimationTime(double time) {
+bool SketchProject::isShowingAnimation()
+{
+    return isDoingAnimation;
+}
+
+bool SketchProject::goToAnimationTime(double time)
+{
     if (!isDoingAnimation) {
         startAnimation();
     }

@@ -532,6 +532,10 @@ void SketchObject::addKeyframeForCurrentLocation(double t)
 //#########################################################################
 void SketchObject::removeKeyframeForTime(double t)
 {
+    if (keyframes.isNull())
+    {
+        return;
+    }
     if (keyframes->contains(t))
     {
         keyframes->remove(t);

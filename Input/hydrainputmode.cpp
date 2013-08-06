@@ -27,6 +27,10 @@ void HydraInputMode::setProject(SketchProject *proj)
 
 void HydraInputMode::useLeftJoystickToRotateViewPoint()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     // maybe disable this sometimes?
     double xdegrees, ydegrees;
     xdegrees = 90.0 * analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)];
@@ -36,6 +40,10 @@ void HydraInputMode::useLeftJoystickToRotateViewPoint()
 
 void HydraInputMode::useRightJoystickToChangeViewTime()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     double signal = analogStatus[ANALOG_RIGHT(LEFT_RIGHT_ANALOG_IDX)];
     double currentTime = project->getViewTime();
     double finalTime = currentTime;
@@ -63,6 +71,10 @@ void HydraInputMode::useRightJoystickToChangeViewTime()
 
 void HydraInputMode::scaleWithLeftFixed()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     TransformManager *transforms = project->getTransformManager();
     double dist = transforms->getOldWorldDistanceBetweenHands();
     double delta = transforms->getWorldDistanceBetweenHands() / dist;
@@ -71,6 +83,10 @@ void HydraInputMode::scaleWithLeftFixed()
 
 void HydraInputMode::scaleWithRightFixed()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     TransformManager *transforms = project->getTransformManager();
     double dist = transforms->getOldWorldDistanceBetweenHands();
     double delta = transforms->getWorldDistanceBetweenHands() / dist;
@@ -79,6 +95,10 @@ void HydraInputMode::scaleWithRightFixed()
 
 void HydraInputMode::grabWorldWithLeft()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     TransformManager *transforms = project->getTransformManager();
     q_vec_type beforePos, afterPos;
     q_type beforeOrient, afterOrient;
@@ -99,6 +119,10 @@ void HydraInputMode::grabWorldWithLeft()
 
 void HydraInputMode::grabWorldWithRight()
 {
+    if (project->isShowingAnimation())
+    {
+        return;
+    }
     TransformManager *transforms = project->getTransformManager();
     q_vec_type beforePos, afterPos;
     q_type beforeOrient, afterOrient;

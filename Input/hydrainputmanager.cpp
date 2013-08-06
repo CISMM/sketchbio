@@ -144,6 +144,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
         } else if (buttonNum == collision_disable_button_idx()) {
             emit toggleWorldCollisionsEnabled();
         } else if (buttonNum == change_modes_button_idx()) {
+            activeMode->clearStatus();
             modeIndex = (modeIndex + 1 ) % modeList.size();
             activeMode = modeList[modeIndex];
             activeMode->clearStatus();

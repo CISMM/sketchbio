@@ -14,8 +14,9 @@ public:
 
     virtual void buttonPressed(int vrpn_ButtonNum);
     virtual void buttonReleased(int vrpn_ButtonNum);
-
+    virtual void doUpdatesForFrame();
     virtual void analogsUpdated();
+    virtual void clearStatus();
 };
 
 #endif // ANIMATIONMODE_H
