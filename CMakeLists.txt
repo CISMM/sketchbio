@@ -21,14 +21,14 @@ INCLUDE_DIRECTORIES(
 FIND_PACKAGE(Qt4 REQUIRED)
 INCLUDE(${QT_USE_FILE})  # include UseQt4.cmake
 
-FIND_PACKAGE(VTK REQUIRED)
+FIND_PACKAGE(VTK 6.1 COMPONENTS vtkGUISupportQt vtkIOGeometry vtkIOLegacy NO_MODULE)
 INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
 
 ###
 # Libusb1
 ###
 IF(NOT WIN32 AND NOT APPLE)
-	find_package(Libusb1 REQUIRED)
+    find_package(Libusb1 REQUIRED)
 
     INCLUDE_DIRECTORIES(
         ${LIBUSB1_INCLUDE_DIRS}
@@ -86,11 +86,6 @@ SOURCE_GROUP("Generated" FILES
 SET(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -ggdb")
  
 ADD_EXECUTABLE( SketchBio ${SketchBioSrcs} ${UISrcs} ${MOCSrcs})
-
-# If using vtk 5.x, explicitly include QVTK (vtk 6 implicitly includes it)
-IF(${VTK_VERSION} VERSION_LESS "6")
-    TARGET_LINK_LIBRARIES( SketchBio QVTK )
-ENDIF(${VTK_VERSION} VERSION_LESS "6")
 
 TARGET_LINK_LIBRARIES( SketchBio
     ${SketchBioLibraries}

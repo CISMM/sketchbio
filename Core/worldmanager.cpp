@@ -73,11 +73,7 @@ WorldManager::WorldManager(vtkRenderer *r) :
     springEnds->Allocate(lastCapacityUpdate*2);
     springEndConnections->Allocate();
     springEndConnections->SetPoints(springEnds);
-#if (VTK_MAJOR_VERSION <= 5)
-    tubeFilter->SetInput(springEndConnections);
-#else
     tubeFilter->SetInputData(springEndConnections);
-#endif
     tubeFilter->SetRadius(5);
     tubeFilter->Update();
     vtkSmartPointer<vtkPolyDataMapper> tubesMapper =

@@ -37,11 +37,7 @@ inline void makeInput(vtkProjectToPlane *filter)
     ids->InsertNextId(0);
     polyDataIn->InsertNextCell(VTK_TRIANGLE,ids);
 
-#if VTK_MAJOR_VERSION <= 5
-    filter->SetInput(polyDataIn);
-#else
     filter->SetInputData(polyDataIn);
-#endif
 }
 
 inline int testIfOnPlane(double *point, double *normal, vtkPolyData *result)
