@@ -87,5 +87,6 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void ColorEditingMode::analogsUpdated()
 {
+    ObjectGrabMode::analogsUpdated();
     useLeftJoystickToRotateViewPoint();
 }

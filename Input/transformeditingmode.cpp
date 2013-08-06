@@ -174,6 +174,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void TransformEditingMode::analogsUpdated()
 {
+    ObjectGrabMode::analogsUpdated();
     if (operationState == REPLICATE_OBJECT_PENDING) {
         double value =  analogStatus[ ANALOG_LEFT(TRIGGER_ANALOG_IDX) ];
         int nCopies =  min( floor( pow(2.0,value / .125)), 64);
