@@ -673,7 +673,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrent(vtkXMLDataElement *
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataElement *root,int minorVersion) {
-    switch(minorVersion) {
+    switch(minorVersion)
+    {
     case 0:
     {
     // Going from 0 to 1, the structure of StructureReplicator changed to use a group
@@ -728,7 +729,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(vtkXMLDataEl
                 objects->AddNestedElement(group);
             }
         }
-        // TODO
     }
     }
     return XML_TO_DATA_SUCCESS;
@@ -1044,7 +1044,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     if (numRead != 4)  return XML_TO_DATA_FAILURE;// orientation wrong length... fail
     vtkXMLDataElement *properties = frame->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
     if (properties == NULL) return XML_TO_DATA_FAILURE; // if no visiblitly status.. fail
-    // TODO ... once there in an interface for it on object, do something with visibility
     const char *c = properties->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME);
     if (c != NULL) {
         QString strA(c);
@@ -1073,7 +1072,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     object->setPosAndOrient(pos,orient);
     object->setIsVisible(visA);
     object->setActive(active);
-    object->addKeyframeForCurrentLocation(time); // TODO -- once visibility is done, set it too.
+    object->addKeyframeForCurrentLocation(time);
     object->restoreToLastLocation(); // restore the object's position
     return XML_TO_DATA_SUCCESS;
 }
