@@ -23,13 +23,13 @@ inline int transform_equals_add_button_idx() {
 inline int replicate_object_button() {
     return BUTTON_RIGHT(ONE_BUTTON_IDX);
 }
-inline int duplicate_object_button() {
+inline int delete_object_button() {
     return BUTTON_RIGHT(FOUR_BUTTON_IDX);
 }
 
 
 #define NO_OPERATION                    0
-#define DUPLICATE_OBJECT_PENDING        1
+#define DELETE_OBJECT_PENDING           1
 #define REPLICATE_OBJECT_PENDING        2
 #define ADD_SPRING_PENDING              3
 #define ADD_TRANSFORM_EQUALS_PENDING    4
@@ -49,10 +49,12 @@ TransformEditingMode::~TransformEditingMode()
 void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
     ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
-    if (vrpn_ButtonNum == duplicate_object_button())
+    if (vrpn_ButtonNum == delete_object_button())
     {
-        operationState = DUPLICATE_OBJECT_PENDING;
-        emit newDirectionsString("Move to the object you want to duplicate and release the button");
+        operationState = DELETE_OBJECT_PENDING;
+        emit newDirectionsString("Move to the object you want to delete and"
+                                 " release the button.\nWarning: this is a"
+                                 " permanent delete!");
     }
     else if (vrpn_ButtonNum == replicate_object_button())
     {
@@ -119,19 +121,12 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
         operationState = NO_OPERATION;
         emit newDirectionsString(" ");
     }
-    else if (vrpn_ButtonNum == duplicate_object_button()
-               && operationState == DUPLICATE_OBJECT_PENDING )
+    else if (vrpn_ButtonNum == delete_object_button()
+               && operationState == DELETE_OBJECT_PENDING )
     {
-        SketchObject *obj = rObj;
         if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
-            q_vec_type pos;
-            double bb[6];
-            obj->getPosition(pos);
-            obj->getBoundingBox(bb);
-            pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
-            SketchObject *nObj = obj->deepCopy();
-            nObj->setPosition(pos);
-            project->addObject(nObj);
+            project->getWorldManager()->deleteObject(rObj);
+            project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
         }
         operationState = NO_OPERATION;
         emit newDirectionsString(" ");
