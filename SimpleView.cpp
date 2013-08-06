@@ -2,6 +2,7 @@
 #include "SimpleView.h"
 
 #include <stdexcept>
+#include <limits>
 
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
