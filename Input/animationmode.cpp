@@ -27,7 +27,7 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
-        emit newDirectionsString("Move to an object and release to add a keyframe\nfor the current location and time.");
+        emit newDirectionsString("Move to an object and release to add or remove a keyframe\nfor the current location and time.");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
