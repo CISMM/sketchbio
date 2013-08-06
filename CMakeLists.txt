@@ -21,7 +21,9 @@ INCLUDE_DIRECTORIES(
 FIND_PACKAGE(Qt4 REQUIRED)
 INCLUDE(${QT_USE_FILE})  # include UseQt4.cmake
 
-FIND_PACKAGE(VTK 6.1 COMPONENTS vtkGUISupportQt vtkIOGeometry vtkIOLegacy NO_MODULE)
+FIND_PACKAGE(VTK 6.1 COMPONENTS vtkGUISupportQt vtkIOGeometry vtkIOLegacy
+                                vtkRenderingFreeType vtkRenderingFreeTypeOpenGL
+                                NO_MODULE)
 INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
 
 ###
