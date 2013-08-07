@@ -357,6 +357,7 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file)
     file.write("\tnewName = filename[filename.rfind('/')+1:-4]\n");
     file.write("\tobject.name = newName # set the name to something based on the filename\n");
     file.write("\tselect_named(newName)\n");
+    file.write("\treturn object\n\n");
     // helper function for reading wrl or x3d models
     // this one I wrote myself
     file.write("def read_wrl_model(filename):\n");
