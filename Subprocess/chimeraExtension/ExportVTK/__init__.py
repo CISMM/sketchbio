@@ -166,7 +166,7 @@ def parseModel(m,modelNum,data):
         from numpy import array
         from numpy import sum
         from Midas.midas_rainbow import _getResidueRanges
-        if hasattr(m,'surfacePiecesAtomsAndBonds'):
+        if hasattr(m,'surfacePieceAtomsAndBonds'):
             for piece in m.surfacePieces:
                 atoms, bonds = m.surfacePieceAtomsAndBonds([piece], False)
                 molecule = atoms[0].molecule
