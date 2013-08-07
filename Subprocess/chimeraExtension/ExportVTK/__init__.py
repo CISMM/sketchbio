@@ -166,40 +166,79 @@ def parseModel(m,modelNum,data):
         from numpy import array
         from numpy import sum
         from Midas.midas_rainbow import _getResidueRanges
-        molecule = m.surfacePieceAtomsAndBonds(m.surfacePieces, False)[0][0].molecule
-        ranges = _getResidueRanges(molecule)
-        atoms = molecule.atoms
-        residues = molecule.residues
-        pos = list()
-        for atom in atoms:
-            pos.append(atom.coord())
-        A = array(pos)
-        for piece in m.surfacePieces:
-            ptOffset = len(data.points)
-            vertices, triangles = piece.geometry
-            normals = piece.normals
-            for i in range(0,len(vertices)):
-                atomIdx = sum((A-vertices[i])**2,1).argmin()
-                atom = atoms[atomIdx]
-                arrays = { 'modelNum' : modelNum, 'atomNum' : atomIdx,
-                           'resType' : atom.residue.type,
-                           'resNum' : residues.index(atom.residue),
-                           'atomType' : atom.name,
-                           'bFactor' : atom.bfactor,
-                           'occupancy' : atom.occupancy }
-                #if atom.residue.kdHydrophobicity != None:
-                #    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
-                #else:
-                #    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
-                for r in ranges:
-                    if atoms[atomIdx].residue in r:
-                        arrays['chainPosition'] = r.index(atoms[atomIdx].residue) / float(len(r))
-                if 'chainPosition' not in arrays:
-                    arrays['chainPosition'] = 0.5
-                norm = normals[i]
-                data.addPoint(list(vertices[i]),arrays,normal = list(norm))
-            for tri in triangles:
-                data.triangles.append((tri[0] + ptOffset, tri[1] + ptOffset, tri[2] + ptOffset))
+        if hasattr(m,'surfacePiecesAtomsAndBonds'):
+            for piece in m.surfacePieces:
+                atoms, bonds = m.surfacePieceAtomsAndBonds([piece], False)
+                molecule = atoms[0].molecule
+                residues = molecule.residues
+                ranges = _getResidueRanges(molecule)
+                matoms = molecule.atoms
+                pos = list()
+                for atom in atoms:
+                    pos.append(atom.coord())
+                A = array(pos)
+                ptOffset = len(data.points)
+                vertices, triangles = piece.geometry
+                normals = piece.normals
+                for i in range(0,len(vertices)):
+                    atomIdx = sum((A-vertices[i])**2,1).argmin()
+                    atom = atoms[atomIdx]
+                    matomIdx = matoms.index(atom)
+                    arrays = { 'modelNum' : modelNum,
+                               'atomNum'  : matomIdx,
+                               'resType'  : atom.residue.type,
+                               'resNum'   : residues.index(atom.residue),
+                               'atomType' : atom.name,
+                               'bFactor'  : atom.bfactor,
+                               'occupancy': atom.occupancy
+                    }
+                    # I would export hydrophobicity (and may in future versions) here,
+                    # but VTK doesn't read in NaN values
+                    for r in ranges:
+                        if atom.residue in r:
+                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
+                    if 'chainPosition' not in arrays:
+                        arrays['chainPosition'] = 0.5
+                    norm = normals[i]
+                    data.addPoint(list(vertices[i]), arrays, normal = list(norm))
+                for tri in triangles:
+                    data.triangles.append((tri[0] + ptOffset, tri[1] + ptOffset, tri[2] + ptOffset))
+        elif hasattr(m, 'atomMap'):
+            atoms = m.atomMap
+            molecule = atoms[0].molecule
+            residues = molecule.residues
+            ranges = _getResidueRanges(molecule)
+            matoms = molecule.atoms
+            for piece in m.surfacePieces:
+                ptOffset = len(data.points)
+                vertices, triangles = piece.geometry
+                normals = piece.normals
+                for i in range(0,len(vertices)):
+                    atom = atoms[i]
+                    matomIdx = matoms.index(atom)
+                    arrays = { 'modelNum' : modelNum,
+                               'atomNum'  : matomIdx,
+                               'resType'  : atom.residue.type,
+                               'resNum'   : residues.index(atom.residue),
+                               'atomType' : atom.name,
+                               'bFactor'  : atom.bfactor,
+                               'occupancy': atom.occupancy
+                    }
+                    # I would export hydrophobicity here (and may in future versions),
+                    # but VTK doesn't read NaN values
+                    for r in ranges:
+                        if atom.residue in r:
+                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
+                    if 'chainPosition' not in arrays:
+                        arrays['chainPosition'] = 0.5
+                    norm = normals[i]
+                    data.addPoint(list(vertices[i]), arrays, normal = list(norm))
+                for tri in triangles:
+                    data.triangles.append((tri[0] + ptOffset, tri[1] + ptOffset, tri[2] + ptOffset))
+        else:
+            print "No associated molecule for surface:"
+            print m
+            print "\n"
 
 # parses chimera's datastructures and adds the data from each to the data object
 def populate_data_object(data):
