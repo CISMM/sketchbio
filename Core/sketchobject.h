@@ -102,7 +102,7 @@ public:
     virtual void setColorMapType(ColorMapType::Type cmap) = 0;
     // gets the array that is currently being used for coloring (default: modelNum)
     // only useful when numInstances == 1
-    virtual const QString &getArrayToColorBy() const;
+    virtual QString getArrayToColorBy() const;
     // sets the array that is being used for coloring (on the object or all subobjects)
     virtual void setArrayToColorBy(const QString &arrayName) = 0;
     // gets the transformed polygonal data of the object (do not modify the return value, but

@@ -227,9 +227,9 @@ SketchObject::ColorMapType::Type SketchObject::getColorMapType() const
     return ColorMapType::SOLID_COLOR_RED;
 }
 //#########################################################################
-const QString &SketchObject::getArrayToColorBy() const
+QString SketchObject::getArrayToColorBy() const
 {
-    throw "Object does not have array to color by.";
+    return "";
 }
 //#########################################################################
 int SketchObject::getModelConformation() const {

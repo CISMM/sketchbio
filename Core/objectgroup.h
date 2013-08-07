@@ -26,7 +26,7 @@ public:
     virtual const SketchModel *getModel() const;
     virtual ColorMapType::Type getColorMapType() const;
     virtual void setColorMapType(ColorMapType::Type cmap);
-    virtual const QString &getArrayToColorBy() const;
+    virtual QString getArrayToColorBy() const;
     virtual void setArrayToColorBy(const QString &arrayName);
     virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual vtkActor *getActor();

@@ -106,7 +106,7 @@ void ModelInstance::setColorMapType(ColorMapType::Type cmap)
 }
 
 //#########################################################################
-const QString &ModelInstance::getArrayToColorBy() const
+QString ModelInstance::getArrayToColorBy() const
 {
     return arrayToColorBy;
 }

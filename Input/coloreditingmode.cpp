@@ -36,6 +36,10 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
     {
         if (rDist < DISTANCE_THRESHOLD) {
             SketchObject::ColorMapType::Type cmap = rObj->getColorMapType();
+            if (rObj->getArrayToColorBy().isEmpty())
+            {
+                return;
+            }
             switch (cmap)
             {
             case SketchObject::ColorMapType::SOLID_COLOR_RED:
@@ -79,7 +83,7 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
             {
                 arr = QString("modelNum");
             }
-            rObj->setArrayToColorBy(arr.toStdString().c_str());
+            rObj->setArrayToColorBy(arr);
         }
         emit newDirectionsString(" ");
     }

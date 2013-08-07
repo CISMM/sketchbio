@@ -112,7 +112,7 @@ void ObjectGroup::setColorMapType(ColorMapType::Type cmap)
 }
 
 //#########################################################################
-const QString &ObjectGroup::getArrayToColorBy() const
+QString ObjectGroup::getArrayToColorBy() const
 {
     if (numInstances() == 1)
     {
@@ -122,7 +122,7 @@ const QString &ObjectGroup::getArrayToColorBy() const
                 return children[i]->getArrayToColorBy();
         }
     }
-    throw "Groups are not colored by arrays.";
+    return "";
 }
 
 //#########################################################################
