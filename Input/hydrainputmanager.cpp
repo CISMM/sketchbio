@@ -149,6 +149,7 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             activeMode = modeList[modeIndex];
             activeMode->clearStatus();
             emit changedModes(getModeName());
+            emit newDirectionsString(" ");
         } else {
             activeMode->buttonPressed(buttonNum);
         } // TODO - change modes button

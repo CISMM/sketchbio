@@ -260,6 +260,7 @@ void ObjectGroup::getBoundingBox(double bb[])
     }
     else
     {
+        orientedBBs->Update();
         orientedBBs->GetOutput()->GetBounds(bb);
     }
 }
