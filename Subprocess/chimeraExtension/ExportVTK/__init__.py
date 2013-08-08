@@ -114,6 +114,22 @@ def getModels():
     from chimera import openModels
     return openModels.list()
 
+# gets the equivalent model pieces for the pieces that have no associated atoms.  The return
+# value is a dict where the keys are pieces without associated atoms and the values are
+# the equivalent pieces with assoicated atoms.  Note, if ms is not a Multiscale model surface this
+# function will throw an exception.
+def equivalent_surface_pieces(ms):
+    from MultiscaleColor import equivalent_surface_pieces as inverse_equivalent_surface_pieces
+    from MultiscaleColor import multiscale_models
+    allAtoms = ms.surfacePieceAtomsAndBonds(ms.surfacePieces, False)[0]
+    models = multiscale_models((ms))
+    invEquivalentPieces = inverse_equivalent_surface_pieces(models,allAtoms)
+    equivalentPieces = {}
+    for p, peqs in invEquivalentPieces.items():
+        for p2 in peqs:
+            equivalentPieces[p2] = p
+    return equivalentPieces
+
 # Parses the model and adds it to the datastructure
 # Current data arrays created:
 #    atomNum - the atom number within the model
@@ -167,15 +183,25 @@ def parseModel(m,modelNum,data):
         from numpy import sum
         from Midas.midas_rainbow import _getResidueRanges
         if hasattr(m,'surfacePieceAtomsAndBonds'):
+            equivalentPieces = equivalent_surface_pieces(m)
             for piece in m.surfacePieces:
                 atoms, bonds = m.surfacePieceAtomsAndBonds([piece], False)
+                if len(atoms) == 0:
+                    atoms = m.surfacePieceAtomsAndBonds([equivalentPieces[piece]], False)[0]
                 molecule = atoms[0].molecule
                 residues = molecule.residues
                 ranges = _getResidueRanges(molecule)
                 matoms = molecule.atoms
                 pos = list()
                 for atom in atoms:
-                    pos.append(atom.coord())
+                    if len(bonds) > 0: # if this piece has associated atoms and bonds
+                        pos.append(atom.coord())
+                    else: # if there are no atoms and bonds for this piece, transform the
+                          # equivalent piece's atoms and bonds to this piece's coordinates
+                        coord = atom.coord()
+                        coord = array([coord.x, coord.y, coord.z, 1])
+                        xformdCoord = piece.placement.dot(coord)
+                        pos.append(xformdCoord)
                 A = array(pos)
                 ptOffset = len(data.points)
                 vertices, triangles = piece.geometry
