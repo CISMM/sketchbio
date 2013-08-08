@@ -14,17 +14,7 @@
 #include <transformequals.h>
 #include <sketchproject.h>
 
-inline SketchModel *getModel() {
-    vtkSmartPointer<vtkCubeSource> cube =
-            vtkSmartPointer<vtkCubeSource>::New();
-    cube->SetBounds(-1,1,-1,1,-1,1);
-    cube->Update();
-    QString fileName = ModelUtilities::createFileFromVTKSource(
-                cube,"transform_equals_test_cube_model");
-    SketchModel *model = new SketchModel(1,1);
-    model->addConformation(fileName,fileName);
-    return model;
-}
+#include "TestCoreHelpers.h"
 
 inline void initializeVectorsAndQuats(q_vec_type nv, q_vec_type p1, q_vec_type p2, q_vec_type p3, q_vec_type p4,
                                       q_vec_type p5, q_vec_type p6, q_type idq, q_type rX, q_type rY, q_type rZ,
@@ -58,7 +48,7 @@ public:
 // no additional pairs are tested
 int test1() {
     int errors = 0;
-    QScopedPointer<SketchModel> m(getModel());
+    QScopedPointer<SketchModel> m(TestCoreHelpers::getCubeModel());
     q_vec_type nv, p1, p2, p3, p4, p5, p6, tv1, tv2, tv3;
     q_type idq, rX, rY, rZ, rrX, rrY, rrZ, t1, t2, t3;
     initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);
@@ -164,7 +154,7 @@ int test1() {
 
 int test2() {
     int errors = 0;
-    QScopedPointer<SketchModel> m(getModel());
+    QScopedPointer<SketchModel> m(TestCoreHelpers::getCubeModel());
     q_vec_type nv, p1, p2, p3, p4, p5, p6, tv1, tv2, tv3;
     q_type idq, rX, rY, rZ, rrX, rrY, rrZ, t1, t2, t3;
     initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);
@@ -240,7 +230,7 @@ int test2() {
 
 int test3() {
     int errors = 0;
-    QScopedPointer<SketchModel> m(getModel());
+    QScopedPointer<SketchModel> m(TestCoreHelpers::getCubeModel());
     q_vec_type nv, p1, p2, p3, p4, p5, p6, tv1;
     q_type idq, rX, rY, rZ, rrX, rrY, rrZ;
     initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);
@@ -296,7 +286,7 @@ int test3() {
 
 int test4() {
     int errors = 0;
-    QScopedPointer<SketchModel> m(getModel());
+    QScopedPointer<SketchModel> m(TestCoreHelpers::getCubeModel());
     q_vec_type nv, p1, p2, p3, p4, p5, p6, tv1, tv2, tv3;
     q_type idq, rX, rY, rZ, rrX, rrY, rrZ, tq1;
     initializeVectorsAndQuats(nv,p1,p2,p3,p4,p5,p6,idq,rX,rY,rZ,rrX,rrY,rrZ);

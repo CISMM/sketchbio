@@ -22,22 +22,8 @@
 using std::cout;
 using std::endl;
 
+#include "TestCoreHelpers.h"
 
-/*
- * Generates the model used for these tests
- */
-SketchModel *getModel()
-{
-    vtkSmartPointer< vtkCubeSource > cube =
-        vtkSmartPointer< vtkCubeSource >::New();
-    cube->SetBounds(-1,1,-1,1,-1,1);
-    cube->Update();
-    QString fname = ModelUtilities::createFileFromVTKSource(cube, "replicated_cube");
-    SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
-                                         DEFAULT_INVERSE_MOMENT);
-    model->addConformation(fname, fname);
-    return model;
-}
 
 /*
  * Tests replication with translation only
@@ -46,7 +32,7 @@ int test1()
 {
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchModel > model(getModel());
+    QScopedPointer< SketchModel > model(TestCoreHelpers::getCubeModel());
     QScopedPointer< WorldManager > world(new WorldManager(renderer));
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
@@ -98,7 +84,7 @@ int test2()
 {
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchModel > model(getModel());
+    QScopedPointer< SketchModel > model(TestCoreHelpers::getCubeModel());
     QScopedPointer< WorldManager > world(new WorldManager(renderer));
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
@@ -145,7 +131,7 @@ int test3()
 {
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchModel > model(getModel());
+    QScopedPointer< SketchModel > model(TestCoreHelpers::getCubeModel());
     QScopedPointer< WorldManager > world(new WorldManager(renderer));
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
