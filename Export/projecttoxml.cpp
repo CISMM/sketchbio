@@ -194,8 +194,11 @@ vtkXMLDataElement *ProjectToXML::modelsToXML(
                 vtkSmartPointer< vtkXMLDataElement >::Take(
                     modelToXML(model,dir,idStr)
                     );
-        element->AddNestedElement(child);
-        modelIds.insert(model,idStr);
+        if (!modelIds.contains(model))
+        {
+            element->AddNestedElement(child);
+            modelIds.insert(model,idStr);
+        }
     }
     else
     {
@@ -203,16 +206,20 @@ vtkXMLDataElement *ProjectToXML::modelsToXML(
 
         for (QListIterator< SketchObject *> it(*subObjs); it.hasNext(); )
         {
-            vtkSmartPointer< vtkXMLDataElement > child =
-                    vtkSmartPointer< vtkXMLDataElement >::Take(
-                        modelsToXML(it.next(),modelIds)
-                        );
-            for (int i = 0; i < child->GetNumberOfNestedElements(); i++)
+            SketchObject *obj = it.next();
+            if (!modelIds.contains(obj->getModel()))
             {
-                vtkSmartPointer< vtkXMLDataElement > subObj =
-                        child->GetNestedElement(i);
-                child->RemoveNestedElement(subObj);
-                element->AddNestedElement(subObj);
+                vtkSmartPointer< vtkXMLDataElement > child =
+                        vtkSmartPointer< vtkXMLDataElement >::Take(
+                            modelsToXML(obj,modelIds)
+                            );
+                for (int i = child->GetNumberOfNestedElements() - 1; i >= 0; i--)
+                {
+                    vtkSmartPointer< vtkXMLDataElement > subObj =
+                            child->GetNestedElement(i);
+                    child->RemoveNestedElement(subObj);
+                    element->AddNestedElement(subObj);
+                }
             }
         }
     }
