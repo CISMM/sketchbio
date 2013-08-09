@@ -129,6 +129,7 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void GroupEditingMode::analogsUpdated()
 {
+    useLeftJoystickToRotateViewPoint();
     ObjectGrabMode::analogsUpdated();
 }
 

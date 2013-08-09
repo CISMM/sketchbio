@@ -141,6 +141,7 @@ void WorldManager::removeObject(SketchObject *object) {
     }
     else if (object->getParent() != NULL)
     {
+        // TODO - add test for this case where an object in a group is removed/deleted
         SketchObject *p = object->getParent(), *r = p;
         while (r->getParent() != NULL)
         {
