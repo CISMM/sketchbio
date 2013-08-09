@@ -119,8 +119,8 @@ public:
     // actor if numInstances is 1
     virtual vtkActor *getActor();
     // position and orientation
-    void getPosition(q_vec_type dest) const;
-    void getOrientation(q_type dest) const;
+    virtual void getPosition(q_vec_type dest) const;
+    virtual void getOrientation(q_type dest) const;
     void getOrientation(double matrix[3][3]) const;
     void setPosition(const q_vec_type newPosition);
     void setOrientation(const q_type newOrientation);

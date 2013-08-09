@@ -320,8 +320,8 @@ void SketchObject::getLastOrientation(q_type dest) const
 //#########################################################################
 void SketchObject::setLastLocation()
 {
-    getPosition(lastPosition);
-    getOrientation(lastOrientation);
+    SketchObject::getPosition(lastPosition);
+    SketchObject::getOrientation(lastOrientation);
 }
 
 //#########################################################################

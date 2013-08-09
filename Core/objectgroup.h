@@ -30,6 +30,8 @@ public:
     virtual void setArrayToColorBy(const QString &arrayName);
     virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual vtkActor *getActor();
+    virtual void getPosition(q_vec_type dest) const;
+    virtual void getOrientation(q_type dest) const;
     // methods to add/remove objects
     // note: this method gives ObjectGroup ownership until the object is removed
     // so these objects are cleaned up in ObjectGroup's destructor

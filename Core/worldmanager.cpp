@@ -25,6 +25,7 @@ using std::endl;
 #include "keyframe.h"
 #include "sketchobject.h"
 #include "modelinstance.h"
+#include "objectgroup.h"
 #include "springconnection.h"
 #include "physicsstrategy.h"
 
@@ -131,10 +132,26 @@ void WorldManager::removeObject(SketchObject *object) {
     // if we are deleting an object, it should not have any springs...
     // TODO - fix this assumption later
     int index = objects.indexOf(object);
-    removeActors(object);
-    removeShadows(object);
-    objects.removeAt(index);
-    object->removeObserver(this);
+    if (index != -1)
+    {
+        removeActors(object);
+        removeShadows(object);
+        objects.removeAt(index);
+        object->removeObserver(this);
+    }
+    else if (object->getParent() != NULL)
+    {
+        SketchObject *p = object->getParent(), *r = p;
+        while (r->getParent() != NULL)
+        {
+            r = r->getParent();
+        }
+        ObjectGroup *grp = dynamic_cast<ObjectGroup *>(p);
+        if (objects.contains(r) && grp != NULL)
+        {
+            grp->removeObject(object);
+        }
+    }
 }
 //##################################################################################################
 //##################################################################################################
@@ -600,6 +617,7 @@ void WorldManager::subobjectAdded(SketchObject *parent, SketchObject *child)
 void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 {
     removeActors(child);
+    removeShadows(child);
 }
 
 //##################################################################################################

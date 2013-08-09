@@ -88,6 +88,46 @@ const SketchModel *ObjectGroup::getModel() const
 }
 
 //#########################################################################
+void ObjectGroup::getPosition(q_vec_type dest) const
+{
+    if (numInstances() == 1)
+    {
+        for (int i = 0; i < children.length(); i++)
+        {
+            if (children[i]->numInstances() == 1)
+            {
+                children[i]->getPosition(dest);
+                return;
+            }
+        }
+    }
+    else
+    {
+        SketchObject::getPosition(dest);
+    }
+}
+
+//#########################################################################
+void ObjectGroup::getOrientation(q_type dest) const
+{
+    if (numInstances() == 1)
+    {
+        for (int i = 0; i < children.length(); i++)
+        {
+            if (children[i]->numInstances() == 1)
+            {
+                children[i]->getOrientation(dest);
+                return;
+            }
+        }
+    }
+    else
+    {
+        SketchObject::getOrientation(dest);
+    }
+}
+
+//#########################################################################
 SketchObject::ColorMapType::Type ObjectGroup::getColorMapType() const
 {
     ColorMapType::Type retVal = ColorMapType::SOLID_COLOR_RED;
