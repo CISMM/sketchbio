@@ -83,15 +83,19 @@ void StructureReplicator::setNumShown(int num) {
             next->setLocalTransformPrecomputed(true);
             next->setPropagateForceToParent(true);
             vtkSmartPointer<vtkActor> actor = next->getActor();
-            if (numShown % 2 == 0) {
-                actor->GetProperty()->SetColor(obj1->getActor()->GetProperty()->GetColor());
-            } else {
-                double color[3];
-                obj1->getActor()->GetProperty()->GetColor(color);
-                color[0] *= COLOR_MODIFIER;
-                color[1] *= COLOR_MODIFIER;
-                color[2] *= COLOR_MODIFIER;
-                actor->GetProperty()->SetColor(color);
+            if (actor.GetPointer() != NULL)
+            { // TODO -- really we should be using color maps here...
+                // I haven't got around to changing it yet
+                if (numShown % 2 == 0) {
+                    actor->GetProperty()->SetColor(obj1->getActor()->GetProperty()->GetColor());
+                } else {
+                    double color[3];
+                    obj1->getActor()->GetProperty()->GetColor(color);
+                    color[0] *= COLOR_MODIFIER;
+                    color[1] *= COLOR_MODIFIER;
+                    color[2] *= COLOR_MODIFIER;
+                    actor->GetProperty()->SetColor(color);
+                }
             }
             previous = next;
         }
