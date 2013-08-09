@@ -498,7 +498,13 @@ inline double distOutsideAABB(q_vec_type point, double bb[6]) {
         zD = min(Q_ABS(bb[4]-point[Q_Z]),Q_ABS(point[Q_Z]-bb[5]));
     }
     if (inX && inY && inZ) {
-        dist = min(min(xD / (bb[1]-bb[0]),yD / (bb[3]-bb[2])),zD / (bb[5]-bb[4]));
+        // if you are in multiple objects, the smallest one wins, that way
+        // selecting a little thing inside a big group is as easy as possible
+        dist = -1.0 / ((bb[1]-bb[0])*(bb[3]-bb[2])*(bb[5]-bb[4]));
+        // old method: whichever object you are closer to the center of (as a %
+        // of the way through) wins... difficult to select small thing inside big
+        // thing
+        //dist = min(min(xD / (bb[1]-bb[0]),yD / (bb[3]-bb[2])),zD / (bb[5]-bb[4]));
     } else if (inX) {
         if (inY) {
             dist = zD;
