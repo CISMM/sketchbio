@@ -49,24 +49,47 @@ public:
     /*****************************************************************************
       *
       * This method creates a SketchModel from the given vtk source using the given
-      * scale factor.  If there is already a model using a vtk source of the same class name, this
-      * method simply returns the old one (ignores scale for now).
+      * scale factor.  If there is already a model with the same source name, it simply
+      * returns that one, otherwise it creates a new model (based on a vtk file in
+      * the given directory)
       *
-      * source  - the VTK source that should be used to generate the geometry for
+      * sourceName - the string name describing the source
+      * source     - the VTK source that should be used to generate the geometry for
       *             the model
-      * scale   - the scale at which the source should be interpreted
+      * scale      - the scale at which the source should be interpreted
+      * dir        - the directory in which to place the VTK file this creates for the model
       *
       ****************************************************************************/
     SketchModel *modelForVTKSource(const QString &sourceName,
                                    vtkPolyDataAlgorithm *source,
                                    double scale,
                                    QDir &dir);
+    /*****************************************************************************
+      *
+      * This method creates a SketchModel from the given filename and source name,
+      * unless there is already a model with the given source name, in which case it
+      * returns that one.  The iMass and iMoment parameter set the inverse mass and
+      * moment of inertia for the model.
+      *
+      ****************************************************************************/
     SketchModel *makeModel(const QString &source, const QString &filename,
                            double iMass, double iMoment);
 
+    /*****************************************************************************
+      *
+      * Finds the model with the given source and adds to it as an alternate
+      * conformation the given new source and data filename.
+      *
+      ****************************************************************************/
     SketchModel *addConformation(const QString &originalSource,
                                  const QString &newSource,
                                  const QString &newFilename);
+    /*****************************************************************************
+      *
+      * Adds the given new source and data file to the given model as an alternate
+      * molecule conformation
+      *
+      ****************************************************************************/
     SketchModel *addConformation(SketchModel *model,
                                  const QString &newSource,
                                  const QString &newFilename);
