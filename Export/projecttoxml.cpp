@@ -829,12 +829,15 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
                 q_vec_type center, pos, dir;
                 SketchObject::ColorMapType::Type cmap = objList[i]->getColorMapType();
                 proj->addObject(objList[i]);
-                objList[i]->setColorMapType(cmap);
                 objList[i]->getBoundingBox(bb);
                 center[0] = (bb[1] + bb[0]) * 0.5;
                 center[1] = (bb[3] + bb[2]) * 0.5;
                 center[2] = (bb[5] + bb[4]) * 0.5;
-                objList[i]->getModelSpacePointInWorldCoordinates(center,center);
+                if (objList[i]->numInstances() == 1)
+                {
+                    objList[i]->setColorMapType(cmap);
+                    objList[i]->getModelSpacePointInWorldCoordinates(center,center);
+                }
                 objList[i]->getPosition(pos);
                 q_vec_subtract(dir,center,pos);
                 q_vec_subtract(pos,newPos,dir);
