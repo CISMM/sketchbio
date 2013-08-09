@@ -39,4 +39,5 @@ SOURCE_GROUP("Resources" FILES
 )
 
 # make the tests
-make_export_test( ProjectToXML testProjectToXML.cc )
+make_export_test( ProjectToXMLSave      TestProjectToXMLSave.cxx      )
+make_export_test( ProjectToXMLCopyPaste TestProjectToXMLCopyPaste.cxx )
