@@ -953,19 +953,22 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(SketchProject *proj, vtkX
 
     if (model.data() != NULL && conformations == numConformations)
     {
+        if (model.data() != proj->getCameraModel())
+        {
+            SketchModel *myModel = proj->addModel(model.data());
+            if (myModel != model.data())
+            {
+                model.reset(myModel);
+            }
+        }
         modelIds.insert("#" + id,model.data());
+        model.take();
+        return XML_TO_DATA_SUCCESS;
     }
     else
     {
         return XML_TO_DATA_FAILURE;
     }
-
-    if (model.data() != proj->getCameraModel())
-    {
-        proj->addModel(model.data());
-    }
-    model.take();
-    return XML_TO_DATA_SUCCESS;
 }
 
 inline void matrixFromDoubleArray(vtkMatrix4x4 *mat, double *data) {
