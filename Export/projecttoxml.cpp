@@ -1249,18 +1249,35 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(SketchProject *p
             if (!err) {
                 return XML_TO_DATA_FAILURE;
             }
-            SketchObject *obj = objectIds.value(grpId),
-                    *first = objectIds.value(obj1Id),
-                    *second = objectIds.value(obj2Id);
+            SketchObject *obj = objectIds.value(grpId,NULL),
+                    *first = objectIds.value(obj1Id,NULL),
+                    *second = objectIds.value(obj2Id,NULL);
             ObjectGroup *grp = dynamic_cast<ObjectGroup *>(obj);
             if (grp == NULL)
             {
                 return XML_TO_DATA_FAILURE;
             }
+            if (first == NULL || second == NULL)
+            {
+                return XML_TO_DATA_FAILURE;
+            }
+            SketchObject *parent = grp->getParent();
+            ObjectGroup *parentGrp = dynamic_cast<ObjectGroup *>(parent);
             grp->removeObject(first);
             grp->removeObject(second);
-            proj->getWorldManager()->deleteObject(grp);
-            proj->addReplication(first,second,numReplicas);
+            if (parentGrp == NULL)
+            {
+                proj->getWorldManager()->deleteObject(grp);
+                proj->addReplication(first,second,numReplicas);
+            }
+            else
+            {
+                parentGrp->removeObject(grp);
+                delete grp;
+                StructureReplicator *rep =
+                        proj->addReplication(first,second,numReplicas);
+                parentGrp->addObject(rep->getReplicaGroup());
+            }
             // Eventually if there is special data about each replica, read it in here and apply it
         }
     }

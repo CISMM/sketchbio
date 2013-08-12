@@ -65,6 +65,15 @@ public:
      * the replication chain is keyframed
      */
     virtual void objectKeyframed(SketchObject *obj, double time);
+    /*
+     * Makes sure that only replicas are in the replicas group
+     */
+    virtual void subobjectAdded(SketchObject *parent, SketchObject *child);
+    /*
+     * If an object is deleted out of the replicas group, delete everything
+     * that depends on it
+     */
+    virtual void subobjectRemoved(SketchObject *parent, SketchObject *child);
 
     /*
      * Gets the group that contains all the replicas
@@ -75,6 +84,7 @@ private:
     int numShown;
     SketchObject *obj1, *obj2;
     ObjectGroup *replicas;
+    QList< SketchObject * > replicaList;
     WorldManager *world;
     vtkSmartPointer<vtkTransform> transform;
 };

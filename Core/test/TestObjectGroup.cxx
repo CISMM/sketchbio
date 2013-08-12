@@ -82,7 +82,7 @@ inline int testObjectGroupActions() {
     }
     // test group position
     grp.getPosition(v2);
-    if (!q_vec_equals(v2,vi)) {
+    if (!q_vec_equals(v2,va)) {
         errors++;
         cout << "Group position wrong with one item" << endl;
     }

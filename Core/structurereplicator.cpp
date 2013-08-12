@@ -1,5 +1,7 @@
 #include "structurereplicator.h"
 
+#include <iostream>
+
 #include <vtkProperty.h>
 #include <vtkActor.h>
 #include <vtkTransform.h>
@@ -22,6 +24,7 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     obj1(object1),
     obj2(object2),
     replicas(new ObjectGroup()),
+    replicaList(),
     world(w)
 {
     transform = vtkSmartPointer<vtkTransform>::New();
@@ -63,17 +66,17 @@ void StructureReplicator::setNumShown(int num) {
     if (num < 0) {
         num = 0;
     }
-    QList< SketchObject *> *objList = replicas->getSubObjects();
     if (num > numShown) {
         SketchObject *previous;
         if (numShown == 0) {
             previous = obj2;
         } else {
-            previous = objList->last();
+            previous = replicaList.last();
         }
         for (; numShown < num; numShown++) {
             SketchObject *next = (numShown % 2 == 0) ?
                         obj1->deepCopy() : obj2->deepCopy();
+            replicaList.append(next);
             replicas->addObject(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();
             tform->Identity();
@@ -101,7 +104,7 @@ void StructureReplicator::setNumShown(int num) {
         }
     } else {
         for (; numShown > num; numShown--) {
-            SketchObject *removed = objList->last();
+            SketchObject *removed = replicaList.last();
             replicas->removeObject(removed);
             delete removed;
         }
@@ -117,7 +120,7 @@ void StructureReplicator::updateTransform() {
 }
 
 QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
-    return QListIterator<SketchObject *>(*replicas->getSubObjects());
+    return QListIterator<SketchObject *>(replicaList);
 }
 
 void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
@@ -125,6 +128,65 @@ void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
     obj1->addKeyframeForCurrentLocation(time);
     obj2->addKeyframeForCurrentLocation(time);
     replicas->addKeyframeForCurrentLocation(time);
+}
+
+void StructureReplicator::subobjectAdded(SketchObject *parent, SketchObject *child)
+{
+    if (parent == replicas)
+    {
+        int idx = replicaList.indexOf(child);
+        if (idx == -1)
+        {
+            SketchObject *pt = replicas->getParent();
+            ObjectGroup *parent = dynamic_cast< ObjectGroup * >(pt);
+            if (parent == NULL)
+            {
+                // if we don't have a parent, create one to add the new object and
+                // the replicas group to
+                parent = new ObjectGroup();
+                world->removeObject(replicas);
+                replicas->removeObject(child);
+                parent->addObject(replicas);
+                parent->addObject(child);
+                world->addObject(parent);
+            }
+            else
+            {
+                // if we have a parent of the replicas group, add the child object there
+                replicas->removeObject(child);
+                parent->addObject(child);
+            }
+        }
+    }
+}
+
+void StructureReplicator::subobjectRemoved(SketchObject *parent, SketchObject *child)
+{
+    if (parent == replicas)
+    {
+        if (child == obj1)
+        {
+            obj1 = NULL;
+            setNumShown(0);
+        }
+        if (child == obj2)
+        {
+            obj2 = NULL;
+            setNumShown(0);
+        }
+        int idx = replicaList.indexOf(child);
+        if ( idx != -1 )
+        {
+            replicaList.removeAt(idx);
+            while (replicaList.size() > idx)
+            {
+                SketchObject *rep = replicaList.last();
+                replicaList.pop_back();
+                replicas->removeObject(rep);
+                delete rep;
+            }
+        }
+    }
 }
 
 ObjectGroup *StructureReplicator::getReplicaGroup()
