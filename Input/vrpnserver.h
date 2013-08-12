@@ -6,6 +6,7 @@
 class QTimer;
 class vrpn_Connection;
 class vrpn_Tracker_RazerHydra;
+class vrpn_Tracker_FilterOneEuro;
 
 /*
  * This class is a Qt signals/slots driven vrpn server.  Ideally create a
@@ -37,6 +38,7 @@ private:
     QTimer *timer;
     vrpn_Connection *connection;
     vrpn_Tracker_RazerHydra *hydra;
+    vrpn_Tracker_FilterOneEuro *filter;
 };
 
 

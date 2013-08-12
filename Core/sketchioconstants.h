@@ -45,8 +45,10 @@
 
 // the device name used on the server -- must change the line below when this is changed
 #define VRPN_RAZER_HYDRA_DEVICE_NAME "razer"
+#define VRPN_ONE_EURO_FILTER_DEVICE_NAME "filteredRazer"
 // the device name and location used by the client -- must update when the device name above updates
 #define VRPN_RAZER_HYDRA_DEVICE_STRING "razer@localhost"
+#define VRPN_ONE_EURO_FILTER_DEVICE_STRING "filteredRazer@localhost"
 
 // transform manager's tracker to workspace scale factor
 #define TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE (.0625 )

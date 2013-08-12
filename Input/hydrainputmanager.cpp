@@ -35,7 +35,7 @@ inline int change_modes_button_idx() {
 
 HydraInputManager::HydraInputManager(SketchProject *proj) :
     project(proj),
-    tracker(VRPN_RAZER_HYDRA_DEVICE_STRING),
+    tracker(VRPN_ONE_EURO_FILTER_DEVICE_STRING),
     buttons(VRPN_RAZER_HYDRA_DEVICE_STRING),
     analogRemote(VRPN_RAZER_HYDRA_DEVICE_STRING),
     modeList(),
