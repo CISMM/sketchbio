@@ -357,7 +357,11 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file)
     file.write("\t\t\t\tobject = bpy.data.objects[key]\n");
     file.write("\t\t\t\tsomethingSelected = True\n");
     file.write("\tbpy.ops.object.join() # merge all the new objects into the first one we found\n");
+#if defined(_WIN32)
+	file.write("\tnewName = filename[filename.rfind('\\\\')+1:-4]\n");
+#else
     file.write("\tnewName = filename[filename.rfind('/')+1:-4]\n");
+#endif
     file.write("\tobject.name = newName # set the name to something based on the filename\n");
     file.write("\tselect_named(newName)\n");
     file.write("\treturn object\n\n");
