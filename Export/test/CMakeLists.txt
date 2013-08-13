@@ -1,5 +1,7 @@
 # Set the libraries to link the tests to
 set( export_test_link_libraries
+    ExportTestHelpers
+    CoreTestHelpers
     SketchBioExport
     SketchBioCore
     SketchBioCustomVtkFilters
@@ -7,6 +9,11 @@ set( export_test_link_libraries
     ${VTK_LIBRARIES}
     ${QUATLIB_LIBRARIES}
     ${PQP_LIBRARIES}
+)
+
+ADD_LIBRARY(ExportTestHelpers
+CompareBeforeAndAfter.h
+CompareBeforeAndAfter.cxx
 )
 
 # define a test-making macro
