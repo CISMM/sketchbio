@@ -1,4 +1,4 @@
-#include "testcorehelpers.h"
+#include "TestCoreHelpers.h"
 
 #include <iostream>
 using std::cout;
