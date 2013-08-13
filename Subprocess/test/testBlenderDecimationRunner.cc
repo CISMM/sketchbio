@@ -104,7 +104,12 @@ int BlenderTest::testResults()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc,argv);
-    QDir::setCurrent(app.applicationDirPath());
+	QString appPath = app.applicationDirPath();
+#if defined(_WIN32)
+	int idx = appPath.lastIndexOf("test");
+	appPath = appPath.mid(0,idx+4);
+#endif
+    QDir::setCurrent(appPath);
     qDebug() << "Temp path: " << QDir::tempPath();
 
     // set required fields to use QSettings API (these specify the location of the settings)

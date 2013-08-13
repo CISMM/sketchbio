@@ -73,8 +73,14 @@ int main(int argc, char *argv[])
     app.setOrganizationName("UNC Computer Science");
     app.setOrganizationDomain("sketchbio.org");
 
-    QDir::setCurrent(app.applicationDirPath());
+	QString appPath = app.applicationDirPath();
+#if defined(_WIN32)
+	int idx = appPath.lastIndexOf("test");
+	appPath = appPath.mid(0,idx+4);
+#endif
+    QDir::setCurrent(appPath);
     qDebug() << "Working directory: " << QDir::currentPath();
+	qDebug() << "Temp dir: " << QDir::tempPath();
 
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();

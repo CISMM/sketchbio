@@ -108,7 +108,8 @@ bool BlenderAnimationRunner::isValid()
 void BlenderAnimationRunner::firstStageDone(int exitCode)
 {
     // blender has finished rendering frames
-    if ((blender->exitStatus() == QProcess::CrashExit) || (exitCode != 0)) {
+	QFile f(frameDir->absoluteFilePath("00001.png"));
+	if ((blender->exitStatus() == QProcess::CrashExit) || (exitCode != 0) || ! f.exists()) {
         qDebug() << "Blender animation failed";
         qDebug() << blender->readAll();
         emit finished(false);
