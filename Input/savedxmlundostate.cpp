@@ -51,3 +51,13 @@ void SavedXMLUndoState::redo()
 {
     restoreToSavePoint(after,project);
 }
+
+QWeakPointer< std::string > SavedXMLUndoState::getBeforeState()
+{
+    return before.toWeakRef();
+}
+
+QWeakPointer< std::string > SavedXMLUndoState::getAfterState()
+{
+    return after.toWeakRef();
+}

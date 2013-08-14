@@ -81,6 +81,7 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
                 world->removeObject(rObj);
                 grp->addObject(rObj);
             }
+            addXMLUndoState();
         }
         emit newDirectionsString(" ");
     }
@@ -117,6 +118,10 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
             {
                 std::cout << "Read xml correctly, but reading object failed."
                           << std::endl;
+            }
+            else
+            {
+                addXMLUndoState();
             }
         }
         else

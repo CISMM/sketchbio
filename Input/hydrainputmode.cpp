@@ -8,6 +8,8 @@
 #include <sketchioconstants.h>
 #include <transformmanager.h>
 
+#include "savedxmlundostate.h"
+
 HydraInputMode::HydraInputMode(SketchProject *proj, const bool *const b, const double *const a) :
     isButtonDown(b),
     analogStatus(a),
@@ -139,4 +141,27 @@ void HydraInputMode::grabWorldWithRight()
     q_invert(inv,beforeOrient);
     q_mult(rotation,afterOrient,inv);
     transforms->rotateWorldRelativeToRoomAboutRightTracker(rotation);
+}
+
+void HydraInputMode::addXMLUndoState()
+{
+    UndoState *last = project->getLastUndoState();
+    SavedXMLUndoState *lastXMLState = dynamic_cast< SavedXMLUndoState * >(last);
+    SavedXMLUndoState *newXMLState = NULL;
+    if (lastXMLState != NULL)
+    {
+        QSharedPointer< std::string > lastState =
+                lastXMLState->getAfterState().toStrongRef();
+        newXMLState = new SavedXMLUndoState(*project,lastState);
+        if (lastXMLState->getBeforeState().isNull())
+        {
+            project->popUndoState();
+        }
+    }
+    else
+    {
+        QSharedPointer< std::string > lastStr(NULL);
+        newXMLState = new SavedXMLUndoState(*project,lastStr);
+    }
+    project->addUndoState(newXMLState);
 }

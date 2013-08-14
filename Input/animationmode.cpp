@@ -66,6 +66,7 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
             // toggle object visible
             rObj->setIsVisible(!rObj->isVisible());
             project->getWorldManager()->changedVisibility(rObj);
+            addXMLUndoState();
         }
         emit newDirectionsString(" ");
     }
@@ -100,6 +101,7 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
                 rObj->setPosAndOrient(pos,orient);
             }
             project->getWorldManager()->setAnimationTime(time);
+            addXMLUndoState();
         }
         emit newDirectionsString(" ");
     }

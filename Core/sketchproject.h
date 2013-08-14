@@ -91,6 +91,8 @@ public:
     // Note: these two will return NULL if there is no state to return
     UndoState *getLastUndoState();
     UndoState *getNextRedoState();
+    // pops the last undo state off the stack entirely and deletes it
+    void popUndoState();
     // clears the redo operation stack in addition to adding an undo state
     void addUndoState(UndoState *state);
     void applyUndo();

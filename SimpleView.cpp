@@ -93,6 +93,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
                     );
         ProjectToXML::xmlToProject(project,root);
         project->setViewTime(0.0);
+        inputManager->setProject(project);
     }
     else if (load_example)
     {

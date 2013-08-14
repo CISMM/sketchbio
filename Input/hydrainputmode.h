@@ -57,6 +57,10 @@ public:
     void grabWorldWithLeft();
     // does a the 'grab world with right' changes for the current frame
     void grabWorldWithRight();
+    // adds a xml save undo point to the project with the last saved point as its previous
+    // state to go back to and the current project state as its state to redo to after the
+    // undo
+    void addXMLUndoState();
 signals:
     void newDirectionsString(QString str);
     // should be emitted whenever the setViewTime() method is called on the project

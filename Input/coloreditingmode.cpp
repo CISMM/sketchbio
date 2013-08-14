@@ -68,6 +68,7 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
                 break;
             }
             rObj->setColorMapType(cmap);
+            addXMLUndoState();
         }
         emit newDirectionsString(" ");
     }
@@ -84,6 +85,7 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
                 arr = QString("modelNum");
             }
             rObj->setArrayToColorBy(arr);
+            addXMLUndoState();
         }
         emit newDirectionsString(" ");
     }

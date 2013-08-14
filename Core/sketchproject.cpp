@@ -336,6 +336,10 @@ SketchProject::SketchProject(vtkRenderer *r) :
 }
 
 SketchProject::~SketchProject() {
+    qDeleteAll(redoStack);
+    redoStack.clear();
+    qDeleteAll(undoStack);
+    undoStack.clear();
     cameras.clear();
     qDeleteAll(replicas);
     replicas.clear();
@@ -392,6 +396,8 @@ void SketchProject::setWorldSpringsEnabled(bool enabled) {
 }
 
 QString SketchProject::getProjectDir() const {
+    if (projectDir == NULL)
+        return "";
     return projectDir->absolutePath();
 }
 
@@ -464,6 +470,13 @@ UndoState *SketchProject::getNextRedoState()
     {
         return redoStack.back();
     }
+}
+
+void SketchProject::popUndoState()
+{
+    UndoState *state = undoStack.back();
+    undoStack.pop_back();
+    delete state;
 }
 
 void SketchProject::addUndoState(UndoState *state)

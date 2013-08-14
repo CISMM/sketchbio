@@ -55,16 +55,26 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
     if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
     {
         if (grabbedWorld == RIGHT_GRABBED_WORLD)
+        {
             grabbedWorld = WORLD_NOT_GRABBED;
+        }
         else if (rightGrabbedSpring)
+        {
             rightGrabbedSpring = false;
+            addXMLUndoState();
+        }
     }
     else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
     {
         if (grabbedWorld == LEFT_GRABBED_WORLD)
+        {
             grabbedWorld = WORLD_NOT_GRABBED;
+        }
         else if (leftGrabbedSpring)
+        {
             leftGrabbedSpring = false;
+            addXMLUndoState();
+        }
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
@@ -82,6 +92,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
                     stiffness,
                     0);
         project->addSpring(spring);
+        addXMLUndoState();
         emit newDirectionsString(" ");
     }
 }

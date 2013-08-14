@@ -119,6 +119,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
     {
         objectsSelected.clear();
         operationState = NO_OPERATION;
+        addXMLUndoState();
         emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == delete_object_button()
@@ -129,6 +130,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
             project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
         }
         operationState = NO_OPERATION;
+        addXMLUndoState();
         emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == camera_add_button_idx())
@@ -139,6 +141,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
         transforms->getRightTrackerPosInWorldCoords(pos);
         transforms->getRightTrackerOrientInWorldCoords(orient);
         project->addCamera(pos,orient);
+        addXMLUndoState();
         emit newDirectionsString(" ");
     } else if (vrpn_ButtonNum == transform_equals_add_button_idx()
                && operationState == ADD_TRANSFORM_EQUALS_PENDING) {
@@ -158,6 +161,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
                 }
             }
             objectsSelected.clear();
+            addXMLUndoState();
             operationState = NO_OPERATION;
             emit newDirectionsString(" ");
         } else {

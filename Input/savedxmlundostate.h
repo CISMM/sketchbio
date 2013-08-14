@@ -14,6 +14,8 @@ public:
                        QSharedPointer< std::string > previous);
     virtual void undo();
     virtual void redo();
+    QWeakPointer< std::string > getBeforeState();
+    QWeakPointer< std::string > getAfterState();
 private:
     QSharedPointer< std::string > before, after;
 };

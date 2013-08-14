@@ -33,7 +33,9 @@ void ObjectGrabMode::buttonPressed(int vrpn_ButtonNum)
               worldGrabbed = LEFT_GRABBED_WORLD;
       }
       else
+      {
           project->grabObject(lObj,true);
+      }
   }
   else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
   {
@@ -43,7 +45,9 @@ void ObjectGrabMode::buttonPressed(int vrpn_ButtonNum)
               worldGrabbed = RIGHT_GRABBED_WORLD;
       }
       else
+      {
           project->grabObject(rObj,false);
+      }
 
   }
 }
@@ -53,16 +57,26 @@ void ObjectGrabMode::buttonReleased(int vrpn_ButtonNum)
   if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
   {
       if (worldGrabbed == LEFT_GRABBED_WORLD)
+      {
           worldGrabbed = WORLD_NOT_GRABBED;
+      }
       else if (!project->getWorldManager()->getLeftSprings()->empty())
+      {
           project->getWorldManager()->clearLeftHandSprings();
+          addXMLUndoState();
+      }
   }
   else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
   {
       if (worldGrabbed == RIGHT_GRABBED_WORLD)
+      {
           worldGrabbed = WORLD_NOT_GRABBED;
+      }
       else if (!project->getWorldManager()->getRightSprings()->empty())
+      {
           project->getWorldManager()->clearRightHandSprings();
+          addXMLUndoState();
+      }
   }
 }
 
@@ -163,6 +177,8 @@ void ObjectGrabMode::clearStatus()
   worldGrabbed = WORLD_NOT_GRABBED;
   lDist = rDist = std::numeric_limits<double>::max();
   lObj = rObj = NULL;
+  project->getWorldManager()->clearLeftHandSprings();
+  project->getWorldManager()->clearRightHandSprings();
 }
 
 void ObjectGrabMode::analogsUpdated()

@@ -25,6 +25,12 @@ inline int collision_disable_button_idx() {
 inline int change_modes_button_idx() {
     return BUTTON_LEFT(ONE_BUTTON_IDX);
 }
+inline int undo_button_idx() {
+    return BUTTON_RIGHT(OBLONG_BUTTON_IDX);
+}
+inline int redo_button_idx() {
+    return BUTTON_LEFT(OBLONG_BUTTON_IDX);
+}
 
 #define NO_OPERATION                    0
 #define DUPLICATE_OBJECT_PENDING        1
@@ -104,6 +110,10 @@ void HydraInputManager::setProject(SketchProject *proj) {
     project = proj;
     for (int i = 0; i < modeList.size(); i++)
         modeList[i]->setProject(proj);
+    if (project->getLastUndoState() == NULL)
+    {
+        activeMode->addXMLUndoState();
+    }
 }
 
 void HydraInputManager::handleCurrentInput() {
@@ -150,6 +160,10 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             activeMode->clearStatus();
             emit changedModes(getModeName());
             emit newDirectionsString(" ");
+        } else if (buttonNum == undo_button_idx()) {
+            project->applyUndo();
+        } else if (buttonNum == redo_button_idx()) {
+            project->applyRedo();
         } else {
             activeMode->buttonPressed(buttonNum);
         } // TODO - change modes button
