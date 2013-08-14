@@ -306,6 +306,56 @@ inline int testObjectGroupSubGroup() {
     return errors;
 }
 
+//#########################################################################
+// this tests the case of a group with one item, which should behave just like
+// a single object
+inline int testObjectGroupOneItem()
+{
+    QScopedPointer<SketchModel> m(TestCoreHelpers::getSphereModel());
+    QScopedPointer< ObjectGroup > group(new ObjectGroup());
+    SketchObject *o = new ModelInstance(m.data());
+    group->addObject(o);
+    int errors = 0;
+    errors += TestCoreHelpers::testNewModelInstance(group.data(), false);
+    errors += TestCoreHelpers::testModelInstanceActions(group.data());
+    // this is a test of a bugfix in grab.  Grab can't tell the difference between
+    // a single item and a group with one item, so group's position needs to be same
+    // as object's position.  Same with orientation, bounding box, etc.
+
+    // undo the position/orientation set in testModelInstanceActions...
+    q_vec_type v1, v2 = {0,0,0};
+    group->setPosition(v2);
+    q_type q1, q2 = Q_ID_QUAT;
+    group->setOrientation(q2);
+
+    q_vec_set(v1,4,5,6);
+    o->setPosition(v1);
+    group->getPosition(v2);
+    if (!q_vec_equals(v1,v2))
+    {
+        errors++;
+        cout << "Group position is wrong with one item and item's position set" << endl;
+    }
+    q_make(q1,0,0,1,Q_PI/3);
+    o->setOrientation(q1);
+    group->getOrientation(q2);
+    if (!q_equals(q1,q2))
+    {
+        errors++;
+        cout << "Group orientation is wrong with one item and item's orientation set"
+                << endl;
+    }
+    double bb1[6], bb2[6];
+    o->getBoundingBox(bb1);
+    o->getBoundingBox(bb2);
+    if (!q_vec_equals(bb1,bb2) || !q_vec_equals(&bb1[3],&bb2[3]))
+    {
+        errors++;
+        cout << "Group bounding box wrong with only one item." << endl;
+    }
+    return errors;
+}
+
 
 //#########################################################################
 inline int testObjectGroup() {
@@ -313,6 +363,7 @@ inline int testObjectGroup() {
     errors += testNewObjectGroup();
     if (errors == 0) {
         errors += testObjectGroupActions();
+        errors += testObjectGroupOneItem();
         errors += testObjectGroupSubGroup();
     }
     cout << "Found " << errors << " errors in ObjectGroup." << endl;

@@ -33,66 +33,6 @@ int main(int argc, char *argv[]) {
 }
 
 
-
-
-//#########################################################################
-// tests if the ModelInstance initialized correctly (note: if methods used
-//  either here or in testNewSketchObject are overridden, this should not be
-//  called, use your own test funciton to check initial state).  This does
-//  not modify the ModelInstance, just checks to see if the initial state is
-//  set up correctly
-inline int testNewModelInstance(ModelInstance *obj) {
-    int errors = TestCoreHelpers::testNewSketchObject(obj);
-    if (obj->numInstances() != 1) {
-        errors++;
-        cout << "How is one instance more than one instance?" << endl;
-    }
-    if (obj->getActor() == NULL) {
-        errors++;
-        cout << "Actor for object is null!" << endl;
-    }
-    if (obj->getModel() == NULL) {
-        errors++;
-        cout << "Model for object is null" << endl;
-    }
-    if (obj->getSubObjects() != NULL) {
-        errors++;
-        cout << "List of sub-objects isn't null" << endl;
-    }
-    return errors;
-}
-
-//#########################################################################
-// tests if the behavioral methods of a ModelInstance are working. this includes
-// get/set methods.  Assumes a newly constructed ModelInstance with no modifications
-// made to it yet.
-inline int testModelInstanceActions(ModelInstance *obj) {
-    int errors = TestCoreHelpers::testSketchObjectActions(obj);
-    // test set wireframe / set solid... can only test if mapper changed easily, no testing
-    // the vtk pipeline to see if it is actually wireframed
-
-    // test the bounding box .... assumes a radius 4 sphere
-    double bb[6];
-    q_vec_type pos;
-    obj->getPosition(pos); // position set in getSketchObjectActions
-    obj->getBoundingBox(bb);
-    for (int i = 0; i < 3; i++) {
-        // due to tessalation, bounding box has some larger fluctuations.
-        if (Q_ABS(bb[2*i+1] - bb[2*i] - 8) > .025) {
-            errors++;
-            cout << "Object bounding box wrong" << endl;
-        }
-        // average of fluctuations has larger fluctuation
-        // note model instance bounding box is now an OBB that fits the
-        // untransformed model...
-        if (Q_ABS((bb[2*i+1] +bb[2*i])/2) > .05) {
-            errors++;
-            cout << "Object bounding box position wrong" << endl;
-        }
-    }
-    return errors;
-}
-
 //#########################################################################
 inline int testModelInstance() {
     // set up
@@ -107,8 +47,8 @@ inline int testModelInstance() {
     }
 
     // test that a new ModelInstance is right
-    errors += testNewModelInstance(obj.data());
-    errors += testModelInstanceActions(obj.data());
+    errors += TestCoreHelpers::testNewModelInstance(obj.data());
+    errors += TestCoreHelpers::testModelInstanceActions(obj.data());
     // maybe
     // testCollisions(obj,obj2);
 

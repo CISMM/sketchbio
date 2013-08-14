@@ -16,12 +16,15 @@ using std::endl;
 
 #include "TestCoreHelpers.h"
 
+// Tests of object methods...
 int testRemoveObject();
+int testDeleteObject();
 
 int main()
 {
     int errors = 0;
     errors += testRemoveObject();
+    errors += testDeleteObject();
     return errors;
 }
 
@@ -90,5 +93,23 @@ int testRemoveObject()
     delete o3;
     world->removeObject(o4);
     delete o4;
+    return 0;
+}
+
+// This is currently testing for recurrence of Bug #807 in which some cases of
+// deleting an object would cause segfaults.  The problem was in removeObject, but
+// just in case something changes, this test is added also
+int testDeleteObject()
+{
+    QScopedPointer< SketchModel > model(TestCoreHelpers::getCubeModel());
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< WorldManager > world(new WorldManager(renderer));
+    SketchObject *o1, *o2, *o3, *o4;
+    createObjects(world.data(),model.data(),o1,o2,o3,o4);
+    world->deleteObject(o1);
+    world->deleteObject(o2);
+    world->deleteObject(o3);
+    world->deleteObject(o4);
     return 0;
 }

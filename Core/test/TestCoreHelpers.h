@@ -26,6 +26,18 @@ int testSketchObjectActions(SketchObject *obj);
 //  sure that the initial state was set up correctly. Used for multiple types
 //  of object's tests
 int testNewSketchObject(SketchObject *obj);
+//#########################################################################
+// tests if the ModelInstance initialized correctly (note: if methods used
+//  either here or in testNewSketchObject are overridden, this should not be
+//  called, use your own test funciton to check initial state).  This does
+//  not modify the ModelInstance, just checks to see if the initial state is
+//  set up correctly
+int testNewModelInstance(SketchObject *obj,bool testSubObjects = true);
+//#########################################################################
+// tests if the behavioral methods of a ModelInstance are working. this includes
+// get/set methods.  Assumes a newly constructed ModelInstance with no modifications
+// made to it yet.
+int testModelInstanceActions(SketchObject *obj);
 }
 
 #endif // TESTCOREHELPERS_H
