@@ -27,6 +27,8 @@ groupeditingmode.cpp  # h file used by Moc, no need to include here
 transformeditingmode.cpp  # h file used by Moc, no need to include here
 springeditingmode.cpp  # h file used by Moc, no need to include here
 animationmode.cpp  # h file used by Moc, no need to include here
+savedxmlundostate.cpp
+savedxmlundostate.h
 ${SketchBioInputMoc}
 )
 ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})
