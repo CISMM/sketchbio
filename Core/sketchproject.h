@@ -34,6 +34,7 @@ class WorldManager;
 class StructureReplicator;
 class TransformEquals;
 #include "physicsstrategyfactory.h"
+class UndoState;
 
 // constants to use with the setOutlineXXX and isOutlineVisible functions
 // for the value of the side variable
@@ -81,6 +82,19 @@ public:
     void setShowShadows(bool show);
     void setShadowsOn();
     void setShadowsOff();
+
+    // clears everything that the user has done in the project in preparation
+    // for loading in an undo state
+    void clearProject();
+
+    // functions for undo and redo
+    // Note: these two will return NULL if there is no state to return
+    UndoState *getLastUndoState();
+    UndoState *getNextRedoState();
+    // clears the redo operation stack in addition to adding an undo state
+    void addUndoState(UndoState *state);
+    void applyUndo();
+    void applyRedo();
 
     // returns the current time in the animation that is being viewed
     double getViewTime() const;
@@ -178,6 +192,9 @@ private:
 
     // project dir
     QDir *projectDir;
+
+    // undo states:
+    QList< UndoState * > undoStack, redoStack;
 
     // other ui stuff
     SketchObject *leftHand, *rightHand; // the objects for the left and right hand trackers

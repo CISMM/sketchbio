@@ -175,6 +175,16 @@ QListIterator<SketchObject *> WorldManager::getObjectIterator() const {
 
 //##################################################################################################
 //##################################################################################################
+void WorldManager::clearObjects()
+{
+    while (!objects.empty())
+    {
+        deleteObject(objects[0]);
+    }
+}
+
+//##################################################################################################
+//##################################################################################################
 SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
     addSpring(spring,&connections);
 
@@ -209,6 +219,14 @@ void WorldManager::clearRightHandSprings() {
     rHand.clear();
 }
 
+void WorldManager::clearSprings()
+{
+    while (! connections.empty())
+    {
+        removeSpring(connections[0]);
+    }
+}
+
 //##################################################################################################
 //##################################################################################################
 SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,const q_vec_type pos1,
@@ -223,6 +241,8 @@ SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,con
 //##################################################################################################
 void WorldManager::removeSpring(SpringConnection *spring) {
     int index = connections.indexOf(spring);
+    if (index == -1)
+        return;
     connections.removeAt(index);
 
     springEndConnections->DeleteCell(spring->getCellId());

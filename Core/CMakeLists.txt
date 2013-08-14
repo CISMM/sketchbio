@@ -37,6 +37,8 @@ physicsstrategyfactory.cpp
 physicsstrategyfactory.h
 transformequals.cpp
 transformequals.h
+undostate.cpp
+undostate.h
 keyframe.cpp
 keyframe.h
 groupidgenerator.h

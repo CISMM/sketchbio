@@ -120,6 +120,14 @@ public:
 
     /*******************************************************************
      *
+     * Clears all the objects stored in the WorldManager (removes and
+     * deletes them)
+     *
+     *******************************************************************/
+    void clearObjects();
+
+    /*******************************************************************
+     *
      * Adds the given spring to the list of springs.  Returns a pointer to
      * the spring (same as the one passed in).
      *
@@ -180,6 +188,12 @@ public:
      *******************************************************************/
     void clearRightHandSprings();
 
+    /*******************************************************************
+     *
+     * Clears all the springs in the WorldManager (removes and deletes them)
+     *
+     *******************************************************************/
+    void clearSprings();
     /*******************************************************************
      *
      * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator

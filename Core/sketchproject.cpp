@@ -33,6 +33,7 @@
 #include "springconnection.h"
 #include "structurereplicator.h"
 #include "transformequals.h"
+#include "undostate.h"
 
 #define NUM_COLORS (6)
 /*
@@ -290,6 +291,8 @@ SketchProject::SketchProject(vtkRenderer *r) :
     cameras(),
     transformOps(),
     projectDir(NULL),
+    undoStack(),
+    redoStack(),
     leftHand(addTracker(r)),
     rightHand(addTracker(r)),
     leftShadowActor(vtkSmartPointer< vtkActor >::New()),
@@ -419,6 +422,76 @@ QString SketchProject::getFileInProjDir(QString filename)
         }
     }
     return result;
+}
+
+void SketchProject::clearProject()
+{
+    if (isDoingAnimation)
+    {
+        stopAnimation();
+    }
+    transformOps.clear();
+    cameras.clear();
+    qDeleteAll(replicas);
+    replicas.clear();
+    world->clearLeftHandSprings();
+    world->clearRightHandSprings();
+    world->clearObjects();
+    world->clearSprings();
+    setOutlineVisible(LEFT_SIDE_OUTLINE,false);
+    setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+}
+
+UndoState *SketchProject::getLastUndoState()
+{
+    if (undoStack.empty())
+    {
+        return NULL;
+    }
+    else
+    {
+        return undoStack.back();
+    }
+}
+
+UndoState *SketchProject::getNextRedoState()
+{
+    if (redoStack.empty())
+    {
+        return NULL;
+    }
+    else
+    {
+        return redoStack.back();
+    }
+}
+
+void SketchProject::addUndoState(UndoState *state)
+{
+    if (state == NULL || &state->getProject() != this)
+        return;
+    undoStack.push_back(state);
+    redoStack.clear();
+}
+
+void SketchProject::applyUndo()
+{
+    if (undoStack.empty())
+        return;
+    UndoState *state = undoStack.back();
+    undoStack.pop_back();
+    state->undo();
+    redoStack.push_back(state);
+}
+
+void SketchProject::applyRedo()
+{
+    if (redoStack.empty())
+        return;
+    UndoState *state = redoStack.back();
+    redoStack.pop_back();
+    state->redo();
+    undoStack.push_back(state);
 }
 
 void SketchProject::startAnimation()
