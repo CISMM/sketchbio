@@ -484,6 +484,7 @@ void SketchProject::addUndoState(UndoState *state)
     if (state == NULL || &state->getProject() != this)
         return;
     undoStack.push_back(state);
+    qDeleteAll(redoStack);
     redoStack.clear();
 }
 
