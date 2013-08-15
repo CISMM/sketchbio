@@ -19,298 +19,138 @@
 #include <projecttoxml.h>
 
 #include "CompareBeforeAndAfter.h"
+#include "MakeTestProject.h"
 
 using std::cout;
 using std::endl;
 
-int testSave1()
+#define PRINT_OUT_XML_TESTNUM -1
+
+int saveLoadAndTest(SketchProject *proj, int testNum, bool writeToFile = false)
 {
     int retVal = 0;
-    vtkSmartPointer< vtkRenderer > r1 =
+    vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
-    proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
-
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    m1->addConformation(m1->getSource(0),
-                        m1->getFileNameFor(0,ModelResolution::FULL_RESOLUTION));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    proj1->addObject(m1,pos1,orient1);
-    proj1->addObject(new ModelInstance(m1,1));
+    QScopedPointer< SketchProject > proj2(new SketchProject(r));
+    proj2->setProjectDir(proj->getProjectDir());
 
     vtkSmartPointer< vtkXMLDataElement > root =
             vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
+                ProjectToXML::projectToXML(proj)
                 );
+
+    if (testNum == PRINT_OUT_XML_TESTNUM)
+    {
+        vtkXMLUtilities::FlattenElement(root,cout);
+        cout << endl;
+    }
+    if (writeToFile)
+    {
+        QDir dir = proj->getProjectDir();
+        QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
+        // write it out and read back in the data to ensure the xml is valid
+        // and that the xml tree can be read back in and be the same...
+        vtkIndent indent(0);
+        vtkXMLUtilities::WriteElementToFile(
+                    root,file.toStdString().c_str(),&indent);
+
+        root = vtkSmartPointer< vtkXMLDataElement >::Take(
+                    vtkXMLUtilities::ReadElementFromFile(
+                        file.toStdString().c_str())
+                    );
+    }
 
     if (ProjectToXML::xmlToProject(proj2.data(),root)
             == ProjectToXML::XML_TO_DATA_FAILURE)
     {
         retVal++;
-        std::cout << "Reading xml for test 1 failed..." << std::endl;
+        std::cout << "Reading xml for test "
+                  << testNum
+                  << " failed..." << std::endl;
     }
     else
     {
-        CompareBeforeAndAfter::compareProjects(proj1.data(),proj2.data(),retVal);
+        CompareBeforeAndAfter::compareProjects(proj,proj2.data(),retVal);
 
         if (retVal == 0)
         {
-            cout << endl << "Passed test 1" << endl;
+            cout << endl << "Passed test " << testNum << endl;
         }
 
     }
     return retVal;
 }
 
+int testSave1()
+{
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > proj1(new SketchProject(r1));
+    proj1->setProjectDir("test/test1");
+
+    MakeTestProject::addObjectToProject(proj1.data(),0);
+    MakeTestProject::addObjectToProject(proj1.data(),1);
+
+    return saveLoadAndTest(proj1.data(),1);
+}
+
 
 int testSave2()
 {
-    int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
-    o1->setColorMapType(SketchObject::ColorMapType::BLUE_TO_RED);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
-    o2->setColorMapType(SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE);
-    o2->setArrayToColorBy("myarray");
-    proj1->addCamera(pos1,orient1);
+    MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addCameraToProject(proj1.data());
 
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
-                );
-
-    if (ProjectToXML::xmlToProject(proj2.data(),root)
-            == ProjectToXML::XML_TO_DATA_FAILURE)
-    {
-        retVal++;
-        cout << endl << "Reading xml for test 2 failed..." << std::endl;
-    }
-    else
-    {
-        CompareBeforeAndAfter::compareProjects(proj1.data(),proj2.data(),retVal);
-    }
-
-    if (retVal == 0)
-    {
-        cout << endl << "Passed test 2" << endl;
-    }
-
-    return retVal;
+    return saveLoadAndTest(proj1.data(),2);
 }
 
 int testSave3()
 {
-    int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
-    proj1->addReplication(o1,o2,12);
+    MakeTestProject::addReplicationToProject(proj1.data(),12);
 
-
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
-                );
-
-    if (ProjectToXML::xmlToProject(proj2.data(),root)
-            == ProjectToXML::XML_TO_DATA_FAILURE)
-    {
-        retVal++;
-        cout << endl << "Reading xml for test 3 failed..." << endl;
-    }
-    else
-    {
-        CompareBeforeAndAfter::compareProjects(
-                    proj1.data(),proj2.data(),retVal);
-    }
-
-    if (retVal == 0)
-    {
-        cout << endl << "Passed test 3" << endl;
-    }
-
-    return retVal;
+    return saveLoadAndTest(proj1.data(),3);
 }
 
 int testSave4()
 {
-    int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
-    proj1->addReplication(o1,o2,12);
-    q_vec_type p1, p2;
-    q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
-    q_vec_scale(p1,sqrt(6.0),p1);
-    q_vec_set(p2,2.23,6.06,7.97); // sqrt(5)
-    q_vec_scale(p2,sqrt(7.0),p2);
-    proj1->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),
-                     3.56*sqrt(11.0),p1,p2); // sqrt(2)
+    StructureReplicator *rep =
+            MakeTestProject::addReplicationToProject(proj1.data(),12);
+    MakeTestProject::addSpringToProject(proj1.data(),
+                                        rep->getFirstObject(),
+                                        rep->getSecondObject());
 
-
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
-                );
-
-
-    if (ProjectToXML::xmlToProject(proj2.data(),root)
-            == ProjectToXML::XML_TO_DATA_FAILURE)
-    {
-        retVal++;
-        cout << endl << "Reading xml for test 4 failed..." << endl;
-    }
-    else
-    {
-        CompareBeforeAndAfter::compareProjects(
-                    proj1.data(),proj2.data(),retVal);
-    }
-
-    if (retVal == 0)
-    {
-        cout << endl << "Passed test 4" << endl;
-    }
-
-    return retVal;
+    return saveLoadAndTest(proj1.data(),4);
 }
 
 int testSave6()
 {
-    int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
-    SketchObject *o3 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o3->setPosAndOrient(pos1,orient1);
-    SketchObject *o4 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o4->setPosAndOrient(pos1,orient1);
-    SketchObject *o5 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o5->setPosAndOrient(pos1,orient1);
-    o5->setColorMapType(SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE);
-    ObjectGroup *grp = new ObjectGroup();
-    grp->addObject(o3);
-    grp->addObject(o4);
-    grp->addObject(o5);
-    pos1[Q_Z] = -40;
-    pos1[Q_Y] = 300 / Q_PI;
-    q_make(orient1,0,1,0,Q_PI/3);
-    grp->setPosAndOrient(pos1,orient1);
-    proj1->addObject(grp);
-    proj1->addReplication(o1,o2,12);
-    q_vec_type p1, p2;
-    q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
-    q_vec_scale(p1,sqrt(6.0),p1);
-    q_vec_set(p2,2.23,6.06,7.97); // sqrt(5)
-    q_vec_scale(p2,sqrt(7.0),p2);
-    proj1->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),
-                     3.56*sqrt(11.0),p1,p2); // sqrt(2)
+    SketchObject *o1 = MakeTestProject::addObjectToProject(proj1.data());
+    SketchObject *o2 = MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addGroupToProject(proj1.data(),3);
+    MakeTestProject::addReplicationToProject(proj1.data(),12);
+    MakeTestProject::addSpringToProject(proj1.data(),o1,o2);
 
-
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
-                );
-
-    if (ProjectToXML::xmlToProject(proj2.data(),root)
-            == ProjectToXML::XML_TO_DATA_FAILURE)
-    {
-        retVal++;
-        cout << endl << "Reading xml for test 6 failed..." << endl;
-    }
-    else
-    {
-        CompareBeforeAndAfter::compareProjects(
-                    proj1.data(),proj2.data(),retVal);
-    }
-
-    if (retVal == 0) {
-        cout << endl << "Passed test 6" << endl;
-    }
-
-    return retVal;
+    return saveLoadAndTest(proj1.data(),6);
 }
 
 int testSave9()
@@ -341,201 +181,51 @@ int testSave9()
     return 0;
 }
 
-
+// tests that my save state makes sense... i.e. no " in the attributes or such
+// tests that it can be read back in as valid xml and reconstructed to the project
 int testSave5()
 {
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > project(new SketchProject(r)),
-            project2(new SketchProject(r));
+    QScopedPointer< SketchProject > project(new SketchProject(r));
     project->setProjectDir("test/test1");
-    project2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = project->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = project->addObject(m1,pos1,orient1);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = project->addObject(m1,pos1,orient1);
-    o2->addKeyframeForCurrentLocation(0.0);
-    project->addReplication(o1,o2,12);
-    q_vec_type p1, p2;
-    q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
-    q_vec_scale(p1,sqrt(6.0),p1);
-    q_vec_set(p2,2.23,6.06,7.97); // sqrt(5)
-    q_vec_scale(p2,sqrt(7.0),p2);
-    project->addSpring(o1,o2,1.41*sqrt(8.0),
-                       4.21*sqrt(10.0),3.56*sqrt(11.0),p1,p2); // sqrt(2)
+    StructureReplicator *rep =
+            MakeTestProject::addReplicationToProject(project.data(),12);
+    MakeTestProject::addKeyframesToObject(rep->getSecondObject(),1);
+    MakeTestProject::addSpringToProject(project.data(),
+                                        rep->getFirstObject(),
+                                        rep->getSecondObject());
 
-    QDir dir = project->getProjectDir();
-    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
-
-    vtkSmartPointer< vtkXMLDataElement > b4 =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(project.data())
-                );
-    vtkIndent indent(0);
-    vtkXMLUtilities::WriteElementToFile(b4,file.toStdString().c_str(),&indent);
-
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                vtkXMLUtilities::ReadElementFromFile(
-                file.toStdString().c_str())
-                );
-
-    if (ProjectToXML::xmlToProject(project2.data(),root)
-            == ProjectToXML::XML_TO_DATA_SUCCESS)
-    {
-        cout << endl << "Passed test 5" << endl;
-    }
-    else
-    {
-        cout << endl << "Reading xml for test 5 failed..." << endl;
-        return 1;
-    }
-    return 0;
+    return saveLoadAndTest(project.data(),5,true);
 }
 
 int testSave7()
 {
-    int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *o1 = proj1->addObject(m1,pos1,orient1);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    SketchObject *o2 = proj1->addObject(m1,pos1,orient1);
-    SketchObject *o3 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o3->setPosAndOrient(pos1,orient1);
-    proj1->addObject(o3);
-    SketchObject *o4 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o4->setPosAndOrient(pos1,orient1);
-    proj1->addObject(o4);
-    SketchObject *o5 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o5->setPosAndOrient(pos1,orient1);
-    proj1->addObject(o5);
+    MakeTestProject::addTransformEqualsToProject(proj1.data(),2);
+    MakeTestProject::addObjectToProject(proj1.data());
 
-    QWeakPointer< TransformEquals > eq = proj1->addTransformEquals(o1,o2);
-    QSharedPointer< TransformEquals > sEq(eq);
-    if (sEq)
-    {
-        sEq->addPair(o3,o4);
-    }
-
-
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
-                );
-
-    if (ProjectToXML::xmlToProject(proj2.data(),root)
-            == ProjectToXML::XML_TO_DATA_FAILURE)
-    {
-        retVal++;
-        cout << endl << "Reading xml for test 7 failed..." << endl;
-    }
-    else
-    {
-
-        CompareBeforeAndAfter::compareProjects(proj1.data(),proj2.data(),retVal);
-    }
-
-    if (retVal == 0)
-    {
-        cout << endl << "Passed test 7" << endl;
-    }
-
-    return retVal;
+    return saveLoadAndTest(proj1.data(),7);
 }
 
 int testSave8()
 {
-    int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    vtkSmartPointer< vtkRenderer > r2 =
-            vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > proj1(new SketchProject(r1));
-    QScopedPointer< SketchProject > proj2(new SketchProject(r2));
     proj1->setProjectDir("test/test1");
-    proj2->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    proj1->addObject(m1,pos1,orient1);
-    pos1[Q_X] += 2 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    proj1->addObject(m1,pos1,orient1);
-    SketchObject *o3 = new ModelInstance(m1);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o3->setPosAndOrient(pos1,orient1);
-    proj1->addObject(o3);
-    o3->addKeyframeForCurrentLocation(0.4);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o3->setPosAndOrient(pos1,orient1);
-    o3->addKeyframeForCurrentLocation(4.332);
-    pos1[Q_Z] += 4 * Q_PI;
-    q_mult(orient1,orient1,orient1);
-    o3->setPosAndOrient(pos1,orient1);
-    o3->addKeyframeForCurrentLocation(10.5);
-    pos1[Q_Z] = 3.14;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    o3->setPosAndOrient(pos1,orient1);
+    MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addObjectToProject(proj1.data());
+    SketchObject *o = MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addKeyframesToObject(o,4);
 
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                ProjectToXML::projectToXML(proj1.data())
-                );
-
-    if (ProjectToXML::xmlToProject(proj2.data(),root)
-            == ProjectToXML::XML_TO_DATA_FAILURE)
-    {
-        retVal++;
-        cout << endl << "Reading xml for test 8 failed..." << endl;
-    }
-    else
-    {
-        CompareBeforeAndAfter::compareProjects(proj1.data(),proj2.data(),retVal);
-    }
-
-    if (retVal == 0)
-    {
-        cout << endl << "Passed test 8" << endl;
-    }
-
-    return retVal;
+    return saveLoadAndTest(proj1.data(),8);
 }
 
 int main(int argc, char *argv[])

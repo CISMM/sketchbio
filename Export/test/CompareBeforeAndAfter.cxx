@@ -3,6 +3,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+#include <cmath>
 
 #include <sketchtests.h>
 #include <sketchmodel.h>
@@ -144,29 +145,43 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
                              << endl;
         return;
     }
-    double epsilon = Q_EPSILON;
+    double epsilon_modifier = 1;
     const SketchObject *p = o1->getParent();
+    // if this is the case, it is probably a replica, so give a higher tolerance
+    if (o1->isLocalTransformPrecomputed() && p != NULL)
+    {
+        double d = (4.0 * p->getSubObjects()->size());
+        epsilon_modifier *= d;
+    }
     while (p != NULL)
     {
-        epsilon *= 8;
+        epsilon_modifier *= 8;
         p = p->getParent();
     }
     q_vec_type pos1, pos2;
     q_type orient1, orient2;
     o1->getPosition(pos1);
+    // we have to take the maximum dimension into account for the epsilon value too...
+    double vector_epsilon = max(max(Q_ABS(pos1[0]*Q_EPSILON),
+                   Q_ABS(pos1[1]*Q_EPSILON)),
+            Q_ABS(pos1[2]*Q_EPSILON));
     o2->getOrientation(orient1);
     o2->getPosition(pos2);
     o2->getOrientation(orient2);
-    if (!q_vec_equals(pos1,pos2,epsilon))
+    if (!q_vec_equals(pos1,pos2,epsilon_modifier *vector_epsilon))
     {
         numDifferences++;
         if (printDiffs)
         {
             cout << "positions wrong" << endl;
+            q_vec_type diff;
+            q_vec_subtract(diff,pos1,pos2);
             cout << "P1: ";
             q_vec_print(pos1);
             cout << "P2: ";
             q_vec_print(pos2);
+            cout << "DIFF: ";
+            printf("(%g, %g, %g), epsilon_modifier = %g\n",diff[0], diff[1], diff[2],epsilon_modifier);
         }
         return;
     }
@@ -185,7 +200,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
     if (o1->numInstances() == 1)
     { // test single instance things... orientation of a group is tested by
         // position of group memebers in recursion
-        if (!q_equals(orient1,orient2,epsilon))
+        if (!q_equals(orient1,orient2,epsilon_modifier * Q_EPSILON))
         {
             numDifferences++;
             if (printDiffs)
@@ -238,48 +253,59 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
     }
     else if (o1->getNumKeyframes() > 0)
     {
-        QMapIterator<double,Keyframe> it(*o1->getKeyframes());
-        while (it.hasNext())
+        QMapIterator< double,Keyframe > it1(*o1->getKeyframes());
+        QMapIterator< double,Keyframe > it2(*o2->getKeyframes());
+        while (it1.hasNext())
         {
-            double time = it.peekNext().key();
-            const Keyframe &frame1 = it.next().value();
-            if (!o2->getKeyframes()->contains(time))
+            double time1 = it1.peekNext().key();
+            double time2 = it2.peekNext().key();
+            if (Q_ABS(time1-time2) > Q_EPSILON)
             {
                 numDifferences++;
-                if (printDiffs) cout << "Keyframe for time " << time << " missing in object 2." << endl;
+                if (printDiffs) cout << "Keyframe for time " << time1
+                                     << " missing in object 2. It has time "
+                                     << time2 << " instead."<< endl;
                 return;
             }
             else
             {
-                const Keyframe &frame2 = o2->getKeyframes()->value(time);
+                const Keyframe &frame1 = it1.next().value();
+                const Keyframe &frame2 = it2.next().value();
                 q_vec_type p1, p2;
                 q_type o1, o2;
                 frame1.getPosition(p1);
                 frame2.getPosition(p2);
                 frame1.getOrientation(o1);
                 frame2.getOrientation(o2);
-                if (!q_vec_equals(p1,p2,epsilon))
+                double vector_epsilon = max(max(Q_ABS(p1[0]*Q_EPSILON),
+                                            Q_ABS(p1[1]*Q_EPSILON)),
+                        Q_ABS(p1[2]*Q_EPSILON));
+                if (!q_vec_equals(p1,p2,epsilon_modifier * vector_epsilon))
                 {
                     numDifferences++;
-                    if (printDiffs) cout << "Keyframe positions are different at time " << time << endl;
+                    if (printDiffs) cout << "Keyframe positions are different at time "
+                                         << time1 << endl;
                     return;
                 }
-                if (!q_equals(o1,o2,epsilon))
+                if (!q_equals(o1,o2,epsilon_modifier * Q_EPSILON))
                 {
                     numDifferences++;
-                    if (printDiffs) cout << "Keyframe orientations are different at time " << time << endl;
+                    if (printDiffs) cout << "Keyframe orientations are different at time "
+                                         << time1 << endl;
                     return;
                 }
                 if (frame1.isVisibleAfter() != frame2.isVisibleAfter())
                 {
                     numDifferences++;
-                    if (printDiffs) cout << "Keyframe visibility is different at time " << time << endl;
+                    if (printDiffs) cout << "Keyframe visibility is different at time "
+                                         << time1 << endl;
                     return;
                 }
                 if (frame1.isActive() != frame2.isActive())
                 {
                     numDifferences++;
-                    if (printDiffs) cout << "Keyframe active state is different at time " << time << endl;
+                    if (printDiffs) cout << "Keyframe active state is different at time "
+                                         << time1 << endl;
                     return;
                 }
             }
@@ -313,7 +339,7 @@ void compareObjectLists(const QList<SketchObject *> &list1,
             if (!used.data()[i])
             {
                 int diffs = 0;
-                compareObjects(n1,n2,diffs,false);
+                compareObjects(n1,n2,diffs,true);
                 if (diffs == 0)
                 {
                     used.data()[i] = true;

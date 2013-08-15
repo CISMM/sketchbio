@@ -54,6 +54,8 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     replicas->addObject(obj2);
     replicas->addObserver(this);
     world->addObject(replicas);
+    obj1->addObserver(this);
+    obj2->addObserver(this);
     transform->Update();
 }
 
@@ -125,9 +127,15 @@ QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
 
 void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
 {
-    obj1->addKeyframeForCurrentLocation(time);
-    obj2->addKeyframeForCurrentLocation(time);
-    replicas->addKeyframeForCurrentLocation(time);
+    if (obj != replicas)
+    {
+        replicas->addKeyframeForCurrentLocation(time);
+        if (obj != obj1 && obj != obj2)
+        {
+            obj1->addKeyframeForCurrentLocation(time);
+            obj2->addKeyframeForCurrentLocation(time);
+        }
+    }
 }
 
 void StructureReplicator::subobjectAdded(SketchObject *parent, SketchObject *child)

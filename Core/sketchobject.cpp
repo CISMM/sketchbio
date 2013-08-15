@@ -468,7 +468,7 @@ void SketchObject::setLocalTransformPrecomputed(bool isComputed)
 }
 
 //#########################################################################
-bool SketchObject::isLocalTransformPrecomputed()
+bool SketchObject::isLocalTransformPrecomputed() const
 {
     return localTransformPrecomputed;
 }
@@ -480,7 +480,7 @@ void SketchObject::setLocalTransformDefiningPosition(bool isDefining)
 }
 
 //#########################################################################
-bool SketchObject::isLocalTransformDefiningPosition()
+bool SketchObject::isLocalTransformDefiningPosition() const
 {
     return localTransformDefiningPosition;
 }

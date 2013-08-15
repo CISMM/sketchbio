@@ -485,7 +485,9 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
             frame.getOrientation(o);
             vtkSmartPointer<vtkXMLDataElement> frameElement = vtkSmartPointer<vtkXMLDataElement>::New();
             frameElement->SetName(OBJECT_KEYFRAME_ELEMENT_NAME);
-            frameElement->SetDoubleAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME,time);
+            setPreciseVectorAttribute(frameElement,&time,1,
+                                      OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME);
+            //frameElement->SetDoubleAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME,time);
             vtkSmartPointer<vtkXMLDataElement> tfrm = vtkSmartPointer<vtkXMLDataElement>::New();
             tfrm->SetName(TRANSFORM_ELEMENT_NAME);
             setPreciseVectorAttribute(tfrm,p,3,POSITION_ATTRIBUTE_NAME);

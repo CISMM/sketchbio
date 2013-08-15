@@ -14,6 +14,8 @@ set( export_test_link_libraries
 ADD_LIBRARY(ExportTestHelpers
 CompareBeforeAndAfter.h
 CompareBeforeAndAfter.cxx
+MakeTestProject.h
+MakeTestProject.cxx
 )
 
 # define a test-making macro

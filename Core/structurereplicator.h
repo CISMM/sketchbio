@@ -50,10 +50,12 @@ public:
      * Gets the first original object
      */
     inline const SketchObject *getFirstObject() const { return obj1; }
+    inline SketchObject *getFirstObject() { return obj1; }
     /*
      * Gets the second original object
      */
     inline const SketchObject *getSecondObject() const { return obj2; }
+    inline SketchObject *getSecondObject() { return obj2; }
 
     /*
      * Updates the transform used to generate all the models

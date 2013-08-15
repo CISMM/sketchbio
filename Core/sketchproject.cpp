@@ -341,6 +341,9 @@ SketchProject::~SketchProject() {
     qDeleteAll(undoStack);
     undoStack.clear();
     cameras.clear();
+    // these destructors call methods on the objects... make sure they are called
+    // before the objects are deleted.
+    transformOps.clear();
     qDeleteAll(replicas);
     replicas.clear();
     delete leftHand;

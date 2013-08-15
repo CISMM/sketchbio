@@ -170,11 +170,11 @@ public:
     // to stop the object from updating its transform when its position/orientation are set
     // used when an external source is defining the object's local transformation
     void setLocalTransformPrecomputed(bool isComputed);
-    bool isLocalTransformPrecomputed();
+    bool isLocalTransformPrecomputed() const;
     // to set whether or not this object's local transformation has more information about
     // its position than the position vector
     void setLocalTransformDefiningPosition(bool isDefining);
-    bool isLocalTransformDefiningPosition();
+    bool isLocalTransformDefiningPosition() const;
     // to allow localTransformUpdated to be called from subclasses on other SketchObjects...
     static void localTransformUpdated(SketchObject *obj);
     // methods for accessing and modifying keyframes
