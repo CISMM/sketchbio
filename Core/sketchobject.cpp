@@ -545,14 +545,6 @@ void SketchObject::removeKeyframeForTime(double t)
 //#########################################################################
 void SketchObject::setPositionByAnimationTime(double t)
 {
-    QList<SketchObject *> *subObjects = getSubObjects();
-    if (subObjects != NULL)
-    {
-        for (QListIterator<SketchObject *> itr(*subObjects); itr.hasNext(); )
-        {
-            itr.next()->setPositionByAnimationTime(t);
-        }
-    }
     // we don't support negative times and if the object has no keyframes, then
     // no need to do anything
     if (t < 0 || !hasKeyframes())
@@ -620,6 +612,15 @@ void SketchObject::setPositionByAnimationTime(double t)
         it.next()->objectMoved(this);
     }
     recalculateLocalTransform();
+    // set out own position first to avoid messing up sub-object positions
+    QList<SketchObject *> *subObjects = getSubObjects();
+    if (subObjects != NULL)
+    {
+        for (QListIterator<SketchObject *> itr(*subObjects); itr.hasNext(); )
+        {
+            itr.next()->setPositionByAnimationTime(t);
+        }
+    }
 }
 
 //#########################################################################

@@ -108,6 +108,7 @@ public:
 
     // get model manager
     const ModelManager *getModelManager() const;
+    ModelManager *getModelManager();
     // get transform manager
     const TransformManager *getTransformManager() const;
     TransformManager *getTransformManager();
@@ -219,6 +220,11 @@ private:
 };
 
 inline const ModelManager *SketchProject::getModelManager() const {
+    return models.data();
+}
+
+inline ModelManager *SketchProject::getModelManager()
+{
     return models.data();
 }
 

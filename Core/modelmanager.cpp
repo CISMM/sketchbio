@@ -146,7 +146,12 @@ SketchModel *ModelManager::addConformation(SketchModel *model,
 {
     if (model == NULL)
         return NULL;
+    if (modelSourceToIdx.contains(newSource))
+    {
+        return models[modelSourceToIdx.value(newSource)];
+    }
     model->addConformation(newSource,newFilename);
+    modelSourceToIdx.insert(newSource,models.indexOf(model));
     return model;
 }
 
