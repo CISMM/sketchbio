@@ -501,7 +501,7 @@ vtkXMLDataElement *ProjectToXML::objectToXML(const SketchObject *object,
         element->AddNestedElement(child);
     }
 
-    if (object->numInstances() > 1) {
+    if (object->numInstances() != 1 && object->numInstances() != 0) {
         vtkXMLDataElement *list = ProjectToXML::objectListToXML(object->getSubObjects(),modelIds,objectIds);
         element->AddNestedElement(list);
         list->Delete();

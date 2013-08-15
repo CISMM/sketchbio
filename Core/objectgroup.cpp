@@ -52,94 +52,15 @@ int ObjectGroup::numInstances() const
     int sum = 0;
     for (int i = 0; i < children.length(); i++)
     {
-        sum += children[i]->numInstances();
+        sum += Q_ABS(children[i]->numInstances());
     }
-    return sum;
-}
-
-//#########################################################################
-SketchModel *ObjectGroup::getModel()
-{
-    SketchModel *retVal = NULL;
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                retVal = children[i]->getModel();
-        }
-    }
-    return retVal;
-}
-
-//#########################################################################
-const SketchModel *ObjectGroup::getModel() const
-{
-    const SketchModel *retVal = NULL;
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                retVal = children[i]->getModel();
-        }
-    }
-    return retVal;
-}
-
-//#########################################################################
-void ObjectGroup::getPosition(q_vec_type dest) const
-{
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-            {
-                children[i]->getPosition(dest);
-                return;
-            }
-        }
-    }
-    else
-    {
-        SketchObject::getPosition(dest);
-    }
-}
-
-//#########################################################################
-void ObjectGroup::getOrientation(q_type dest) const
-{
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-            {
-                children[i]->getOrientation(dest);
-                return;
-            }
-        }
-    }
-    else
-    {
-        SketchObject::getOrientation(dest);
-    }
+    return -sum;
 }
 
 //#########################################################################
 SketchObject::ColorMapType::Type ObjectGroup::getColorMapType() const
 {
-    ColorMapType::Type retVal = ColorMapType::SOLID_COLOR_RED;
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                retVal = children[i]->getColorMapType();
-        }
-    }
-    return retVal;
+    return ColorMapType::SOLID_COLOR_RED;
 }
 
 //#########################################################################
@@ -154,14 +75,6 @@ void ObjectGroup::setColorMapType(ColorMapType::Type cmap)
 //#########################################################################
 QString ObjectGroup::getArrayToColorBy() const
 {
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                return children[i]->getArrayToColorBy();
-        }
-    }
     return "";
 }
 
@@ -177,31 +90,7 @@ void ObjectGroup::setArrayToColorBy(const QString &arrayName)
 //#########################################################################
 vtkTransformPolyDataFilter *ObjectGroup::getTransformedGeometry()
 {
-    vtkTransformPolyDataFilter *retVal = NULL;
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                retVal = children[i]->getTransformedGeometry();
-        }
-    }
-    return retVal;
-}
-
-//#########################################################################
-vtkActor *ObjectGroup::getActor()
-{
-    vtkActor *retVal = NULL;
-    if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-                retVal = children[i]->getActor();
-        }
-    }
-    return retVal;
+    return NULL;
 }
 
 //#########################################################################
@@ -287,16 +176,6 @@ void ObjectGroup::getBoundingBox(double bb[])
     if (children.size() == 0)
     {
         bb[0] = bb[1] = bb[2] = bb[3] = bb[4] = bb[5] = 0;
-    }
-    else if (numInstances() == 1)
-    {
-        for (int i = 0; i < children.length(); i++)
-        {
-            if (children[i]->numInstances() == 1)
-            {
-                children[i]->getBoundingBox(bb);
-            }
-        }
     }
     else
     {

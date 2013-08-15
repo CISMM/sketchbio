@@ -247,6 +247,12 @@ public:
 
     /*******************************************************************
      *
+     * Returns a const reference to the list of springs
+     *
+     *******************************************************************/
+    const QList<SpringConnection *> &getSprings() const;
+    /*******************************************************************
+     *
      * Returns an iterator over all the springs in the list
      *
      *******************************************************************/
@@ -461,8 +467,14 @@ inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject 
     return addSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
 }
 
-inline const QList<SketchObject *> *WorldManager::getObjects() const {
+inline const QList<SketchObject *> *WorldManager::getObjects() const
+{
     return &objects;
+}
+
+inline const QList< SpringConnection *> &WorldManager::getSprings() const
+{
+    return connections;
 }
 
 inline SketchObject *WorldManager::getClosestObject(SketchObject *subj, double &distOut)

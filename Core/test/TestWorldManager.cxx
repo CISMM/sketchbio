@@ -20,11 +20,15 @@ using std::endl;
 int testRemoveObject();
 int testDeleteObject();
 
+// Tests of bugs
+int testSelectionBug();
+
 int main()
 {
     int errors = 0;
     errors += testRemoveObject();
     errors += testDeleteObject();
+    errors += testSelectionBug();
     return errors;
 }
 
@@ -112,4 +116,31 @@ int testDeleteObject()
     world->deleteObject(o3);
     world->deleteObject(o4);
     return 0;
+}
+
+// This is testing for a case in Bug #792 that occurs when a group only has one
+// object in it.
+int testSelectionBug()
+{
+    QScopedPointer< SketchModel > model(TestCoreHelpers::getCubeModel());
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< WorldManager > world(new WorldManager(renderer));
+    SketchObject *o1 = new ModelInstance(model.data());
+    ObjectGroup *group = new ObjectGroup();
+    group->addObject(o1);
+    q_vec_type v1 = {400,-30,50};
+    o1->setPosition(v1);
+    world->addObject(group);
+    QScopedPointer< SketchObject > subject(new ModelInstance(model.data()));
+    subject->setPosition(v1);
+    double dist;
+    int errors = 0;
+    SketchObject *closest = world->getClosestObject(subject.data(),dist);
+    if (closest != group || dist > 0)
+    {
+        errors++;
+        cout << "Group with one object treated wrong in selection test." << endl;
+    }
+    return errors;
 }
