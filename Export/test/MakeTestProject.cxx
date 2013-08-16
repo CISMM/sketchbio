@@ -80,7 +80,7 @@ SketchObject *addObjectToProject(SketchProject *proj, int conformation)
     return obj;
 }
 
-void addCameraToProject(SketchProject *proj)
+SketchObject *addCameraToProject(SketchProject *proj)
 {
     int num = proj->getWorldManager()->getNumberOfObjects();
     q_vec_type pos1 = {3.14 - num,
@@ -89,7 +89,7 @@ void addCameraToProject(SketchProject *proj)
     q_vec_scale(pos1,sqrt(Q_PI) * num,pos1);
     q_type orient1;
     q_from_axis_angle(orient1,2.71,8.28,1.82,85 * num); // e
-    proj->addCamera(pos1,orient1);
+    return proj->addCamera(pos1,orient1);
 }
 
 SketchObject *addGroupToProject(SketchProject *proj, int numItemsInGroup)

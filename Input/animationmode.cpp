@@ -64,7 +64,7 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
         if (rDist < DISTANCE_THRESHOLD)
         {
             // toggle object visible
-            rObj->setIsVisible(!rObj->isVisible());
+            SketchObject::setIsVisibleRecursive(rObj,!rObj->isVisible());
             project->getWorldManager()->changedVisibility(rObj);
             addXMLUndoState();
         }

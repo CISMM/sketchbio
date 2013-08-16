@@ -16,7 +16,7 @@ SketchObject *addObjectToProject(SketchProject *proj, int conformation = 0);
 
 // adds a camera to the project (position/orientation based on current # of
 // objects).
-void addCameraToProject(SketchProject *proj);
+SketchObject *addCameraToProject(SketchProject *proj);
 
 // adds a group to the project with the given number of items...
 SketchObject *addGroupToProject(SketchProject *proj, int numItemsInGroup);

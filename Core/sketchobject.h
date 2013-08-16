@@ -185,7 +185,8 @@ public:
     void removeKeyframeForTime(double t);
     void setPositionByAnimationTime(double t);
     // visibility methods
-    virtual void setIsVisible(bool isVisible);
+    void setIsVisible(bool isVisible);
+    static void setIsVisibleRecursive(SketchObject *obj, bool isVisible);
     bool isVisible() const;
     // set/get active status (only has meaning on cameras)
     void setActive(bool isActive);

@@ -206,16 +206,6 @@ void ObjectGroup::localTransformUpdated()
 }
 
 //#########################################################################
-void ObjectGroup::setIsVisible(bool isVisible)
-{
-    SketchObject::setIsVisible(isVisible);
-    for (int i = 0; i < children.size(); i++)
-    {
-        children[i]->setIsVisible(isVisible);
-    }
-}
-
-//#########################################################################
 SketchObject *ObjectGroup::deepCopy()
 {
     ObjectGroup *nObj = new ObjectGroup();

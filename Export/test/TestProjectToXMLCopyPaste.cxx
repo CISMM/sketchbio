@@ -25,6 +25,7 @@
 
 #include "test/TestCoreHelpers.h"
 #include "CompareBeforeAndAfter.h"
+#include "MakeTestProject.h"
 
 int testSavePastedItem();
 int testPastedItemIsTheSame();
@@ -43,15 +44,8 @@ int testSavePastedItem()
     vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
     QScopedPointer<SketchProject> proj1(new SketchProject(r1));
     proj1->setProjectDir("test/test1");
-    QString filename = "models/1m1j.obj";
 
-    SketchModel *m1 = proj1->addModelFromFile(filename,filename,
-                                              3*sqrt(12.0),4*sqrt(13.0));
-    q_vec_type pos1 = {3.14,1.59,2.65}; // pi
-    q_vec_scale(pos1,sqrt(Q_PI),pos1);
-    q_type orient1;
-    q_from_axis_angle(orient1,2.71,8.28,1.82,85); // e
-    SketchObject *obj = proj1->addObject(m1,pos1,orient1);
+    SketchObject *obj = MakeTestProject::addObjectToProject(proj1.data());
 
     vtkSmartPointer< vtkXMLDataElement > copy =
             vtkSmartPointer< vtkXMLDataElement >::Take(
@@ -119,16 +113,20 @@ int testPastedGroupIsTheSame()
     proj1->addModel(m1);
     proj1->addModel(m2);
 
-    q_vec_type vec = {5, 0, 0};
-    SketchObject *obj1 = new ModelInstance(m1);
-    obj1->setPosition(vec);
-    SketchObject *obj2 = new ModelInstance(m2);
+    // This ensures that a wide variety of things will be tested including
+    // copy/paste of color maps, keyframes, ...
+    SketchObject *obj1 = MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addKeyframesToObject(obj1,4);
+    SketchObject *obj2 = MakeTestProject::addCameraToProject(proj1.data());
+    proj1->getWorldManager()->removeObject(obj1);
+    proj1->getWorldManager()->removeObject(obj2);
     SketchObject *obj3 = obj1->deepCopy();
     SketchObject *obj4 = obj2->deepCopy();
+
+    q_vec_type vec = {5, 0, 0};
+    obj1->setPosition(vec);
     vec[0] = -5;
     obj2->setPosition(vec);
-    obj2->setColorMapType(SketchObject::ColorMapType::DIM_SOLID_COLOR_GREEN);
-    obj2->setArrayToColorBy("xfcde");
 
     ObjectGroup *grp1 = new ObjectGroup();
     grp1->addObject(obj1);

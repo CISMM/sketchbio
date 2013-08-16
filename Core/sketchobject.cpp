@@ -685,6 +685,20 @@ void SketchObject::setIsVisible(bool isVisible)
 }
 
 //#########################################################################
+void SketchObject::setIsVisibleRecursive(SketchObject *obj, bool isVisible)
+{
+    obj->setIsVisible(isVisible);
+    QList< SketchObject * > *children = obj->getSubObjects();
+    if (children != NULL)
+    {
+        for (int i = 0; i < children->size(); i++)
+        {
+            setIsVisibleRecursive(children->at(i),isVisible);
+        }
+    }
+}
+
+//#########################################################################
 bool SketchObject::isVisible() const
 {
     return visible;
