@@ -349,8 +349,8 @@ int test4() {
 int testVTKSegfault()
 {
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> project(new SketchProject(renderer));
-    project->setProjectDir("test/testModels/replicatorTest");
+    QScopedPointer<SketchProject> project(
+                new SketchProject(renderer,"test/testModels/replicatorTest"));
 
     QString filename = "models/1m1j.obj";
 

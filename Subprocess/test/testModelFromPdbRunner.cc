@@ -48,7 +48,7 @@ TestModelFromPDB::TestModelFromPDB(QString pdb) :
     pdbId(pdb),
     runner(NULL),
     renderer(vtkSmartPointer< vtkRenderer >::New()),
-    proj(new SketchProject(renderer.GetPointer()))
+    proj(new SketchProject(renderer.GetPointer(),QDir::currentPath()))
 {
     proj->setProjectDir(QDir::currentPath());
 }

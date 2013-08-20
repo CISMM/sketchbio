@@ -162,8 +162,10 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
             emit newDirectionsString(" ");
         } else if (buttonNum == undo_button_idx()) {
             project->applyUndo();
+            activeMode->clearStatus();
         } else if (buttonNum == redo_button_idx()) {
             project->applyRedo();
+            activeMode->clearStatus();
         } else {
             activeMode->buttonPressed(buttonNum);
         } // TODO - change modes button
@@ -178,6 +180,11 @@ void HydraInputManager::setAnalogStates(const double state[]) {
         analogStatus[i] = state[i];
     }
     activeMode->analogsUpdated();
+}
+
+HydraInputMode *HydraInputManager::getActiveMode()
+{
+    return activeMode.data();
 }
 
 void HydraInputManager::setNewDirectionsString(QString str) {

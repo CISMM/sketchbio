@@ -27,6 +27,8 @@
 #include "CompareBeforeAndAfter.h"
 #include "MakeTestProject.h"
 
+#define TEST_DIR "test/test1"
+
 int testSavePastedItem();
 int testPastedItemIsTheSame();
 int testPastedGroupIsTheSame();
@@ -41,9 +43,10 @@ int main(int argc, char *argv[])
 int testSavePastedItem()
 {
     int retVal = 0;
-    vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
-    proj1->setProjectDir("test/test1");
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > proj1(
+                new SketchProject(r1,TEST_DIR));
 
     SketchObject *obj = MakeTestProject::addObjectToProject(proj1.data());
 
@@ -69,9 +72,10 @@ int testSavePastedItem()
 int testPastedItemIsTheSame()
 {
     int retVal = 0;
-    vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
-    proj1->setProjectDir("test/test1");
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > proj1(
+                new SketchProject(r1,TEST_DIR));
 
     SketchModel *m1 = TestCoreHelpers::getCubeModel();
     proj1->addModel(m1);
@@ -104,9 +108,10 @@ int testPastedItemIsTheSame()
 int testPastedGroupIsTheSame()
 {
     int retVal = 0;
-    vtkSmartPointer<vtkRenderer> r1 = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> proj1(new SketchProject(r1));
-    proj1->setProjectDir("test/test1");
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > proj1(
+                new SketchProject(r1,TEST_DIR));
 
     SketchModel *m1 = TestCoreHelpers::getCubeModel();
     SketchModel *m2 = TestCoreHelpers::getSphereModel();

@@ -56,7 +56,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     serverThread(new QThread(this)),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer())),
+    project(new SketchProject(renderer.GetPointer(), QDir::currentPath())),
     inputManager(new HydraInputManager(project))
 {
     this->ui = new Ui_SimpleView;
@@ -403,9 +403,8 @@ void SimpleView::loadProject() {
     delete project;
     // create new one
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
-    project = new SketchProject(renderer);
+    project = new SketchProject(renderer,dirPath);
     inputManager->setProject(project);
-    project->setProjectDir(dirPath);
     project->setCollisionTestsOn(this->ui->actionCollision_Tests_On->isChecked());
     project->setWorldSpringsEnabled(this->ui->actionWorld_Springs_On->isChecked());
     this->ui->actionPose_Mode_1->setChecked(true);

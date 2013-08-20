@@ -32,6 +32,9 @@ public:
     void setButtonState(int buttonNum, bool buttonPressed);
     void setAnalogStates(const double state[]);
 
+    // mostly for testing
+    HydraInputMode *getActiveMode();
+
 signals:
     void toggleWorldSpringsEnabled();
     void toggleWorldCollisionsEnabled();

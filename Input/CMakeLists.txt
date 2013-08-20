@@ -32,3 +32,5 @@ savedxmlundostate.h
 ${SketchBioInputMoc}
 )
 ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})
+
+ADD_SUBDIRECTORY( test )

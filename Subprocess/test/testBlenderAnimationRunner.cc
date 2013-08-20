@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
 
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj(new SketchProject(r));
-    proj->setProjectDir("projects/animation");
+    QScopedPointer< SketchProject > proj(
+                new SketchProject(r,"projects/animation"));
 
     vtkSmartPointer< vtkXMLDataElement > root =
             vtkSmartPointer< vtkXMLDataElement >::Take(

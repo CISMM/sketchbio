@@ -85,8 +85,8 @@ int testFileRefreshBug(const QDir &projectDir)
 {
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer<SketchProject> proj(new SketchProject(renderer));
-    proj->setProjectDir(projectDir.absolutePath());
+    QScopedPointer<SketchProject> proj(
+                new SketchProject(renderer,projectDir.absolutePath()));
     SketchModel *model = NULL;
 
     vtkSmartPointer< vtkSphereSource > sphere1 =
@@ -128,8 +128,8 @@ int testFileRefreshBug2(const QDir &projectDir)
 {
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer<SketchProject> proj(new SketchProject(renderer));
-    proj->setProjectDir(projectDir.absolutePath());
+    QScopedPointer<SketchProject> proj(
+                new SketchProject(renderer,projectDir.absolutePath()));
     SketchObject *object = NULL;
 
     vtkSmartPointer< vtkSphereSource > sphere1 =

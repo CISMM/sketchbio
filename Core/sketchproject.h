@@ -52,11 +52,11 @@ class UndoState;
 class SketchProject
 {
 public:
-    SketchProject(vtkRenderer *r);
+    SketchProject(vtkRenderer *r, const QString &projDir);
     ~SketchProject();
     // setters
     // sets the directory path for this project (should be an absolute path)
-    bool setProjectDir(QString dir);
+    bool setProjectDir(const QString &dir);
     // sets the left hand position/orientation
     void setLeftHandPos(q_xyz_quat_type *loc);
     // sets the right hand position/orientation

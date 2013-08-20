@@ -282,7 +282,7 @@ inline void makeTrackerShadow(SketchObject *hand, vtkActor *shadowActor,
 }
 
 #define OUTLINES_COLOR 0.7,0.7,0.7
-SketchProject::SketchProject(vtkRenderer *r) :
+SketchProject::SketchProject(vtkRenderer *r, const QString &projDir) :
     renderer(r),
     models(new ModelManager()),
     transforms(new TransformManager()),
@@ -333,6 +333,7 @@ SketchProject::SketchProject(vtkRenderer *r) :
     renderer->AddActor(shadowFloorActor);
     renderer->AddActor(leftShadowActor);
     renderer->AddActor(rightShadowActor);
+    setProjectDir(projDir);
 }
 
 SketchProject::~SketchProject() {
@@ -355,7 +356,7 @@ SketchProject::~SketchProject() {
     }
 }
 
-bool SketchProject::setProjectDir(QString dir) {
+bool SketchProject::setProjectDir(const QString &dir) {
     QDir tmp = QDir(dir);
     if (tmp.isRelative()) {
         QString abs = QDir::current().absoluteFilePath(dir);
