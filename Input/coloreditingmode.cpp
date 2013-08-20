@@ -34,12 +34,8 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
-        if (rDist < DISTANCE_THRESHOLD) {
+        if (rDist < DISTANCE_THRESHOLD && !rObj->getArrayToColorBy().isEmpty()) {
             SketchObject::ColorMapType::Type cmap = rObj->getColorMapType();
-            if (rObj->getArrayToColorBy().isEmpty())
-            {
-                return;
-            }
             switch (cmap)
             {
             case SketchObject::ColorMapType::SOLID_COLOR_RED:
