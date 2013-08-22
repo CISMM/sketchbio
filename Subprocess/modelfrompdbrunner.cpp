@@ -140,18 +140,20 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
                     model->getVTKSource(conformation);
             vtkSmartPointer< vtkDecimatePro > decimator =
                     vtkSmartPointer< vtkDecimatePro >::New();
+            QDir dir(project->getProjectDir());
             decimator->SetInputConnection(source->GetOutputPort());
-            int numTris = model->getCollisionModel(conformation)->num_tris;
+            int numTris = source->GetOutput()->GetNumberOfPolys();
             decimator->SetTargetReduction(std::max(0.0,1.0 - 5000.0/numTris));
             decimator->SetFeatureAngle(60.0);
             decimator->BoundaryVertexDeletionOn();
+            decimator->PreserveTopologyOn();
             decimator->Update();
             vtkSmartPointer< vtkThreshold > thresh =
                     vtkSmartPointer< vtkThreshold >::New();
             thresh->SetInputConnection(source->GetOutputPort());
             thresh->SetInputArrayToProcess(0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,
                                            "modelNum");
-            thresh->ThresholdByUpper(0.0);
+            thresh->ThresholdByLower(0.0);
             thresh->AllScalarsOn();
             thresh->Update();
             vtkSmartPointer< vtkGeometryFilter > convertToPolyData =
@@ -165,24 +167,23 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             appended->AddInputConnection(convertToPolyData->GetOutputPort());
             appended->Update();
             QString fname = ModelUtilities::createFileFromVTKSource(
-                        appended,sourceName + ".decimated.5000",
-                        QDir(project->getProjectDir()));
+                        appended,sourceName + ".decimated.5000",dir);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_5000,
                                                fname);
             decimator->SetTargetReduction(std::max(0.0,1.0 - 2000.0/numTris));
             decimator->Update();
+            appended->Update();
             fname = ModelUtilities::createFileFromVTKSource(
-                        appended,sourceName + ".decimated.2000",
-                        QDir(project->getProjectDir()));
+                        appended,sourceName + ".decimated.2000",dir);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_2000,
                                                fname);
             decimator->SetTargetReduction(std::max(0.0,1.0 - 1000.0/numTris));
             decimator->Update();
+            appended->Update();
             fname = ModelUtilities::createFileFromVTKSource(
-                        appended,sourceName + ".decimated.1000",
-                        QDir(project->getProjectDir()));
+                        appended,sourceName + ".decimated.1000",dir);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_1000,
                                                fname);
