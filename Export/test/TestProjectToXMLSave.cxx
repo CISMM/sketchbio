@@ -119,7 +119,10 @@ int testSave3()
     QScopedPointer< SketchProject > proj1(
                 new SketchProject(r1,SAVE_TEST_DIR));
 
-    MakeTestProject::addReplicationToProject(proj1.data(),12);
+    StructureReplicator *rep =
+            MakeTestProject::addReplicationToProject(proj1.data(),12);
+    // Bug840 - undo clears keyframes on the replication group, test this
+    MakeTestProject::addKeyframesToObject(rep->getReplicaGroup(),3);
 
     return saveLoadAndTest(proj1.data(),3);
 }
