@@ -136,6 +136,11 @@ int testSave4()
     MakeTestProject::addSpringToProject(proj1.data(),
                                         rep->getFirstObject(),
                                         rep->getSecondObject());
+    for (QListIterator< SketchObject *> itr(rep->getReplicaIterator());
+         itr.hasNext(); )
+    {
+        MakeTestProject::setColorMapForObject(itr.next());
+    }
 
     return saveLoadAndTest(proj1.data(),4);
 }
