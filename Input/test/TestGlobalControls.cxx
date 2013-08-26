@@ -13,11 +13,15 @@
 #include <sketchioconstants.h>
 #include <sketchtests.h>
 #include <sketchobject.h>
+#include <modelinstance.h>
+#include <objectgroup.h>
+#include <structurereplicator.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
 
 #include <hydrainputmode.h>
 #include <hydrainputmanager.h>
+#include <groupeditingmode.h>
 
 #include <test/TestCoreHelpers.h>
 
@@ -27,11 +31,13 @@
 //       back to the right state (which is determined by the position
 //       of an single object)
 int testUndoRedo();
+int testMultilevelGroupUndo();
 
 int main(int argc, char *argv[])
 {
     int errors = 0;
     errors += testUndoRedo();
+    errors += testMultilevelGroupUndo();
     return errors;
 }
 
@@ -114,5 +120,50 @@ int testUndoRedo()
     clickButton(manager.data(),BUTTON_LEFT(OBLONG_BUTTON_IDX));
     expected[0] = 3;
     errors += testPositionOfObject(project.data(),expected);
+    return errors;
+}
+
+inline void createMultiLevelGroup(SketchProject *proj,SketchModel *model)
+{
+    SketchObject *obj[4];
+    ObjectGroup *grpL1 = new ObjectGroup();
+    ObjectGroup *grp = new ObjectGroup();
+    grp->addObject(grpL1);
+    for (int i = 0; i < 4; i++)
+    {
+        obj[i] = new ModelInstance(model,0);
+        q_vec_type pos = { i + 1.0 , 0 , 0 };
+        obj[i]->setPosition(pos);
+    }
+    grpL1->addObject(obj[2]);
+    grpL1->addObject(obj[3]);
+    StructureReplicator *rep = proj->addReplication(obj[1],obj[0],3);
+    grp->addObject(rep->getReplicaGroup());
+    proj->addObject(grp);
+}
+
+// This test is testing the recurrance of Bug841, a segfault in undo/redo when
+// multi-level groups are present, potentially a double free issue
+int testMultilevelGroupUndo()
+{
+    cout << "Double free test" << endl;
+    int errors = 0;
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > project(
+                new SketchProject(renderer,QDir::currentPath()));
+    QScopedPointer< HydraInputManager > manager(
+                new HydraInputManager(project.data()));
+    // As long as we don't have the vrpn server running, this should be fine
+    // and we should be able to test things as if vrpn devices were not initialized
+    SketchModel *model = TestCoreHelpers::getCubeModel();
+    project->addModel(model);
+    // create a group with a replica group as a subgroup
+    createMultiLevelGroup(project.data(),model);
+    // create some undo states
+    createState(manager.data(),project.data(),1);
+    createState(manager.data(),project.data(),0);
+    // call undo and segfault
+    clickButton(manager.data(),BUTTON_RIGHT(OBLONG_BUTTON_IDX));
     return errors;
 }
