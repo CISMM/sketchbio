@@ -1278,6 +1278,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(SketchProject *p
                 delete grp;
                 StructureReplicator *rep =
                         proj->addReplication(first,second,numReplicas);
+                proj->getWorldManager()->removeObject(rep->getReplicaGroup());
                 parentGrp->addObject(rep->getReplicaGroup());
             }
             // Eventually if there is special data about each replica, read it in here and apply it

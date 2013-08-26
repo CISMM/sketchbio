@@ -138,6 +138,7 @@ inline void createMultiLevelGroup(SketchProject *proj,SketchModel *model)
     grpL1->addObject(obj[2]);
     grpL1->addObject(obj[3]);
     StructureReplicator *rep = proj->addReplication(obj[1],obj[0],3);
+    proj->getWorldManager()->removeObject(rep->getReplicaGroup());
     grp->addObject(rep->getReplicaGroup());
     proj->addObject(grp);
 }
@@ -164,6 +165,8 @@ int testMultilevelGroupUndo()
     createState(manager.data(),project.data(),1);
     createState(manager.data(),project.data(),0);
     // call undo and segfault
+    clickButton(manager.data(),BUTTON_RIGHT(OBLONG_BUTTON_IDX));
+    clickButton(manager.data(),BUTTON_LEFT(OBLONG_BUTTON_IDX));
     clickButton(manager.data(),BUTTON_RIGHT(OBLONG_BUTTON_IDX));
     return errors;
 }
