@@ -25,9 +25,9 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     obj2(object2),
     replicas(new ObjectGroup()),
     replicaList(),
-    world(w)
+    world(w),
+    transform(vtkSmartPointer< vtkTransform >::New())
 {
-    transform = vtkSmartPointer<vtkTransform>::New();
     transform->Identity();
     transform->PostMultiply();
     transform->Concatenate(obj1->getInverseLocalTransform());
@@ -57,6 +57,58 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     obj1->addObserver(this);
     obj2->addObserver(this);
     transform->Update();
+}
+
+StructureReplicator::StructureReplicator(
+        SketchObject *object1, SketchObject *object2, WorldManager *w,
+        ObjectGroup *grp, QList<SketchObject *> &replicaLst)
+    :
+      numShown(replicaLst.size()),
+      obj1(object1),
+      obj2(object2),
+      replicas(grp),
+      replicaList(),
+      world(w),
+      transform(vtkSmartPointer< vtkTransform >::New())
+{
+    transform->Identity();
+    transform->PostMultiply();
+    transform->Concatenate(obj1->getInverseLocalTransform());
+    transform->Concatenate(obj2->getLocalTransform());
+    transform->Update();
+
+    SketchObject *previous = obj2;
+    for (QList< SketchObject * >::iterator it = replicaLst.begin();
+         it != replicaLst.end(); ++it)
+    {
+        SketchObject *next = *it;
+        if (next->getParent() != replicas)
+        {
+            ObjectGroup *grp = dynamic_cast< ObjectGroup * >(next->getParent());
+            if (grp != NULL)
+            {
+                grp->removeObject(next);
+            }
+            else
+            {
+                world->removeObject(next);
+            }
+            replicas->addObject(next);
+        }
+        vtkTransform *lTrans = next->getLocalTransform();
+        lTrans->Identity();
+        lTrans->PostMultiply();
+        lTrans->Concatenate(previous->getLocalTransform());
+        lTrans->Concatenate(transform);
+        lTrans->Update();
+        next->setLocalTransformPrecomputed(true);
+        next->setPropagateForceToParent(true);
+        previous = next;
+        replicaList.append(next);
+    }
+    obj1->addObserver(this);
+    obj2->addObserver(this);
+    replicas->addObserver(this);
 }
 
 StructureReplicator::~StructureReplicator() {

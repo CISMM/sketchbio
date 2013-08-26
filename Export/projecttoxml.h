@@ -66,9 +66,9 @@ private: // no other code should call these (this is the reason for making this 
     static vtkXMLDataElement *objectToXML(const SketchObject *object, const QHash<const SketchModel *, QString> &modelIds,
                                           QHash<const SketchObject *, QString> &objectIds, const QString &id);
 
-    static vtkXMLDataElement *replicatorListToXML(const QList<StructureReplicator *> *replicaList,
-                                                  const QHash<const SketchModel *, QString> &modelIds,
-                                                  QHash<const SketchObject *, QString> &objectIds);
+    static vtkXMLDataElement *replicatorListToXML(
+            const QList<StructureReplicator *> *replicaList,
+            QHash<const SketchObject *, QString> &objectIds);
 
     static vtkXMLDataElement *springListToXML(const WorldManager *world,
                                               const QHash<const SketchObject *, QString> &objectIds);

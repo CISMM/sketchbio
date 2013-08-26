@@ -536,7 +536,7 @@ void compareReplicationLists(const QList< StructureReplicator * > &list1,
             if (!used.data()[i])
             {
                 int diffs = 0;
-                compareReplications(n1,n2,diffs,false);
+                compareReplications(n1,n2,diffs,printDiffs);
                 if (diffs == 0)
                 {
                     used.data()[i] = true;

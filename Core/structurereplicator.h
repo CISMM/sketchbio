@@ -21,11 +21,26 @@ class StructureReplicator : public ObjectChangeObserver
 {
 public:
     /*
-     * Creates a new StructureRenderer with the given two actors as a baseline, the given
-     * mapper containing the model to use on the newly created actors, and the given renderer
-     * as the renderer to register the copies with.
+     * Creates a new StructureRenderer with the given two actors as a baseline, adding
+     * the copies the the world manager passed to the constructor
      */
     StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w);
+
+    /*
+     * Creates a new StructureReplicator with the given base objects, adding the copies
+     * to the given group and initializing the list of copies with the given list,
+     * which is assumed to be in order starting closest to the base object.
+     *
+     * This constructor will set the localTransforms of the objects in the list
+     * to be based on the first two objects, and add them to the given group if
+     * they are not already among its members.
+     *
+     * Note that unlike the other constructor, this one does not add the group to
+     * the world manager.
+     */
+    StructureReplicator(SketchObject *object1, SketchObject *object2,
+                        WorldManager *w, ObjectGroup *grp,
+                        QList< SketchObject * > &replicas);
 
     virtual ~StructureReplicator();
 

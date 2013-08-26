@@ -761,6 +761,11 @@ StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObjec
     return rep;
 }
 
+void SketchProject::addReplication(StructureReplicator *rep)
+{
+    replicas.append(rep);
+}
+
 QWeakPointer<TransformEquals> SketchProject::addTransformEquals(SketchObject *o1, SketchObject *o2) {
     QSharedPointer<TransformEquals> trans(new TransformEquals(o1,o2,world.data()));
     transformOps.append(trans);

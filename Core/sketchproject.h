@@ -172,6 +172,7 @@ public:
     SpringConnection *addSpring(SpringConnection *spring);
     // for structure replication chains
     StructureReplicator *addReplication(SketchObject *o1, SketchObject *o2, int numCopies);
+    void addReplication(StructureReplicator *rep);
     // for transform equals
     QWeakPointer<TransformEquals> addTransformEquals(SketchObject *o1, SketchObject *o2);
 private:
