@@ -1483,26 +1483,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(
             StructureReplicator *rep = new StructureReplicator(
                         first,second,proj->getWorldManager(),grp,repList);
             proj->addReplication(rep);
-            /*
-            SketchObject *parent = grp->getParent();
-            ObjectGroup *parentGrp = dynamic_cast<ObjectGroup *>(parent);
-            grp->removeObject(first);
-            grp->removeObject(second);
-            if (parentGrp == NULL)
-            {
-                proj->getWorldManager()->deleteObject(grp);
-                proj->addReplication(first,second,numReplicas);
-            }
-            else
-            {
-                parentGrp->removeObject(grp);
-                delete grp;
-                StructureReplicator *rep =
-                        proj->addReplication(first,second,numReplicas);
-                proj->getWorldManager()->removeObject(rep->getReplicaGroup());
-                parentGrp->addObject(rep->getReplicaGroup());
-            }
-            */
         }
     }
     return XML_TO_DATA_SUCCESS;
