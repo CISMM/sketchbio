@@ -110,10 +110,6 @@ void HydraInputManager::setProject(SketchProject *proj) {
     project = proj;
     for (int i = 0; i < modeList.size(); i++)
         modeList[i]->setProject(proj);
-    if (project->getLastUndoState() == NULL)
-    {
-        activeMode->addXMLUndoState();
-    }
 }
 
 void HydraInputManager::handleCurrentInput() {
@@ -185,6 +181,11 @@ void HydraInputManager::setAnalogStates(const double state[]) {
 HydraInputMode *HydraInputManager::getActiveMode()
 {
     return activeMode.data();
+}
+
+void HydraInputManager::addUndoState()
+{
+    activeMode->addXMLUndoState();
 }
 
 void HydraInputManager::setNewDirectionsString(QString str) {

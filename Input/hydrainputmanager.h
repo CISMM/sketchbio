@@ -35,6 +35,12 @@ public:
     // mostly for testing
     HydraInputMode *getActiveMode();
 
+public slots:
+    // This slot adds an undo state to the project.  An undo
+    // state is a saved state that can be gotten back to by
+    // pressing undo
+    void addUndoState();
+
 signals:
     void toggleWorldSpringsEnabled();
     void toggleWorldCollisionsEnabled();

@@ -93,7 +93,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
                     );
         ProjectToXML::xmlToProject(project,root);
         project->setViewTime(0.0);
-        inputManager->setProject(project);
     }
     else if (load_example)
     {
@@ -124,6 +123,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         q_from_axis_angle(orientation,1,0,0,0);
         project->addCamera(position,orientation);
     }
+    inputManager->addUndoState();
 
     // VTK/Qt wedded
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(dummyRenderer);
@@ -405,6 +405,7 @@ void SimpleView::loadProject() {
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
     project = new SketchProject(renderer,dirPath);
     inputManager->setProject(project);
+    inputManager->addUndoState();
     project->setCollisionTestsOn(this->ui->actionCollision_Tests_On->isChecked());
     project->setWorldSpringsEnabled(this->ui->actionWorld_Springs_On->isChecked());
     this->ui->actionPose_Mode_1->setChecked(true);
@@ -489,7 +490,7 @@ void SimpleView::importPDBId()
             }
             else
             {
-                runSubprocessAndFreezeGUI(objMaker);
+                runSubprocessAndFreezeGUI(objMaker,true);
             }
         }
     }
@@ -516,7 +517,16 @@ void SimpleView::exportBlenderAnimation() {
     }
 }
 
-void SimpleView::runSubprocessAndFreezeGUI(SubprocessRunner *runner)
+void SimpleView::addUndoStateIfSuccess(bool success)
+{
+    if (success)
+    {
+        inputManager->addUndoState();
+    }
+}
+
+void SimpleView::runSubprocessAndFreezeGUI(SubprocessRunner *runner,
+                                           bool needsUndoState)
 {
     if (runner == NULL)
         return;
@@ -529,6 +539,10 @@ void SimpleView::runSubprocessAndFreezeGUI(SubprocessRunner *runner)
     connect(dialog, SIGNAL(canceled()), runner, SLOT(cancel()));
     connect(dialog, SIGNAL(canceled()), timer, SLOT(start()));
     connect(dialog, SIGNAL(canceled()), dialog, SLOT(reset()));
+    if (needsUndoState)
+    {
+        connect(runner, SIGNAL(finished(bool)), this, SLOT(addUndoStateIfSuccess(bool)));
+    }
     dialog->open();
     runner->start();
 }

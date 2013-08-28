@@ -100,11 +100,13 @@ public slots:
 protected:
  
 protected slots:
+  void addUndoStateIfSuccess(bool success);
  
 private:
 
   // Methods
-  void runSubprocessAndFreezeGUI(SubprocessRunner *runner);
+  void runSubprocessAndFreezeGUI(SubprocessRunner *runner,
+                                 bool needsUndoState = false);
 
   // Fields
   Ui_SimpleView *ui;
