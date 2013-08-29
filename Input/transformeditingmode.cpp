@@ -3,6 +3,7 @@
 #include <limits>
 
 #include <vtkMatrix4x4.h>
+#include <vtkPolyDataAlgorithm.h>
 
 #include <sketchioconstants.h>
 #include <sketchtests.h>
@@ -63,8 +64,10 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
             q_vec_type pos;
             double bb[6];
             obj->getPosition(pos);
-            obj->getBoundingBox(bb);
-            pos[Q_Y] += (bb[3] - bb[2]) * 1.5;
+            obj->getOrientedBoundingBoxes()->GetOutput()->GetBounds(bb);
+            double difference;
+            difference = bb[3] - bb[2];
+            pos[Q_Y] += difference;
             SketchObject *nObj = obj->deepCopy();
             nObj->setPosition(pos);
             project->addObject(nObj);
