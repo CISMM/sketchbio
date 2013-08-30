@@ -6,6 +6,7 @@
 #include <sketchtests.h>
 #include <keyframe.h>
 #include <sketchobject.h>
+#include <transformmanager.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
 
@@ -29,17 +30,14 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
         return;
     }
     ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
-    if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
-    {
-        emit newDirectionsString("Move to an object and release to toggle object visibility.");
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+
+    if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
         emit newDirectionsString("Move to an object and release to add or remove a keyframe\nfor the current location and time.");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
-        emit newDirectionsString("Release to toggle whether invisible objects are shown.");
+        emit newDirectionsString("Release the button to add a camera.");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
     {
@@ -59,18 +57,7 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
         return;
     }
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
-    if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
-    {
-        if (rDist < DISTANCE_THRESHOLD)
-        {
-            // toggle object visible
-            SketchObject::setIsVisibleRecursive(rObj,!rObj->isVisible());
-            project->getWorldManager()->changedVisibility(rObj);
-            addXMLUndoState();
-        }
-        emit newDirectionsString(" ");
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
         if (rDist < DISTANCE_THRESHOLD)
         {
@@ -107,12 +94,13 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
-        // toggle invisible objects shown
-        WorldManager *world = project->getWorldManager();
-        if (world->isShowingInvisible())
-            world->hideInvisibleObjects();
-        else
-            world->showInvisibleObjects();
+        TransformManager *transforms = project->getTransformManager();
+        q_vec_type pos;
+        q_type orient;
+        transforms->getRightTrackerPosInWorldCoords(pos);
+        transforms->getRightTrackerOrientInWorldCoords(orient);
+        project->addCamera(pos,orient);
+        addXMLUndoState();
         emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))

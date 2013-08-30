@@ -2,6 +2,8 @@
 
 #include <limits>
 
+#include <vtkSmartPointer.h>
+#include <vtkTransform.h>
 #include <vtkMatrix4x4.h>
 #include <vtkPolyDataAlgorithm.h>
 
@@ -14,10 +16,8 @@
 #include <worldmanager.h>
 #include <structurereplicator.h>
 
+#include "TransformInputDialog.h"
 
-inline int camera_add_button_idx() {
-    return BUTTON_RIGHT(THREE_BUTTON_IDX);
-}
 inline int transform_equals_add_button_idx() {
     return BUTTON_RIGHT(TWO_BUTTON_IDX);
 }
@@ -32,7 +32,7 @@ inline int delete_object_button() {
 #define NO_OPERATION                    0
 #define DELETE_OBJECT_PENDING           1
 #define REPLICATE_OBJECT_PENDING        2
-#define ADD_SPRING_PENDING              3
+#define SET_TRANFORM_PENDING            3
 #define ADD_TRANSFORM_EQUALS_PENDING    4
 
 TransformEditingMode::TransformEditingMode(SketchProject *proj, const bool *b, const double *a) :
@@ -79,9 +79,19 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
             emit newDirectionsString("Pull the trigger to set the number of replicas to add,\nthen release the button.");
         }
     }
-    else if (vrpn_ButtonNum == camera_add_button_idx())
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
-        emit newDirectionsString("Release the button to add a camera.");
+        if (operationState == NO_OPERATION)
+        {
+            operationState = SET_TRANFORM_PENDING;
+            emit newDirectionsString("Select the object to use as the base of the\n"
+                                     "coordinate system and release the button.");
+        }
+        else if (operationState == SET_TRANFORM_PENDING)
+        {
+            emit newDirectionsString("Select the object to define the transformation\n"
+                                     "to and release the button.");
+        }
     }
     else if (vrpn_ButtonNum == transform_equals_add_button_idx())
     {
@@ -136,17 +146,56 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
         addXMLUndoState();
         emit newDirectionsString(" ");
     }
-    else if (vrpn_ButtonNum == camera_add_button_idx())
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
-        TransformManager *transforms = project->getTransformManager();
-        q_vec_type pos;
-        q_type orient;
-        transforms->getRightTrackerPosInWorldCoords(pos);
-        transforms->getRightTrackerOrientInWorldCoords(orient);
-        project->addCamera(pos,orient);
-        addXMLUndoState();
-        emit newDirectionsString(" ");
-    } else if (vrpn_ButtonNum == transform_equals_add_button_idx()
+        if (operationState == SET_TRANFORM_PENDING)
+        {
+            if (objectsSelected.empty())
+            {
+                if (rDist < DISTANCE_THRESHOLD)
+                {
+                    objectsSelected.append(rObj);
+                    emit newDirectionsString("Press to select the object to define relative\n"
+                                             "to the selected object.");
+                }
+                else
+                {
+                    operationState = NO_OPERATION;
+                }
+            }
+            else
+            {
+                if (rDist < DISTANCE_THRESHOLD)
+                {
+                    objectsSelected.append(rObj);
+                    vtkSmartPointer< vtkTransform > transform =
+                            vtkSmartPointer< vtkTransform >::New();
+                    transform->Identity();
+                    transform->PostMultiply();
+                    transform->Concatenate(objectsSelected[0]->getInverseLocalTransform());
+                    transform->Concatenate(objectsSelected[1]->getLocalTransform());
+                    transform->Update();
+                    TransformInputDialog *dialog = new TransformInputDialog(
+                                "Set Transformation from First to Second");
+                    dialog->setTranslation(transform->GetPosition());
+                    dialog->setRotation(transform->GetOrientation());
+                    connect(dialog,SIGNAL(
+                                transformAquired(double,double,double,
+                                                 double,double,double)),
+                            this,SLOT(
+                                setTransformBetweenActiveObjects(
+                                    double,double,double,double,double,double)));
+                    connect(dialog,SIGNAL(rejected()),this,SLOT(cancelSetTransforms()));
+                    dialog->exec();
+                    delete dialog;
+                    // TODO - actually set the transforms
+                }
+                objectsSelected.clear();
+                operationState = NO_OPERATION;
+            }
+        }
+    }
+    else if (vrpn_ButtonNum == transform_equals_add_button_idx()
                && operationState == ADD_TRANSFORM_EQUALS_PENDING) {
         SketchObject *obj = NULL;
         obj = rObj;
@@ -193,3 +242,32 @@ void TransformEditingMode::clearStatus()
     operationState = NO_OPERATION;
 }
 
+void TransformEditingMode::setTransformBetweenActiveObjects(
+        double translateX, double translateY, double translateZ,
+        double rotateX, double rotateY, double rotateZ)
+{
+    if (operationState != SET_TRANFORM_PENDING ||
+            objectsSelected.size() != 2)
+    {
+        return;
+    }
+    vtkSmartPointer< vtkTransform > transform =
+            vtkSmartPointer< vtkTransform >::New();
+    transform->Identity();
+    transform->Translate(translateX,translateY,translateZ);
+    transform->RotateZ(rotateZ);
+    transform->RotateX(rotateX);
+    transform->RotateY(rotateY);
+    transform->Concatenate(objectsSelected[0]->getLocalTransform());
+    q_vec_type pos;
+    q_type orient;
+    transform->GetPosition(pos);
+    double wxyz[4];
+    transform->GetOrientationWXYZ(wxyz);
+    q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
+    objectsSelected[1]->setPosAndOrient(pos,orient);
+}
+
+void TransformEditingMode::cancelSetTransforms()
+{
+}

@@ -22,6 +22,11 @@ public:
     // this will be called from within setProject after the new project is set
     // it should refresh the status and delete all references to the old project
     virtual void clearStatus();
+private slots:
+    void setTransformBetweenActiveObjects(double translateX, double translateY,
+                                          double translateZ, double rotateX,
+                                          double rotateY, double rotateZ);
+    void cancelSetTransforms();
 private:
 
     int operationState;

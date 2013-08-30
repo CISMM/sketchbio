@@ -14,6 +14,7 @@ groupeditingmode.h
 transformeditingmode.h
 springeditingmode.h
 animationmode.h
+TransformInputDialog.h
 )
 SOURCE_GROUP("Generated" FILES ${SketchBioInputMoc})
 
@@ -27,6 +28,7 @@ groupeditingmode.cpp  # h file used by Moc, no need to include here
 transformeditingmode.cpp  # h file used by Moc, no need to include here
 springeditingmode.cpp  # h file used by Moc, no need to include here
 animationmode.cpp  # h file used by Moc, no need to include here
+TransformInputDialog.cpp  # h file used by Moc, no need to include here
 savedxmlundostate.cpp
 savedxmlundostate.h
 ${SketchBioInputMoc}

@@ -2,6 +2,7 @@
 
 #include <sketchioconstants.h>
 #include <sketchobject.h>
+#include <worldmanager.h>
 #include <sketchproject.h>
 
 ColorEditingMode::ColorEditingMode(SketchProject *proj, const bool * const b,
@@ -26,6 +27,15 @@ void ColorEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
         emit newDirectionsString("Move to the object and release to change\n"
                                  " the variable the object is colored by.");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
+    {
+        emit newDirectionsString("Move to an object and release to toggle "
+                                 "object visibility.");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        emit newDirectionsString("Release to toggle whether invisible objects are shown.");
     }
 }
 
@@ -83,6 +93,27 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
             rObj->setArrayToColorBy(arr);
             addXMLUndoState();
         }
+        emit newDirectionsString(" ");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
+    {
+        if (rDist < DISTANCE_THRESHOLD)
+        {
+            // toggle object visible
+            SketchObject::setIsVisibleRecursive(rObj,!rObj->isVisible());
+            project->getWorldManager()->changedVisibility(rObj);
+            addXMLUndoState();
+        }
+        emit newDirectionsString(" ");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        // toggle invisible objects shown
+        WorldManager *world = project->getWorldManager();
+        if (world->isShowingInvisible())
+            world->hideInvisibleObjects();
+        else
+            world->showInvisibleObjects();
         emit newDirectionsString(" ");
     }
 }
