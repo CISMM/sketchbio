@@ -159,7 +159,7 @@ void addKeyframesToObject(SketchObject *obj, int numKeyframes)
     obj->getOrientation(orient);
     for (int i = 0; i < numKeyframes; i++)
     {
-        double time = (double)i * sqrt(27);
+		double time = (double)i * std::sqrt(27.0);
         setObjectPosAndOrient(obj,numKeyframes * i + 37);
         obj->addKeyframeForCurrentLocation(time);
     }
