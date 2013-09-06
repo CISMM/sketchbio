@@ -309,7 +309,7 @@ QString createFileFromVTKSource(vtkPolyDataAlgorithm *algorithm, const QString &
 
 QString createSourceNameFor(const QString &pdbId, const QString &chainsLeftOut)
 {
-    QString src = "PDB:" + pdbId;
+    QString src = "PDB-" + pdbId;
     if (!chainsLeftOut.trimmed().isEmpty())
         src = src + "-" + chainsLeftOut;
     return src;

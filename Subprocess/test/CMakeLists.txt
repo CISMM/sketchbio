@@ -31,6 +31,9 @@ endmacro (make_subprocess_test)
 FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
 )
+FILE(COPY ${CMAKE_SOURCE_DIR}/models/4fun.pdb
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
+)
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/project.xml
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/projects/animation
 )
@@ -46,6 +49,7 @@ FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/1qkr-a_isosurface.vtk
 
 SOURCE_GROUP("Resources" FILES
     ${CMAKE_SOURCE_DIR}/models/1m1j.obj
+    ${CMAKE_SOURCE_DIR}/models/4fun.pdb
 )
 
 FILE(COPY ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK/__init__.py

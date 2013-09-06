@@ -483,7 +483,7 @@ void SimpleView::importPDBId()
         {
 
             printf("Importing %s from PDB\n", text.toStdString().c_str());
-            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDB(project,text,toDelete);
+            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDBId(project,text,toDelete);
             if (objMaker == NULL)
             {
                 QMessageBox::warning(NULL, "Could not run subprocess to import molecule ", text);
@@ -494,6 +494,48 @@ void SimpleView::importPDBId()
             }
         }
     }
+}
+
+void SimpleView::openPDBFile()
+{
+    // Ask the user for the name of the file to open.
+    QString fn = QFileDialog::getOpenFileName(this,
+                                              tr("Open local PDB file"),
+                                              project->getProjectDir(),
+                                              tr("PDB Files (*.pdb)"));
+    if (fn.length() == 0 || !QFile(fn).exists())
+    {
+        return;
+    }
+    bool ok;
+    QString toDelete = QInputDialog::getText(this,tr("Specify chains to delete (if any)"),
+                                             tr("Unneeded Chain IDS:"), QLineEdit::Normal,
+                                             "", &ok);
+    if (!ok)
+    {
+        return;
+    }
+    if (project->getModelManager()->hasModel(fn))
+    {
+        SketchModel *model = project->getModelManager()->getModel(fn);
+        q_vec_type pos = Q_NULL_VECTOR;
+        q_type orient = Q_ID_QUAT;
+        project->addObject(model,pos,orient);
+    }
+    else
+    {
+        printf("Importing %s\n", fn.toStdString().c_str());
+        SubprocessRunner *objMaker = SubprocessUtils::loadFromPDBFile(project,fn,toDelete);
+        if (objMaker == NULL)
+        {
+            QMessageBox::warning(NULL,"Could not run subprocess to import molecule ", fn);
+        }
+        else
+        {
+            runSubprocessAndFreezeGUI(objMaker,true);
+        }
+    }
+
 }
 
 void SimpleView::exportBlenderAnimation() {

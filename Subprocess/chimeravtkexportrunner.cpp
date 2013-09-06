@@ -12,6 +12,7 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QStri
                                  const QString &chainsToDelete, QObject *parent) :
     AbstractSingleProcessRunner(parent),
     cmdFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
+    resultFile(vtkFile),
     valid(true)
 {
     if (!cmdFile->open())
@@ -38,8 +39,13 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QStri
             }
         }
         // TODO - change resolution/export multiple resolutions ?
-        line = "runCommand(\"sym #0 surfaces all resolution %1\")\n";
+        cmdFile->write("from Midas import MidasError\n");
+        cmdFile->write("try:\n");
+        line = "\trunCommand(\"sym #0 surfaces all resolution %1\")\n";
         cmdFile->write(line.arg(threshold).toStdString().c_str());
+        cmdFile->write("except MidasError:\n");
+        cmdFile->write("\tprint \"Failed to create Multiscale surface...\"\n");
+        cmdFile->write("\trunCommand(\"surf\")\n");
         cmdFile->write("import sys\n");
         line = "sys.path.insert(0,'%1')\n";
         line = line.arg(SubprocessUtils::getChimeraVTKExtensionDir());
@@ -83,4 +89,14 @@ void ChimeraVTKExportRunner::start()
         emit statusChanged("Creating surface with UCSF Chimera...");
         qDebug() << "Chimera Started";
     }
+}
+
+bool ChimeraVTKExportRunner::didProcessSucceed(QString output)
+{
+    if (output.contains("Failed to create Multiscale surface..."))
+    {
+        qDebug() << "Warning: using full Connoly surface since reduced resolution"
+                    " surfacing failed.";
+    }
+    return QFile(resultFile).exists();
 }

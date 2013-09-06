@@ -193,10 +193,24 @@ SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles)
     return runner;
 }
 
-SubprocessRunner *loadFromPDB(SketchProject *proj, const QString &pdb,
-                              const QString &chainsToDelete)
+SubprocessRunner *loadFromPDBId(SketchProject *proj, const QString &pdb,
+                                const QString &chainsToDelete)
 {
     ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdb,chainsToDelete);
+    if (!runner->isValid())
+    {
+        delete runner;
+        return NULL;
+    }
+    return runner;
+}
+
+SubprocessRunner *loadFromPDBFile(SketchProject *proj, const QString &pdbfilename,
+                                  const QString &chainsToDelete)
+{
+    QString prefix = pdbfilename.mid(pdbfilename.lastIndexOf("/")+1);
+    ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdbfilename,
+                                                        prefix,chainsToDelete);
     if (!runner->isValid())
     {
         delete runner;

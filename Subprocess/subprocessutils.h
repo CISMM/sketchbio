@@ -91,8 +91,20 @@ SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *loadFromPDB(SketchProject *proj, const QString &pdb,
-                              const QString &chainsToDelete);
+SubprocessRunner *loadFromPDBId(SketchProject *proj, const QString &pdb,
+                                const QString &chainsToDelete);
+/*
+ * This method returns a valid SubprocessRunner to run various subprocesses to
+ * create a model and object from a PDB id or NULL.  There is no need to check
+ * if the returned object is valid, simply check for NULL.  Then connect it
+ * to the signals/slots and call start().
+ *
+ * Note: chainsToDelete - the ids (letters) of chains to delete before surfacing
+ *
+ * For detailed usage information, see subprocessrunner.h
+ */
+SubprocessRunner *loadFromPDBFile(SketchProject *proj, const QString &pdbfilename,
+                                  const QString &chainsToDelete);
 }
 
 #endif // SUBPROCESSUTILS_H

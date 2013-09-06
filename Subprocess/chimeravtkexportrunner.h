@@ -30,11 +30,15 @@ public:
     // starts the subprocess
     virtual void start();
 
+    // checks if the subprocess succeeded
+    virtual bool didProcessSucceed(QString output);
+
 
 private:
 
     // fields
     QTemporaryFile *cmdFile;
+    QString resultFile;
     bool valid;
 };
 

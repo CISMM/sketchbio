@@ -53,9 +53,15 @@ public slots:
   void openOBJFile();
 
   // Throw a dialog box to type in the name of a PDB ID to import
-  // Run an external pymol script to download and surface the model
-  // Put the resulting model in the models/ directory.
+  // and the chains to remove
+  // Run an external Chimera script to download and surface the model
+  // Put the resulting model in the project directory.
   void importPDBId();
+  // Use a file dialog to select a local PDB file to open and import
+  // Also gives a dialog for the chains to remove
+  // as a model.  Runs an external Chimera script to surface the model
+  // and puts the result in the project folder
+  void openPDBFile();
 
   // Export an animation to blender
   // currently writes the test file so I can see if it is correct

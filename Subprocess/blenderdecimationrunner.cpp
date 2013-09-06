@@ -150,7 +150,7 @@ bool BlenderDecimationRunner::isValid()
     return valid;
 }
 
-bool BlenderDecimationRunner::didProcessSucceed()
+bool BlenderDecimationRunner::didProcessSucceed(QString output)
 {
     QByteArray result = process->readAll();
 

@@ -3,6 +3,8 @@
 
 #include "subprocessrunner.h"
 
+#include <QString>
+
 class QProcess;
 
 class AbstractSingleProcessRunner : public SubprocessRunner
@@ -24,7 +26,7 @@ protected:
     // Override to test for success after the process finishes.
     // default returns true indicating that it found success.
     // This is guaranteed to be called after process finished.
-    virtual bool didProcessSucceed();
+    virtual bool didProcessSucceed(QString output);
 
 protected:
     // the process - should be started in overridden start method

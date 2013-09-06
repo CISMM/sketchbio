@@ -19,7 +19,8 @@ using std::endl;
 
 #include "testqt.h"
 
-#define FILENAME (QDir::tempPath() + "/1m1j.vtk")
+#define PDBID   "1atn"
+#define FILENAME (QDir::tempPath() + "/1atn.vtk")
 
 class ChimeraTest : public Test
 {
@@ -48,7 +49,7 @@ void ChimeraTest::setUp()
     QFile f(FILENAME);
     if (f.exists())
         f.remove();
-    runner = SubprocessUtils::makeChimeraSurfaceFor("1m1j",FILENAME,thresh,toDelete);
+    runner = SubprocessUtils::makeChimeraSurfaceFor(PDBID,FILENAME,thresh,toDelete);
 }
 
 int ChimeraTest::testResults()

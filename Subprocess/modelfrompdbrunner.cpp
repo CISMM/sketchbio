@@ -29,11 +29,29 @@ ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
     SubprocessRunner(parent),
     pdbId(pdb.toLower()),
     chainsToDelete(toDelete),
+    modelFilePrefix(ModelUtilities::createSourceNameFor(pdb,toDelete)),
     project(proj),
     model(NULL),
     conformation(-1),
     currentRunner(NULL),
-    stepNum(0)
+    stepNum(0),
+    importFromLocalFile(false)
+{
+}
+
+ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &filename,
+                                       const QString &modelFilePre,
+                                       const QString &toDelete, QObject *parent) :
+    SubprocessRunner(parent),
+    pdbId(filename),
+    chainsToDelete(toDelete),
+    modelFilePrefix(modelFilePre),
+    project(proj),
+    model(NULL),
+    conformation(-1),
+    currentRunner(NULL),
+    stepNum(0),
+    importFromLocalFile(true)
 {
 }
 
@@ -43,8 +61,7 @@ ModelFromPDBRunner::~ModelFromPDBRunner()
 
 void ModelFromPDBRunner::start()
 {
-    QString filename = (project->getProjectDir() + "/" + pdbId
-                        + (chainsToDelete.isEmpty() ? "" : "-" + chainsToDelete)
+    QString filename = (project->getProjectDir() + "/" + modelFilePrefix
                         + ".vtk").trimmed();
     currentRunner = SubprocessUtils::makeChimeraSurfaceFor(
                 pdbId,filename,0,chainsToDelete);
@@ -73,13 +90,19 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
 {
     if (succeeded)
     {
-        QString filename = (project->getProjectDir() + "/" + pdbId
-                              + (chainsToDelete.isEmpty() ? "" : "-" + chainsToDelete)
+        QString filename = (project->getProjectDir() + "/" + modelFilePrefix
                               + ".vtk").trimmed();
-        QString simplified = (project->getProjectDir() + "/" + pdbId
-                              + (chainsToDelete.isEmpty() ? QString("") : "-" + chainsToDelete)
+        QString simplified = (project->getProjectDir() + "/" + modelFilePrefix
                               + "_isosurface.vtk").trimmed();
-        QString sourceName = ModelUtilities::createSourceNameFor(pdbId,chainsToDelete);
+        QString sourceName; // = ModelUtilities::createSourceNameFor(pdbId,chainsToDelete);
+        if (importFromLocalFile)
+        {
+            sourceName = pdbId;
+        }
+        else
+        {
+            sourceName = modelFilePrefix;
+        }
         switch (stepNum)
         {
         case 0:
@@ -167,7 +190,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             appended->AddInputConnection(convertToPolyData->GetOutputPort());
             appended->Update();
             QString fname = ModelUtilities::createFileFromVTKSource(
-                        appended,sourceName + ".decimated.5000",dir);
+                        appended,modelFilePrefix + ".decimated.5000",dir);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_5000,
                                                fname);
@@ -175,7 +198,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             decimator->Update();
             appended->Update();
             fname = ModelUtilities::createFileFromVTKSource(
-                        appended,sourceName + ".decimated.2000",dir);
+                        appended,modelFilePrefix + ".decimated.2000",dir);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_2000,
                                                fname);
@@ -183,7 +206,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             decimator->Update();
             appended->Update();
             fname = ModelUtilities::createFileFromVTKSource(
-                        appended,sourceName + ".decimated.1000",dir);
+                        appended,modelFilePrefix + ".decimated.1000",dir);
             model->addSurfaceFileForResolution(conformation,
                                                ModelResolution::SIMPLIFIED_1000,
                                                fname);

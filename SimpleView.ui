@@ -39,6 +39,7 @@
      </property>
      <addaction name="separator"/>
      <addaction name="actionOBJ"/>
+     <addaction name="actionPDB_file"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
@@ -236,6 +237,11 @@
   <action name="actionSet_View_Time">
    <property name="text">
     <string>Set View Time</string>
+   </property>
+  </action>
+  <action name="actionPDB_file">
+   <property name="text">
+    <string>PDB file</string>
    </property>
   </action>
  </widget>
@@ -472,6 +478,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionPDB_file</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>openPDBFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -489,5 +511,6 @@
   <slot>exportBlenderAnimation()</slot>
   <slot>restartVRPNServer()</slot>
   <slot>goToViewTime()</slot>
+  <slot>openPDBFile()</slot>
  </slots>
 </ui>

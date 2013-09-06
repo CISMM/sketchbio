@@ -26,7 +26,7 @@ void AbstractSingleProcessRunner::cancel()
     }
 }
 
-bool AbstractSingleProcessRunner::didProcessSucceed()
+bool AbstractSingleProcessRunner::didProcessSucceed(QString output)
 {
     // default implementation
     return true;
@@ -43,12 +43,13 @@ void AbstractSingleProcessRunner::processFinished(int status)
     {
         success = false;
     }
-    if (!didProcessSucceed())
+    QByteArray result = process->readAll();
+    if (!didProcessSucceed(result))
         success = false;
     if (!success)
     {
         qDebug() << "Object surfacing failed.";
-        qDebug() << process->readAll();
+        qDebug() << result;
     }
     else
         qDebug() << "Successfully surfaced object.";

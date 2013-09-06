@@ -25,7 +25,7 @@ public:
     virtual void start();
     virtual bool isValid();
 protected:
-    virtual bool didProcessSucceed();
+    virtual bool didProcessSucceed(QString output);
 
 private:
     QTemporaryFile *tempFile;

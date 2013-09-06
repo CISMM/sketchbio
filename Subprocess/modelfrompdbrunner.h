@@ -19,6 +19,13 @@ public:
     // toDelete - chain identifiers to delete before surfacing
     ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
                        const QString &toDelete, QObject *parent = 0);
+    // proj - the project
+    // filename - the pdb file
+    // modelFilePre - the prefix to use for the model files in the project dir
+    // toDeltee - chain identifiers to delete before surfacing
+    ModelFromPDBRunner(SketchProject *proj, const QString &filename,
+                       const QString &modelFilePre, const QString &toDelete,
+                       QObject *parent = 0);
     ~ModelFromPDBRunner();
 
     virtual void start();
@@ -31,7 +38,7 @@ private slots:
     void stepFinished(bool succeeded);
 private:
     // PDB id, and the chain identifiers of chains to delete before surfacing
-    QString pdbId, chainsToDelete;
+    QString pdbId, chainsToDelete, modelFilePrefix;
     // project to add model to
     SketchProject *project;
     // The model (once it is created, keep a reference to it)
@@ -42,6 +49,7 @@ private:
     SubprocessRunner *currentRunner;
     // The step number we are on (which subprocess is running)
     int stepNum;
+    bool importFromLocalFile;
 };
 
 #endif // MODELFROMPDBRUNNER_H
