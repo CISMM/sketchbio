@@ -176,10 +176,6 @@ static inline void writeCreateObject(
             writeCreateModel(file,modelIdxs,key);
         }
         int idx = modelIdxs.value(key);
-        sprintf(buf.data(),"select_object(modelObjects[%u])\n",idx);
-        file.write(buf.data());
-        file.write("bpy.ops.object.duplicate(linked=True)\n");
-        file.write("myObjects.append(bpy.context.active_object)\n");
         objectIdxs.insert(obj,objectsLen++);
         q_vec_type pos;
         q_type orient, tmp;
@@ -191,45 +187,18 @@ static inline void writeCreateObject(
             q_mult(orient,orient,tmp);
             isCamera = true;
         }
-        file.write("bpy.context.active_object.location = (0,0,0)\n");
-        file.write("bpy.context.active_object.rotation_mode = 'QUATERNION'\n");
-        file.write("bpy.context.active_object.rotation_quaternion = (0,0,0,0)\n");
-        if (isCamera)
-        {
-            // set the far plane out enough to see all the objects (we hope)
-            file.write("bpy.context.active_object.data.clip_end = 5000\n");
-            // give the camera a light that will follow it around
-            file.write("cam = bpy.context.active_object\n");
-            file.write("bpy.ops.object.lamp_add(type='POINT')\n");
-            file.write("bpy.context.active_object.location = (0,-80000,0)\n");
-            file.write("bpy.context.active_object.data.energy = 0.46\n");
-            file.write("bpy.context.active_object.data.falloff_type = 'CONSTANT'\n");
-            file.write("bpy.context.active_object.data.distance = 0.0\n");
-            file.write("bpy.context.active_object.data.shadow_method = 'RAY_SHADOW'\n");
-            file.write("lamp = bpy.context.active_object\n");
-            file.write("select_object(cam)\n");
-            file.write("lamp.select = True\n");
-            file.write("bpy.ops.object.parent_set()\n");
-        }
-        sprintf(buf.data(),"bpy.context.active_object.location = (float(%f), float(%f), float(%f))\n",
-                pos[Q_X], pos[Q_Y], pos[Q_Z]);
+        const char *isCameraString, *isVisibleString, *isActiveString;
+        isCameraString = (isCamera) ? "True" : "False";
+        isVisibleString = (obj->isVisible()) ? "True" : "False";
+        isActiveString = (obj->isActive()) ? "True" : "False";
+        sprintf(buf.data(),"obj = createInstance(modelObjects[%u],%s,"
+                "(float(%f),float(%f),float(%f)),(float(%f),float(%f),float(%f),"
+                "float(%f)),%s,%s)\n",
+                idx,isCameraString,pos[Q_X],pos[Q_Y],
+                pos[Q_Z],orient[Q_W],orient[Q_X],orient[Q_Y],orient[Q_Z],
+                isVisibleString,isActiveString);
         file.write(buf.data());
-        sprintf(buf.data(), "bpy.context.active_object.rotation_quaternion = "
-                "(float(%f), float(%f), float(%f), float(%f))\n", orient[Q_W], orient[Q_X],
-                orient[Q_Y], orient[Q_Z]);
-        file.write(buf.data());
-        // not sure if this needs modification to do something different for cameras
-        if (!obj->isVisible())
-        {
-            // hide it in the main view?
-            file.write("bpy.context.active_object.hide = True\n");
-            // hide it during rendering
-            file.write("bpy.context.active_object.hide_render = True\n");
-        }
-        if (obj->isActive())
-        {
-            file.write("bpy.context.scene.camera = bpy.context.active_object\n");
-        }
+        file.write("myObjects.append(obj)\n");
     }
 }
 
@@ -238,6 +207,7 @@ bool ProjectToBlenderAnimation::writeCreateObjects(
         QHash<SketchObject *, int> &objectIdxs, SketchProject *proj)
 {
     QHash< ModelColorMapKey, int > modelIdxs;
+    proj->goToAnimationTime(0.0);
     WorldManager *world = proj->getWorldManager();
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
@@ -258,6 +228,7 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
 {
     QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     unsigned frame = 0;
+    file.write("bpy.data.scenes[\"Scene\"].frame_start = 0\n");
     double time = static_cast<double>(frame) / static_cast<double>(frameRate);
     while (!proj->goToAnimationTime(time))
     {
