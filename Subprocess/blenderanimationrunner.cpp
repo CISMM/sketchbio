@@ -34,7 +34,8 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
     {
         valid = false;
     }
-    if (!ProjectToBlenderAnimation::writeProjectBlenderFile(*py_file,proj))
+    if (!ProjectToBlenderAnimation::writeProjectBlenderFile(
+                *py_file,proj,SubprocessUtils::getChimeraVTKExtensionDir()))
     {
         valid = false;
     } else

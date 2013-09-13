@@ -3,6 +3,7 @@
 
 #include <QHash>
 class QFile;
+class QString;
 
 class SketchProject;
 class SketchModel;
@@ -21,7 +22,8 @@ class ProjectToBlenderAnimation
 {
 public:
     // returns true for success, false for failure
-    static bool writeProjectBlenderFile(QFile &file, SketchProject *proj);
+    static bool writeProjectBlenderFile(QFile &file, SketchProject *proj,
+                                        const QString &modulePath);
     // converts time in seconds to a blender frame number (what Blender puts keyframes on)
     // using the frame rate.  The default for frame rate is Blender's default frame rate.
     static unsigned timeToBlenderFrameNum(double time, unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
@@ -31,7 +33,7 @@ public:
                                        vtkColorTransferFunction *colorMap = NULL);
 private:
     // Writes some python helper function definitions to the file
-    static bool writeHelperFunctions(QFile &file);
+    static bool writeHelperFunctions(QFile &file,const QString &modulePath);
     // Writes code to create an object in Blender for each SketchObject (for now assumes no groups)
     // stores the index of each object in the myObjects list in the objectIdxs QHash
     static bool writeCreateObjects(QFile &file,
