@@ -54,17 +54,25 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
         {
             valid = false;
         }
-    } else {
+    }
+    if (dir2.exists())
+    {
         frameDir = new QDir(dir2);
         dir2.setFilter(QDir::Files | QDir::NoDotAndDotDot);
         QStringList files = dir2.entryList();
-        for (int idx = 0; idx < files.length(); idx++) {
+        for (int idx = 0; idx < files.length(); idx++)
+        {
             QFile f(dir2.absoluteFilePath(files[idx]));
-            if (!f.remove()) {
+            if (!f.remove())
+            {
                 qDebug() << "Could not remove " << files[idx];
                 valid = false;
             }
         }
+    }
+    else
+    {
+        valid = false;
     }
     // create the process as a child of this object
     blender = new QProcess(this);

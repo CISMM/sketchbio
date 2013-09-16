@@ -87,6 +87,20 @@ int main(int argc, char *argv[])
     QScopedPointer< SketchProject > proj(
                 new SketchProject(r,"projects/animation"));
 
+    QDir d(proj->getProjectDir());
+    QDir d2(d.absoluteFilePath("anim"));
+    d2.setFilter(QDir::Files | QDir::NoDotAndDotDot);
+    QStringList files = d2.entryList();
+    for (int idx = 0; idx < files.length(); idx++)
+    {
+        QFile f(d2.absoluteFilePath(files[idx]));
+        if (!f.remove())
+        {
+            qDebug() << "Could not remove " << files[idx];
+        }
+    }
+    d.rmdir("anim");
+
     vtkSmartPointer< vtkXMLDataElement > root =
             vtkSmartPointer< vtkXMLDataElement >::Take(
                 vtkXMLUtilities::ReadElementFromFile("projects/animation/project.xml")
@@ -101,9 +115,10 @@ int main(int argc, char *argv[])
 
     TestBlender test(proj.data());
 
-    TestQObject testObj(app,test);
+    TestQObject testObj(app,test), testObj2(app,test);
 
-    QObject::connect(&testObj,SIGNAL(finished()),&app,SLOT(quit()));
+    QObject::connect(&testObj,SIGNAL(finished()),&testObj2,SLOT(start()));
+    QObject::connect(&testObj2,SIGNAL(finished()),&app,SLOT(quit()));
     QTimer::singleShot(0,&testObj,SLOT(start()));
     return app.exec();
 }
