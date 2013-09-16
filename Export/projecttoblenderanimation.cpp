@@ -177,7 +177,7 @@ static inline void writeCreateObject(
             QMapIterator< double, Keyframe > itr(*obj->getKeyframes());
             while (itr.hasNext())
             {
-                const Keyframe &f = itr.value();
+                const Keyframe &f = itr.next().value();
                 if (! (ColorMapType::isSolidColor(type,array) || // if neither is a solid color,(demorgan's law)
                     ColorMapType::isSolidColor(f.getColorMapType(),f.getArrayToColorBy())))
                 {
@@ -273,13 +273,10 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
         file.write(buf.data());
         for (QHashIterator<SketchObject *, int> it(objectIdxs); it.hasNext();)
         {
+            // NOTE: cannot make the assumption that because an object has no
+            // keyframes it doesn't move
             SketchObject * obj = it.peekNext().key();
             int idx = it.next().value();
-            if (! obj->hasKeyframes() ||
-                obj->getKeyframes()->upperBound(time) == obj->getKeyframes()->end())
-            {
-                continue;
-            }
             computeNewTranslate(pos,orient,obj);
             if (obj->getModel()->getSource(obj->getModelConformation())
                     == CAMERA_MODEL_KEY)
@@ -292,19 +289,27 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
                     idx, pos[Q_X], pos[Q_Y], pos[Q_Z], orient[Q_W], orient[Q_X], orient[Q_Y],
                     orient[Q_Z]);
             file.write(buf.data());
-            if (std::ceil(obj->getKeyframes()->lowerBound(time).key() * frameRate) == frame )
+            if (obj->hasKeyframes())
             {
-                QString array = obj->getArrayToColorBy();
-                ColorMapType::Type type = obj->getColorMapType();
-                bool isSolidColor = ColorMapType::isSolidColor(type,array);
-                vtkSmartPointer< vtkColorTransferFunction > cmap =
-                    vtkSmartPointer< vtkColorTransferFunction >::Take(
-                        ColorMapType::getColorMap(type,0,1));
-                const char* useVertexColorString = (isSolidColor) ? "False" : "True";
-                double color[3];
-                cmap->GetColor(1.0,color);
-                sprintf(buf.data(),"keyframeColor(myObjects[%d],color=(%g,%g,%g),useVertexColors=%s)\n",
-                        idx,color[0],color[1],color[2],useVertexColorString);
+                double kfTime = obj->getKeyframes()->lowerBound(time).key();
+                // debugging print
+                //file.write(QString("#%1\n").arg(std::floor(kfTime * frameRate)
+                //                                ).toStdString().c_str());
+                if (std::floor(kfTime * frameRate) == frame )
+                {
+                    QString array = obj->getArrayToColorBy();
+                    ColorMapType::Type type = obj->getColorMapType();
+                    bool isSolidColor = ColorMapType::isSolidColor(type,array);
+                    vtkSmartPointer< vtkColorTransferFunction > cmap =
+                            vtkSmartPointer< vtkColorTransferFunction >::Take(
+                                ColorMapType::getColorMap(type,0,1));
+                    const char* useVertexColorString = (isSolidColor) ? "False" : "True";
+                    double color[3];
+                    cmap->GetColor(1.0,color);
+                    sprintf(buf.data(),"keyframeColor(myObjects[%d],color=(%g,%g,%g),useVertexColors=%s)\n",
+                            idx,color[0],color[1],color[2],useVertexColorString);
+                    file.write(buf.data());
+                }
             }
             // TODO - visibility and active camera stuff
         }

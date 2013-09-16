@@ -26,6 +26,9 @@ def select_object(ob):
 # assigns a material to an object
 def setMaterial(ob,mat):
     me = ob.data
+    while len(me.materials) > 0:
+        bpy.context.object.active_material_index = 0
+        bpy.ops.object.material_slot_remove()
     me.materials.append(mat)
     select_object(ob)
     bpy.context.object.active_material_index = len(me.materials)-1
