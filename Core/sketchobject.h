@@ -170,6 +170,7 @@ protected: // methods
     void notifyObjectAdded(SketchObject *child);
     // notifies change observers that the given object has been removed as a child
     void notifyObjectRemoved(SketchObject *child);
+    virtual void setSolidColor(double color[3]) {}
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
     vtkSmartPointer<vtkLinearTransform> invLocalTransform;

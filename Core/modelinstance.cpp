@@ -223,7 +223,29 @@ void ModelInstance::updateColorMap()
     else
     {
         double rgb[3];
-        colorFunc->GetColor(range[0],rgb);
+        colorFunc->GetColor(range[1],rgb);
         actor->GetProperty()->SetColor(rgb);
+    }
+}
+
+void ModelInstance::setSolidColor(double color[])
+{
+    vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();
+    if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
+    {
+        vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+                vtkSmartPointer< vtkColorTransferFunction >::New();
+        colorFunc->SetScaleToLinear();
+        colorFunc->AddRGBPoint(0.0,color[0],color[1],color[2]);
+        solidMapper->ScalarVisibilityOn();
+        solidMapper->SetColorModeToMapScalars();
+        solidMapper->SetScalarModeToUsePointFieldData();
+        solidMapper->SelectColorArray(arrayToColorBy.toStdString().c_str());
+        solidMapper->SetLookupTable(colorFunc);
+        solidMapper->Update();
+    }
+    else
+    {
+        actor->GetProperty()->SetColor(color);
     }
 }

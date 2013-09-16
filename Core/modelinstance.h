@@ -43,6 +43,7 @@ public:
 protected:
     virtual void localTransformUpdated();
     virtual void updateColorMap();
+    virtual void setSolidColor(double color[3]);
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;

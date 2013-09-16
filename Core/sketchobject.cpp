@@ -2,6 +2,8 @@
 
 #include <vtkTransform.h>
 #include <vtkNew.h>
+#include <vtkActor.h>
+#include <vtkProperty.h>
 #include <vtkColorTransferFunction.h>
 
 #include "keyframe.h"
@@ -487,9 +489,37 @@ void SketchObject::setPositionByAnimationTime(double t)
         q_vec_scale(pos2,ratio,pos2);
         q_vec_add(position,pos1,pos2); // set position to linearly interpolated location between points
         q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
-        // set color map stuff here
-        setColorMapType(f1.getColorMapType());
-        setArrayToColorBy(f1.getArrayToColorBy());
+        if (numInstances() == 1)
+        {
+            // set color map stuff here
+            ColorMapType::Type c1,c2;
+            const QString &a1 = f1.getArrayToColorBy(),
+                    &a2 = f2.getArrayToColorBy();
+            c1 = f1.getColorMapType();
+            c2 = f2.getColorMapType();
+            if (ColorMapType::isSolidColor(c1,a1) &&
+                    ColorMapType::isSolidColor(c2,a2))
+            {
+                vtkSmartPointer< vtkColorTransferFunction > map =
+                        vtkSmartPointer< vtkColorTransferFunction >::Take(
+                            ColorMapType::getColorMap(c1,0,1)
+                            );
+                double color1[3], color2[3], netColor[3];
+                map->GetColor(1.0,color1);
+                map.TakeReference(ColorMapType::getColorMap(c2,0,1));
+                map->GetColor(1.0,color2);
+                double tmpC1[3], tmpC2[3];
+                q_vec_scale(tmpC2,ratio,color2);
+                q_vec_scale(tmpC1,1.0-ratio,color1);
+                q_vec_add(netColor,tmpC1,tmpC2);
+                setSolidColor(netColor);
+            }
+            else
+            {
+                setColorMapType(f1.getColorMapType());
+                setArrayToColorBy(f1.getArrayToColorBy());
+            }
+        }
         // set visibility stuff here
         setIsVisible(f1.isVisibleAfter());
         setActive(f1.isActive());
