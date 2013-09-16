@@ -16,6 +16,7 @@
 #include <vtkVRMLWriter.h>
 
 #include <modelutilities.h>
+#include <keyframe.h>
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
@@ -168,9 +169,40 @@ static inline void writeCreateObject(
         QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
         SketchModel *model  = obj->getModel();
         int conformation = obj->getModelConformation();
-        ModelColorMapKey key(model,conformation,
-                             obj->getColorMapType(),
-                             obj->getArrayToColorBy());
+        QString array = obj->getArrayToColorBy();
+        ColorMapType::Type type = obj->getColorMapType();
+        if (obj->hasKeyframes())
+        {
+            QMapIterator< double, Keyframe > itr(*obj->getKeyframes());
+            while (itr.hasNext())
+            {
+                const Keyframe &f = itr.value();
+                if (f.getArrayToColorBy() != array)
+                {
+                    if (array == "modelNum")
+                    {
+                        array = f.getArrayToColorBy();
+                        type = f.getColorMapType();
+                    }
+                    else
+                    {
+                        std::cerr << "Warning: multiple colormaps with per-pixel color."
+                            << std::endl << "\tThis is not supported for blender animation currently and "
+                            << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
+                    }
+                }
+                else if (array != "modelNum")
+                {
+                    if (type != f.getColorMapType())
+                    {
+                        std::cerr << "Warning: multiple colormaps with per-pixel color."
+                            << std::endl << "\tThis is not supported for blender animation currently and "
+                            << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
+                    }
+                }
+            }
+        }
+        ModelColorMapKey key(model,conformation,type,array);
         if (!modelIdxs.contains(key))
         {
             writeCreateModel(file,modelIdxs,key);
