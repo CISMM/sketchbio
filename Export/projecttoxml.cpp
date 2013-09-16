@@ -473,10 +473,10 @@ vtkXMLDataElement *ProjectToXML::objectToXML(
         modelId = modelId.append(idx);
         child->SetAttribute(OBJECT_MODELID_ATTRIBUTE_NAME,
                             modelId.toStdString().c_str());
-        SketchObject::ColorMapType::Type cmap = object->getColorMapType();
+        ColorMapType::Type cmap = object->getColorMapType();
         const QString &array = object->getArrayToColorBy();
         child->SetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME,
-                            SketchObject::ColorMapType::stringFromColorMap(cmap));
+                            ColorMapType::stringFromColorMap(cmap));
         child->SetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME,
                             array.toStdString().c_str());
     }
@@ -1024,7 +1024,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
             for (int i = 0; i < objList.size(); i++) {
                 double bb[6];
                 q_vec_type center, pos, dir;
-                SketchObject::ColorMapType::Type cmap = objList[i]->getColorMapType();
+                ColorMapType::Type cmap = objList[i]->getColorMapType();
                 proj->addObject(objList[i]);
                 objList[i]->getBoundingBox(bb);
                 center[0] = (bb[1] + bb[0]) * 0.5;
@@ -1348,8 +1348,8 @@ SketchObject *ProjectToXML::readObject(vtkXMLDataElement *elem,
             if (props->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME))
             {
                 const char *ch = props->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
-                SketchObject::ColorMapType::Type cmap;
-                cmap = SketchObject::ColorMapType::colorMapFromString(ch);
+                ColorMapType::Type cmap;
+                cmap = ColorMapType::colorMapFromString(ch);
                 object->setColorMapType(cmap);
             }
         } else {
@@ -1400,7 +1400,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(SketchProject *proj,
         return XML_TO_DATA_FAILURE;
     }
     for (int i = 0; i < objects.size(); i++) {
-        SketchObject::ColorMapType::Type cmap = objects[i]->getColorMapType();
+        ColorMapType::Type cmap = objects[i]->getColorMapType();
         proj->addObject(objects[i]);
         if (objects[i]->numInstances() == 1)
         {

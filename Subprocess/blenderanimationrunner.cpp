@@ -43,6 +43,7 @@ BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QStrin
         qDebug() << "Wrote temporary file.";
     }
     py_file->close();
+    py_file->setAutoRemove(false);
 
     QDir dir = QDir(proj->getProjectDir());
     QDir dir2 = dir.absoluteFilePath("anim");

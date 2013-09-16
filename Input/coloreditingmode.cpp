@@ -44,33 +44,35 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
-        if (rDist < DISTANCE_THRESHOLD && !rObj->getArrayToColorBy().isEmpty()) {
-            SketchObject::ColorMapType::Type cmap = rObj->getColorMapType();
+        if (rDist < DISTANCE_THRESHOLD && !rObj->getArrayToColorBy().isEmpty())
+        {
+            ColorMapType::Type cmap = rObj->getColorMapType();
+            using namespace ColorMapType;
             switch (cmap)
             {
-            case SketchObject::ColorMapType::SOLID_COLOR_RED:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_GREEN;
+            case SOLID_COLOR_RED:
+                cmap = SOLID_COLOR_GREEN;
                 break;
-            case SketchObject::ColorMapType::SOLID_COLOR_GREEN:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_BLUE;
+            case SOLID_COLOR_GREEN:
+                cmap = SOLID_COLOR_BLUE;
                 break;
-            case SketchObject::ColorMapType::SOLID_COLOR_BLUE:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_YELLOW;
+            case SOLID_COLOR_BLUE:
+                cmap = SOLID_COLOR_YELLOW;
                 break;
-            case SketchObject::ColorMapType::SOLID_COLOR_YELLOW:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_PURPLE;
+            case SOLID_COLOR_YELLOW:
+                cmap = SOLID_COLOR_PURPLE;
                 break;
-            case SketchObject::ColorMapType::SOLID_COLOR_PURPLE:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_CYAN;
+            case SOLID_COLOR_PURPLE:
+                cmap = SOLID_COLOR_CYAN;
                 break;
-            case SketchObject::ColorMapType::SOLID_COLOR_CYAN:
-                cmap = SketchObject::ColorMapType::BLUE_TO_RED;
+            case SOLID_COLOR_CYAN:
+                cmap = BLUE_TO_RED;
                 break;
-            case SketchObject::ColorMapType::BLUE_TO_RED:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_RED;
+            case BLUE_TO_RED:
+                cmap = SOLID_COLOR_RED;
                 break;
             default:
-                cmap = SketchObject::ColorMapType::SOLID_COLOR_RED;
+                cmap = SOLID_COLOR_RED;
                 break;
             }
             rObj->setColorMapType(cmap);

@@ -41,6 +41,8 @@ undostate.cpp
 undostate.h
 keyframe.cpp
 keyframe.h
+colormaptype.cpp
+colormaptype.h
 groupidgenerator.h
 sketchioconstants.h
 sketchtests.h

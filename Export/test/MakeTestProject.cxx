@@ -169,8 +169,7 @@ void addKeyframesToObject(SketchObject *obj, int numKeyframes)
 void setColorMapForObject(SketchObject *obj)
 {
 #define NUMBER_OF_ARRAYS 2
-    typedef SketchObject::ColorMapType CMapType;
-    static CMapType::Type nextType = CMapType::SOLID_COLOR_RED;
+    static ColorMapType::Type nextType = ColorMapType::SOLID_COLOR_RED;
     static int arrayToColorBy = 0;
 
     QString array;
@@ -191,44 +190,44 @@ void setColorMapForObject(SketchObject *obj)
     obj->setArrayToColorBy(array);
     switch (nextType)
     {
-    case CMapType::SOLID_COLOR_RED:
-        nextType = CMapType::SOLID_COLOR_BLUE;
+    case ColorMapType::SOLID_COLOR_RED:
+        nextType = ColorMapType::SOLID_COLOR_BLUE;
         break;
-    case CMapType::SOLID_COLOR_BLUE:
-        nextType = CMapType::SOLID_COLOR_GREEN;
+    case ColorMapType::SOLID_COLOR_BLUE:
+        nextType = ColorMapType::SOLID_COLOR_GREEN;
         break;
-    case CMapType::SOLID_COLOR_GREEN:
-        nextType = CMapType::SOLID_COLOR_YELLOW;
+    case ColorMapType::SOLID_COLOR_GREEN:
+        nextType = ColorMapType::SOLID_COLOR_YELLOW;
         break;
-    case CMapType::SOLID_COLOR_YELLOW:
-        nextType = CMapType::SOLID_COLOR_CYAN;
+    case ColorMapType::SOLID_COLOR_YELLOW:
+        nextType = ColorMapType::SOLID_COLOR_CYAN;
         break;
-    case CMapType::SOLID_COLOR_CYAN:
-        nextType = CMapType::SOLID_COLOR_PURPLE;
+    case ColorMapType::SOLID_COLOR_CYAN:
+        nextType = ColorMapType::SOLID_COLOR_PURPLE;
         break;
-    case CMapType::SOLID_COLOR_PURPLE:
-        nextType = CMapType::DIM_SOLID_COLOR_RED;
+    case ColorMapType::SOLID_COLOR_PURPLE:
+        nextType = ColorMapType::DIM_SOLID_COLOR_RED;
         break;
-    case CMapType::DIM_SOLID_COLOR_RED:
-        nextType = CMapType::DIM_SOLID_COLOR_BLUE;
+    case ColorMapType::DIM_SOLID_COLOR_RED:
+        nextType = ColorMapType::DIM_SOLID_COLOR_BLUE;
         break;
-    case CMapType::DIM_SOLID_COLOR_BLUE:
-        nextType = CMapType::DIM_SOLID_COLOR_GREEN;
+    case ColorMapType::DIM_SOLID_COLOR_BLUE:
+        nextType = ColorMapType::DIM_SOLID_COLOR_GREEN;
         break;
-    case CMapType::DIM_SOLID_COLOR_GREEN:
-        nextType = CMapType::DIM_SOLID_COLOR_YELLOW;
+    case ColorMapType::DIM_SOLID_COLOR_GREEN:
+        nextType = ColorMapType::DIM_SOLID_COLOR_YELLOW;
         break;
-    case CMapType::DIM_SOLID_COLOR_YELLOW:
-        nextType = CMapType::DIM_SOLID_COLOR_CYAN;
+    case ColorMapType::DIM_SOLID_COLOR_YELLOW:
+        nextType = ColorMapType::DIM_SOLID_COLOR_CYAN;
         break;
-    case CMapType::DIM_SOLID_COLOR_CYAN:
-        nextType = CMapType::DIM_SOLID_COLOR_PURPLE;
+    case ColorMapType::DIM_SOLID_COLOR_CYAN:
+        nextType = ColorMapType::DIM_SOLID_COLOR_PURPLE;
         break;
-    case CMapType::DIM_SOLID_COLOR_PURPLE:
-        nextType = CMapType::BLUE_TO_RED;
+    case ColorMapType::DIM_SOLID_COLOR_PURPLE:
+        nextType = ColorMapType::BLUE_TO_RED;
         break;
-    case CMapType::BLUE_TO_RED:
-        nextType = CMapType::SOLID_COLOR_RED;
+    case ColorMapType::BLUE_TO_RED:
+        nextType = ColorMapType::SOLID_COLOR_RED;
         break;
     }
     arrayToColorBy = (arrayToColorBy + 1) % NUMBER_OF_ARRAYS;

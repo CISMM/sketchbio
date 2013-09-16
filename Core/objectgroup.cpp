@@ -58,7 +58,7 @@ int ObjectGroup::numInstances() const
 }
 
 //#########################################################################
-SketchObject::ColorMapType::Type ObjectGroup::getColorMapType() const
+ColorMapType::Type ObjectGroup::getColorMapType() const
 {
     return ColorMapType::SOLID_COLOR_RED;
 }

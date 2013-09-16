@@ -26,7 +26,7 @@ public:
     // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    virtual SketchObject::ColorMapType::Type getColorMapType() const;
+    virtual ColorMapType::Type getColorMapType() const;
     virtual void setColorMapType(ColorMapType::Type cmap);
     virtual QString getArrayToColorBy() const;
     virtual void setArrayToColorBy(const QString &arrayName);
@@ -46,7 +46,7 @@ protected:
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
-    SketchObject::ColorMapType::Type colorMap;
+    ColorMapType::Type colorMap;
     QString arrayToColorBy;
     int conformation;
     vtkSmartPointer< vtkTransformPolyDataFilter > modelTransformed;

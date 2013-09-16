@@ -29,9 +29,9 @@ struct ModelColorMapKey
 {
     SketchModel *model;
     int conformation;
-    SketchObject::ColorMapType::Type cmap;
+    ColorMapType::Type cmap;
     QString arrayToColorBy;
-    ModelColorMapKey(SketchModel *m, int c, SketchObject::ColorMapType::Type cm,
+    ModelColorMapKey(SketchModel *m, int c, ColorMapType::Type cm,
                      const QString &a)
         :
           model(m),
@@ -120,7 +120,7 @@ static inline void writeCreateModel(
             }
             vtkSmartPointer< vtkColorTransferFunction > colors =
                     vtkSmartPointer< vtkColorTransferFunction >::Take(
-                        SketchObject::getColorMap(model.cmap,range[0],range[1])
+                        ColorMapType::getColorMap(model.cmap,range[0],range[1])
                     );
             fname = ProjectToBlenderAnimation::generateVRMLFileFor(
                         fname, model.arrayToColorBy.toStdString().c_str(),colors);

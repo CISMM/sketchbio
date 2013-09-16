@@ -93,7 +93,7 @@ const SketchModel *ModelInstance::getModel() const
 }
 
 //#########################################################################
-SketchObject::ColorMapType::Type ModelInstance::getColorMapType() const
+ColorMapType::Type ModelInstance::getColorMapType() const
 {
     return colorMap;
 }
@@ -209,7 +209,7 @@ void ModelInstance::updateColorMap()
     }
     vtkSmartPointer< vtkColorTransferFunction > colorFunc =
             vtkSmartPointer< vtkColorTransferFunction >::Take(
-                SketchObject::getColorMap(colorMap,range[0],range[1])
+                ColorMapType::getColorMap(colorMap,range[0],range[1])
             );
     if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
     {

@@ -26,6 +26,7 @@
 
 #include "sketchioconstants.h"
 #include "transformmanager.h"
+#include "colormaptype.h"
 #include "modelmanager.h"
 #include "sketchobject.h"
 #include "worldmanager.h"
@@ -45,14 +46,14 @@ static double COLORS[][3] =
      { 1.0, 0.7, 1.0 },
      { 0.7, 1.0, 1.0 } };
      */
-static SketchObject::ColorMapType::Type COLORS[] =
+static ColorMapType::Type COLORS[] =
 {
-    SketchObject::ColorMapType::SOLID_COLOR_RED,
-    SketchObject::ColorMapType::SOLID_COLOR_GREEN,
-    SketchObject::ColorMapType::SOLID_COLOR_BLUE,
-    SketchObject::ColorMapType::SOLID_COLOR_YELLOW,
-    SketchObject::ColorMapType::SOLID_COLOR_PURPLE,
-    SketchObject::ColorMapType::SOLID_COLOR_CYAN,
+    ColorMapType::SOLID_COLOR_RED,
+    ColorMapType::SOLID_COLOR_GREEN,
+    ColorMapType::SOLID_COLOR_BLUE,
+    ColorMapType::SOLID_COLOR_YELLOW,
+    ColorMapType::SOLID_COLOR_PURPLE,
+    ColorMapType::SOLID_COLOR_CYAN,
 };
 
 class TrackerObject : public SketchObject {

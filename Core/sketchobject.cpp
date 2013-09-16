@@ -7,128 +7,6 @@
 #include "keyframe.h"
 #include "objectchangeobserver.h"
 
-const char *SketchObject::ColorMapType::stringFromColorMap(
-        SketchObject::ColorMapType::Type cmap)
-{
-    switch (cmap)
-    {
-    case SketchObject::ColorMapType::SOLID_COLOR_RED:
-        return "solid_red";
-    case SketchObject::ColorMapType::SOLID_COLOR_GREEN:
-        return "solid_green";
-    case SketchObject::ColorMapType::SOLID_COLOR_BLUE:
-        return "solid_blue";
-    case SketchObject::ColorMapType::SOLID_COLOR_YELLOW:
-        return "solid_yellow";
-    case SketchObject::ColorMapType::SOLID_COLOR_PURPLE:
-        return "solid_purple";
-    case SketchObject::ColorMapType::SOLID_COLOR_CYAN:
-        return "solid_cyan";
-    case SketchObject::ColorMapType::DIM_SOLID_COLOR_RED:
-        return "dim_red";
-    case SketchObject::ColorMapType::DIM_SOLID_COLOR_GREEN:
-        return "dim_green";
-    case SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE:
-        return "dim_blue";
-    case SketchObject::ColorMapType::DIM_SOLID_COLOR_YELLOW:
-        return "dim_yellow";
-    case SketchObject::ColorMapType::DIM_SOLID_COLOR_PURPLE:
-        return "dim_purple";
-    case SketchObject::ColorMapType::DIM_SOLID_COLOR_CYAN:
-        return "dim_cyan";
-    case SketchObject::ColorMapType::BLUE_TO_RED:
-        return "blue_to_red";
-    default:
-        throw "No string for color map: " + QString::number(cmap);
-    }
-}
-
-SketchObject::ColorMapType::Type SketchObject::ColorMapType::colorMapFromString(
-        const char *str)
-{
-    QString s(str);
-    if (s == "solid_red")
-        return SketchObject::ColorMapType::SOLID_COLOR_RED;
-    if (s ==  "solid_green")
-        return SketchObject::ColorMapType::SOLID_COLOR_GREEN;
-    if (s ==  "solid_blue")
-        return SketchObject::ColorMapType::SOLID_COLOR_BLUE;
-    if (s ==  "solid_yellow")
-        return SketchObject::ColorMapType::SOLID_COLOR_YELLOW;
-    if (s ==  "solid_purple")
-        return SketchObject::ColorMapType::SOLID_COLOR_PURPLE;
-    if (s ==  "solid_cyan")
-        return SketchObject::ColorMapType::SOLID_COLOR_CYAN;
-    if (s ==  "dim_red")
-        return SketchObject::ColorMapType::DIM_SOLID_COLOR_RED;
-    if (s ==  "dim_green")
-        return SketchObject::ColorMapType::DIM_SOLID_COLOR_GREEN;
-    if (s ==  "dim_blue")
-        return SketchObject::ColorMapType::DIM_SOLID_COLOR_BLUE;
-    if (s ==  "dim_yellow")
-        return SketchObject::ColorMapType::DIM_SOLID_COLOR_YELLOW;
-    if (s ==  "dim_purple")
-        return SketchObject::ColorMapType::DIM_SOLID_COLOR_PURPLE;
-    if (s ==  "dim_cyan")
-        return SketchObject::ColorMapType::DIM_SOLID_COLOR_CYAN;
-    if (s ==  "blue_to_red")
-        return SketchObject::ColorMapType::BLUE_TO_RED;
-    throw "Unknown color map.";
-}
-
-vtkColorTransferFunction *SketchObject::getColorMap(
-        SketchObject::ColorMapType::Type cmapType,
-        double low,
-        double high)
-{
-    vtkColorTransferFunction *ctf = vtkColorTransferFunction::New();
-    ctf->SetScaleToLinear();
-    switch (cmapType)
-    {
-    case ColorMapType::SOLID_COLOR_RED:
-        ctf->AddRGBPoint(low,1.0,0.7,0.7);
-        break;
-    case ColorMapType::SOLID_COLOR_GREEN:
-        ctf->AddRGBPoint(low,0.7,1.0,0.8);
-        break;
-    case ColorMapType::SOLID_COLOR_BLUE:
-        ctf->AddRGBPoint(low,0.7,0.7,1.0);
-        break;
-    case ColorMapType::SOLID_COLOR_YELLOW:
-        ctf->AddRGBPoint(low,1.0,1.0,0.7);
-        break;
-    case ColorMapType::SOLID_COLOR_PURPLE:
-        ctf->AddRGBPoint(low,1.0,0.7,1.0);
-        break;
-    case ColorMapType::SOLID_COLOR_CYAN:
-        ctf->AddRGBPoint(low,0.7,1.0,1.0);
-        break;
-    case ColorMapType::DIM_SOLID_COLOR_RED:
-        ctf->AddRGBPoint(low,0.5,0.35,0.35);
-        break;
-    case ColorMapType::DIM_SOLID_COLOR_GREEN:
-        ctf->AddRGBPoint(low,0.35,0.5,0.4);
-        break;
-    case ColorMapType::DIM_SOLID_COLOR_BLUE:
-        ctf->AddRGBPoint(low,0.35,0.35,0.5);
-        break;
-    case ColorMapType::DIM_SOLID_COLOR_YELLOW:
-        ctf->AddRGBPoint(low,0.5,0.5,0.35);
-        break;
-    case ColorMapType::DIM_SOLID_COLOR_PURPLE:
-        ctf->AddRGBPoint(low,0.5,0.35,0.5);
-        break;
-    case ColorMapType::DIM_SOLID_COLOR_CYAN:
-        ctf->AddRGBPoint(low,0.35,0.5,0.5);
-        break;
-    case ColorMapType::BLUE_TO_RED:
-        ctf->SetColorSpaceToDiverging();
-        ctf->AddRGBPoint(low,59.0/256.0,76.0/256.0,192.0/256.0);
-        ctf->AddRGBPoint(high,180.0/256.0,4.0/256.0,38.0/256.0);
-        break;
-    }
-    return ctf;
-}
 
 void SketchObject::setParentRelativePositionForAbsolutePosition(
         SketchObject *obj, SketchObject *parent,
@@ -222,7 +100,7 @@ const SketchModel *SketchObject::getModel() const
     return NULL;
 }
 //#########################################################################
-SketchObject::ColorMapType::Type SketchObject::getColorMapType() const
+ColorMapType::Type SketchObject::getColorMapType() const
 {
     return ColorMapType::SOLID_COLOR_RED;
 }
