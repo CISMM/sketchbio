@@ -1,6 +1,8 @@
 #ifndef COLORMAPTYPE_H_
 #define COLORMAPTYPE_H_
 
+class QString;
+
 class vtkColorTransferFunction;
 /*
  * This namespace contains an enum that holds the color map types that are available,
@@ -37,7 +39,11 @@ namespace ColorMapType {
     vtkColorTransferFunction *getColorMap(ColorMapType::Type cmapType,
                                              double low, double high);
 
-};
+    // Returns true if the color map listed has a solid color for the entire object
+    // and false if it requires per-vertex coloring
+    bool isSolidColor(ColorMapType::Type cmapType, const QString& arrayName);
+
+}
 
 
 #endif

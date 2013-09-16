@@ -169,6 +169,7 @@ static inline void writeCreateObject(
         QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
         SketchModel *model  = obj->getModel();
         int conformation = obj->getModelConformation();
+        // get color map data to figure out which coloring needs to be exported
         QString array = obj->getArrayToColorBy();
         ColorMapType::Type type = obj->getColorMapType();
         if (obj->hasKeyframes())
@@ -177,36 +178,27 @@ static inline void writeCreateObject(
             while (itr.hasNext())
             {
                 const Keyframe &f = itr.value();
-                if (f.getArrayToColorBy() != array)
+                if (! (ColorMapType::isSolidColor(type,array) || // if neither is a solid color,(demorgan's law)
+                    ColorMapType::isSolidColor(f.getColorMapType(),f.getArrayToColorBy())))
                 {
-                    if (array == "modelNum")
-                    {
-                        array = f.getArrayToColorBy();
-                        type = f.getColorMapType();
-                    }
-                    else
-                    {
-                        std::cerr << "Warning: multiple colormaps with per-pixel color."
-                            << std::endl << "\tThis is not supported for blender animation currently and "
-                            << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
-                    }
+                    std::cerr << "Warning: multiple colormaps with per-pixel color."
+                        << std::endl << "\tThis is not supported for blender animation currently and "
+                        << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
                 }
-                else if (array != "modelNum")
+                else if (ColorMapType::isSolidColor(type,array))
                 {
-                    if (type != f.getColorMapType())
-                    {
-                        std::cerr << "Warning: multiple colormaps with per-pixel color."
-                            << std::endl << "\tThis is not supported for blender animation currently and "
-                            << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
-                    }
+                    type =  f.getColorMapType();
+                    array = f.getArrayToColorBy();
                 }
             }
         }
+        // write out the model data for the object if it isn't already done
         ModelColorMapKey key(model,conformation,type,array);
         if (!modelIdxs.contains(key))
         {
             writeCreateModel(file,modelIdxs,key);
         }
+        // get the data needed to create the object
         int idx = modelIdxs.value(key);
         objectIdxs.insert(obj,objectsLen++);
         q_vec_type pos;
@@ -223,12 +215,23 @@ static inline void writeCreateObject(
         isCameraString = (isCamera) ? "True" : "False";
         isVisibleString = (obj->isVisible()) ? "True" : "False";
         isActiveString = (obj->isActive()) ? "True" : "False";
+        // get the current color information
+        array = obj->getArrayToColorBy();
+        type = obj->getColorMapType();
+        bool isSolidColor = ColorMapType::isSolidColor(type,array);
+        vtkSmartPointer< vtkColorTransferFunction > cmap =
+            vtkSmartPointer< vtkColorTransferFunction >::Take(
+                ColorMapType::getColorMap(type,0,1));
+        const char* useVertexColorString = (isSolidColor) ? "False" : "True";
+        double color[3];
+        cmap->GetColor(1.0,color);
         sprintf(buf.data(),"obj = createInstance(modelObjects[%u],%s,"
                 "(float(%f),float(%f),float(%f)),(float(%f),float(%f),float(%f),"
-                "float(%f)),%s,%s)\n",
+                "float(%f)),%s,%s,startColor=(%f,%f,%f),useVertexColors=%s)\n",
                 idx,isCameraString,pos[Q_X],pos[Q_Y],
                 pos[Q_Z],orient[Q_W],orient[Q_X],orient[Q_Y],orient[Q_Z],
-                isVisibleString,isActiveString);
+                isVisibleString,isActiveString,color[0],color[1],color[2],
+                useVertexColorString);
         file.write(buf.data());
         file.write("myObjects.append(obj)\n");
     }
@@ -272,6 +275,11 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
         {
             SketchObject * obj = it.peekNext().key();
             int idx = it.next().value();
+            if (! obj->hasKeyframes() ||
+                obj->getKeyframes()->upperBound(time) == obj->getKeyframes()->end())
+            {
+                continue;
+            }
             computeNewTranslate(pos,orient,obj);
             if (obj->getModel()->getSource(obj->getModelConformation())
                     == CAMERA_MODEL_KEY)
@@ -284,6 +292,20 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
                     idx, pos[Q_X], pos[Q_Y], pos[Q_Z], orient[Q_W], orient[Q_X], orient[Q_Y],
                     orient[Q_Z]);
             file.write(buf.data());
+            if (std::ceil(obj->getKeyframes()->lowerBound(time).key() * frameRate) == frame )
+            {
+                QString array = obj->getArrayToColorBy();
+                ColorMapType::Type type = obj->getColorMapType();
+                bool isSolidColor = ColorMapType::isSolidColor(type,array);
+                vtkSmartPointer< vtkColorTransferFunction > cmap =
+                    vtkSmartPointer< vtkColorTransferFunction >::Take(
+                        ColorMapType::getColorMap(type,0,1));
+                const char* useVertexColorString = (isSolidColor) ? "False" : "True";
+                double color[3];
+                cmap->GetColor(1.0,color);
+                sprintf(buf.data(),"keyframeColor(myObjects[%d],color=(%g,%g,%g),useVertexColors=%s)\n",
+                        idx,color[0],color[1],color[2],useVertexColorString);
+            }
             // TODO - visibility and active camera stuff
         }
         frame++;

@@ -130,4 +130,35 @@ vtkColorTransferFunction *getColorMap(
     return ctf;
 }
 
+bool isSolidColor(ColorMapType::Type cMap, const QString& arrayName)
+{
+    // this array means solid color whatever the color map
+    if (arrayName == "modelNum")
+    {
+        return true;
+    }
+    // test if the color map is solid color
+    switch (cMap)
+    {
+    case SOLID_COLOR_RED:
+    case SOLID_COLOR_GREEN:
+    case SOLID_COLOR_BLUE:
+    case SOLID_COLOR_YELLOW:
+    case SOLID_COLOR_PURPLE:
+    case SOLID_COLOR_CYAN:
+    case DIM_SOLID_COLOR_RED:
+    case DIM_SOLID_COLOR_GREEN:
+    case DIM_SOLID_COLOR_BLUE:
+    case DIM_SOLID_COLOR_YELLOW:
+    case DIM_SOLID_COLOR_PURPLE:
+    case DIM_SOLID_COLOR_CYAN:
+        return true;
+        break;
+    case BLUE_TO_RED:
+        return false;
+        break;
+    }
+    return false;
+}
+
 }
