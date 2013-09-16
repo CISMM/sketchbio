@@ -395,7 +395,7 @@ void SketchObject::addKeyframeForCurrentLocation(double t)
     { // no negative times allowed
         return;
     }
-    Keyframe frame(position, orientation,visible,active);
+    Keyframe frame(position, orientation,getColorMapType(),getArrayToColorBy(),visible,active);
     if (keyframes.isNull())
     {
         keyframes.reset(new QMap< double, Keyframe >());

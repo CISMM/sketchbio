@@ -3,6 +3,10 @@
 
 #include <quat.h>
 
+#include <QString>
+
+#include "colormaptype.h"
+
 /*
  * This class holds the state information for a keyframe, the positions of each object that
  * have been explicitly set for that frame and the camera position for that frame if that has
@@ -12,28 +16,45 @@ class Keyframe
 {
 public:
     Keyframe(); // creates a keyframe with all default values
-    Keyframe(const q_vec_type pos, const q_type orient, bool visibleA, bool isActive);
+    Keyframe(const q_vec_type pos, const q_type orient, ColorMapType::Type cMap,
+             const QString& array, bool visibleA, bool isActive);
     void getPosition(q_vec_type pos) const;
     void getOrientation(q_type orient) const;
+    ColorMapType::Type getColorMapType() const;
+    const QString& getArrayToColorBy() const;
     bool isVisibleAfter() const;
     bool isActive() const;
 private:
     q_vec_type position;
     q_type orientation;
+    ColorMapType::Type colorMap;
+    QString arrayToColorBy;
     bool visibleAfter;
     bool active;
 };
 
-inline void Keyframe::getPosition(q_vec_type pos) const {
+inline void Keyframe::getPosition(q_vec_type pos) const
+{
     q_vec_copy(pos,position);
 }
-inline void Keyframe::getOrientation(q_type orient) const {
+inline void Keyframe::getOrientation(q_type orient) const
+{
     q_copy(orient,orientation);
 }
-inline bool Keyframe::isVisibleAfter() const {
+inline ColorMapType::Type Keyframe::getColorMapType() const
+{
+    return colorMap;
+}
+inline const QString& Keyframe::getArrayToColorBy() const
+{
+    return arrayToColorBy;
+}
+inline bool Keyframe::isVisibleAfter() const
+{
     return visibleAfter;
 }
-inline bool Keyframe::isActive() const {
+inline bool Keyframe::isActive() const
+{
     return active;
 }
 
