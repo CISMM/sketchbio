@@ -1316,6 +1316,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     object->setActive(active);
     object->addKeyframeForCurrentLocation(time);
     object->restoreToLastLocation(); // restore the object's position
+    // restore the object's color map
     object->setColorMapType(cMap);
     object->setArrayToColorBy(array);
     return XML_TO_DATA_SUCCESS;
