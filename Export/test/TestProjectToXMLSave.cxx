@@ -27,7 +27,7 @@ using std::endl;
 #define SAVE_TEST_DIR "test/test1"
 #define LOAD_ONLY_TEST_DIR "test/test2"
 
-#define PRINT_OUT_XML_TESTNUM -1
+#define PRINT_OUT_XML_TESTNUM 5
 
 int saveLoadAndTest(SketchProject *proj, int testNum, bool writeToFile = false)
 {
@@ -148,49 +148,6 @@ int testSave4()
     return saveLoadAndTest(proj1.data(),4);
 }
 
-int testSave6()
-{
-    vtkSmartPointer< vtkRenderer > r1 =
-            vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
-
-    SketchObject *o1 = MakeTestProject::addObjectToProject(proj1.data());
-    SketchObject *o2 = MakeTestProject::addObjectToProject(proj1.data());
-    MakeTestProject::addGroupToProject(proj1.data(),3);
-    MakeTestProject::addReplicationToProject(proj1.data(),12);
-    MakeTestProject::addSpringToProject(proj1.data(),o1,o2);
-
-    return saveLoadAndTest(proj1.data(),6);
-}
-
-int testSave9()
-{
-    vtkSmartPointer< vtkRenderer > r =
-            vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > project(
-                new SketchProject(r,LOAD_ONLY_TEST_DIR));
-
-    QDir dir = project->getProjectDir();
-    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
-
-    vtkSmartPointer< vtkXMLDataElement > root =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str())
-                );
-
-    if (ProjectToXML::xmlToProject(project.data(),root)
-            == ProjectToXML::XML_TO_DATA_SUCCESS)
-    {
-        cout << endl << "Passed test 9" << endl;
-    }
-    else
-    {
-        cout << "Reading xml for test 9 failed..." << endl;
-        return 1;
-    }
-    return 0;
-}
 
 // tests that my save state makes sense... i.e. no " in the attributes or such
 // tests that it can be read back in as valid xml and reconstructed to the project
@@ -210,6 +167,24 @@ int testSave5()
 
     return saveLoadAndTest(project.data(),5,true);
 }
+
+int testSave6()
+{
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > proj1(
+                new SketchProject(r1,SAVE_TEST_DIR));
+
+    SketchObject *o1 = MakeTestProject::addObjectToProject(proj1.data());
+    SketchObject *o2 = MakeTestProject::addObjectToProject(proj1.data());
+    MakeTestProject::addGroupToProject(proj1.data(),3);
+    MakeTestProject::addReplicationToProject(proj1.data(),12);
+    MakeTestProject::addSpringToProject(proj1.data(),o1,o2);
+
+    return saveLoadAndTest(proj1.data(),6);
+}
+
+
 
 int testSave7()
 {
@@ -237,6 +212,35 @@ int testSave8()
     MakeTestProject::addKeyframesToObject(o,4);
 
     return saveLoadAndTest(proj1.data(),8);
+}
+
+
+int testSave9()
+{
+    vtkSmartPointer< vtkRenderer > r =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > project(
+                new SketchProject(r,LOAD_ONLY_TEST_DIR));
+
+    QDir dir = project->getProjectDir();
+    QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
+
+    vtkSmartPointer< vtkXMLDataElement > root =
+            vtkSmartPointer< vtkXMLDataElement >::Take(
+                vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str())
+                );
+
+    if (ProjectToXML::xmlToProject(project.data(),root)
+            == ProjectToXML::XML_TO_DATA_SUCCESS)
+    {
+        cout << endl << "Passed test 9" << endl;
+    }
+    else
+    {
+        cout << "Reading xml for test 9 failed..." << endl;
+        return 1;
+    }
+    return 0;
 }
 
 int main(int argc, char *argv[])

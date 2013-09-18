@@ -35,7 +35,7 @@ using std::strcmp;
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_ATTRIBUTE_NAME                  "version"
 #define SAVE_MAJOR_VERSION                      1
-#define SAVE_MINOR_VERSION                      2
+#define SAVE_MINOR_VERSION                      3
 #define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
@@ -535,6 +535,14 @@ vtkXMLDataElement *ProjectToXML::objectToXML(
             visibility->SetAttribute(OBJECT_KEYFRAME_ACTIVE_ATTR_NAME,
                                      (frame.isActive() ? "true" : "false"));
             frameElement->AddNestedElement(visibility);
+            if (object->numInstances() == 1)
+            {
+                frameElement->SetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME,
+                                           ColorMapType::stringFromColorMap(
+                                               frame.getColorMapType()));
+                frameElement->SetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME,
+                                           frame.getArrayToColorBy().toStdString().c_str());
+            }
             child->AddNestedElement(frameElement);
         }
         element->AddNestedElement(child);
@@ -852,6 +860,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(
     }
     case 1:
     {
+        // Going from 1 to 2, in order to save correct info about all the replicas
+        // such as color, we save the whole chain instead of just the bases and group
         vtkXMLDataElement *replicators =
                 root->FindNestedElementWithName(REPLICATOR_LIST_ELEMENT_NAME);
         if (replicators == NULL)
@@ -926,6 +936,12 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(
                 }
             }
         }
+    }
+    case 2:
+    {
+        // Going from 2 to 3, keyframes now have color information
+        // but groups don't have color info, so objects without it
+        // are handled
     }
     }
     return XML_TO_DATA_SUCCESS;
@@ -1232,6 +1248,9 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     if (QString(OBJECT_KEYFRAME_ELEMENT_NAME) != QString(frame->GetName())) {
         return XML_TO_DATA_FAILURE;
     }
+    // make sure not to change the color map data, save the old data
+    ColorMapType::Type cMap = object->getColorMapType();
+    const QString &array = object->getArrayToColorBy();
     q_vec_type pos;
     q_type orient;
     bool visA, active;
@@ -1271,12 +1290,34 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(SketchObject *object, v
     } else {
         return XML_TO_DATA_FAILURE;
     }
+    if (object->numInstances() == 1)
+    {
+        c = frame->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
+        if (c != NULL)
+        {
+            ColorMapType::Type colorMap = ColorMapType::colorMapFromString(c);
+            c = frame->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME);
+            if (c != NULL)
+            {
+                QString array(c);
+                object->setColorMapType(colorMap);
+                object->setArrayToColorBy(array);
+            }
+            else
+            {
+                return XML_TO_DATA_FAILURE; // can have neither array or color, but
+                // if you have one, you should have both
+            }
+        }
+    }
     object->setLastLocation(); // so we don't change the object's position
     object->setPosAndOrient(pos,orient);
     object->setIsVisible(visA);
     object->setActive(active);
     object->addKeyframeForCurrentLocation(time);
     object->restoreToLastLocation(); // restore the object's position
+    object->setColorMapType(cMap);
+    object->setArrayToColorBy(array);
     return XML_TO_DATA_SUCCESS;
 }
 

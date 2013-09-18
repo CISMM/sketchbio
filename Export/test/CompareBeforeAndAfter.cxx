@@ -308,6 +308,18 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
                                          << time1 << endl;
                     return;
                 }
+                if (frame1.getColorMapType() != frame2.getColorMapType())
+                {
+                    numDifferences++;
+                    if (printDiffs) cout << "Keyframe color changed at time "
+                                         << time1 << endl;
+                }
+                if (frame1.getArrayToColorBy() != frame2.getArrayToColorBy())
+                {
+                    numDifferences++;
+                    if (printDiffs) cout << "Keyframe array to color by is different at "
+                                            "time " << time1 << endl;
+                }
             }
         }
     }

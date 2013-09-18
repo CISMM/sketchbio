@@ -66,10 +66,6 @@ ColorMapType::Type ObjectGroup::getColorMapType() const
 //#########################################################################
 void ObjectGroup::setColorMapType(ColorMapType::Type cmap)
 {
-    for (int i = 0; i < children.length(); i++)
-    {
-        children[i]->setColorMapType(cmap);
-    }
 }
 
 //#########################################################################
@@ -81,10 +77,6 @@ QString ObjectGroup::getArrayToColorBy() const
 //#########################################################################
 void ObjectGroup::setArrayToColorBy(const QString &arrayName)
 {
-    for (int i = 0; i < children.length(); i++)
-    {
-        children[i]->setArrayToColorBy(arrayName);
-    }
 }
 
 //#########################################################################

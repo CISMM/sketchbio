@@ -155,15 +155,22 @@ void addKeyframesToObject(SketchObject *obj, int numKeyframes)
     using std::sqrt;
     q_vec_type pos;
     q_type orient;
+    QString array;
+    ColorMapType::Type colorMap;
     obj->getPosition(pos);
     obj->getOrientation(orient);
+    colorMap = obj->getColorMapType();
+    array = obj->getArrayToColorBy();
     for (int i = 0; i < numKeyframes; i++)
     {
 		double time = (double)i * std::sqrt(27.0);
         setObjectPosAndOrient(obj,numKeyframes * i + 37);
+        setColorMapForObject(obj);
         obj->addKeyframeForCurrentLocation(time);
     }
     obj->setPosAndOrient(pos,orient);
+    obj->setArrayToColorBy(array);
+    obj->setColorMapType(colorMap);
 }
 
 void setColorMapForObject(SketchObject *obj)
