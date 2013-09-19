@@ -12,6 +12,7 @@
 #include <vtkArrayCalculator.h>
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
+#include <vtkNew.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkColorTransferFunction.h>
@@ -985,4 +986,39 @@ void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
     vCam->SetFocalPoint(fPoint);
     vCam->SetViewUp(up);
     vCam->SetClippingRange(20,5000);
+}
+
+SketchObject* SketchProject::addCameraObjectFromCameraPosition(vtkCamera* cam)
+{
+    q_vec_type pos,forward,up,right,focalPoint;
+    q_type orient;
+
+    cam->GetPosition(pos);
+    cam->GetFocalPoint(focalPoint);
+    cam->GetViewUp(up);
+    q_vec_subtract(forward,pos,focalPoint);
+    q_vec_normalize(forward,forward);
+    q_vec_cross_product(right,forward,up);
+
+    vtkNew< vtkTransform > transform;
+    vtkSmartPointer< vtkMatrix4x4 > mat =
+            vtkSmartPointer< vtkMatrix4x4 >::New();
+    mat->Identity();
+    mat->SetElement(0,0,right[0]);
+    mat->SetElement(1,0,right[1]);
+    mat->SetElement(2,0,right[2]);
+    mat->SetElement(0,1,up[0]);
+    mat->SetElement(1,1,up[1]);
+    mat->SetElement(2,1,up[2]);
+    mat->SetElement(0,2,forward[0]);
+    mat->SetElement(1,2,forward[1]);
+    mat->SetElement(2,2,forward[2]);
+    transform->SetMatrix(mat);
+
+    q_vec_type junk;
+    SketchObject::getPositionAndOrientationFromTransform(
+                transform.GetPointer(),junk,orient);
+
+    SketchObject* obj = addCamera(pos,orient);
+    return obj;
 }

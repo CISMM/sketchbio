@@ -40,9 +40,18 @@ class ObjectChangeObserver;
 
 class SketchObject {
 public:
+    // Takes an absolute position and an object and its parent
+    // and computes and sets the correct parent-relative position
+    // of the object so that it has the absolute position specified
     static void setParentRelativePositionForAbsolutePosition(
             SketchObject *obj, SketchObject *parent,
             const q_vec_type absPos, const q_type abs_orient);
+    // Given a vtkTransform, compute the position and orientation
+    // described by that vtkTransform
+    static void getPositionAndOrientationFromLinearTransform(
+            vtkLinearTransform* trans, q_vec_type pos, q_type orient);
+    static void getPositionAndOrientationFromTransform(
+            vtkTransform *trans, q_vec_type pos, q_type orient);
 public:
     // constructor
     SketchObject();

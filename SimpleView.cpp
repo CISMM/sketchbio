@@ -539,6 +539,23 @@ void SimpleView::openPDBFile()
 }
 
 void SimpleView::exportBlenderAnimation() {
+    if (project->getCameras()->empty())
+    {
+        QMessageBox::StandardButton reply = QMessageBox::warning(
+                    NULL, "Warning: No cameras defined",
+                    "Project has no cameras defined!\n"
+                    "Create a camera for the current viewpoint and use that one?",
+                    QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+        {
+            vtkCamera *cam = project->getTransformManager()->getGlobalCamera();
+            project->addCameraObjectFromCameraPosition(cam);
+        }
+        else
+        {
+            return;
+        }
+    }
     QString fn = QFileDialog::getSaveFileName(this,
                                               tr("Select Save Location"),
                                               "./",

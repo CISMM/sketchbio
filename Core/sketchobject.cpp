@@ -10,6 +10,7 @@
 #include "objectchangeobserver.h"
 
 
+//#########################################################################
 void SketchObject::setParentRelativePositionForAbsolutePosition(
         SketchObject *obj, SketchObject *parent,
         const q_vec_type absPos, const q_type abs_orient)
@@ -25,13 +26,32 @@ void SketchObject::setParentRelativePositionForAbsolutePosition(
     trans->Concatenate(parent->getInverseLocalTransform());
     q_vec_type relPos;
     q_type relOrient;
-    double wxyz[4];
-    trans->GetPosition(relPos);
-    trans->GetOrientationWXYZ(wxyz);
-    q_from_axis_angle(relOrient,wxyz[1],wxyz[2],wxyz[3],Q_PI/180.0 * wxyz[0]);
+    getPositionAndOrientationFromTransform(trans.GetPointer(),relPos,relOrient);
     obj->setPosAndOrient(relPos,relOrient);
 }
 
+//#########################################################################
+void SketchObject::getPositionAndOrientationFromLinearTransform(
+        vtkLinearTransform* trans, q_vec_type pos, q_type orient)
+{
+    vtkNew< vtkTransform > transform;
+    transform->Identity();
+    transform->Concatenate(trans);
+    getPositionAndOrientationFromTransform(transform.GetPointer(),pos,orient);
+}
+
+//#########################################################################
+void SketchObject::getPositionAndOrientationFromTransform(
+        vtkTransform *trans, q_vec_type pos, q_type orient)
+{
+    double wxyz[4];
+    trans->GetPosition(pos);
+    trans->GetOrientationWXYZ(wxyz);
+    q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],Q_PI/180.0 * wxyz[0]);
+}
+
+//#########################################################################
+//#########################################################################
 //#########################################################################
 SketchObject::SketchObject() :
     localTransform(vtkSmartPointer<vtkTransform>::New()),

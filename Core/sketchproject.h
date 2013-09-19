@@ -164,6 +164,9 @@ public:
     SketchObject *addObject(QString source, QString filename);
     SketchObject *addObject(SketchObject *obj);
     SketchObject *addCamera(const q_vec_type pos, const q_type orient);
+    // Given the vtk camera position, creates a camera object that has that position
+    // and view
+    SketchObject* addCameraObjectFromCameraPosition(vtkCamera* cam);
     bool addObjects(QVector<QString> filenames);
     // for springs between objects (object-tracker springs managed internally)
     SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
@@ -175,12 +178,15 @@ public:
     void addReplication(StructureReplicator *rep);
     // for transform equals
     QWeakPointer<TransformEquals> addTransformEquals(SketchObject *o1, SketchObject *o2);
+public:
+    // sets up the vtkCamera object to the position and orientation of the given
+    // SketchObject.  Should only pass cameras for the SketchObject...
+    static void setUpVtkCamera(SketchObject *cam, vtkCamera *vCam);
 private:
     // helper functions
     // input related functions
     void handleInput();
     void updateTrackerObjectConnections();
-    static void setUpVtkCamera(SketchObject *cam, vtkCamera *vCam);
 
     // fields
     vtkSmartPointer< vtkRenderer > renderer;
