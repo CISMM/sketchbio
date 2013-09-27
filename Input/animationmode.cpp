@@ -73,8 +73,19 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
                 Keyframe frame = rObj->getKeyframes()->value(time);
                 frame.getPosition(fpos);
                 frame.getOrientation(forient);
-                if (q_vec_equals(pos,fpos) && q_equals(forient,orient))
+                ColorMapType::Type fcmap, cmap;
+                cmap = rObj->getColorMapType();
+                fcmap = frame.getColorMapType();
+                const QString & farray = frame.getArrayToColorBy(),
+                              & array = rObj->getArrayToColorBy();
+                if (q_vec_equals(pos,fpos) && q_equals(forient,orient)
+                        && (cmap == fcmap) &&
+                        (( ColorMapType::isSolidColor(cmap,array) &&
+                          ColorMapType::isSolidColor(fcmap,farray)) ||
+                         (farray == array)))
+                {
                     newFrame = false;
+                }
             }
             if (newFrame)
             {
