@@ -1,9 +1,11 @@
 #ifndef SPRINGCONNECTION_H
 #define SPRINGCONNECTION_H
 
-#include "quat.h"
-class SketchObject;
+#include <quat.h>
+
 #include <vtkType.h>
+
+#include "connector.h"
 
 /*
  * This class represents a general Spring and contains all the data needed by every spring
@@ -15,47 +17,19 @@ class SketchObject;
  * This class is abstract and designed to be subclassed to define specific types of springs
  */
 
-class SpringConnection
+class SpringConnection : public Connector
 {
 public:
 
     SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                      double maxRestLen, double k, const q_vec_type obj1Pos,
                      const q_vec_type obj2Pos);
+    virtual ~SpringConnection() {}
 
     inline double getStiffness() const { return stiffness; }
     inline void setStiffness(double newK) { stiffness = newK; }
     inline double getMinRestLength() const { return minRestLength; }
     inline double getMaxRestLength() const { return maxRestLength; }
-
-    inline void getObject1ConnectionPosition(q_vec_type out) const
-    { q_vec_copy(out,object1ConnectionPosition);}
-    inline void getObject2ConnectionPosition(q_vec_type out) const
-    { q_vec_copy(out,object2ConnectionPosition);}
-
-    inline const SketchObject *getObject1() const { return object1; }
-    // if we have a non-const spring, get a non-const object
-    inline SketchObject *getObject1() { return object1; }
-    // when setting the spring's object, the world position of the
-    // endpoint will not move (the relative position is recalculated)
-    void setObject1(SketchObject *obj);
-
-    inline const SketchObject *getObject2() const { return object2; }
-    // if not a const reference to spring, get non-const obj
-    inline SketchObject *getObject2() { return object2; }
-    // when setting the spring's object, the world position of the
-    // endpoint will not move (the relative position is recalculated)
-    void setObject2(SketchObject *obj);
-
-    inline void setObject1ConnectionPosition(q_vec_type newPos)
-    { q_vec_copy(object1ConnectionPosition,newPos);}
-    inline void setObject2ConnectionPosition(q_vec_type newPos)
-    { q_vec_copy(object2ConnectionPosition,newPos);}
-
-    void getEnd1WorldPosition(q_vec_type out) const;
-    void setEnd1WorldPosition(const q_vec_type newPos);
-    void getEnd2WorldPosition(q_vec_type out) const;
-    void setEnd2WorldPosition(const q_vec_type newPos);
 
     inline vtkIdType getEnd1Id() const { return end1;}
     inline void setEnd1Id(vtkIdType id) { end1 = id;}
@@ -64,13 +38,11 @@ public:
     inline vtkIdType getCellId() const { return cellId; }
     inline void setCellId(vtkIdType id) { cellId = id;}
 
-    void addForce();
+    virtual void addForce();
 
 private:
-    SketchObject *object1, *object2;
     double minRestLength, maxRestLength;
     double stiffness;
-    q_vec_type object1ConnectionPosition, object2ConnectionPosition;
     vtkIdType end1, end2, cellId;
 public: // static factories
     /*******************************************************************

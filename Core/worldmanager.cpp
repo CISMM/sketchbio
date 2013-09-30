@@ -185,7 +185,7 @@ void WorldManager::clearObjects()
 
 //##################################################################################################
 //##################################################################################################
-SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
+Connector* WorldManager::addSpring(Connector* spring) {
     addSpring(spring,&connections);
 
     return spring;
@@ -194,8 +194,8 @@ SpringConnection *WorldManager::addSpring(SpringConnection *spring) {
 //##################################################################################################
 //##################################################################################################
 void WorldManager::clearLeftHandSprings() {
-    for (QMutableListIterator<SpringConnection *> it(lHand); it.hasNext();) {
-        SpringConnection *spring = it.next();
+    for (QMutableListIterator< Connector* > it(lHand); it.hasNext();) {
+        Connector* spring = it.next();
 #ifdef SHOW_DEBUGGING_FORCE_LINES
         springEndConnections->DeleteCell(spring->getCellId());
 #endif
@@ -208,8 +208,8 @@ void WorldManager::clearLeftHandSprings() {
 //##################################################################################################
 //##################################################################################################
 void WorldManager::clearRightHandSprings() {
-    for (QMutableListIterator<SpringConnection *> it(rHand); it.hasNext();) {
-        SpringConnection *spring = it.next();
+    for (QMutableListIterator< Connector* > it(rHand); it.hasNext();) {
+        Connector* spring = it.next();
 #ifdef SHOW_DEBUGGING_FORCE_LINES
         springEndConnections->DeleteCell(spring->getCellId());
 #endif
@@ -219,7 +219,7 @@ void WorldManager::clearRightHandSprings() {
     rHand.clear();
 }
 
-void WorldManager::clearSprings()
+void WorldManager::clearConnectors()
 {
     while (! connections.empty())
     {
@@ -239,13 +239,15 @@ SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,con
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::removeSpring(SpringConnection *spring) {
+void WorldManager::removeSpring(Connector* spring) {
     int index = connections.indexOf(spring);
     if (index == -1)
         return;
     connections.removeAt(index);
 
+#if 0 // TODO
     springEndConnections->DeleteCell(spring->getCellId());
+#endif
     // can't delete points...
 
     delete spring;
@@ -260,8 +262,8 @@ int WorldManager::getNumberOfSprings() const {
 
 //##################################################################################################
 //##################################################################################################
-QListIterator<SpringConnection *> WorldManager::getSpringsIterator() const {
-    return QListIterator<SpringConnection *>(connections);
+QListIterator< Connector* > WorldManager::getSpringsIterator() const {
+    return QListIterator< Connector* >(connections);
 }
 
 //##################################################################################################
@@ -433,12 +435,13 @@ void WorldManager::setCollisionCheckOn(bool on) {
     doCollisionCheck = on;
 }
 
+#if 0 // TODO
 //##################################################################################################
 //##################################################################################################
 // helper function for updateSprings - updates the endpoints of the springs in the vtkPoints object
-inline void updatePoints(QList<SpringConnection *> &list, vtkPoints *pts) {
-    for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
-        SpringConnection *s = it.next();
+inline void updatePoints(QList< Connector* > &list, vtkPoints *pts) {
+    for (QListIterator< Connector* > it(list); it.hasNext();) {
+        Connector* s = it.next();
         q_vec_type pos1,pos2;
         s->getEnd1WorldPosition(pos1);
         pts->SetPoint(s->getEnd1Id(),pos1);
@@ -450,9 +453,9 @@ inline void updatePoints(QList<SpringConnection *> &list, vtkPoints *pts) {
 //##################################################################################################
 // helper function for updateSprings - adds in cells to the vtkPolyData for each spring a line-type
 //   cell is added
-inline void addSpringCells(QList<SpringConnection *> &list, vtkPolyData *data) {
-    for (QListIterator<SpringConnection *> it(list); it.hasNext();) {
-        SpringConnection *s = it.next();
+inline void addSpringCells(QList< Connector* > &list, vtkPolyData *data) {
+    for (QListIterator< Connector* > it(list); it.hasNext();) {
+        Connector* s = it.next();
         vtkIdType pts[2];
         pts[0] = s->getEnd1Id();
         pts[1] = s->getEnd2Id();
@@ -460,10 +463,12 @@ inline void addSpringCells(QList<SpringConnection *> &list, vtkPolyData *data) {
         s->setCellId(cellId);
     }
 }
+#endif
 
 //##################################################################################################
 //##################################################################################################
 void WorldManager::updateSprings() {
+#if 0 // TODO
     // set spring ends to new positions
     updatePoints(connections,springEnds);
 #ifdef SHOW_DEBUGGING_FORCE_LINES
@@ -486,6 +491,7 @@ void WorldManager::updateSprings() {
         springEndConnections->Modified();
         tubeFilter->Update();
     }
+#endif
 }
 
 
@@ -576,13 +582,13 @@ SketchObject *WorldManager::getClosestObject(QList<SketchObject *> &objects,
 
 //##################################################################################################
 //##################################################################################################
-SpringConnection *WorldManager::getClosestSpring(q_vec_type point, double *distOut,
+Connector* WorldManager::getClosestSpring(q_vec_type point, double *distOut,
                                                  bool *closerToEnd1) {
-    SpringConnection *closest = NULL;
+    Connector* closest = NULL;
     double distance = std::numeric_limits<double>::max();
     bool isCloserToEnd1 = false;
-    for (QListIterator<SpringConnection *> it(connections); it.hasNext();) {
-        SpringConnection *spr = it.next();
+    for (QListIterator< Connector* > it(connections); it.hasNext();) {
+        Connector* spr = it.next();
         q_vec_type pt1, pt2, vec;
         spr->getEnd1WorldPosition(pt1);
         spr->getEnd2WorldPosition(pt2);
@@ -649,7 +655,7 @@ void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> *list) {
+void WorldManager::addSpring(Connector* spring,QList< Connector* > *list) {
     list->push_back(spring);
 
     if (list == &connections)
@@ -663,6 +669,7 @@ void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> 
         }
         q_vec_type endOfSpring;
         spring->getEnd1WorldPosition(endOfSpring);
+#if 0 // TODO
         vtkIdType end1Id = springEnds->InsertNextPoint(endOfSpring);
         spring->setEnd1Id(end1Id);
         spring->getEnd2WorldPosition(endOfSpring);
@@ -673,6 +680,7 @@ void WorldManager::addSpring(SpringConnection *spring,QList<SpringConnection *> 
         vtkIdType cellId = springEndConnections->InsertNextCell(VTK_LINE,2,pts);
         //    springEndConnections->Update();
         spring->setCellId(cellId);
+#endif
     }
 }
 

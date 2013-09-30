@@ -29,7 +29,7 @@ class SketchModel;
 class ModelManager;
 class TransformManager;
 class SketchObject;
-class SpringConnection;
+class Connector;
 class WorldManager;
 class StructureReplicator;
 class TransformEquals;
@@ -52,17 +52,17 @@ class UndoState;
 class SketchProject
 {
 public:
-    SketchProject(vtkRenderer *r, const QString &projDir);
+    SketchProject(vtkRenderer* r, const QString& projDir);
     ~SketchProject();
     // setters
     // sets the directory path for this project (should be an absolute path)
-    bool setProjectDir(const QString &dir);
+    bool setProjectDir(const QString& dir);
     // sets the left hand position/orientation
-    void setLeftHandPos(q_xyz_quat_type *loc);
+    void setLeftHandPos(q_xyz_quat_type* loc);
     // sets the right hand position/orientation
-    void setRightHandPos(q_xyz_quat_type *loc);
+    void setRightHandPos(q_xyz_quat_type* loc);
     // sets the viewpoint
-    void setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes);
+    void setViewpoint(vtkMatrix4x4* worldToRoom, vtkMatrix4x4* roomToEyes);
     // sets the collision mode (testing only)
     void setCollisionMode(PhysicsMode::Type mode);
     // toggle settings in the physics
@@ -89,12 +89,12 @@ public:
 
     // functions for undo and redo
     // Note: these two will return NULL if there is no state to return
-    UndoState *getLastUndoState();
-    UndoState *getNextRedoState();
+    UndoState* getLastUndoState();
+    UndoState* getNextRedoState();
     // pops the last undo state off the stack entirely and deletes it
     void popUndoState();
     // clears the redo operation stack in addition to adding an undo state
-    void addUndoState(UndoState *state);
+    void addUndoState(UndoState* state);
     void applyUndo();
     void applyRedo();
 
@@ -107,23 +107,23 @@ public:
     void timestep(double dt);
 
     // get model manager
-    const ModelManager *getModelManager() const;
-    ModelManager *getModelManager();
+    const ModelManager* getModelManager() const;
+    ModelManager* getModelManager();
     // get transform manager
-    const TransformManager *getTransformManager() const;
-    TransformManager *getTransformManager();
+    const TransformManager* getTransformManager() const;
+    TransformManager* getTransformManager();
     // get world manager
-    const WorldManager *getWorldManager() const;
-    WorldManager *getWorldManager();
+    const WorldManager* getWorldManager() const;
+    WorldManager* getWorldManager();
     // get objects representing trackers ('hands')
-    SketchObject *getLeftHandObject();
-    SketchObject *getRightHandObject();
+    SketchObject* getLeftHandObject();
+    SketchObject* getRightHandObject();
     // get replicas
-    const QList<StructureReplicator *> *getReplicas() const;
+    const QList< StructureReplicator* >* getReplicas() const;
     // get transform equals objects (or more things added later, not sure)
-    const QVector<QSharedPointer<TransformEquals> > *getTransformOps() const;
+    const QVector< QSharedPointer< TransformEquals > >* getTransformOps() const;
     // get cameras hash
-    const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *getCameras() const;
+    const QHash< SketchObject* , vtkSmartPointer< vtkCamera > >* getCameras() const;
     // number of replicas
     int getNumberOfReplications() const;
     // number of transform equals (or more stuff... see comment on getTransformOps())
@@ -133,16 +133,16 @@ public:
     // gets the file in the project directory that matches the given file
     // this will copy the file to the project directory if it can, and if
     // that fails will return the file as-is if it is outside the project directory
-    QString getFileInProjDir(QString filename);
+    QString getFileInProjDir(const QString& filename);
     // gets the camera model
-    SketchModel *getCameraModel();
+    SketchModel* getCameraModel();
 
     // update locations of tracker objects
     void updateTrackerPositions();
     // update the object used for the outlines
-    void setOutlineObject(int outlineIdx, SketchObject *obj);
+    void setOutlineObject(int outlineIdx, SketchObject* obj);
     // update the spring used for the outlines
-    void setOutlineSpring(int outlineIdx, SpringConnection *conn, bool end1Large);
+    void setOutlineSpring(int outlineIdx, Connector* conn, bool end1Large);
     // show/hide the outlines of objects
     void setOutlineVisible(int outlineIdx, bool visible);
     // tell if the outlines for a particular side are visible
@@ -157,31 +157,32 @@ public:
 
     // adding things functions
     // for models
-    SketchModel *addModel(SketchModel *model);
-    SketchModel *addModelFromFile(QString source, QString filename, double imass, double imoment);
+    SketchModel* addModel(SketchModel* model);
+    SketchModel* addModelFromFile(const QString& source, const QString& filename,
+                                  double imass, double imoment);
     // for objects
-    SketchObject *addObject(SketchModel *model, const q_vec_type pos, const q_type orient);
-    SketchObject *addObject(QString source, QString filename);
-    SketchObject *addObject(SketchObject *obj);
-    SketchObject *addCamera(const q_vec_type pos, const q_type orient);
+    SketchObject* addObject(SketchModel* model, const q_vec_type pos, const q_type orient);
+    SketchObject* addObject(const QString& source, const QString& filename);
+    SketchObject* addObject(SketchObject* obj);
+    SketchObject* addCamera(const q_vec_type pos, const q_type orient);
     // Given the vtk camera position, creates a camera object that has that position
     // and view
-    SketchObject* addCameraObjectFromCameraPosition(vtkCamera* cam);
-    bool addObjects(QVector<QString> filenames);
+    SketchObject *addCameraObjectFromCameraPosition(vtkCamera *cam);
+    bool addObjects(const QVector<QString>& filenames);
     // for springs between objects (object-tracker springs managed internally)
-    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
+    Connector *addSpring(SketchObject* o1, SketchObject* o2, double minRest, double maxRest,
                        double stiffness, q_vec_type o1Pos, q_vec_type o2Pos);
     // for other springs
-    SpringConnection *addSpring(SpringConnection *spring);
+    Connector* addSpring(Connector* spring);
     // for structure replication chains
-    StructureReplicator *addReplication(SketchObject *o1, SketchObject *o2, int numCopies);
-    void addReplication(StructureReplicator *rep);
+    StructureReplicator* addReplication(SketchObject* o1, SketchObject* o2, int numCopies);
+    void addReplication(StructureReplicator* rep);
     // for transform equals
-    QWeakPointer<TransformEquals> addTransformEquals(SketchObject *o1, SketchObject *o2);
+    QWeakPointer<TransformEquals> addTransformEquals(SketchObject* o1, SketchObject* o2);
 public:
     // sets up the vtkCamera object to the position and orientation of the given
     // SketchObject.  Should only pass cameras for the SketchObject...
-    static void setUpVtkCamera(SketchObject *cam, vtkCamera *vCam);
+    static void setUpVtkCamera(SketchObject* cam, vtkCamera* vCam);
 private:
     // helper functions
     // input related functions
@@ -196,18 +197,18 @@ private:
     QScopedPointer< TransformManager > transforms;
     QScopedPointer< WorldManager > world;
     // operators on objects -- these are owned here... but not sure if I can do lists of ScopedPointers
-    QList< StructureReplicator * > replicas;
-    QHash< SketchObject *, vtkSmartPointer< vtkCamera > > cameras;
+    QList< StructureReplicator*  > replicas;
+    QHash< SketchObject* , vtkSmartPointer< vtkCamera > > cameras;
     QVector< QSharedPointer< TransformEquals > > transformOps;
 
     // project dir
     QDir *projectDir;
 
     // undo states:
-    QList< UndoState * > undoStack, redoStack;
+    QList< UndoState* > undoStack, redoStack;
 
     // other ui stuff
-    SketchObject *leftHand, *rightHand; // the objects for the left and right hand trackers
+    SketchObject* leftHand, * rightHand; // the objects for the left and right hand trackers
     // the left and right trackers' shadows
     vtkSmartPointer< vtkActor > leftShadowActor, rightShadowActor;
     // outline actors are added to the renderer when the object is close enough to
@@ -226,56 +227,69 @@ private:
     double viewTime;
 };
 
-inline const ModelManager *SketchProject::getModelManager() const {
+inline const ModelManager* SketchProject::getModelManager() const {
     return models.data();
 }
 
-inline ModelManager *SketchProject::getModelManager()
+inline ModelManager* SketchProject::getModelManager()
 {
     return models.data();
 }
 
-inline const TransformManager *SketchProject::getTransformManager() const {
+inline const TransformManager* SketchProject::getTransformManager() const
+{
     return transforms.data();
 }
 
-inline TransformManager *SketchProject::getTransformManager() {
+inline TransformManager* SketchProject::getTransformManager()
+{
     return transforms.data();
 }
 
-inline const WorldManager *SketchProject::getWorldManager() const {
+inline const WorldManager* SketchProject::getWorldManager() const
+{
     return world.data();
 }
 
-inline WorldManager *SketchProject::getWorldManager() {
+inline WorldManager* SketchProject::getWorldManager()
+{
     return world.data();
 }
 
-inline SketchObject *SketchProject::getLeftHandObject() {
+inline SketchObject* SketchProject::getLeftHandObject()
+{
     return leftHand;
 }
 
-inline SketchObject *SketchProject::getRightHandObject() {
+inline SketchObject* SketchProject::getRightHandObject()
+{
     return rightHand;
 }
 
-inline const QList<StructureReplicator *> *SketchProject::getReplicas() const {
+inline const QList< StructureReplicator* >* SketchProject::getReplicas() const
+{
     return &replicas;
 }
 
-inline int SketchProject::getNumberOfReplications() const {
+inline int SketchProject::getNumberOfReplications() const
+{
     return replicas.size();
 }
 
-inline const QVector<QSharedPointer<TransformEquals> > *SketchProject::getTransformOps() const {
+inline const QVector< QSharedPointer< TransformEquals > >*
+        SketchProject::getTransformOps() const
+{
     return &transformOps;
 }
 
-inline int SketchProject::getNumberOfTransformOps() const {
+inline int SketchProject::getNumberOfTransformOps() const
+{
     return transformOps.size();
 }
 
-inline const QHash<SketchObject *, vtkSmartPointer<vtkCamera> > *SketchProject::getCameras() const {
+inline const QHash< SketchObject* , vtkSmartPointer< vtkCamera > >*
+        SketchProject::getCameras() const
+{
     return &cameras;
 }
 

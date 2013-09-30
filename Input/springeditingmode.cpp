@@ -8,8 +8,8 @@
 #include <worldmanager.h>
 #include <sketchproject.h>
 
-SpringEditingMode::SpringEditingMode(SketchProject *proj, const bool *buttonState,
-                                     const double *analogState) :
+SpringEditingMode::SpringEditingMode(SketchProject* proj, const bool* buttonState,
+                                     const double* analogState) :
     HydraInputMode(proj,buttonState,analogState),
     grabbedWorld(WORLD_NOT_GRABBED),
     lSpring(NULL),
@@ -82,8 +82,8 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
         project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
         q_vec_add(pos2,pos1,pos2);
         double stiffness;
-        stiffness = 2 *( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
-        SpringConnection *spring = SpringConnection::makeSpring(
+        stiffness = 2 * ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
+        SpringConnection* spring = SpringConnection::makeSpring(
                     NULL,
                     NULL,
                     pos1,
@@ -103,20 +103,20 @@ void SpringEditingMode::analogsUpdated()
     useLeftJoystickToRotateViewPoint();
 }
 
-inline void processFrameForSide(SketchProject *project,
-                                SpringConnection * & spring, // reference to pointer
-                                double &springDist,
-                                bool & atEnd1,
+static inline void processFrameForSide(SketchProject* project,
+                                Connector* & spring, // reference to pointer
+                                double& springDist,
+                                bool& atEnd1,
                                 bool grabbedSpring,
                                 q_vec_type trackerPos,
-                                SketchObject *trackerObj,
+                                SketchObject* trackerObj,
                                 int side)
 {
-    WorldManager *world = project->getWorldManager();
+    WorldManager* world = project->getWorldManager();
     if ( ! grabbedSpring )
     {
         // if we haven't grabbed a spring, display which spring is grabbable
-        SpringConnection *closest;
+        Connector* closest;
         bool newAtEnd1;
         closest = world->getClosestSpring(trackerPos,&springDist,&newAtEnd1);
         if (closest != spring || (newAtEnd1 != atEnd1))
@@ -141,7 +141,7 @@ inline void processFrameForSide(SketchProject *project,
     {
         // if we have grabbed a spring, move that spring's end
         double objectDist = 0;
-        SketchObject *closestObject = world->getClosestObject(trackerObj,objectDist);
+        SketchObject* closestObject = world->getClosestObject(trackerObj,objectDist);
         if (objectDist > DISTANCE_THRESHOLD)
         {
             closestObject = NULL;
@@ -174,15 +174,15 @@ void SpringEditingMode::doUpdatesForFrame()
     else if (grabbedWorld == RIGHT_GRABBED_WORLD)
         grabWorldWithRight();
 
-    WorldManager *world = project->getWorldManager();
-    SketchObject *leftHand = project->getLeftHandObject();
-    SketchObject *rightHand = project->getRightHandObject();
+    WorldManager* world = project->getWorldManager();
+    SketchObject* leftHand = project->getLeftHandObject();
+    SketchObject* rightHand = project->getRightHandObject();
 
     if ( world->getNumberOfSprings() > 0 )
     {
         // get the tracker positions
         q_vec_type leftTrackerPos, rightTrackerPos;
-        TransformManager *transformMgr = project->getTransformManager();
+        TransformManager* transformMgr = project->getTransformManager();
         transformMgr->getLeftTrackerPosInWorldCoords(leftTrackerPos);
         transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
 

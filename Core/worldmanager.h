@@ -10,6 +10,7 @@
 
 #include <vtkSmartPointer.h>
 class vtkRenderer;
+class vtkLineSource;
 class vtkTransform;
 class vtkPoints;
 class vtkPolyData;
@@ -22,6 +23,7 @@ class vtkProjectToPlane;
 class SketchModel;
 class ModelManager;
 class SketchObject;
+class Connector;
 class SpringConnection;
 class PhysicsStrategy;
 #include "groupidgenerator.h"
@@ -131,73 +133,73 @@ public:
      * Adds the given spring to the list of springs.  Returns a pointer to
      * the spring (same as the one passed in).
      *
-     * This passes ownership of the SpringConnection to the world manager
+     * This passes ownership of the Connector to the world manager
      * and the spring connection will be deleted in removeSpring
      * or the world manager's destructor
      *
      * spring - the spring to add
      *
      *******************************************************************/
-    SpringConnection *addSpring(SpringConnection *spring);
+    Connector* addSpring(Connector* spring);
     /*******************************************************************
      *
      * Adds the given spring to the list of springs for the left hand
      *
-     * This passes ownership of the SpringConnection to the world manager
+     * This passes ownership of the Connector to the world manager
      * and the spring connection will be deleted in removeSpring
      * or the world manager's destructor
      *
      * spring - the spring to add
      *
      *******************************************************************/
-    inline void addLeftHandSpring(SpringConnection *spring) {addSpring(spring,&lHand); }
+    inline void addLeftHandSpring(Connector *spring) {addSpring(spring,&lHand); }
     /*******************************************************************
      *
      * Adds the given spring to the list of springs for the right hand
      *
-     * This passes ownership of the SpringConnection to the world manager
+     * This passes ownership of the Connector to the world manager
      * and the spring connection will be deleted in removeSpring
      * or the world manager's destructor
      *
      * spring - the spring to add
      *
      *******************************************************************/
-    inline void addRightHandSpring(SpringConnection *spring) {addSpring(spring,&rHand); }
+    inline void addRightHandSpring(Connector *spring) {addSpring(spring,&rHand); }
     /*******************************************************************
      *
-     * Gets the list of springs for the left hand
+     * Gets the list of connectors (springs) for the left hand
      *
      *******************************************************************/
-    inline QList<SpringConnection *> *getLeftSprings() { return &lHand; }
+    inline QList< Connector* > *getLeftSprings() { return &lHand; }
     /*******************************************************************
      *
-     * Gets the list of springs for the right hand
+     * Gets the list of connectors (springs) for the right hand
      *
      *******************************************************************/
-    inline QList<SpringConnection *> *getRightSprings() { return &rHand; }
+    inline QList< Connector* > *getRightSprings() { return &rHand; }
     /*******************************************************************
      *
-     * Clears the list of springs for the left hand
+     * Clears the list of connectors (springs) for the left hand
      *
      *******************************************************************/
     void clearLeftHandSprings();
     /*******************************************************************
      *
-     * Clears the list of springs for the right hand
+     * Clears the list of connectors (springs) for the right hand
      *
      *******************************************************************/
     void clearRightHandSprings();
 
     /*******************************************************************
      *
-     * Clears all the springs in the WorldManager (removes and deletes them)
+     * Clears all the connectors in the WorldManager (removes and deletes them)
      *
      *******************************************************************/
-    void clearSprings();
+    void clearConnectors();
     /*******************************************************************
      *
-     * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator
-     * to the position of that spring in the list
+     * Adds the a spring between the two models and returns a pointer to it.
+     * The returned pointer is owned by the world manager
      *
      * o1 - the first object to connect
      * o2 - the second object to connect
@@ -210,13 +212,13 @@ public:
      * maxLen - the maximum rest length of the spring
      *
      *******************************************************************/
-    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+    SpringConnection* addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
                        const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen);
 
     /*******************************************************************
      *
-     * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator
-     * to the position of that spring in the list
+     * Adds the a spring between the two models and returns a pointer to it.
+     * The returned pointer is owned by the world manager
      *
      * o1 - the first object to connect
      * o2 - the second object to connect
@@ -228,7 +230,7 @@ public:
      * len - the length of the spring
      *
      *******************************************************************/
-    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+    SpringConnection* addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
                                        const q_vec_type pos2, bool worldRelativePos, double k, double len);
 
     /*******************************************************************
@@ -236,7 +238,7 @@ public:
      * Removes the given spring from the list of springs
      *
      *******************************************************************/
-    void removeSpring(SpringConnection *spring);
+    void removeSpring(Connector* spring);
 
     /*******************************************************************
      *
@@ -250,13 +252,13 @@ public:
      * Returns a const reference to the list of springs
      *
      *******************************************************************/
-    const QList<SpringConnection *> &getSprings() const;
+    const QList< Connector* > &getSprings() const;
     /*******************************************************************
      *
      * Returns an iterator over all the springs in the list
      *
      *******************************************************************/
-    QListIterator<SpringConnection *> getSpringsIterator() const;
+    QListIterator< Connector* > getSpringsIterator() const;
     /*******************************************************************
      *
      * Sets the collision response mode
@@ -379,7 +381,7 @@ public:
      * than to End2.
      *
      *******************************************************************/
-    SpringConnection *getClosestSpring(q_vec_type point, double *distOut, bool *closerToEnd1);
+    Connector* getClosestSpring(q_vec_type point, double *distOut, bool *closerToEnd1);
     /*******************************************************************
      *
      * This method set the plane used to compute the shadows of objects
@@ -410,7 +412,7 @@ private:
      * other steps necessary for the spring to be shown onscreen
      *
      *******************************************************************/
-    void addSpring(SpringConnection *spring, QList<SpringConnection *> *list);
+    void addSpring(Connector* spring, QList< Connector* > *list);
 
     /*******************************************************************
      *
@@ -445,7 +447,9 @@ private:
     QList< SketchObject * > objects;
     QHash< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
         vtkSmartPointer< vtkActor > > > shadows;
-    QList< SpringConnection * > connections, lHand, rHand;
+    QHash< Connector* , QPair< vtkSmartPointer< vtkLineSource >,
+        vtkSmartPointer< vtkActor > > > lines;
+    QList< Connector * > connections, lHand, rHand;
     QVector< QSharedPointer< PhysicsStrategy > > strategies;
 
     vtkSmartPointer< vtkRenderer > renderer;
@@ -462,7 +466,7 @@ private:
     PhysicsMode::Type collisionResponseMode;
 };
 
-inline SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+inline SpringConnection* WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
                                const q_vec_type pos2, bool worldRelativePos, double k, double len) {
     return addSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
 }
@@ -472,7 +476,7 @@ inline const QList<SketchObject *> *WorldManager::getObjects() const
     return &objects;
 }
 
-inline const QList< SpringConnection *> &WorldManager::getSprings() const
+inline const QList< Connector *> &WorldManager::getSprings() const
 {
     return connections;
 }

@@ -3,7 +3,7 @@
 
 #include "hydrainputmode.h"
 
-class SpringConnection;
+class Connector;
 
 class SpringEditingMode : public HydraInputMode
 {
@@ -25,7 +25,7 @@ public:
     virtual void clearStatus();
 private:
     int grabbedWorld;
-    SpringConnection *lSpring, *rSpring;
+    Connector* lSpring, * rSpring;
     double lSpringDist, rSpringDist;
     bool lAtEnd1, rAtEnd1;
     bool leftGrabbedSpring, rightGrabbedSpring;

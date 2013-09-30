@@ -20,7 +20,7 @@ using std::endl;
 namespace CompareBeforeAndAfter
 {
 
-void compareNumbers(SketchProject *proj1, SketchProject *proj2, int &retVal)
+void compareNumbers(SketchProject* proj1, SketchProject* proj2, int& retVal)
 {
     // make sure both have camera models created (easier than making sure neither has it)
     proj1->getCameraModel();
@@ -63,7 +63,7 @@ void compareNumbers(SketchProject *proj1, SketchProject *proj2, int &retVal)
     }
 }
 
-void compareModels(const SketchModel *m1, const SketchModel *m2, int &numDifferences,
+void compareModels(const SketchModel* m1, const SketchModel* m2, int& numDifferences,
                    bool printDiffs)
 {
     if (m1->getNumberOfConformations() != m2->getNumberOfConformations())
@@ -122,8 +122,8 @@ void compareModels(const SketchModel *m1, const SketchModel *m2, int &numDiffere
     }
 }
 
-void compareObjects(const SketchObject *o1, const SketchObject *o2,
-                    int &numDifferences, bool printDiffs)
+void compareObjects(const SketchObject* o1, const SketchObject* o2,
+                    int& numDifferences, bool printDiffs)
 {
     if (o1 == NULL || o2 == NULL)
     {
@@ -146,7 +146,7 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
         return;
     }
     double epsilon_modifier = 1;
-    const SketchObject *p = o1->getParent();
+    const SketchObject* p = o1->getParent();
     // if this is the case, it is probably a replica, so give a higher tolerance
     if (o1->isLocalTransformPrecomputed() && p != NULL)
     {
@@ -269,8 +269,8 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
             }
             else
             {
-                const Keyframe &frame1 = it1.next().value();
-                const Keyframe &frame2 = it2.next().value();
+                const Keyframe& frame1 = it1.next().value();
+                const Keyframe& frame2 = it2.next().value();
                 q_vec_type p1, p2;
                 q_type o1, o2;
                 frame1.getPosition(p1);
@@ -325,9 +325,9 @@ void compareObjects(const SketchObject *o1, const SketchObject *o2,
     }
 }
 
-void compareObjectLists(const QList<SketchObject *> &list1,
-                        const QList<SketchObject *> &list2,
-                        int &retVal, bool printDiffs)
+void compareObjectLists(const QList< SketchObject* >& list1,
+                        const QList< SketchObject* >& list2,
+                        int& retVal, bool printDiffs)
 {
     if (list1.size() != list2.size())
     {
@@ -340,14 +340,14 @@ void compareObjectLists(const QList<SketchObject *> &list1,
     {
         used.data()[i] = false;
     }
-    for (QListIterator< SketchObject * > it1(list1); it1.hasNext();)
+    for (QListIterator< SketchObject* > it1(list1); it1.hasNext();)
     {
-        const SketchObject *n1 = it1.next();
+        const SketchObject* n1 = it1.next();
         int i = 0;
         bool failed = true;
-        for (QListIterator< SketchObject * > it2(list2); it2.hasNext();i++)
+        for (QListIterator< SketchObject* > it2(list2); it2.hasNext();i++)
         {
-            const SketchObject *n2 = it2.next();
+            const SketchObject* n2 = it2.next();
             if (!used.data()[i])
             {
                 int diffs = 0;
@@ -369,21 +369,21 @@ void compareObjectLists(const QList<SketchObject *> &list1,
 
 }
 
-void compareCameras(SketchProject *proj1, SketchProject *proj2, int &retVal)
+void compareCameras(SketchProject* proj1, SketchProject* proj2, int& retVal)
 {
-    const QHash< SketchObject *, vtkSmartPointer< vtkCamera > > *cameras1 =
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >* cameras1 =
             proj1->getCameras();
-    const QHash< SketchObject *, vtkSmartPointer< vtkCamera > > *cameras2 =
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >* cameras2 =
             proj2->getCameras();
-    for (QHashIterator< SketchObject *, vtkSmartPointer< vtkCamera > > it (*cameras1);
+    for (QHashIterator< SketchObject*, vtkSmartPointer< vtkCamera > > it (*cameras1);
          it.hasNext(); )
     {
-        SketchObject *obj1 = it.next().key();
+        SketchObject* obj1 = it.next().key();
         bool match = false;
-        for (QHashIterator< SketchObject *, vtkSmartPointer< vtkCamera > >
+        for (QHashIterator< SketchObject*, vtkSmartPointer< vtkCamera > >
              it2(*cameras2); it2.hasNext(); )
         {
-            SketchObject *obj2 = it2.next().key();
+            SketchObject* obj2 = it2.next().key();
             int numDiffs = 0;
             compareObjects(obj1,obj2,numDiffs,true);
             if (numDiffs == 0)
@@ -401,9 +401,9 @@ void compareCameras(SketchProject *proj1, SketchProject *proj2, int &retVal)
 
 void compareTransformOps(QSharedPointer< TransformEquals > t1,
                          QSharedPointer< TransformEquals > t2,
-                         int &retVal, bool printDiffs)
+                         int& retVal, bool printDiffs)
 {
-    const QVector< ObjectPair > *l1 = t1->getPairsList(), *l2 = t2->getPairsList();
+    const QVector< ObjectPair >* l1 = t1->getPairsList(), * l2 = t2->getPairsList();
     if (l1->size() != l2->size())
     {
         retVal++;
@@ -444,9 +444,9 @@ void compareTransformOps(QSharedPointer< TransformEquals > t1,
     }
 }
 
-void compareTransformOpLists(const QVector<QSharedPointer<TransformEquals> > &list1,
-                             const QVector<QSharedPointer<TransformEquals> > &list2,
-                             int &retVal, bool printDiffs)
+void compareTransformOpLists(const QVector<QSharedPointer<TransformEquals> >& list1,
+                             const QVector<QSharedPointer<TransformEquals> >& list2,
+                             int& retVal, bool printDiffs)
 {
     if (list1.size() != list2.size())
     {
@@ -489,15 +489,15 @@ void compareTransformOpLists(const QVector<QSharedPointer<TransformEquals> > &li
     }
 }
 
-void compareWorldObjects(SketchProject *proj1, SketchProject *proj2, int &retVal)
+void compareWorldObjects(SketchProject* proj1, SketchProject* proj2, int& retVal)
 {
     compareObjectLists(*proj1->getWorldManager()->getObjects(),
                        *proj2->getWorldManager()->getObjects(),
                        retVal,true);
 }
 
-void compareReplications(const StructureReplicator *rep1, const StructureReplicator *rep2,
-                        int &diffs, bool printDiffs)
+void compareReplications(const StructureReplicator* rep1, const StructureReplicator* rep2,
+                        int& diffs, bool printDiffs)
 {
     int v = 0;
     compareObjects(rep1->getFirstObject(),rep2->getFirstObject(),v,printDiffs);
@@ -520,9 +520,9 @@ void compareReplications(const StructureReplicator *rep1, const StructureReplica
     }
 }
 
-void compareReplicationLists(const QList< StructureReplicator * > &list1,
-                             const QList< StructureReplicator * > &list2,
-                             int retVal, bool printDiffs)
+void compareReplicationLists(const QList< StructureReplicator* >& list1,
+                             const QList< StructureReplicator* >& list2,
+                             int& retVal, bool printDiffs)
 {
     if (list1.size() != list2.size())
     {
@@ -535,16 +535,16 @@ void compareReplicationLists(const QList< StructureReplicator * > &list1,
     {
         used.data()[i] = false;
     }
-    for (QListIterator< StructureReplicator * > it1(list1);
+    for (QListIterator< StructureReplicator* > it1(list1);
          it1.hasNext();)
     {
-        StructureReplicator *n1 = it1.next();
+        StructureReplicator* n1 = it1.next();
         int i = 0;
         bool failed = true;
-        for (QListIterator< StructureReplicator * > it2(list2);
+        for (QListIterator< StructureReplicator* > it2(list2);
              it2.hasNext();i++)
         {
-            StructureReplicator *n2 = it2.next();
+            StructureReplicator* n2 = it2.next();
             if (!used.data()[i])
             {
                 int diffs = 0;
@@ -565,8 +565,8 @@ void compareReplicationLists(const QList< StructureReplicator * > &list1,
     }
 }
 
-void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
-                    int &diffs, bool printDiffs)
+void compareSprings(const SpringConnection* sp1, const SpringConnection* sp2,
+                    int& diffs, bool printDiffs)
 {
     int mydiffs = 0;
     int v = 0;
@@ -659,9 +659,9 @@ void compareSprings(const SpringConnection *sp1, const SpringConnection *sp2,
     diffs += mydiffs;
 }
 
-void compareSpringLists(const QList<SpringConnection *> &list1,
-                        const QList<SpringConnection *> &list2,
-                        int retVal, bool printDiffs)
+void compareSpringLists(const QList< Connector* >& list1,
+                        const QList< Connector* >& list2,
+                        int& retVal, bool printDiffs)
 {
     if (list1.size() != list2.size())
     {
@@ -674,20 +674,29 @@ void compareSpringLists(const QList<SpringConnection *> &list1,
     {
         used.data()[i] = false;
     }
-    for (QListIterator< SpringConnection * > it1(list1);
+    for (QListIterator< Connector* > it1(list1);
          it1.hasNext();)
     {
-        SpringConnection *n1 = it1.next();
+        Connector* n1 = it1.next();
+        SpringConnection* sp1 = dynamic_cast< SpringConnection* >(n1);
         int i = 0;
         bool failed = true;
-        for (QListIterator< SpringConnection * > it2(list2);
+        for (QListIterator< Connector* > it2(list2);
              it2.hasNext();i++)
         {
-            SpringConnection *n2 = it2.next();
+            Connector* n2 = it2.next();
+            SpringConnection* sp2 = dynamic_cast< SpringConnection* >(n2);
             if (!used.data()[i])
             {
                 int diffs = 0;
-                compareSprings(n1,n2,diffs,false);
+                if (sp1 != NULL && sp2 != NULL)
+                {
+                    compareSprings(sp1,sp2,diffs,false);
+                }
+                else
+                {
+                    diffs++;
+                }
                 if (diffs == 0)
                 {
                     used.data()[i] = true;
@@ -704,7 +713,7 @@ void compareSpringLists(const QList<SpringConnection *> &list1,
     }
 }
 
-void compareProjects(SketchProject *proj1, SketchProject *proj2, int &differences)
+void compareProjects(SketchProject* proj1, SketchProject* proj2, int& differences)
 {
     compareNumbers(proj1,proj2,differences);
     compareWorldObjects(proj1,proj2,differences);

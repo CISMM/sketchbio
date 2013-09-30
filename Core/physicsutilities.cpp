@@ -12,10 +12,10 @@ namespace PhysicsUtilities
 {
 
 //###################################################################################
-void euler(SketchObject *obj, double dt) {
+void euler(SketchObject* obj, double dt) {
     q_vec_type pos, angularVel,deltaPos,force,torque;
     q_type spin, orient;
-    SketchModel *model = obj->getModel();
+    SketchModel* model = obj->getModel();
     double iMass, iMoment;
     if (model != NULL) {
         iMass = model->getInverseMass();
@@ -47,7 +47,7 @@ void euler(SketchObject *obj, double dt) {
     orient[Q_Z] += spin[Q_Z]*.5*dt;
     q_normalize(orient,orient);
     // end quaternion integration
-    SketchObject *p = obj->getParent();
+    SketchObject* p = obj->getParent();
     if (p != NULL)
     {
         SketchObject::setParentRelativePositionForAbsolutePosition(obj,p,pos,orient);
@@ -59,13 +59,13 @@ void euler(SketchObject *obj, double dt) {
 }
 
 //###################################################################################
-void applyEuler(QList<SketchObject *> &list,
+void applyEuler(QList< SketchObject* >& list,
                 double dt, bool clearForces)
 {
     int n = list.size();
     for (int i = 0; i < n; i++)
     {
-        SketchObject *obj = list.at(i);
+        SketchObject* obj = list.at(i);
         euler(obj,dt);
         if (clearForces)
         {
@@ -75,17 +75,17 @@ void applyEuler(QList<SketchObject *> &list,
 }
 
 //###################################################################################
-bool collideAndComputeResponse(QList< SketchObject * > &list,
-                               QSet< int > &affectedCollisionGroups,
+bool collideAndComputeResponse(QList< SketchObject* >& list,
+                               QSet< int >& affectedCollisionGroups,
                                bool find_all_collisions,
-                               PhysicsStrategy *strategy)
+                               PhysicsStrategy* strategy)
 {
     int n = list.size();
     bool foundCollision = false;
     for (int i = 0; i < n; i++) {
         // TODO - self collision once deformation added
         bool needsTest = affectedCollisionGroups.empty();
-        for (QSetIterator<int> it(affectedCollisionGroups); it.hasNext();)
+        for (QSetIterator< int > it(affectedCollisionGroups); it.hasNext();)
         {
             if (list.at(i)->isInCollisionGroup(it.next()))
             {
@@ -111,13 +111,13 @@ bool collideAndComputeResponse(QList< SketchObject * > &list,
     return foundCollision;
 }
 
-bool collideWithinGroupAndComputeResponse(QSet< SketchObject * > &affectedGroups,
-                                          QSet< int > affectedCollisionGroups,
+bool collideWithinGroupAndComputeResponse(QSet< SketchObject* >& affectedGroups,
+                                          QSet< int >& affectedCollisionGroups,
                                           bool find_all_collisions,
-                                          PhysicsStrategy *strategy)
+                                          PhysicsStrategy* strategy)
 {
     bool hasCollision = false;
-    for (QSet< SketchObject * >::iterator it = affectedGroups.begin();
+    for (QSet< SketchObject* >::iterator it = affectedGroups.begin();
          it != affectedGroups.end() && (find_all_collisions || !hasCollision);
          it++)
     {
@@ -129,22 +129,22 @@ bool collideWithinGroupAndComputeResponse(QSet< SketchObject * > &affectedGroups
 }
 
 
-void springForcesFromList(QList<SpringConnection *> &list,
-                          QSet<int> &affectedCollisionGroups,
-                          QSet<SketchObject *> &affectedGroups)
+void springForcesFromList(QList< Connector* >& list,
+                          QSet< int >& affectedCollisionGroups,
+                          QSet< SketchObject* >& affectedGroups)
 {
-    for (QListIterator<SpringConnection *> it(list); it.hasNext();)
+    for (QListIterator< Connector* > it(list); it.hasNext();)
     {
-        SpringConnection *c = it.next();
+        Connector* c = it.next();
         c->addForce();
         int i = OBJECT_HAS_NO_GROUP;
         if (c->getObject1() != NULL)
         {
-            SketchObject *o = c->getObject1();
+            SketchObject* o = c->getObject1();
             i = o->getPrimaryCollisionGroupNum();
             if (o->getParent() != NULL && !o->isPropagatingForceToParent())
             {
-                SketchObject *p = o->getParent();
+                SketchObject* p = o->getParent();
                 while (p != NULL)
                 {
                     affectedGroups.insert(p);
@@ -161,11 +161,11 @@ void springForcesFromList(QList<SpringConnection *> &list,
         i = OBJECT_HAS_NO_GROUP;
         if (c->getObject2() != NULL)
         {
-            SketchObject *o = c->getObject2();
+            SketchObject* o = c->getObject2();
             i = o->getPrimaryCollisionGroupNum();
             if (o->getParent() != NULL && !o->isPropagatingForceToParent())
             {
-                SketchObject *p = o->getParent();
+                SketchObject* p = o->getParent();
                 while (p != NULL)
                 {
                     affectedGroups.insert(p);
@@ -183,8 +183,8 @@ void springForcesFromList(QList<SpringConnection *> &list,
 }
 
 
-void restoreToLastLocation(QList< SketchObject * > &list,
-                           QSet< SketchObject * > &affectedGroups)
+void restoreToLastLocation(QList< SketchObject* >& list,
+                           QSet< SketchObject* >& affectedGroups)
 {
     int n = list.size();
     for (int i = 0; i < n; i++)
@@ -197,8 +197,8 @@ void restoreToLastLocation(QList< SketchObject * > &list,
     }
 }
 
-void setLastLocation(QList< SketchObject * > &list,
-                     QSet< SketchObject * > &affectedGroups)
+void setLastLocation(QList< SketchObject*  >& list,
+                     QSet< SketchObject*  >& affectedGroups)
 {
     int n = list.size();
     for (int i = 0; i < n; i++)
@@ -211,19 +211,19 @@ void setLastLocation(QList< SketchObject * > &list,
     }
 }
 
-void applyEulerToListAndGroups(QList< SketchObject * > &list,
-                               QSet< SketchObject * > &affectedGroups,
+void applyEulerToListAndGroups(QList< SketchObject* >& list,
+                               QSet< SketchObject* >& affectedGroups,
                                double dt, bool clearForces)
 {
     applyEuler(list,dt);
-    for (QSetIterator< SketchObject * > it(affectedGroups); it.hasNext(); )
+    for (QSetIterator< SketchObject* > it(affectedGroups); it.hasNext(); )
     {
         applyEuler(*it.next()->getSubObjects(),dt,clearForces);
     }
 }
 
-void clearForces(QList< SketchObject * > &list,
-                 QSet< SketchObject * > &affectedGroups)
+void clearForces(QList< SketchObject* >& list,
+                 QSet< SketchObject* >& affectedGroups)
 {
     for (int i = 0; i < list.size(); i++)
     {

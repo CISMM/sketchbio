@@ -119,32 +119,32 @@ public:
     virtual void setColorMapType(ColorMapType::Type) {}
     virtual void setArrayToColorBy(const QString &) {}
     virtual int numInstances() const { return 0; }
-    virtual vtkActor *getActor() { return actor; }
-    virtual vtkTransformPolyDataFilter *getTransformedGeometry() { return shadowGeometry; }
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags) { return false;}
+    virtual vtkActor* getActor() { return actor; }
+    virtual vtkTransformPolyDataFilter* getTransformedGeometry() { return shadowGeometry; }
+    virtual bool collide(SketchObject* other, PhysicsStrategy* physics, int pqp_flags) { return false;}
     virtual void getBoundingBox(double bb[]) {}
-    virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes() { return NULL;}
-    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines() { return NULL; }
+    virtual vtkPolyDataAlgorithm* getOrientedBoundingBoxes() { return NULL;}
+    virtual vtkAlgorithm* getOrientedHalfPlaneOutlines() { return NULL; }
     virtual void setOrientedHalfPlaneData(double) {}
-    virtual SketchObject *deepCopy() { return NULL; }
+    virtual SketchObject* deepCopy() { return NULL; }
 
 private:
     vtkSmartPointer< vtkActor > actor;
     vtkSmartPointer< vtkTransformPolyDataFilter > shadowGeometry;
 };
 
-inline SketchObject *addTracker(vtkRenderer *r) {
+inline SketchObject* addTracker(vtkRenderer* r) {
     vtkSmartPointer<vtkActor> actor;
-    SketchObject *tracker = new TrackerObject();
+    SketchObject* tracker = new TrackerObject();
     actor = tracker->getActor();
     r->AddActor(actor);
     return tracker;
 }
 
-inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
-                              vtkActor *shadowFloorActor,
-                              vtkActor *floorLinesActor,
-                              TransformManager *transforms)
+inline void makeFloorAndLines(vtkPlaneSource*  shadowFloorSource,
+                              vtkActor* shadowFloorActor,
+                              vtkActor* floorLinesActor,
+                              TransformManager* transforms)
 {
 // the half x-length of the plane in room units
 #define PLANE_HALF_LENGTH 30
@@ -264,8 +264,8 @@ inline void makeFloorAndLines(vtkPlaneSource * shadowFloorSource,
 // the color of the trackers' shadows
 #define TRACKER_SHADOW_COLOR 0.0,0.0,0.0
 
-inline void makeTrackerShadow(SketchObject *hand, vtkActor *shadowActor,
-                              vtkLinearTransform *roomToWorldTransform)
+inline void makeTrackerShadow(SketchObject* hand, vtkActor* shadowActor,
+                              vtkLinearTransform* roomToWorldTransform)
 {
     vtkSmartPointer< vtkProjectToPlane > projection =
             vtkSmartPointer< vtkProjectToPlane >::New();
@@ -284,7 +284,7 @@ inline void makeTrackerShadow(SketchObject *hand, vtkActor *shadowActor,
 }
 
 #define OUTLINES_COLOR 0.7,0.7,0.7
-SketchProject::SketchProject(vtkRenderer *r, const QString &projDir) :
+SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     renderer(r),
     models(new ModelManager()),
     transforms(new TransformManager()),
@@ -338,7 +338,8 @@ SketchProject::SketchProject(vtkRenderer *r, const QString &projDir) :
     setProjectDir(projDir);
 }
 
-SketchProject::~SketchProject() {
+SketchProject::~SketchProject()
+{
     qDeleteAll(redoStack);
     redoStack.clear();
     qDeleteAll(undoStack);
@@ -353,61 +354,73 @@ SketchProject::~SketchProject() {
     leftHand = NULL;
     delete rightHand;
     rightHand = NULL;
-    if (projectDir != NULL) {
+    if (projectDir != NULL)
+    {
         delete projectDir;
     }
 }
 
-bool SketchProject::setProjectDir(const QString &dir) {
+bool SketchProject::setProjectDir(const QString &dir)
+{
     QDir tmp = QDir(dir);
-    if (tmp.isRelative()) {
+    if (tmp.isRelative())
+    {
         QString abs = QDir::current().absoluteFilePath(dir);
         tmp = QDir(abs);
     }
     bool exists;
-    if (!(exists = tmp.exists())) {
+    if (!(exists = tmp.exists()))
+    {
         tmp.mkpath(".");
         exists = tmp.exists();
     }
-    if (projectDir != NULL) {
+    if (projectDir != NULL)
+    {
         delete projectDir;
     }
     projectDir = new QDir(tmp.absolutePath());
     return exists;
 }
 
-void SketchProject::setLeftHandPos(q_xyz_quat_type *loc) {
+void SketchProject::setLeftHandPos(q_xyz_quat_type* loc)
+{
     transforms->setLeftHandTransform(loc);
 }
 
-void SketchProject::setRightHandPos(q_xyz_quat_type *loc) {
+void SketchProject::setRightHandPos(q_xyz_quat_type* loc)
+{
     transforms->setRightHandTransform(loc);
 }
 
-void SketchProject::setViewpoint(vtkMatrix4x4 *worldToRoom, vtkMatrix4x4 *roomToEyes) {
+void SketchProject::setViewpoint(vtkMatrix4x4* worldToRoom, vtkMatrix4x4* roomToEyes)
+{
     transforms->setWorldToRoomMatrix(worldToRoom);
     transforms->setRoomToEyeMatrix(roomToEyes);
 }
 
-void SketchProject::setCollisionMode(PhysicsMode::Type mode) {
+void SketchProject::setCollisionMode(PhysicsMode::Type mode)
+{
     world->setCollisionMode(mode);
 }
 
-void SketchProject::setCollisionTestsOn(bool on) {
+void SketchProject::setCollisionTestsOn(bool on)
+{
     world->setCollisionCheckOn(on);
 }
 
-void SketchProject::setWorldSpringsEnabled(bool enabled) {
+void SketchProject::setWorldSpringsEnabled(bool enabled)
+{
     world->setPhysicsSpringsOn(enabled);
 }
 
-QString SketchProject::getProjectDir() const {
+QString SketchProject::getProjectDir() const
+{
     if (projectDir == NULL)
         return "";
     return projectDir->absolutePath();
 }
 
-QString SketchProject::getFileInProjDir(QString filename)
+QString SketchProject::getFileInProjDir(const QString& filename)
 {
     QString result;
     if (QFile(projectDir->absolutePath() + "/" + filename).exists())
@@ -449,12 +462,12 @@ void SketchProject::clearProject()
     world->clearLeftHandSprings();
     world->clearRightHandSprings();
     world->clearObjects();
-    world->clearSprings();
+    world->clearConnectors();
     setOutlineVisible(LEFT_SIDE_OUTLINE,false);
     setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
 }
 
-UndoState *SketchProject::getLastUndoState()
+UndoState* SketchProject::getLastUndoState()
 {
     if (undoStack.empty())
     {
@@ -466,7 +479,7 @@ UndoState *SketchProject::getLastUndoState()
     }
 }
 
-UndoState *SketchProject::getNextRedoState()
+UndoState* SketchProject::getNextRedoState()
 {
     if (redoStack.empty())
     {
@@ -480,12 +493,12 @@ UndoState *SketchProject::getNextRedoState()
 
 void SketchProject::popUndoState()
 {
-    UndoState *state = undoStack.back();
+    UndoState* state = undoStack.back();
     undoStack.pop_back();
     delete state;
 }
 
-void SketchProject::addUndoState(UndoState *state)
+void SketchProject::addUndoState(UndoState* state)
 {
     if (state == NULL || &state->getProject() != this)
         return;
@@ -498,7 +511,7 @@ void SketchProject::applyUndo()
 {
     if (undoStack.empty())
         return;
-    UndoState *state = undoStack.back();
+    UndoState* state = undoStack.back();
     undoStack.pop_back();
     state->undo();
     redoStack.push_back(state);
@@ -508,7 +521,7 @@ void SketchProject::applyRedo()
 {
     if (redoStack.empty())
         return;
-    UndoState *state = redoStack.back();
+    UndoState* state = redoStack.back();
     redoStack.pop_back();
     state->redo();
     undoStack.push_back(state);
@@ -626,8 +639,9 @@ void SketchProject::timestep(double dt) {
             // if setAnimationTime returns true, then we are done
             stopAnimation();
         } else {
-            for (QHashIterator<SketchObject *, vtkSmartPointer<vtkCamera> > it(cameras); it.hasNext(); ) {
-                SketchObject *cam = it.peekNext().key();
+            for (QHashIterator< SketchObject* , vtkSmartPointer< vtkCamera > > it(cameras);
+                 it.hasNext(); ) {
+                SketchObject* cam = it.peekNext().key();
                 vtkSmartPointer< vtkCamera > vCam = it.next().value();
                 if (cam->isActive()) {
                     setUpVtkCamera(cam,vCam);
@@ -639,14 +653,14 @@ void SketchProject::timestep(double dt) {
     }
 }
 
-SketchModel *SketchProject::addModel(SketchModel *model)
+SketchModel* SketchProject::addModel(SketchModel* model)
 {
     model = models->addModel(model);
     return model;
 }
 
 
-SketchModel *SketchProject::addModelFromFile(QString source, QString fileName,
+SketchModel* SketchProject::addModelFromFile(const QString& source, const QString& fileName,
                                              double iMass, double iMoment)
 {
     QFile file(fileName);
@@ -670,11 +684,11 @@ SketchModel *SketchProject::addModelFromFile(QString source, QString fileName,
     }
 }
 
-SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
+SketchObject* SketchProject::addObject(SketchModel* model, const q_vec_type pos,
                                        const q_type orient)
 {
     int myIdx = world->getNumberOfObjects();
-    SketchObject *object = world->addObject(model,pos,orient);
+    SketchObject* object = world->addObject(model,pos,orient);
     //object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
     if (object->numInstances() == 1)
     {
@@ -683,9 +697,9 @@ SketchObject *SketchProject::addObject(SketchModel *model, const q_vec_type pos,
     return object;
 }
 
-SketchObject *SketchProject::addObject(QString source,QString filename)
+SketchObject* SketchProject::addObject(const QString& source,const QString& filename)
 {
-    SketchModel *model = NULL;
+    SketchModel* model = NULL;
     model = models->getModel(source);
     if (model == NULL)
     {
@@ -701,7 +715,7 @@ SketchObject *SketchProject::addObject(QString source,QString filename)
     return addObject(model,pos,orient);
 }
 
-SketchObject *SketchProject::addObject(SketchObject *object) {
+SketchObject* SketchProject::addObject(SketchObject* object) {
     int myIdx = world->getNumberOfObjects();
     if (object->numInstances() == 1) {
     //    object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
@@ -720,7 +734,8 @@ SketchObject *SketchProject::addObject(SketchObject *object) {
     return object;
 }
 
-bool SketchProject::addObjects(QVector<QString> filenames) {
+bool SketchProject::addObjects(const QVector<QString>& filenames)
+{
 
     int i;
     for (i = 0; i < filenames.size(); i++) {
@@ -734,9 +749,10 @@ bool SketchProject::addObjects(QVector<QString> filenames) {
     return true;
 }
 
-SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient) {
-    SketchModel *model = models->getCameraModel(*projectDir);
-    SketchObject *obj = addObject(model,pos,orient);
+SketchObject* SketchProject::addCamera(const q_vec_type pos, const q_type orient)
+{
+    SketchModel* model = models->getCameraModel(*projectDir);
+    SketchObject* obj = addObject(model,pos,orient);
     // cameras are invisible (from the animation's standpoint)
     obj->setIsVisible(false);
     // if this is the first camera added, make it active
@@ -747,28 +763,34 @@ SketchObject *SketchProject::addCamera(const q_vec_type pos, const q_type orient
     return obj;
 }
 
-SpringConnection *SketchProject::addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
-                                  double stiffness, q_vec_type o1Pos, q_vec_type o2Pos) {
+Connector* SketchProject::addSpring(SketchObject* o1, SketchObject* o2, double minRest, double maxRest,
+                                  double stiffness, q_vec_type o1Pos, q_vec_type o2Pos)
+{
     return world->addSpring(o1,o2,o1Pos,o2Pos,false,stiffness,minRest,maxRest);
 }
 
-SpringConnection *SketchProject::addSpring(SpringConnection *spring) {
+Connector* SketchProject::addSpring(Connector* spring)
+{
     return world->addSpring(spring);
 }
 
-StructureReplicator *SketchProject::addReplication(SketchObject *o1, SketchObject *o2, int numCopies) {
-    StructureReplicator *rep = new StructureReplicator(o1,o2,world.data());
+StructureReplicator* SketchProject::addReplication(SketchObject* o1, SketchObject* o2,
+                                                   int numCopies)
+{
+    StructureReplicator* rep = new StructureReplicator(o1,o2,world.data());
     replicas.append(rep);
     rep->setNumShown(numCopies);
     return rep;
 }
 
-void SketchProject::addReplication(StructureReplicator *rep)
+void SketchProject::addReplication(StructureReplicator* rep)
 {
     replicas.append(rep);
 }
 
-QWeakPointer<TransformEquals> SketchProject::addTransformEquals(SketchObject *o1, SketchObject *o2) {
+QWeakPointer<TransformEquals> SketchProject::addTransformEquals(
+        SketchObject* o1, SketchObject* o2)
+{
     QSharedPointer<TransformEquals> trans(new TransformEquals(o1,o2,world.data()));
     transformOps.append(trans);
     return trans.toWeakRef();
@@ -777,7 +799,8 @@ QWeakPointer<TransformEquals> SketchProject::addTransformEquals(SketchObject *o1
 /*
  * Updates the positions and transformations of the tracker objects.
  */
-void SketchProject::updateTrackerPositions() {
+void SketchProject::updateTrackerPositions()
+{
     q_vec_type pos;
     q_type orient;
     transforms->getLeftTrackerPosInWorldCoords(pos);
@@ -801,10 +824,10 @@ void SketchProject::updateTrackerPositions() {
     transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
 }
 
-void SketchProject::setOutlineObject(int outlineIdx, SketchObject *obj)
+void SketchProject::setOutlineObject(int outlineIdx, SketchObject* obj)
 {
-    vtkPolyDataMapper *mapper = outlines[outlineIdx].first;
-    vtkActor *actor = outlines[outlineIdx].second;
+    vtkPolyDataMapper* mapper = outlines[outlineIdx].first;
+    vtkActor* actor = outlines[outlineIdx].second;
     mapper->SetInputConnection(obj->getOrientedBoundingBoxes()->GetOutputPort());
     mapper->Update();
     // TODO - fix this
@@ -818,10 +841,10 @@ void SketchProject::setOutlineObject(int outlineIdx, SketchObject *obj)
     }
 }
 
-void SketchProject::setOutlineSpring(int outlineIdx, SpringConnection *conn, bool end1Large)
+void SketchProject::setOutlineSpring(int outlineIdx, Connector* conn, bool end1Large)
 {
-    vtkPolyDataMapper *mapper = outlines[outlineIdx].first;
-    vtkActor *actor = outlines[outlineIdx].second;
+    vtkPolyDataMapper* mapper = outlines[outlineIdx].first;
+    vtkActor* actor = outlines[outlineIdx].second;
     q_vec_type end1, end2, midpoint, direction;
     conn->getEnd1WorldPosition(end1);
     conn->getEnd2WorldPosition(end2);
@@ -852,7 +875,7 @@ void SketchProject::setOutlineSpring(int outlineIdx, SpringConnection *conn, boo
 
 void SketchProject::setOutlineVisible(int outlineIdx, bool visible)
 {
-    vtkActor *actor = outlines[outlineIdx].second;
+    vtkActor* actor = outlines[outlineIdx].second;
     if (visible)
     {
         renderer->AddActor(actor);
@@ -868,7 +891,7 @@ bool SketchProject::isOutlineVisible(int outlineIdx)
     return renderer->HasViewProp(outlines[outlineIdx].second);
 }
 
-SketchModel *SketchProject::getCameraModel() {
+SketchModel* SketchProject::getCameraModel() {
     return models->getCameraModel(*projectDir);
 }
 
@@ -892,8 +915,8 @@ inline int getMinIdx(const q_vec_type vec) {
     }
 }
 
-void SketchProject::grabObject(SketchObject *objectToGrab, bool grabWithLeft) {
-    SketchObject *tracker = NULL;
+void SketchProject::grabObject(SketchObject* objectToGrab, bool grabWithLeft) {
+    SketchObject* tracker = NULL;
     if (grabWithLeft) {
         tracker = leftHand;
     } else {
@@ -958,7 +981,7 @@ void SketchProject::grabObject(SketchObject *objectToGrab, bool grabWithLeft) {
     }
 }
 
-void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
+void SketchProject::setUpVtkCamera(SketchObject* cam, vtkCamera* vCam) {
     vtkSmartPointer<vtkTransform> trans = cam->getLocalTransform();
     // not actually the inverse... I guess I goofed up... but it works, so leaving it for now.
     vtkSmartPointer<vtkMatrix4x4> invMat = trans->GetMatrix();

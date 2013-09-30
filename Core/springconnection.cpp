@@ -5,8 +5,7 @@
 SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                                    double maxRestLen, double k, const q_vec_type obj1Pos,
                                    const q_vec_type obj2Pos) :
-    object1(o1),
-    object2(o2),
+    Connector(o1,o2,obj1Pos,obj2Pos),
     minRestLength(minRestLen),
     maxRestLength(maxRestLen),
     stiffness(k)
@@ -17,53 +16,8 @@ SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double mi
     cellId(-1)
   #endif
 {
-    q_vec_copy(object1ConnectionPosition,obj1Pos);
-    q_vec_copy(object2ConnectionPosition,obj2Pos);
 }
 
-void SpringConnection::setObject1(SketchObject *obj)
-{
-    q_vec_type wPos;
-    getEnd1WorldPosition(wPos);
-    object1 = obj;
-    setEnd1WorldPosition(wPos);
-}
-
-void SpringConnection::setObject2(SketchObject *obj)
-{
-    q_vec_type wPos;
-    getEnd2WorldPosition(wPos);
-    object2 = obj;
-    setEnd2WorldPosition(wPos);
-}
-
-void SpringConnection::getEnd1WorldPosition(q_vec_type out) const {
-    if (object1 != NULL)
-        object1->getModelSpacePointInWorldCoordinates(object1ConnectionPosition,out);
-    else
-        q_vec_copy(out,object1ConnectionPosition);
-}
-
-void SpringConnection::setEnd1WorldPosition(const q_vec_type newPos) {
-    if (object1 != NULL)
-        object1->getWorldSpacePointInModelCoordinates(newPos,object1ConnectionPosition);
-    else
-        q_vec_copy(object1ConnectionPosition,newPos);
-}
-
-void SpringConnection::getEnd2WorldPosition(q_vec_type out) const {
-    if (object2 != NULL)
-        object2->getModelSpacePointInWorldCoordinates(object2ConnectionPosition,out);
-    else
-        q_vec_copy(out,object2ConnectionPosition);
-}
-
-void SpringConnection::setEnd2WorldPosition(const q_vec_type newPos) {
-    if (object2 != NULL)
-        object2->getWorldSpacePointInModelCoordinates(newPos,object2ConnectionPosition);
-    else
-        q_vec_copy(object2ConnectionPosition,newPos);
-}
 
 void SpringConnection::addForce() {
     if (object1 == object2)

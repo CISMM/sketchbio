@@ -7,7 +7,7 @@ struct PQP_CollideResult;
 
 // Forward declare spring and object... circular dependency with object
 class SketchObject;
-class SpringConnection;
+class Connector;
 
 /*
  * This class implements the Strategy Pattern for collision response techniques for SketchBio.
@@ -23,9 +23,9 @@ public:
     virtual ~PhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-                                                 QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-                                                 QList<SketchObject *> &objects, double dt, bool doCollisionCheck) = 0;
+    void performPhysicsStepAndCollisionDetection(QList< Connector* > &lHand, QList< Connector* > &rHand,
+                                                 QList< Connector* > &physicsSprings, bool doPhysicsSprings,
+                                                 QList< SketchObject* > &objects, double dt, bool doCollisionCheck) = 0;
     virtual
     void respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags) = 0;
 };

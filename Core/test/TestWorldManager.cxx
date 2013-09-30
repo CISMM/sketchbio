@@ -221,12 +221,12 @@ int testSelection()
         cout << "Wrong selection of group3." << endl;
     }
 
-    SpringConnection *s1 = world->addSpring(o1,o4,v1,v1,false,1.0,0.0);
+    Connector* s1 = world->addSpring(o1,o4,v1,v1,false,1.0,0.0);
     q_vec_set(v1,0,0,5);
-    SpringConnection *s2 = world->addSpring(o3,o2,v1,v1,false,1.0,0.0);
+    Connector* s2 = world->addSpring(o3,o2,v1,v1,false,1.0,0.0);
     q_vec_set(v1,3,0,-10);
     bool closerToEnd1;
-    SpringConnection *closestSp = world->getClosestSpring(v1,&dist,&closerToEnd1);
+    Connector* closestSp = world->getClosestSpring(v1,&dist,&closerToEnd1);
     if (closestSp != s1 || !closerToEnd1)
     {
         errors++;

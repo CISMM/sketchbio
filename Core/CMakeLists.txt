@@ -25,6 +25,8 @@ modelutilities.cpp
 modelutilities.h
 worldmanager.cpp
 worldmanager.h
+connector.cpp
+connector.h
 springconnection.cpp
 springconnection.h
 sketchproject.cpp

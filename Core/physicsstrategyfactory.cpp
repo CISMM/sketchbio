@@ -9,7 +9,7 @@
 #include "sketchmodel.h"
 #include "sketchobject.h"
 #include "sketchioconstants.h"
-#include "springconnection.h"
+class Connector;
 #include "physicsstrategy.h"
 #include "physicsutilities.h"
 
@@ -17,23 +17,25 @@
  * These classes have definitions further down in the file, below
  * the only publicly visible method
  */
-namespace PhysicsStrategyFactory {
+namespace PhysicsStrategyFactory
+{
 
 /*
  * This class implements the original physics mode where all objects are subject to response forces and all
  * forces are applied at once.
  */
-class SimplePhysicsStrategy : public PhysicsStrategy {
+class SimplePhysicsStrategy : public PhysicsStrategy
+{
 public:
     SimplePhysicsStrategy();
     virtual ~SimplePhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-                                                 QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-                                                 QList<SketchObject *> &objects, double dt, bool doCollisionCheck);
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+                                                 QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+                                                 QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
-    void respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags);
+    void respondToCollision(SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags);
 };
 
 /*
@@ -44,19 +46,20 @@ public:
  * Note: this class uses internal state to keep track of which objects are affected by springs, so it is not
  * safe to call from multiple threads
  */
-class PoseModePhysicsStrategy : public PhysicsStrategy {
+class PoseModePhysicsStrategy : public PhysicsStrategy
+{
 public:
     PoseModePhysicsStrategy();
     virtual ~PoseModePhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-                                                 QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-                                                 QList<SketchObject *> &objects, double dt, bool doCollisionCheck);
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+                                                 QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+                                                 QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
-    void respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags);
+    void respondToCollision(SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags);
 private:
-    void poseModeForSprings(QList<SpringConnection *> &springs, QList<SketchObject *> &objs,
+    void poseModeForSprings(QList< Connector* >& springs, QList<SketchObject* >& objs,
                                double dt, bool doCollisionCheck);
     QSet<int> affectedGroups;
 };
@@ -66,17 +69,18 @@ private:
  * never allowed and the motion is always undone if it results in a collision. This strategy is like PoseMode in that
  * forces from different sources are applied or rejected separately.
  */
-class BinaryCollisionSearchStrategy : public PhysicsStrategy {
+class BinaryCollisionSearchStrategy : public PhysicsStrategy
+{
 public:
     BinaryCollisionSearchStrategy();
     virtual ~BinaryCollisionSearchStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-                                                 QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-                                                 QList<SketchObject *> &objects, double dt, bool doCollisionCheck);
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+                                                 QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+                                                 QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
-    void respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags);
+    void respondToCollision(SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags);
 };
 
 /*
@@ -96,13 +100,13 @@ public:
     virtual ~PoseModePCAPhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-                                                 QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-                                                 QList<SketchObject *> &objects, double dt, bool doCollisionCheck);
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+                                                 QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+                                                 QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
-    void respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags);
+    void respondToCollision(SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags);
 private:
-    void poseModePCAForSprings(QList<SpringConnection *> &springs, QList<SketchObject *> &objs,
+    void poseModePCAForSprings(QList< Connector* >& springs, QList<SketchObject* >& objs,
                                double dt, bool doCollisionCheck);
     QSet<int> affectedGroups;
 };
@@ -245,12 +249,12 @@ Meigen(PQP_REAL vout[3][3], PQP_REAL dout[3], PQP_REAL a[3][3])
 // helper function-- compute the normal n of triangle tri in the model
 // assumes points in each triangle in the model are added in counterclockwise order
 // relative to the outside of the surface looking down
-static inline void unit_normal(q_vec_type n, PQP_Model *m, int t) {
+static inline void unit_normal(q_vec_type n, PQP_Model* m, int t) {
     q_vec_type diff1, diff2;
 #ifdef PQP_UPDATE_EPSILON
-    Tri *tri = &(m->tris[m->idsToIndices[t]]);
+    Tri* tri = &(m->tris[m->idsToIndices[t]]);
 #else
-    Tri *tri = NULL;
+    Tri* tri = NULL;
     for (int i = 0; i < m->num_tris; i++) {
         if (m->tris[i].id == t) {
             tri = &(m->tris[i]);
@@ -266,11 +270,11 @@ static inline void unit_normal(q_vec_type n, PQP_Model *m, int t) {
 
 //##################################################################################################
 // helper function -- compute the centriod of the triangle
-static inline void centriod(q_vec_type c, PQP_Model *m, int t) {
+static inline void centriod(q_vec_type c, PQP_Model* m, int t) {
 #ifdef PQP_UPDATE_EPSILON
-    Tri *tri = &(m->tris[m->idsToIndices[t]]);
+    Tri* tri = &(m->tris[m->idsToIndices[t]]);
 #else
-    Tri *tri = NULL;
+    Tri* tri = NULL;
     for (int i = 0; i < m->num_tris; i++) {
         if (m->tris[i].id == t) {
             tri = &(m->tris[i]);
@@ -287,9 +291,9 @@ static inline void centriod(q_vec_type c, PQP_Model *m, int t) {
 //##################################################################################################
 // -helper function to compute mean point of all triangle points where the triangles are involved in
 //   the collision
-static inline void computeMeanCollisionPoint(PQP_REAL mean[3], PQP_CollideResult *cr,
-                                      SketchModel *model1, bool isFirst,
-                                      PQP_Model *m1) {
+static inline void computeMeanCollisionPoint(PQP_REAL mean[3], PQP_CollideResult* cr,
+                                      SketchModel* model1, bool isFirst,
+                                      PQP_Model* m1) {
     int total = 3 * cr->NumPairs();
     mean[0] = mean[1] = mean[2] = 0.0;
 
@@ -318,9 +322,9 @@ static inline void computeMeanCollisionPoint(PQP_REAL mean[3], PQP_CollideResult
 //##################################################################################################
 // -helper function to compute the covariance of all triangle points involved in the collision on the
 //   given model
-static inline void computeCollisonPointCovariance(PQP_REAL mean[3], PQP_CollideResult *cr,
-                                           SketchModel *model1, bool isFirst,
-                                           PQP_Model *m1, PQP_REAL cov[3][3]) {
+static inline void computeCollisonPointCovariance(PQP_REAL mean[3], PQP_CollideResult* cr,
+                                           SketchModel* model1, bool isFirst,
+                                           PQP_Model* m1, PQP_REAL cov[3][3]) {
     int total = 3 * cr->NumPairs();
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -368,13 +372,13 @@ static inline void computeCollisonPointCovariance(PQP_REAL mean[3], PQP_CollideR
 // this function also handles the case where affectedGroups is empty by
 // picking the highest level that is not in the other hierarchy as the level
 // to add force at
-static inline void computeObjectsToAddForce(SketchObject *o1, SketchObject *o2,
+static inline void computeObjectsToAddForce(SketchObject* o1, SketchObject* o2,
                                             QSet< int > affectedGroups,
-                                            SketchObject * & result1,
-                                            SketchObject * & result2)
+                                            SketchObject* & result1,
+                                            SketchObject* & result2)
 {
-    QList< SketchObject * > parents1, parents2;
-    SketchObject *p = o1;
+    QList< SketchObject* > parents1, parents2;
+    SketchObject* p = o1;
     while (p != NULL)
     {
         parents1.append(p);
@@ -450,13 +454,13 @@ static inline void computeObjectsToAddForce(SketchObject *o1, SketchObject *o2,
 }
 
 //##################################################################################################
-static inline void applyPCACollisionResponseForce(SketchObject *o1, SketchObject *o2,
-                                               PQP_CollideResult *cr, QSet<int> &affectedGroups) {
+static inline void applyPCACollisionResponseForce(SketchObject* o1, SketchObject* o2,
+                                               PQP_CollideResult* cr, QSet< int >& affectedGroups) {
     // get the collision models:
-    SketchModel *model1 = o1->getModel();
-    SketchModel *model2 = o2->getModel();
-    PQP_Model *m1 = model1->getCollisionModel(o1->getModelConformation());
-    PQP_Model *m2 = model2->getCollisionModel(o2->getModelConformation());
+    SketchModel* model1 = o1->getModel();
+    SketchModel* model2 = o2->getModel();
+    PQP_Model* m1 = model1->getCollisionModel(o1->getModelConformation());
+    PQP_Model* m2 = model2->getCollisionModel(o2->getModelConformation());
 
     // get object's orientations
     q_type quat1, quat2;
@@ -504,7 +508,7 @@ static inline void applyPCACollisionResponseForce(SketchObject *o1, SketchObject
     o2->getLocalTransform()->TransformVector(dir2,dir2W);
     q_vec_scale(dir1W,COLLISION_FORCE*30,dir1W);
     q_vec_scale(dir2W,COLLISION_FORCE*30,dir2W);
-    SketchObject *obj1 = NULL, *obj2 = NULL;
+    SketchObject* obj1 = NULL, * obj2 = NULL;
     computeObjectsToAddForce(o1,o2,affectedGroups,obj1,obj2);
     if (obj1 != NULL)
     {
@@ -521,11 +525,11 @@ static inline void applyPCACollisionResponseForce(SketchObject *o1, SketchObject
 }
 
 //##################################################################################################
-static inline void applyCollisionResponseForce(SketchObject *o1, SketchObject *o2,
-                                               PQP_CollideResult *cr, QSet<int> &affectedGroups) {
+static inline void applyCollisionResponseForce(SketchObject* o1, SketchObject* o2,
+                                               PQP_CollideResult* cr, QSet< int >& affectedGroups) {
     // get the collision models:
-    PQP_Model *pqp_model1 = o1->getModel()->getCollisionModel(o1->getModelConformation());
-    PQP_Model *pqp_model2 = o2->getModel()->getCollisionModel(o2->getModelConformation());
+    PQP_Model* pqp_model1 = o1->getModel()->getCollisionModel(o1->getModelConformation());
+    PQP_Model* pqp_model2 = o2->getModel()->getCollisionModel(o2->getModelConformation());
 
     // get object's orientations
     q_type quat1, quat2;
@@ -536,7 +540,7 @@ static inline void applyCollisionResponseForce(SketchObject *o1, SketchObject *o
     // scale it by the number of colliding primaries so that we have some chance of sliding along surfaces
     // instead of sticking
 
-    SketchObject *obj1 = NULL, *obj2 = NULL;
+    SketchObject* obj1 = NULL, * obj2 = NULL;
     computeObjectsToAddForce(o1,o2,affectedGroups,obj1,obj2);
 
     // for each pair in collision
@@ -580,10 +584,10 @@ static inline void applyCollisionResponseForce(SketchObject *o1, SketchObject *o
 //   objects.  This means that the objects are tested for collisions, then respond, then are tested again.
 //   If the collision response did not fix the collision, then the entire movement (including changes
 //   from before this) is undone.
-static inline void applyPoseModeCollisionResponse(QList< SketchObject * > &list,
+static inline void applyPoseModeCollisionResponse(QList< SketchObject* >& list,
                                                   QSet< int > &affectedCollisionGroups,
-                                                  QSet< SketchObject * > &affectedGroups,
-                                           double dt, PhysicsStrategy *strategy) {
+                                                  QSet< SketchObject* >& affectedGroups,
+                                           double dt, PhysicsStrategy* strategy) {
     bool appliedResponse = PhysicsUtilities::collideAndComputeResponse(
                 list,affectedCollisionGroups,true,strategy)
             || PhysicsUtilities::collideWithinGroupAndComputeResponse(
@@ -605,14 +609,14 @@ static inline void applyPoseModeCollisionResponse(QList< SketchObject * > &list,
 //##################################################################################################
 // -helper function: divides forces and torques on all objects by divisor and sets the force and torque on the
 //   objects to the new amount
-static inline void divideForces(QList< SketchObject * > &list,
-                                QSet< SketchObject * > &affectedGroups,
+static inline void divideForces(QList< SketchObject* >& list,
+                                QSet< SketchObject* >& affectedGroups,
                                 double divisor)
 {
     double scale = 1/divisor;
-    for (QMutableListIterator<SketchObject *> it(list); it.hasNext();) {
+    for (QMutableListIterator< SketchObject* > it(list); it.hasNext();) {
         q_vec_type f, t;
-        SketchObject *obj = it.next();
+        SketchObject* obj = it.next();
         obj->getForce(f);
         obj->getTorque(t);
         q_vec_scale(f,scale,f);
@@ -630,12 +634,12 @@ static inline void divideForces(QList< SketchObject * > &list,
 //   collision search on the force/torque applied
 // -assumes that applyEuler has NOT been called on the list, but the forces have been added to each
 //   object
-static inline void applyBinaryCollisionSearch(QList< SketchObject * > &list,
+static inline void applyBinaryCollisionSearch(QList< SketchObject* >& list,
                                               QSet< int > &affectedCollisionGroups,
-                                              QSet< SketchObject * > &affectedGroups,
+                                              QSet< SketchObject* >& affectedGroups,
                                               double dt,
                                               bool testCollisions,
-                                              PhysicsStrategy *strategy)
+                                              PhysicsStrategy* strategy)
 {
     PhysicsUtilities::setLastLocation(list,affectedGroups);
     PhysicsUtilities::applyEulerToListAndGroups(list,affectedGroups,dt,false);
@@ -657,14 +661,14 @@ static inline void applyBinaryCollisionSearch(QList< SketchObject * > &list,
 
 
 //##################################################################################################
-static inline void binaryCollisionSearch(QList< SpringConnection * > &springs,
-                                         QList< SketchObject * > &objs,
+static inline void binaryCollisionSearch(QList< Connector* >& springs,
+                                         QList< SketchObject* >& objs,
                                          double dt,
                                          bool doCollisionCheck,
-                                         PhysicsStrategy *strategy)
+                                         PhysicsStrategy* strategy)
 {
     QSet< int > affectedCollisionGroups;
-    QSet< SketchObject * > affectedGroups;
+    QSet< SketchObject* > affectedGroups;
     if (!springs.empty()) {
         PhysicsUtilities::springForcesFromList(
                     springs,affectedCollisionGroups,affectedGroups);
@@ -687,9 +691,9 @@ SimplePhysicsStrategy::~SimplePhysicsStrategy() {}
 
 //######################################################################################
 void SimplePhysicsStrategy::performPhysicsStepAndCollisionDetection(
-        QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-        QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-        QList<SketchObject *> &objects, double dt, bool doCollisionCheck)
+        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+        QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
     QSet< int > affectedCollisionGroups;
     QSet< SketchObject * > affectedGroups;
@@ -712,7 +716,8 @@ void SimplePhysicsStrategy::performPhysicsStepAndCollisionDetection(
     }
 }
 //######################################################################################
-void SimplePhysicsStrategy::respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags)
+void SimplePhysicsStrategy::respondToCollision(
+        SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags)
 {
     QSet<int> emptySet;
     applyCollisionResponseForce(o1,o2,cr,emptySet);
@@ -730,9 +735,9 @@ PoseModePhysicsStrategy::~PoseModePhysicsStrategy() {}
 
 //######################################################################################
 void PoseModePhysicsStrategy::performPhysicsStepAndCollisionDetection(
-        QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-        QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-        QList<SketchObject *> &objects, double dt, bool doCollisionCheck)
+        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+        QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
         // spring forces for right hand interacton
         poseModeForSprings(rHand,objects,dt,doCollisionCheck);
@@ -747,7 +752,7 @@ void PoseModePhysicsStrategy::performPhysicsStepAndCollisionDetection(
 
 //######################################################################################
 void PoseModePhysicsStrategy::respondToCollision(
-        SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags)
+        SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags)
 {
     if (pqp_flags == PQP_ALL_CONTACTS) {
         applyCollisionResponseForce(o1,o2,cr,affectedGroups);
@@ -756,12 +761,12 @@ void PoseModePhysicsStrategy::respondToCollision(
 //##################################################################################################
 // -helper function applies the forces from the list of springs to the objects and does pose-mode
 //   collision response on them.
-void PoseModePhysicsStrategy::poseModeForSprings(QList< SpringConnection * > &springs,
-                                                 QList< SketchObject * > &objs,
+void PoseModePhysicsStrategy::poseModeForSprings(QList< Connector* >& springs,
+                                                 QList< SketchObject* >& objs,
                                                  double dt,
                                                  bool doCollisionCheck)
 {
-    QSet< SketchObject *> affectedObjectGroups;
+    QSet< SketchObject* > affectedObjectGroups;
     if (!springs.empty()) {
         PhysicsUtilities::springForcesFromList(
                     springs,affectedGroups,affectedObjectGroups);
@@ -787,9 +792,9 @@ BinaryCollisionSearchStrategy::~BinaryCollisionSearchStrategy() {}
 
 //######################################################################################
 void BinaryCollisionSearchStrategy::performPhysicsStepAndCollisionDetection(
-        QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-        QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-        QList<SketchObject *> &objects, double dt, bool doCollisionCheck)
+        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+        QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
     binaryCollisionSearch(rHand,objects,dt,doCollisionCheck,this);
     binaryCollisionSearch(lHand,objects,dt,doCollisionCheck,this);
@@ -799,7 +804,8 @@ void BinaryCollisionSearchStrategy::performPhysicsStepAndCollisionDetection(
 }
 
 //######################################################################################
-void BinaryCollisionSearchStrategy::respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags)
+void BinaryCollisionSearchStrategy::respondToCollision(
+        SketchObject* o1, SketchObject* o2, PQP_CollideResult* cr, int pqp_flags)
 {
 }
 
@@ -817,9 +823,9 @@ PoseModePCAPhysicsStrategy::~PoseModePCAPhysicsStrategy() {}
 
 //######################################################################################
 void PoseModePCAPhysicsStrategy::performPhysicsStepAndCollisionDetection(
-        QList<SpringConnection *> &lHand, QList<SpringConnection *> &rHand,
-        QList<SpringConnection *> &physicsSprings, bool doPhysicsSprings,
-        QList<SketchObject *> &objects, double dt, bool doCollisionCheck)
+        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& physicsSprings, bool doPhysicsSprings,
+        QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
         // spring forces for right hand interacton
         poseModePCAForSprings(rHand,objects,dt,doCollisionCheck);
@@ -833,7 +839,8 @@ void PoseModePCAPhysicsStrategy::performPhysicsStepAndCollisionDetection(
 }
 
 //######################################################################################
-void PoseModePCAPhysicsStrategy::respondToCollision(SketchObject *o1, SketchObject *o2, PQP_CollideResult *cr, int pqp_flags)
+void PoseModePCAPhysicsStrategy::respondToCollision(SketchObject* o1, SketchObject* o2,
+                                                    PQP_CollideResult* cr, int pqp_flags)
 {
     if (pqp_flags == PQP_ALL_CONTACTS) {
         applyPCACollisionResponseForce(o1,o2,cr,affectedGroups);
@@ -842,8 +849,8 @@ void PoseModePCAPhysicsStrategy::respondToCollision(SketchObject *o1, SketchObje
 //##################################################################################################
 // -helper function applies the forces from the list of springs to the objects and does pose-mode
 //   collision response on them.
-void PoseModePCAPhysicsStrategy::poseModePCAForSprings(QList< SpringConnection * > &springs,
-                                                       QList< SketchObject * > &objs,
+void PoseModePCAPhysicsStrategy::poseModePCAForSprings(QList< Connector* >& springs,
+                                                       QList< SketchObject* >& objs,
                                                        double dt,
                                                        bool doCollisionCheck)
 {
