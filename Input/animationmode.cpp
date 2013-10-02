@@ -31,7 +31,11 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
     }
     ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
 
-    if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+        emit newDirectionsString("Release to keyframe all objects.");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
         emit newDirectionsString("Move to an object and release to add or remove a keyframe\nfor the current location and time.");
     }
@@ -57,7 +61,20 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
         return;
     }
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
-    if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+        double time = project->getViewTime();
+        QListIterator< SketchObject* > itr =
+                project->getWorldManager()->getObjectIterator();
+        while ( itr.hasNext() )
+        {
+            itr.next()->addKeyframeForCurrentLocation(time);
+        }
+        project->getWorldManager()->setAnimationTime(time);
+        emit newDirectionsString(" ");
+        addXMLUndoState();
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
         if (rDist < DISTANCE_THRESHOLD)
         {

@@ -988,11 +988,15 @@ void SketchProject::setUpVtkCamera(SketchObject *cam, vtkCamera *vCam) {
     vCam->SetClippingRange(20,5000);
 }
 
-SketchObject* SketchProject::addCameraObjectFromCameraPosition(vtkCamera* cam)
+// helper function to compute position and orientation from vtkCamera
+// on return position and orientation will be in the quatlib types passed in
+static inline void getCameraPositionAndOrientation(vtkCamera *cam,
+                                                   q_vec_type pos,
+                                                   q_type orient)
 {
-    q_vec_type pos,forward,up,right,focalPoint;
-    q_type orient;
+    q_vec_type forward,up,right,focalPoint;
 
+    // position is easy
     cam->GetPosition(pos);
     cam->GetFocalPoint(focalPoint);
     cam->GetViewUp(up);
@@ -1016,9 +1020,30 @@ SketchObject* SketchProject::addCameraObjectFromCameraPosition(vtkCamera* cam)
     transform->SetMatrix(mat);
 
     q_vec_type junk;
+    // finally get orientation... note that position could
+    // also be computed, but the position is not added to the
+    // matrix and thus the output should be the null vector
     SketchObject::getPositionAndOrientationFromTransform(
                 transform.GetPointer(),junk,orient);
+}
+
+SketchObject* SketchProject::addCameraObjectFromCameraPosition(vtkCamera* cam)
+{
+    q_vec_type pos;
+    q_type orient;
+
+    getCameraPositionAndOrientation(cam,pos,orient);
 
     SketchObject* obj = addCamera(pos,orient);
     return obj;
+}
+
+void SketchProject::setCameraToVTKCameraPosition(SketchObject* cam, vtkCamera* vcam)
+{
+    q_vec_type pos;
+    q_type orient;
+
+    getCameraPositionAndOrientation(vcam,pos,orient);
+
+    cam->setPosAndOrient(pos,orient);
 }

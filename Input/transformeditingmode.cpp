@@ -160,6 +160,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
                 }
                 else
                 {
+                    emit newDirectionsString(" ");
                     operationState = NO_OPERATION;
                 }
             }
@@ -191,6 +192,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
                     // TODO - actually set the transforms
                 }
                 objectsSelected.clear();
+                emit newDirectionsString(" ");
                 operationState = NO_OPERATION;
             }
         }

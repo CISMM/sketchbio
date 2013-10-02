@@ -86,6 +86,9 @@
     <addaction name="separator"/>
     <addaction name="actionSet_View_Time"/>
     <addaction name="separator"/>
+    <addaction name="actionCreate_Camera_for_Viewpoint"/>
+    <addaction name="actionSet_Camera_to_Viewpoint"/>
+    <addaction name="separator"/>
     <addaction name="actionReset_Device"/>
    </widget>
    <addaction name="menuFile"/>
@@ -242,6 +245,16 @@
   <action name="actionPDB_file">
    <property name="text">
     <string>PDB file</string>
+   </property>
+  </action>
+  <action name="actionCreate_Camera_for_Viewpoint">
+   <property name="text">
+    <string>Create Camera for Viewpoint</string>
+   </property>
+  </action>
+  <action name="actionSet_Camera_to_Viewpoint">
+   <property name="text">
+    <string>Set Camera to Viewpoint</string>
    </property>
   </action>
  </widget>
@@ -494,6 +507,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCreate_Camera_for_Viewpoint</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>createCameraForViewpoint()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSet_Camera_to_Viewpoint</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>setCameraToViewpoint()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -512,5 +557,7 @@
   <slot>restartVRPNServer()</slot>
   <slot>goToViewTime()</slot>
   <slot>openPDBFile()</slot>
+  <slot>createCameraForViewpoint()</slot>
+  <slot>setCameraToViewpoint()</slot>
  </slots>
 </ui>

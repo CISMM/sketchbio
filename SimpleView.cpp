@@ -425,6 +425,25 @@ void SimpleView::loadProject() {
     }
 }
 
+void SimpleView::createCameraForViewpoint()
+{
+    project->addCameraObjectFromCameraPosition(
+                project->getTransformManager()->getGlobalCamera());
+}
+
+void SimpleView::setCameraToViewpoint()
+{
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >* cams =
+            project->getCameras();
+    if (cams->empty())
+    {
+        return;
+    }
+    SketchObject *obj = cams->begin().key();
+    project->setCameraToVTKCameraPosition(
+                obj,project->getTransformManager()->getGlobalCamera());
+}
+
 void SimpleView::simplifyObjectByName(const QString name)
 {
     if (name.length() == 0) {

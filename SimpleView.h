@@ -103,6 +103,9 @@ public slots:
   void updateViewTime(double time);
   void goToViewTime();
 
+  void createCameraForViewpoint();
+  void setCameraToViewpoint();
+
 protected:
  
 protected slots:

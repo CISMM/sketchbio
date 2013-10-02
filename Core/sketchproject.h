@@ -167,6 +167,7 @@ public:
     // Given the vtk camera position, creates a camera object that has that position
     // and view
     SketchObject* addCameraObjectFromCameraPosition(vtkCamera* cam);
+    void setCameraToVTKCameraPosition(SketchObject* cam, vtkCamera* vcam);
     bool addObjects(QVector<QString> filenames);
     // for springs between objects (object-tracker springs managed internally)
     SpringConnection *addSpring(SketchObject *o1, SketchObject *o2, double minRest, double maxRest,
