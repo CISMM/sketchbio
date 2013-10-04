@@ -44,6 +44,10 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
         else if (grabbedWorld == WORLD_NOT_GRABBED)
             grabbedWorld = LEFT_GRABBED_WORLD;
     }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+        emit newDirectionsString("Move to a spring and release to delete the spring.");
+    }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
         emit newDirectionsString("Release at location of new spring.");
@@ -61,6 +65,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
         else if (rightGrabbedSpring)
         {
             rightGrabbedSpring = false;
+            project->setOutlineSpring(RIGHT_SIDE_OUTLINE,rSpring,rAtEnd1);
             addXMLUndoState();
         }
     }
@@ -73,7 +78,20 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
         else if (leftGrabbedSpring)
         {
             leftGrabbedSpring = false;
+            project->setOutlineSpring(LEFT_SIDE_OUTLINE,lSpring,lAtEnd1);
             addXMLUndoState();
+        }
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+        if (rSpringDist < SPRING_DISTANCE_THRESHOLD)
+        {
+            project->getWorldManager()->removeSpring(rSpring);
+            if (rSpring == lSpring)
+            {
+                lSpring = NULL;
+            }
+            rSpring = NULL;
         }
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))

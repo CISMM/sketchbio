@@ -83,7 +83,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
     file.write(buf.data());
     file.write("bpy.ops.object.lamp_add(type='SUN')\n");
-    file.write("bpy.context.active_object.data.energy = 0.16\n");
+    file.write("bpy.context.active_object.data.energy = 0.2\n");
     file.write("bpy.context.scene.render.fps_base = 1\n");
     file.write("bpy.context.scene.world.light_settings.use_ambient_occlusion = True\n");
     file.write("bpy.context.scene.world.light_settings.ao_factor = 1.0\n");
@@ -91,6 +91,9 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("bpy.context.scene.world.light_settings.distance = 40\n");
     file.write("bpy.context.scene.world.light_settings.samples = 5\n");
     file.write("bpy.context.scene.world.horizon_color = (0.0, 0.0, 0.0)\n");
+    sprintf(buf.data(),"bpy.ops.wm.save_mainfile(filepath=\"%s/project.blend\")\n",
+            proj->getProjectDir().toStdString().c_str());
+    file.write(buf.data());
     file.write("bpy.ops.render.render(animation=True)\n");
     file.write("bpy.ops.wm.quit_blender()\n");
     return success && file.error() == QFile::NoError;
@@ -295,7 +298,8 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
                 // debugging print
                 //file.write(QString("#%1\n").arg(std::floor(kfTime * frameRate)
                 //                                ).toStdString().c_str());
-                if (std::floor(kfTime * frameRate) == frame )
+                if (std::floor(kfTime * frameRate) == frame &&
+                        proj->getCameraModel() != obj->getModel())
                 {
                     QString array = obj->getArrayToColorBy();
                     ColorMapType::Type type = obj->getColorMapType();

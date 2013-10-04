@@ -57,13 +57,13 @@ public:
     // setters
     // sets the directory path for this project (should be an absolute path)
     bool setProjectDir(const QString& dir);
-    // sets the left hand position/orientation
+    // sets the left hand position/orientation from vrpn
     void setLeftHandPos(q_xyz_quat_type* loc);
-    // sets the right hand position/orientation
+    // sets the right hand position/orientation from vrpn
     void setRightHandPos(q_xyz_quat_type* loc);
     // sets the viewpoint
     void setViewpoint(vtkMatrix4x4* worldToRoom, vtkMatrix4x4* roomToEyes);
-    // sets the collision mode (testing only)
+    // sets the collision mode
     void setCollisionMode(PhysicsMode::Type mode);
     // toggle settings in the physics
     void setCollisionTestsOn(bool on);
@@ -73,7 +73,7 @@ public:
     void stopAnimation();
     // returns true if the animation preview is being played
     bool isShowingAnimation();
-    // an setter for world->setAnimationTime.  Sets the project state correctly
+    // a setter for world->setAnimationTime.  Sets the project state correctly
     // if it is not set yet
     // Returns true if the animation is done by the time given
     bool goToAnimationTime(double time);
@@ -167,7 +167,9 @@ public:
     SketchObject* addCamera(const q_vec_type pos, const q_type orient);
     // Given the vtk camera position, creates a camera object that has that position
     // and view
-    SketchObject *addCameraObjectFromCameraPosition(vtkCamera *cam);
+    SketchObject* addCameraObjectFromCameraPosition(vtkCamera* cam);
+    void setCameraToVTKCameraPosition(SketchObject* cam, vtkCamera* vcam);
+    // adds objects for the given list of filenames
     bool addObjects(const QVector<QString>& filenames);
     // for springs between objects (object-tracker springs managed internally)
     Connector *addSpring(SketchObject* o1, SketchObject* o2, double minRest, double maxRest,
@@ -196,8 +198,9 @@ private:
     QScopedPointer< ModelManager > models;
     QScopedPointer< TransformManager > transforms;
     QScopedPointer< WorldManager > world;
-    // operators on objects -- these are owned here... but not sure if I can do lists of ScopedPointers
-    QList< StructureReplicator*  > replicas;
+
+    // operators on objects -- these are owned here.
+    QList< StructureReplicator* > replicas;
     QHash< SketchObject* , vtkSmartPointer< vtkCamera > > cameras;
     QVector< QSharedPointer< TransformEquals > > transformOps;
 
@@ -216,8 +219,7 @@ private:
     // changes (unless another one is currently grabbed). Note: left is 0, right is 1
     QVector< QPair< vtkSmartPointer< vtkPolyDataMapper >,
         vtkSmartPointer< vtkActor > > > outlines;
-//    vtkSmartPointer< vtkActor > leftOutlinesActor, rightOutlinesActor;
-//    vtkSmartPointer< vtkPolyDataMapper > leftOutlinesMapper, rightOutlinesMapper;
+
     vtkSmartPointer< vtkPlaneSource > shadowFloorSource;
     vtkSmartPointer< vtkActor > shadowFloorActor, floorLinesActor;
     // animation stuff

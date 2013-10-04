@@ -132,7 +132,7 @@ def createInstance(modelObj,isCamera,location,orientation_quat,isVisible,isActiv
         obj.data.clip_end = 5000
         bpy.ops.object.lamp_add(type='POINT')
         light = bpy.context.active_object
-        light.location = (0,-80000,0)
+        light.location = (30,-100,0)
         light.data.energy = 0.46
         light.data.falloff_type = 'CONSTANT'
         light.data.distance = 0.0

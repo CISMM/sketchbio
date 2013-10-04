@@ -57,6 +57,10 @@ public:
     SketchObject();
     virtual ~SketchObject();
     // the number of instances controlled by this object (is single or group?)
+    // this should return 1 for a single object that fulfills the requirements
+    // defined on the virtual functions below.  Otherwise it should return a
+    // value other than 1, which is some indication of how many single objects
+    // this one contains
     virtual int numInstances() const =0;
     // the parent "object"/group
     virtual SketchObject *getParent();
@@ -71,12 +75,12 @@ public:
     virtual const SketchModel *getModel() const;
     // gets the color map for this object (only a valid call if the numInstances() == 1)
     virtual ColorMapType::Type getColorMapType() const;
-    // sets the color map for this object (or all child objects if numInstances() > 1)
+    // sets the color map for this object
     virtual void setColorMapType(ColorMapType::Type cmap) = 0;
     // gets the array that is currently being used for coloring (default: modelNum)
     // only useful when numInstances == 1
     virtual QString getArrayToColorBy() const;
-    // sets the array that is being used for coloring (on the object or all subobjects)
+    // sets the array that is being used for coloring
     virtual void setArrayToColorBy(const QString &arrayName) = 0;
     // gets the transformed polygonal data of the object (do not modify the return value, but
     // you may use it as input to other filters)
@@ -98,7 +102,8 @@ public:
     void setPosition(const q_vec_type newPosition);
     void setOrientation(const q_type newOrientation);
     void setPosAndOrient(const q_vec_type newPosition, const q_type newOrientation);
-    // to do with setting undo position
+    // to do with setting "undo" position -- not real undo, but a temporary state
+    // for physics calculations
     void getLastPosition(q_vec_type dest) const;
     void getLastOrientation(q_type dest) const;
     void setLastLocation();
@@ -129,7 +134,7 @@ public:
     // bounding box info for grab (have to stop using PQP_Distance)
     // the bounding box is relative to the object, and should be the axis-aligned bounding
     // box of the untransformed object (so sort-of oriented bounding box)
-    // TODO - fix getBoundingBox of ObjectGroup to work this way
+    // TODO - fix getBoundingBox of ObjectGroup to work this way, it doesn't
     virtual void getBoundingBox(double bb[6]) = 0;
     // this returns the box(es) that contain the lowest-level objects in whatever heirarchy
     // group should do an AppendPolyData to combine these
