@@ -53,16 +53,12 @@ public:
      * Adds a new object with the given modelId to the world with the
      * given position and orientation  Returns the object created
      *
-     * All objects created here are deleted either in removeObject or
-     * the destructor of the world manager.
+     * The new object is owned by the WorldManager
      *
-     * modelId - the id of the model to use when generating the object,
+     * model   - the model to use when generating the object,
      *           should be a valid modelId with the model manager
      * pos     - the position at which the object should be added
      * orient  - the orientation of the object when it is added
-     * worldEyeTransform - this is the world-Eye transformation matrix
-     *                  from the TransformManager used to set up the
-     *                  new object's actor
      *
      *******************************************************************/
     SketchObject *addObject(SketchModel *model,const q_vec_type pos, const q_type orient);
@@ -76,6 +72,7 @@ public:
     /*******************************************************************
      *
      * Removes the SketchObject identified by the given index from the world.
+     *
      * This method does not delete the object, instead ownership of the object
      * is transferred to the caller
      *
@@ -87,7 +84,9 @@ public:
     /*******************************************************************
      *
      * Removes the SketchObject identified by the given index from the world.
-     * This method also deletes the object.
+     *
+     * This method also deletes the object, the pointer passed in will point
+     * to freed memory after this call
      *
      * object - the object, returned by addObject
      *
@@ -144,7 +143,7 @@ public:
      * Adds the given spring to the list of springs for the left hand
      *
      * This passes ownership of the SpringConnection to the world manager
-     * and the spring connection will be deleted in removeSpring
+     * and the spring connection will be deleted in clearRightHandSprings
      * or the world manager's destructor
      *
      * spring - the spring to add
@@ -156,7 +155,7 @@ public:
      * Adds the given spring to the list of springs for the right hand
      *
      * This passes ownership of the SpringConnection to the world manager
-     * and the spring connection will be deleted in removeSpring
+     * and the spring connection will be deleted in clearRightHandSprings
      * or the world manager's destructor
      *
      * spring - the spring to add
@@ -168,13 +167,13 @@ public:
      * Gets the list of springs for the left hand
      *
      *******************************************************************/
-    inline QList<SpringConnection *> *getLeftSprings() { return &lHand; }
+    inline const QList<SpringConnection *> *getLeftSprings() const { return &lHand; }
     /*******************************************************************
      *
      * Gets the list of springs for the right hand
      *
      *******************************************************************/
-    inline QList<SpringConnection *> *getRightSprings() { return &rHand; }
+    inline const QList<SpringConnection *> *getRightSprings() const { return &rHand; }
     /*******************************************************************
      *
      * Clears the list of springs for the left hand
@@ -196,8 +195,9 @@ public:
     void clearSprings();
     /*******************************************************************
      *
-     * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator
-     * to the position of that spring in the list
+     * Adds the a spring between the two models and returns a pointer to it.
+     *
+     * The created spring is owned by the WorldManager
      *
      * o1 - the first object to connect
      * o2 - the second object to connect
@@ -215,8 +215,9 @@ public:
 
     /*******************************************************************
      *
-     * Adds the a spring between the two models and returns a pointer to it.  Returns an iterator
-     * to the position of that spring in the list
+     * Adds the a spring between the two models and returns a pointer to it.
+     *
+     * The created spring is owned by the WorldManager
      *
      * o1 - the first object to connect
      * o2 - the second object to connect
@@ -233,10 +234,13 @@ public:
 
     /*******************************************************************
      *
-     * Removes the given spring from the list of springs
+     * Removes the given spring from the list of springs and deletes it
+     *
+     * The pointer passed in will be invalid after this call, having been
+     * freed
      *
      *******************************************************************/
-    void removeSpring(SpringConnection *spring);
+    void removeSpring(SpringConnection* spring);
 
     /*******************************************************************
      *
@@ -250,13 +254,13 @@ public:
      * Returns a const reference to the list of springs
      *
      *******************************************************************/
-    const QList<SpringConnection *> &getSprings() const;
+    const QList<SpringConnection* >& getSprings() const;
     /*******************************************************************
      *
      * Returns an iterator over all the springs in the list
      *
      *******************************************************************/
-    QListIterator<SpringConnection *> getSpringsIterator() const;
+    QListIterator<SpringConnection* > getSpringsIterator() const;
     /*******************************************************************
      *
      * Sets the collision response mode
@@ -311,7 +315,7 @@ public:
      * is externally modified
      *
      *******************************************************************/
-    void changedVisibility(SketchObject *obj);
+    void changedVisibility(SketchObject* obj);
     /*******************************************************************
      *
      * Returns true if invisible objects are being shown

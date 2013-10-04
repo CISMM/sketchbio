@@ -11,6 +11,14 @@ class vtkMatrix4x4;
 class vtkCamera;
 /*
  * This class handles transformations between world space, tracker space, and camera space.
+ *
+ * There is an idea of having a vehicle or "room" that moves around relative to the world
+ * space.  This is that space that the view and trackers are located in.  This class
+ * contains transforms that define the relationships between tracker coordinates,
+ * room coordinates, view coordinates and world coordinates.
+ *
+ * This class also keeps track of the vrpn output of tracker position/orientation
+ * for the current step and the last step.
  */
 
 class TransformManager
@@ -231,7 +239,9 @@ public:
     void updateCameraForFrame();
 
     /*
-     * Get the global camera
+     * Get the global camera.  This is a vtkCamera object whose coordinate
+     * space is world coordinates but whose location and orientation are
+     * at the origin of view coordinates.
      */
     vtkCamera *getGlobalCamera();
 
