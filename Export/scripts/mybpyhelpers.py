@@ -69,7 +69,12 @@ def read_obj_model(filename):
                 object = bpy.data.objects[key]
                 somethingSelected = True
     bpy.ops.object.join() # merge all the new objects into the first one we found
-    newName = filename[filename.rfind('/')+1:-4]
+    newName = None
+    import platform
+    if platform.system() == 'Windows':
+        newName = filename[filename.rfind('\\')+1:-4]
+    else:
+        newName = filename[filename.rfind('/')+1:-4]
     object.name = newName # set the name to something based on the filename
     select_named(newName)
     return object
@@ -88,7 +93,12 @@ def read_wrl_model(filename):
                 object = bpy.data.objects[key]
                 somethingSelected = True
     bpy.ops.object.join() # merge all the new objects into the first one we found
-    newName = filename[filename.rfind('/')+1:-4]
+    newName = None
+    import platform
+    if platform.system() == 'Windows':
+        newName = filename[filename.rfind('\\')+1:-4]
+    else:
+        newName = filename[filename.rfind('/')+1:-4]
     object.name = newName # set the name to something based on the filename
     select_named(newName)
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY',center='BOUNDS')
