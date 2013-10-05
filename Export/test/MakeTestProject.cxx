@@ -118,7 +118,7 @@ StructureReplicator * addReplicationToProject(SketchProject *proj, int numReplic
 
 void addSpringToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2)
 {
-    int num = proj->getWorldManager()->getNumberOfSprings();
+    int num = proj->getWorldManager()->getNumberOfConnectors();
     q_vec_type p1, p2;
     q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
     q_vec_scale(p1,sqrt(6.0) + num,p1);
@@ -130,6 +130,22 @@ void addSpringToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2)
     q_vec_scale(p2,sqrt(7.0) + num,p2);
     proj->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),
                      3.56*sqrt(11.0),p1,p2); // sqrt(2)
+}
+
+void addConnectorToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2)
+{
+    int num = proj->getWorldManager()->getNumberOfConnectors();
+    q_vec_type p1, p2;
+    q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
+    q_vec_scale(p1,sqrt(6.0) + num,p1);
+    if (num % 2 == 1)
+    {
+        p1[2] = -p1[2];
+    }
+    q_vec_set(p2,2.23,-6.06,7.97); // sqrt(5)
+    q_vec_scale(p2,sqrt(7.0) + num,p2);
+    Connector* conn = new Connector(o1,o2,p1,p2,0.67 / num,2.45 * num);
+    proj->addConnector(conn);
 }
 
 void addTransformEqualsToProject(SketchProject *proj, int numPairs)

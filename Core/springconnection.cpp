@@ -1,11 +1,12 @@
 #include "springconnection.h"
 
+#include "sketchioconstants.h"
 #include "sketchobject.h"
 
 SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                                    double maxRestLen, double k, const q_vec_type obj1Pos,
                                    const q_vec_type obj2Pos) :
-    Connector(o1,o2,obj1Pos,obj2Pos,0.0,5),
+    Connector(o1,o2,obj1Pos,obj2Pos,SPRING_ALPHA_VALUE,SPRING_DISPLAY_RADIUS),
     minRestLength(minRestLen),
     maxRestLength(maxRestLen),
     stiffness(k)

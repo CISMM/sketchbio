@@ -196,7 +196,7 @@ void SpringEditingMode::doUpdatesForFrame()
     SketchObject* leftHand = project->getLeftHandObject();
     SketchObject* rightHand = project->getRightHandObject();
 
-    if ( world->getNumberOfSprings() > 0 )
+    if ( world->getNumberOfConnectors() > 0 )
     {
         // get the tracker positions
         q_vec_type leftTrackerPos, rightTrackerPos;

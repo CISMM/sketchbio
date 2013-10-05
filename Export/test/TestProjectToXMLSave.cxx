@@ -180,6 +180,10 @@ int testSave6()
     MakeTestProject::addGroupToProject(proj1.data(),3);
     MakeTestProject::addReplicationToProject(proj1.data(),12);
     MakeTestProject::addSpringToProject(proj1.data(),o1,o2);
+    MakeTestProject::addConnectorToProject(proj1.data(),o1,o2);
+    MakeTestProject::addSpringToProject(proj1.data(),o1,o2);
+    MakeTestProject::addConnectorToProject(proj1.data(),o1,o2);
+    MakeTestProject::addSpringToProject(proj1.data(),o1,o2);
 
     return saveLoadAndTest(proj1.data(),6);
 }

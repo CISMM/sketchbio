@@ -64,4 +64,10 @@
 #define DEFAULT_INVERSE_MASS 1.0
 #define DEFAULT_INVERSE_MOMENT (1.0/25000)
 
+// the default values of alpha and radius for a SpringConnection
+// alpha is 0 so springs are not exported to Blender
+#define SPRING_ALPHA_VALUE 0.0
+// radius is 5 so that it looks the same as the old display of springs
+#define SPRING_DISPLAY_RADIUS 5.0
+
 #endif // SKETCHIOCONSTANTS_H

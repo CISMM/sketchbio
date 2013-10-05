@@ -260,7 +260,7 @@ public:
      * Returns the number of springs stored in the spring list
      *
      *******************************************************************/
-    int getNumberOfSprings() const;
+    int getNumberOfConnectors() const;
 
     /*******************************************************************
      *

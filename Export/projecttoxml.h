@@ -13,7 +13,7 @@ class TransformManager;
 class SketchModel;
 class ModelManager;
 class SketchObject;
-class SpringConnection;
+class Connector;
 class WorldManager;
 class StructureReplicator;
 class TransformEquals;
@@ -73,7 +73,7 @@ private: // no other code should call these (this is the reason for making this 
     static vtkXMLDataElement *springListToXML(const WorldManager *world,
                                               const QHash<const SketchObject *, QString> &objectIds);
 
-    static vtkXMLDataElement *springToXML(const SpringConnection *spring,
+    static vtkXMLDataElement *springToXML(const Connector *spring,
                                           const QHash<const SketchObject *, QString> &objectIds);
 
     static vtkXMLDataElement *transformOpListToXML(const QVector<QSharedPointer<TransformEquals> > *ops,

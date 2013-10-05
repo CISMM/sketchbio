@@ -35,7 +35,7 @@ using std::strcmp;
 #define ROOT_ELEMENT_NAME                       "sketchbio"
 #define VERSION_ATTRIBUTE_NAME                  "version"
 #define SAVE_MAJOR_VERSION                      1
-#define SAVE_MINOR_VERSION                      3
+#define SAVE_MINOR_VERSION                      4
 #define SAVE_VERSION_NUM                        (QString::number(SAVE_MAJOR_VERSION) + "." + QString::number(SAVE_MINOR_VERSION))
 
 #define MODEL_MANAGER_ELEMENT_NAME              "models"
@@ -81,12 +81,20 @@ using std::strcmp;
 #define REPLICA_ID_ELEMENT_NAME                 "replica"
 #define REPLICA_OBJECT_ID_ATTRIBUTE_NAME        "objId"
 
+// kept for backwards compatibility for use in converting old
+// formats to current
 #define SPRING_LIST_ELEMENT_NAME                "springList"
 #define SPRING_ELEMENT_NAME                     "spring"
-#define SPRING_OBJECT_END_ELEMENT_NAME          "objConnection"
-#define SPRING_POINT_END_ELEMENT_NAME           "pointConnection"
-#define SPRING_OBJECT_ID_ATTRIBUTE_NAME         "objId"
-#define SPRING_CONNECTION_POINT_ATTRIBUTE_NAME  "connectionPoint"
+
+#define CONNECTOR_LIST_ELEMENT_NAME             "connectorList"
+#define CONNECTOR_ELEMENT_NAME                  "connector"
+#define CONNECTOR_OBJECT_END_ELEMENT_NAME       "objConnection"
+#define CONNECTOR_POINT_END_ELEMENT_NAME        "pointConnection"
+#define CONNECTOR_OBJECT_ID_ATTRIBUTE_NAME      "objId"
+#define CONNECTOR_CONNECTION_POINT_ATTR_NAME    "connectionPoint"
+#define CONNECTOR_ALPHA_ATTRIBUTE_NAME          "alpha"
+#define CONNECTOR_RADIUS_ATTRIBUTE_NAME         "radius"
+// fields unique to springs that connectors will not have
 #define SPRING_STIFFNESS_ATTRIBUTE_NAME         "stiffness"
 #define SPRING_MIN_REST_ATTRIBUTE_NAME          "minRestLen"
 #define SPRING_MAX_REST_ATTRIBUTE_NAME          "maxRestLen"
@@ -610,99 +618,102 @@ vtkXMLDataElement* ProjectToXML::springListToXML(
         const QHash< const SketchObject*, QString >& objectIds)
 {
     vtkXMLDataElement* element = vtkXMLDataElement::New();
-    element->SetName(SPRING_LIST_ELEMENT_NAME);
+    element->SetName(CONNECTOR_LIST_ELEMENT_NAME);
     for (QListIterator< Connector* > it = world->getSpringsIterator();
          it.hasNext();)
     {
         const Connector* conn = it.next();
-        vtkSmartPointer< vtkXMLDataElement > child;
-        const SpringConnection* spring = dynamic_cast< const SpringConnection* >(conn);
-        if (spring != NULL)
-        {
-            child.TakeReference(springToXML(spring,objectIds));
-        }
-        if (child.GetPointer() != NULL)
-        {
-            element->AddNestedElement(child);
-        }
+        vtkSmartPointer< vtkXMLDataElement > child =
+                vtkSmartPointer< vtkXMLDataElement >::Take(
+                    springToXML(conn,objectIds)
+                            );
+        element->AddNestedElement(child);
     }
     return element;
 }
 
 vtkXMLDataElement* ProjectToXML::springToXML(
-        const SpringConnection* spring,
+        const Connector* conn,
         const QHash< const SketchObject*, QString >& objectIds)
 {
-    if (spring->getObject1() == spring->getObject2())
+    if (conn->getObject1() == conn->getObject2())
     {
         return NULL;
     }
     vtkXMLDataElement* element = vtkXMLDataElement::New();
-    element->SetName(SPRING_ELEMENT_NAME);
+    element->SetName(CONNECTOR_ELEMENT_NAME);
     vtkSmartPointer< vtkXMLDataElement > child =
             vtkSmartPointer< vtkXMLDataElement >::New();
     q_vec_type pos1;
-    // spring properties
+    // conn properties
     child->SetName(PROPERTIES_ELEMENT_NAME);
-    double v = spring->getStiffness();
-    setPreciseVectorAttribute(child,&v,1,SPRING_STIFFNESS_ATTRIBUTE_NAME);
-    v = spring->getMinRestLength();
-    setPreciseVectorAttribute(child,&v,1,SPRING_MIN_REST_ATTRIBUTE_NAME);
-    v = spring->getMaxRestLength();
-    setPreciseVectorAttribute(child,&v,1,SPRING_MAX_REST_ATTRIBUTE_NAME);
+    const SpringConnection* spring = dynamic_cast< const SpringConnection* >(conn);
+    double v = conn->getAlpha();
+    setPreciseVectorAttribute(child,&v,1,CONNECTOR_ALPHA_ATTRIBUTE_NAME);
+    v = conn->getRadius();
+    setPreciseVectorAttribute(child,&v,1,CONNECTOR_RADIUS_ATTRIBUTE_NAME);
+    if (spring != NULL)
+    {
+        v = spring->getStiffness();
+        setPreciseVectorAttribute(child,&v,1,SPRING_STIFFNESS_ATTRIBUTE_NAME);
+        v = spring->getMinRestLength();
+        setPreciseVectorAttribute(child,&v,1,SPRING_MIN_REST_ATTRIBUTE_NAME);
+        v = spring->getMaxRestLength();
+        setPreciseVectorAttribute(child,&v,1,SPRING_MAX_REST_ATTRIBUTE_NAME);
+    }
     element->AddNestedElement(child);
-    // second end, depends on spring type
-    if (spring->getObject1() != NULL && spring->getObject2() != NULL)
+    // second end, depends on conn type
+    if (conn->getObject1() != NULL && conn->getObject2() != NULL)
     {
         child = vtkSmartPointer<vtkXMLDataElement>::New();
-        child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
+        child->SetName(CONNECTOR_OBJECT_END_ELEMENT_NAME);
         child->SetAttribute(
-                    SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+                    CONNECTOR_OBJECT_ID_ATTRIBUTE_NAME,
                     ("#" + objectIds.value(
-                         spring->getObject1())).toStdString().c_str());
-        spring->getObject1ConnectionPosition(pos1);
+                         conn->getObject1())).toStdString().c_str());
+        conn->getObject1ConnectionPosition(pos1);
         setPreciseVectorAttribute(child,pos1,3,
-                                  SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
+                                  CONNECTOR_CONNECTION_POINT_ATTR_NAME);
         element->AddNestedElement(child);
         child = vtkSmartPointer<vtkXMLDataElement>::New();
-        child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
+        child->SetName(CONNECTOR_OBJECT_END_ELEMENT_NAME);
         child->SetAttribute(
-                    SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+                    CONNECTOR_OBJECT_ID_ATTRIBUTE_NAME,
                     ("#" +objectIds.value(
-                         spring->getObject2())).toStdString().c_str());
+                         conn->getObject2())).toStdString().c_str());
         q_vec_type pos2;
-        spring->getObject2ConnectionPosition(pos2);
+        conn->getObject2ConnectionPosition(pos2);
         setPreciseVectorAttribute(child,pos2,3,
-                                  SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
+                                  CONNECTOR_CONNECTION_POINT_ATTR_NAME);
         element->AddNestedElement(child);
     }
-    else if ((spring->getObject1() != NULL) ^ (spring->getObject2() != NULL))
+    else if ((conn->getObject1() != NULL) ^ (conn->getObject2() != NULL))
     {
         q_vec_type pos2;
         QString objId;
-        if (spring->getObject1() != NULL)
+        if (conn->getObject1() != NULL)
         {
-            spring->getObject1ConnectionPosition(pos1);
-            spring->getEnd2WorldPosition(pos2);
-            objId = "#" + objectIds.value(spring->getObject1());
+            conn->getObject1ConnectionPosition(pos1);
+            conn->getEnd2WorldPosition(pos2);
+            objId = "#" + objectIds.value(conn->getObject1());
         }
         else
         {
-            spring->getObject2ConnectionPosition(pos1);
-            spring->getEnd1WorldPosition(pos2);
-            objId = "#" + objectIds.value(spring->getObject2());
+            conn->getObject2ConnectionPosition(pos1);
+            conn->getEnd1WorldPosition(pos2);
+            objId = "#" + objectIds.value(conn->getObject2());
         }
         child = vtkSmartPointer<vtkXMLDataElement>::New();
-        child->SetName(SPRING_OBJECT_END_ELEMENT_NAME);
-        child->SetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME,
+        child->SetName(CONNECTOR_OBJECT_END_ELEMENT_NAME);
+        child->SetAttribute(CONNECTOR_OBJECT_ID_ATTRIBUTE_NAME,
                     objId.toStdString().c_str());
         setPreciseVectorAttribute(child,pos1,3,
-                                  SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
+                                  CONNECTOR_CONNECTION_POINT_ATTR_NAME);
         element->AddNestedElement(child);
         child = vtkSmartPointer<vtkXMLDataElement>::New();
-        child->SetName(SPRING_POINT_END_ELEMENT_NAME);
+        child->SetName(CONNECTOR_POINT_END_ELEMENT_NAME);
         setPreciseVectorAttribute(child,pos2,3,
-                                  SPRING_CONNECTION_POINT_ATTRIBUTE_NAME);
+                                  CONNECTOR_CONNECTION_POINT_ATTR_NAME);
         element->AddNestedElement(child);
     }
     return element;
@@ -946,6 +957,37 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(
         // but groups don't have color info, so objects without it
         // are handled
     }
+    case 3:
+        // Going from 3 to 4, springs are generalized to connectors
+        // and have alpha and radius added as well as some names change
+    {
+        vtkXMLDataElement* springList =
+                root->FindNestedElementWithName(SPRING_LIST_ELEMENT_NAME);
+        if (springList == NULL)
+        {
+            return XML_TO_DATA_FAILURE;
+        }
+        springList->SetName(CONNECTOR_LIST_ELEMENT_NAME);
+        const int n = springList->GetNumberOfNestedElements();
+        for (int i = 0; i < n; i++)
+        {
+            vtkXMLDataElement* spring = springList->GetNestedElement(i);
+            if (strcmp(spring->GetName(),SPRING_ELEMENT_NAME) == 0)
+            {
+                spring->SetName(CONNECTOR_ELEMENT_NAME);
+                vtkXMLDataElement* props =
+                        spring->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+                if (props == NULL)
+                {
+                    return XML_TO_DATA_FAILURE;
+                }
+                props->SetDoubleAttribute(CONNECTOR_ALPHA_ATTRIBUTE_NAME,
+                                          SPRING_ALPHA_VALUE);
+                props->SetDoubleAttribute(CONNECTOR_RADIUS_ATTRIBUTE_NAME,
+                                          SPRING_DISPLAY_RADIUS);
+            }
+        }
+    }
     }
     return XML_TO_DATA_SUCCESS;
 }
@@ -998,7 +1040,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
         {
             return XML_TO_DATA_FAILURE;
         }
-        vtkXMLDataElement* springs = elem->FindNestedElementWithName(SPRING_LIST_ELEMENT_NAME);
+        vtkXMLDataElement* springs = elem->FindNestedElementWithName(CONNECTOR_LIST_ELEMENT_NAME);
         if (springs == NULL)
         {
             return XML_TO_DATA_FAILURE;
@@ -1617,14 +1659,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpringList(
         SketchProject* proj, vtkXMLDataElement* elem,
         QHash< QString, SketchObject* >& objectIds)
 {
-    if (QString(elem->GetName()) != QString(SPRING_LIST_ELEMENT_NAME))
+    if (QString(elem->GetName()) != QString(CONNECTOR_LIST_ELEMENT_NAME))
     {
         return XML_TO_DATA_FAILURE;
     }
     for (int i = 0; i < elem->GetNumberOfNestedElements(); i++)
     {
         vtkXMLDataElement* child = elem->GetNestedElement(i);
-        if (QString(child->GetName()) == QString(SPRING_ELEMENT_NAME))
+        if (QString(child->GetName()) == QString(CONNECTOR_ELEMENT_NAME))
         {
             if (xmlToSpring(proj,child,objectIds) != XML_TO_DATA_SUCCESS)
             {
@@ -1639,25 +1681,26 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
         SketchProject* proj, vtkXMLDataElement* elem,
         QHash< QString, SketchObject* >& objectIds)
 {
-    if (QString(elem->GetName()) != QString(SPRING_ELEMENT_NAME))
+    if (QString(elem->GetName()) != QString(CONNECTOR_ELEMENT_NAME))
     {
         return XML_TO_DATA_FAILURE;
     }
     QString obj1Id, obj2Id;
     int objCount = 0;
-    bool seenWPoint = false;
-    double k, minRLen, maxRLen;
+    bool seenWPoint = false, seenProperties = false;
+    bool hasK = false;
+    double k, minRLen, maxRLen, alpha, radius;
     q_vec_type o1Pos, o2Pos, wPos;
     for (int i = 0; i < elem->GetNumberOfNestedElements(); i++)
     {
         vtkXMLDataElement* child = elem->GetNestedElement(i);
         QString name = child->GetName();
-        if (name == QString(SPRING_OBJECT_END_ELEMENT_NAME))
+        if (name == QString(CONNECTOR_OBJECT_END_ELEMENT_NAME))
         {
             if (objCount == 0)
             {
-                obj1Id = child->GetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME);
-                int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,o1Pos);
+                obj1Id = child->GetAttribute(CONNECTOR_OBJECT_ID_ATTRIBUTE_NAME);
+                int err = child->GetVectorAttribute(CONNECTOR_CONNECTION_POINT_ATTR_NAME,3,o1Pos);
                 if (err != 3)
                 {
                     return XML_TO_DATA_FAILURE;
@@ -1669,8 +1712,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
             }
             else if (objCount == 1)
             {
-                obj2Id = child->GetAttribute(SPRING_OBJECT_ID_ATTRIBUTE_NAME);
-                int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,o2Pos);
+                obj2Id = child->GetAttribute(CONNECTOR_OBJECT_ID_ATTRIBUTE_NAME);
+                int err = child->GetVectorAttribute(CONNECTOR_CONNECTION_POINT_ATTR_NAME,3,o2Pos);
                 if (err != 3)
                 {
                     return XML_TO_DATA_FAILURE;
@@ -1683,17 +1726,30 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
         }
         else if (name == QString(PROPERTIES_ELEMENT_NAME))
         {
-            int err = child->GetScalarAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,k);
-            err += child->GetScalarAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,minRLen);
-            err += child->GetScalarAttribute(SPRING_MAX_REST_ATTRIBUTE_NAME,maxRLen);
-            if (err != 3)
+            seenProperties = true;
+            hasK = (child->GetAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME) != NULL);
+            int err = 0;
+            err += child->GetScalarAttribute(CONNECTOR_ALPHA_ATTRIBUTE_NAME,alpha);
+            err += child->GetScalarAttribute(CONNECTOR_RADIUS_ATTRIBUTE_NAME,radius);
+            if (err != 2)
             {
                 return XML_TO_DATA_FAILURE;
             }
+            if (hasK)
+            {
+                err = 0;
+                err = child->GetScalarAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME,k);
+                err += child->GetScalarAttribute(SPRING_MIN_REST_ATTRIBUTE_NAME,minRLen);
+                err += child->GetScalarAttribute(SPRING_MAX_REST_ATTRIBUTE_NAME,maxRLen);
+                if (err != 3)
+                {
+                    return XML_TO_DATA_FAILURE;
+                }
+            }
         }
-        else if (name == QString(SPRING_POINT_END_ELEMENT_NAME))
+        else if (name == QString(CONNECTOR_POINT_END_ELEMENT_NAME))
         {
-            int err = child->GetVectorAttribute(SPRING_CONNECTION_POINT_ATTRIBUTE_NAME,3,wPos);
+            int err = child->GetVectorAttribute(CONNECTOR_CONNECTION_POINT_ATTR_NAME,3,wPos);
             if (err != 3)
             {
                 return XML_TO_DATA_FAILURE;
@@ -1701,7 +1757,12 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
             seenWPoint = true;
         }
     }
-    SpringConnection* spring = NULL;
+    Connector* conn = NULL;
+    if (!seenProperties)
+    {
+        // if we didn't read a properties element
+        return XML_TO_DATA_FAILURE;
+    }
     if ((seenWPoint ? 1 : 0) + objCount != 2)
     {
         // we have too few or too many endpoints
@@ -1709,16 +1770,33 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
     }
     else if (seenWPoint)
     {
-        spring = new SpringConnection(objectIds.value(obj1Id),NULL,minRLen,
-                                      maxRLen,k,o1Pos,wPos);
-        proj->addConnector(spring);
+        if (hasK)
+        {
+            conn = new SpringConnection(objectIds.value(obj1Id),NULL,minRLen,
+                                        maxRLen,k,o1Pos,wPos);
+        }
+        else
+        {
+            conn = new Connector(objectIds.value(obj1Id),NULL,
+                                 o1Pos,wPos,alpha,radius);
+        }
+        proj->addConnector(conn);
     }
     else if (objCount == 2)
     {
-        spring = SpringConnection::makeSpring(objectIds.value(obj1Id),
-                                              objectIds.value(obj2Id),
-                                              o1Pos,o2Pos,false,k,minRLen,maxRLen);
-        proj->addConnector(spring);
+        if (hasK)
+        {
+            conn = SpringConnection::makeSpring(objectIds.value(obj1Id),
+                                                objectIds.value(obj2Id),
+                                                o1Pos,o2Pos,false,k,minRLen,maxRLen);
+        }
+        else
+        {
+            conn = new Connector(objectIds.value(obj1Id),
+                                 objectIds.value(obj2Id),
+                                 o1Pos,o2Pos,alpha,radius);
+        }
+        proj->addConnector(conn);
     }
     else
     {

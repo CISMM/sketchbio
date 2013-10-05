@@ -237,7 +237,7 @@ void WorldManager::removeSpring(Connector* spring) {
 
 //##################################################################################################
 //##################################################################################################
-int WorldManager::getNumberOfSprings() const {
+int WorldManager::getNumberOfConnectors() const {
     return connections.size();
 }
 

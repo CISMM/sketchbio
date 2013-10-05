@@ -28,6 +28,9 @@ StructureReplicator *addReplicationToProject(SketchProject *proj, int numReplica
 // adds a spring to the project between the given two objects
 void addSpringToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2);
 
+// adds a connector to the project between the given two objects
+void addConnectorToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2);
+
 // adds a transform equals with the given number of pairs to the project.
 void addTransformEqualsToProject(SketchProject *proj, int numPairs);
 

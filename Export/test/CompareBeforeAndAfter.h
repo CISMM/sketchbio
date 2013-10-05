@@ -10,7 +10,6 @@ class SketchProject;
 class TransformEquals;
 class StructureReplicator;
 class Connector;
-class SpringConnection;
 
 namespace CompareBeforeAndAfter
 {
@@ -47,10 +46,10 @@ void compareReplicationLists(const QList< StructureReplicator* >& list1,
                              const QList< StructureReplicator* >& list2,
                              int& retVal, bool printDiffs);
 
-void compareSprings(const SpringConnection* sp1, const SpringConnection* sp2,
+void compareConnectors(const Connector* sp1, const Connector* sp2,
                     int& diffs, bool printDiffs = false);
 
-void compareSpringLists(const QList< Connector* >& list1,
+void compareConnectorLists(const QList< Connector* >& list1,
                         const QList< Connector* >& list2,
                         int& retVal, bool printDiffs);
 
