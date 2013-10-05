@@ -30,18 +30,6 @@ class PhysicsStrategy;
 #include "objectchangeobserver.h"
 #include "physicsstrategyfactory.h"
 
-// This is a neat trick I found on StackOverflow.  This allows me to
-// declare a QPair of vtkSmartPointers in a much more concise manner.
-// http://stackoverflow.com/questions/649718/templated-typedef
-// ...
-// templated typedefs will not be supported until C++11
-// http://en.wikipedia.org/wiki/C%2B%2B0x#Alias_templates
-template< typename T, typename V >
-struct QVTKTypes
-{
-    typedef QPair< vtkSmartPointer< T >, vtkSmartPointer< V > > Pair;
-};
-
 /*
  * This class contains the data that is in the modeled "world", all the objects and
  * springs.  It also contains code to step the "physics" of the simulation and run
@@ -458,9 +446,14 @@ private:
      *******************************************************************/
     void removeShadows(SketchObject *obj);
 
+    typedef QPair< vtkSmartPointer< vtkProjectToPlane >,
+                   vtkSmartPointer< vtkActor > > ShadowPair;
+    typedef QPair< vtkSmartPointer< vtkLineSource>,
+                   vtkSmartPointer< vtkActor > > ConnectorPair;
+
     QList< SketchObject* > objects;
-    QHash< SketchObject*, QVTKTypes< vtkProjectToPlane, vtkActor >::Pair > shadows;
-    QHash< Connector* , QVTKTypes< vtkLineSource, vtkActor >::Pair > lines;
+    QHash< SketchObject*, ShadowPair > shadows;
+    QHash< Connector* , ConnectorPair > lines;
     QList< Connector* > connections, lHand, rHand;
     QVector< QSharedPointer< PhysicsStrategy > > strategies;
 

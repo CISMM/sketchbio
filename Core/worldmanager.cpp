@@ -330,8 +330,7 @@ void WorldManager::setShowShadows(bool show)
     if (show == showShadows)
         return;
     showShadows = show;
-    QHashIterator< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
-            vtkSmartPointer< vtkActor > > > itr(shadows);
+    QHashIterator< SketchObject *, ShadowPair > itr(shadows);
     while (itr.hasNext())
     {
         vtkActor *actor = itr.next().value().second;
@@ -393,7 +392,14 @@ void WorldManager::showInvisibleObjects() {
             insertActors(objects[i]);
         }
     }
-    // TODO - transparent connectors
+    int n = connections.length();
+    for (int i = 0; i < n; i++)
+    {
+        if (connections.at(i)->getAlpha() < Q_EPSILON)
+        {
+            renderer->AddActor(lines.value(connections[i]).second);
+        }
+    }
 }
 
 //##################################################################################################
@@ -406,6 +412,14 @@ void WorldManager::hideInvisibleObjects() {
         }
     }
     // TODO - transparent connectors
+    int n = connections.length();
+    for (int i = 0; i < n; i++)
+    {
+        if (connections.at(i)->getAlpha() < Q_EPSILON)
+        {
+            renderer->RemoveActor(lines.value(connections[i]).second);
+        }
+    }
 }
 
 //##################################################################################################
@@ -424,7 +438,8 @@ void WorldManager::setCollisionCheckOn(bool on) {
 // helper function for updateSprings - updates the endpoints of the springs in the vtkPoints object
 static inline void updateLines(
         QList< Connector* >& list,
-        QHash< Connector*, QVTKTypes< vtkLineSource, vtkActor >::Pair >& map)
+        QHash< Connector*, QPair< vtkSmartPointer< vtkLineSource >,
+                                  vtkSmartPointer< vtkActor > > >& map)
 {
     for (QListIterator< Connector* > it(list); it.hasNext();) {
         Connector* s = it.next();
@@ -580,8 +595,7 @@ Connector* WorldManager::getClosestConnector(q_vec_type point, double *distOut,
 //##################################################################################################
 void WorldManager::setShadowPlane(q_vec_type point, q_vec_type nVector)
 {
-    QHashIterator< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
-            vtkSmartPointer< vtkActor > > > itr(shadows);
+    QHashIterator< SketchObject *, ShadowPair > itr(shadows);
     while (itr.hasNext())
     {
         vtkProjectToPlane *filter = itr.next().value().first;
@@ -642,11 +656,11 @@ void WorldManager::addConnector(Connector* spring,QList< Connector* > *list) {
         {
             actor->GetProperty()->SetOpacity(spring->getAlpha());
         }
-        if (spring->getAlpha() > 0 || showInvisible)
+        if (spring->getAlpha() > Q_EPSILON || showInvisible)
         {
             renderer->AddActor(actor);
         }
-        lines.insert(spring,QVTKTypes< vtkLineSource, vtkActor >::Pair(line,actor));
+        lines.insert(spring,ConnectorPair(line,actor));
     }
 }
 
@@ -678,8 +692,7 @@ void WorldManager::insertActors(SketchObject *obj)
             shadowActor->SetMapper(mapper);
             shadowActor->GetProperty()->LightingOff();
             shadowActor->GetProperty()->SetColor(SHADOW_COLOR);
-            shadows.insert(obj,QPair< vtkSmartPointer< vtkProjectToPlane >,
-                           vtkSmartPointer< vtkActor > >(projection,shadowActor));
+            shadows.insert(obj,ShadowPair(projection,shadowActor));
             renderer->AddActor(shadowActor);
         }
     }
