@@ -14,6 +14,7 @@ def makeMaterial(name, diffuse, specular, alpha):
     mat.specular_intensity = 0.5
     mat.alpha = alpha
     mat.ambient = 1
+    mat.use_transparent_shadows = True
     return mat
 
 # selects the given object and deselects all others
@@ -155,6 +156,31 @@ def createInstance(modelObj,isCamera,location,orientation_quat,isVisible,isActiv
         bpy.context.scene.camera = obj
     return obj
 
+def createConnector(p1,p2,alpha,radius,color=(0.5,0.5,0.5)):
+    oldKeys = list(bpy.data.objects.keys()) # copies the object names list
+    bpy.ops.mesh.primitive_cylinder_add()
+    cylinder = None
+    for key in bpy.data.objects.keys():
+        if key not in oldKeys:
+            cylinder = bpy.data.objects[key]
+            break
+    if cylinder is None:
+        raise ValueError('Failed to create cylinder')
+    v = [p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]]
+    pos = [(p2[0]+p1[0])/2.0,(p2[1]+p1[1])/2.0,(p2[2]+p1[2])/2.0]
+    import math
+    l = math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2])
+    # note: blender stores euler rotations internally as radians, but
+    # displays them as degrees
+    theta = math.atan2(v[1],v[0])
+    phi = math.acos(v[2]/l)
+    cylinder.location = pos
+    cylinder.dimensions = (radius,radius,l)
+    cylinder.rotation_euler = (0,phi,theta)
+    m = makeMaterial('mat_'+cylinder.name,color,(1.0,1.0,1.0),alpha)
+    setMaterial(cylinder,m)
+    return cylinder
+
 # Make a keyframe at the current time on the object
 def makeKeyframe(obj,location,quaternion):
     select_object(obj)
@@ -171,4 +197,20 @@ def keyframeColor(obj,color = (0.0,0.0,0.0),useVertexColors = True):
     if useVertexColors != mat.use_vertex_color_paint:
         mat.use_vertex_color_paint = useVertexColors
         mat.keyframe_insert(data_path='use_vertex_color_paint')
+
+def keyframeCylinder(cylinder,p1,p2):
+    v = [p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]]
+    pos = [(p2[0]+p1[0])/2.0,(p2[1]+p1[1])/2.0,(p2[2]+p1[2])/2.0]
+    import math
+    l = math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2])
+    # note: blender stores euler rotations internally as radians, but
+    # displays them as degrees
+    theta = math.atan2(v[1],v[0])
+    phi = math.acos(v[2]/l)
+    cylinder.location = pos
+    cylinder.keyframe_insert(data_path='location')
+    cylinder.dimensions[2] = l
+    cylinder.keyframe_insert(data_path='dimensions')
+    cylinder.rotation_euler = (0,phi,theta)
+    cylinder.keyframe_insert(data_path='rotation_euler')
 

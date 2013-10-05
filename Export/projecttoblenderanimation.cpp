@@ -20,6 +20,7 @@
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
+#include <connector.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
 
@@ -76,9 +77,11 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("bpy.ops.object.delete()\n");
     file.write("modelObjects = list()\n");
     file.write("myObjects = list()\n");
-    QHash<SketchObject *, int> objectIdxs;
+    QHash< SketchObject*, int > objectIdxs;
+    QHash< Connector*, int > connectorIdxs;
     success &= writeCreateObjects(file,objectIdxs, proj);
-    success &= writeObjectKeyframes(file,objectIdxs, proj);
+    success &= writeCreateCylinders(file,connectorIdxs,proj);
+    success &= writeKeyframes(file,objectIdxs, connectorIdxs, proj);
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     sprintf(buf.data(),"bpy.context.scene.render.fps = %u\n",BLENDER_RENDERER_FRAMERATE);
     file.write(buf.data());
@@ -260,9 +263,41 @@ bool ProjectToBlenderAnimation::writeCreateObjects(
     return file.error() == QFile::NoError;
 }
 
+bool ProjectToBlenderAnimation::writeCreateCylinders(
+        QFile& file, QHash< Connector*, int>& connectorIdxs,
+        SketchProject* proj)
+{
+    WorldManager* world = proj->getWorldManager();
+    file.write("\n\n");
+    file.write("# Creates cylinders for all the connectors in SketchBio with nonzero alpha\n");
+    file.write("myConnectors = list()\n");
+    int cylindersLen = 0;
+    QScopedPointer< char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
+    QListIterator< Connector* > it = world->getSpringsIterator();
+    while (it.hasNext())
+    {
+        Connector* c = it.next();
+        if (c->getAlpha() > Q_EPSILON)
+        {
+            q_vec_type p1, p2;
+            c->getEnd1WorldPosition(p1);
+            c->getEnd2WorldPosition(p2);
+            sprintf(buf.data(),"obj = createConnector((%f,%f,%f),(%f,%f,%f),%f,%f)\n",
+                    p1[0],p1[1],p1[2],p2[0],p2[1],p2[2],c->getAlpha(),c->getRadius());
+            file.write(buf.data());
+            file.write("myConnectors.append(obj)\n");
+            connectorIdxs.insert(c,cylindersLen);
+            cylindersLen++;
+        }
+    }
+    return file.error() == QFile::NoError;
+}
 
-bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchObject *, int> &objectIdxs,
-                                                     SketchProject *proj, unsigned frameRate)
+
+bool ProjectToBlenderAnimation::writeKeyframes(
+        QFile& file, QHash< SketchObject*, int >& objectIdxs,
+        QHash< Connector*, int >& connectorIdxs,
+        SketchProject* proj, unsigned frameRate)
 {
     QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     unsigned frame = 0;
@@ -316,6 +351,17 @@ bool ProjectToBlenderAnimation::writeObjectKeyframes(QFile &file, QHash<SketchOb
                 }
             }
             // TODO - visibility and active camera stuff
+        }
+        for (QHashIterator< Connector*, int > it(connectorIdxs); it.hasNext();)
+        {
+            Connector* c = it.peekNext().key();
+            int idx = it.next().value();
+            q_vec_type p1, p2;
+            c->getEnd1WorldPosition(p1);
+            c->getEnd2WorldPosition(p2);
+            sprintf(buf.data(),"keyframeCylinder(myConnectors[%d],(%f,%f,%f),(%f,%f,%f))\n",
+                    idx,p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
+            file.write(buf.data());
         }
         frame++;
         time = static_cast<double>(frame) / static_cast<double>(frameRate);

@@ -122,7 +122,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
         q_vec_type pos1, pos2 = {0, 1, 0};
         project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
         q_vec_add(pos2,pos1,pos2);
-        Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.4,10);
+        Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.3,10);
         project->addConnector(conn);
         addXMLUndoState();
         emit newDirectionsString(" ");
