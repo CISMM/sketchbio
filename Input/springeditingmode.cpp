@@ -52,6 +52,10 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
         emit newDirectionsString("Release at location of new spring.");
     }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        emit newDirectionsString("Release to create a transparent connector at the current location.");
+    }
 }
 
 void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
@@ -110,6 +114,16 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
                     stiffness,
                     0);
         project->addConnector(spring);
+        addXMLUndoState();
+        emit newDirectionsString(" ");
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+        q_vec_type pos1, pos2 = {0, 1, 0};
+        project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
+        q_vec_add(pos2,pos1,pos2);
+        Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.4,10);
+        project->addConnector(conn);
         addXMLUndoState();
         emit newDirectionsString(" ");
     }
