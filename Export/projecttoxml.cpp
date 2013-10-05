@@ -1711,14 +1711,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
     {
         spring = new SpringConnection(objectIds.value(obj1Id),NULL,minRLen,
                                       maxRLen,k,o1Pos,wPos);
-        proj->addSpring(spring);
+        proj->addConnector(spring);
     }
     else if (objCount == 2)
     {
         spring = SpringConnection::makeSpring(objectIds.value(obj1Id),
                                               objectIds.value(obj2Id),
                                               o1Pos,o2Pos,false,k,minRLen,maxRLen);
-        proj->addSpring(spring);
+        proj->addConnector(spring);
     }
     else
     {

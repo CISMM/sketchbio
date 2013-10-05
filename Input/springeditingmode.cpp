@@ -100,7 +100,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
         project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
         q_vec_add(pos2,pos1,pos2);
         double stiffness;
-        stiffness = 2 * ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
+        stiffness = ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
         SpringConnection* spring = SpringConnection::makeSpring(
                     NULL,
                     NULL,
@@ -109,7 +109,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
                     true,
                     stiffness,
                     0);
-        project->addSpring(spring);
+        project->addConnector(spring);
         addXMLUndoState();
         emit newDirectionsString(" ");
     }
@@ -136,7 +136,7 @@ static inline void processFrameForSide(SketchProject* project,
         // if we haven't grabbed a spring, display which spring is grabbable
         Connector* closest;
         bool newAtEnd1;
-        closest = world->getClosestSpring(trackerPos,&springDist,&newAtEnd1);
+        closest = world->getClosestConnector(trackerPos,&springDist,&newAtEnd1);
         if (closest != spring || (newAtEnd1 != atEnd1))
         {
             project->setOutlineSpring(side,closest,newAtEnd1);

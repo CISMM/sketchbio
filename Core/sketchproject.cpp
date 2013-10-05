@@ -769,9 +769,9 @@ Connector* SketchProject::addSpring(SketchObject* o1, SketchObject* o2, double m
     return world->addSpring(o1,o2,o1Pos,o2Pos,false,stiffness,minRest,maxRest);
 }
 
-Connector* SketchProject::addSpring(Connector* spring)
+Connector* SketchProject::addConnector(Connector* spring)
 {
-    return world->addSpring(spring);
+    return world->addConnector(spring);
 }
 
 StructureReplicator* SketchProject::addReplication(SketchObject* o1, SketchObject* o2,

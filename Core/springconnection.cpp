@@ -5,16 +5,10 @@
 SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                                    double maxRestLen, double k, const q_vec_type obj1Pos,
                                    const q_vec_type obj2Pos) :
-    Connector(o1,o2,obj1Pos,obj2Pos),
+    Connector(o1,o2,obj1Pos,obj2Pos,0.0,5),
     minRestLength(minRestLen),
     maxRestLength(maxRestLen),
     stiffness(k)
-    #ifdef SHOW_DEBUGGING_FORCE_LINES
-  ,
-    end1(-1),
-    end2(-1),
-    cellId(-1)
-  #endif
 {
 }
 

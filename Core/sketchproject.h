@@ -175,7 +175,7 @@ public:
     Connector *addSpring(SketchObject* o1, SketchObject* o2, double minRest, double maxRest,
                        double stiffness, q_vec_type o1Pos, q_vec_type o2Pos);
     // for other springs
-    Connector* addSpring(Connector* spring);
+    Connector* addConnector(Connector* spring);
     // for structure replication chains
     StructureReplicator* addReplication(SketchObject* o1, SketchObject* o2, int numCopies);
     void addReplication(StructureReplicator* rep);

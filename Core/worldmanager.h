@@ -30,6 +30,17 @@ class PhysicsStrategy;
 #include "objectchangeobserver.h"
 #include "physicsstrategyfactory.h"
 
+// This is a neat trick I found on StackOverflow.  This allows me to
+// declare a QPair of vtkSmartPointers in a much more concise manner.
+// http://stackoverflow.com/questions/649718/templated-typedef
+// ...
+// templated typedefs will not be supported until C++11
+// http://en.wikipedia.org/wiki/C%2B%2B0x#Alias_templates
+template< typename T, typename V >
+struct QVTKTypes
+{
+    typedef QPair< vtkSmartPointer< T >, vtkSmartPointer< V > > Pair;
+};
 
 /*
  * This class contains the data that is in the modeled "world", all the objects and
@@ -139,7 +150,7 @@ public:
      * spring - the spring to add
      *
      *******************************************************************/
-    Connector* addSpring(Connector* spring);
+    Connector* addConnector(Connector* spring);
     /*******************************************************************
      *
      * Adds the given spring to the list of springs for the left hand
@@ -151,7 +162,7 @@ public:
      * spring - the spring to add
      *
      *******************************************************************/
-    inline void addLeftHandSpring(Connector *spring) {addSpring(spring,&lHand); }
+    inline void addLeftHandSpring(Connector *spring) {addConnector(spring,&lHand); }
     /*******************************************************************
      *
      * Adds the given spring to the list of springs for the right hand
@@ -163,7 +174,7 @@ public:
      * spring - the spring to add
      *
      *******************************************************************/
-    inline void addRightHandSpring(Connector *spring) {addSpring(spring,&rHand); }
+    inline void addRightHandSpring(Connector *spring) {addConnector(spring,&rHand); }
     /*******************************************************************
      *
      * Gets the list of connectors (springs) for the left hand
@@ -385,7 +396,7 @@ public:
      * than to End2.
      *
      *******************************************************************/
-    Connector* getClosestSpring(q_vec_type point, double *distOut, bool *closerToEnd1);
+    Connector* getClosestConnector(q_vec_type point, double *distOut, bool *closerToEnd1);
     /*******************************************************************
      *
      * This method set the plane used to compute the shadows of objects
@@ -413,18 +424,17 @@ private:
     /*******************************************************************
      *
      * This method adds the spring to the given list and performs the
-     * other steps necessary for the spring to be shown onscreen
+     * other steps necessary for the connector to be shown onscreen
      *
      *******************************************************************/
-    void addSpring(Connector* spring, QList< Connector* > *list);
+    void addConnector(Connector* spring, QList< Connector* > *list);
 
     /*******************************************************************
      *
-     * This method updates the spring endpoints and removes springs that
-     * have been deleted from the shown springs
+     * This method updates the connector endpoints for the current frame
      *
      *******************************************************************/
-    void updateSprings();
+    void updateConnectors();
 
     /*******************************************************************
      *
@@ -448,22 +458,15 @@ private:
      *******************************************************************/
     void removeShadows(SketchObject *obj);
 
-    QList< SketchObject * > objects;
-    QHash< SketchObject *, QPair< vtkSmartPointer< vtkProjectToPlane >,
-        vtkSmartPointer< vtkActor > > > shadows;
-    QHash< Connector* , QPair< vtkSmartPointer< vtkLineSource >,
-        vtkSmartPointer< vtkActor > > > lines;
-    QList< Connector * > connections, lHand, rHand;
+    QList< SketchObject* > objects;
+    QHash< SketchObject*, QVTKTypes< vtkProjectToPlane, vtkActor >::Pair > shadows;
+    QHash< Connector* , QVTKTypes< vtkLineSource, vtkActor >::Pair > lines;
+    QList< Connector* > connections, lHand, rHand;
     QVector< QSharedPointer< PhysicsStrategy > > strategies;
 
     vtkSmartPointer< vtkRenderer > renderer;
     vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;
     vtkSmartPointer< vtkActor > halfPlanesActor;
-
-    int lastCapacityUpdate;
-    vtkSmartPointer< vtkPoints > springEnds;
-    vtkSmartPointer< vtkPolyData > springEndConnections;
-    vtkSmartPointer< vtkTubeFilter > tubeFilter;
 
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;

@@ -3,13 +3,17 @@
 
 #include "quat.h"
 
+#include <vtkSmartPointer.h>
+class vtkLineSource;
+class vtkPolyDataAlgorithm;
+
 class SketchObject;
 
 class Connector
 {
 public:
     Connector(SketchObject* o1, SketchObject* o2, const q_vec_type o1Pos,
-              const q_vec_type o2Pos);
+              const q_vec_type o2Pos, double a = 1.0, double rad = 10);
     virtual ~Connector();
 
     inline const SketchObject *getObject1() const { return object1; }
@@ -41,12 +45,19 @@ public:
     void getEnd2WorldPosition(q_vec_type out) const;
     void setEnd2WorldPosition(const q_vec_type newPos);
 
+    // get alpha
+    inline double getAlpha() const { return alpha; }
+    // get radius
+    inline double getRadius() const { return radius; }
+
     // So that springs don't have to be dynamic casted...
-    virtual void addForce() = 0;
+    // default does nothing
+    virtual void addForce() {}
 
 protected:
     SketchObject* object1, * object2;
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
+    double alpha, radius;
 };
 
 #endif // CONNECTOR_H

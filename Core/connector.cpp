@@ -3,12 +3,15 @@
 #include "sketchobject.h"
 
 Connector::Connector(SketchObject *o1, SketchObject *o2,
-                     const q_vec_type o1Pos, const q_vec_type o2Pos)
+                     const q_vec_type o1Pos, const q_vec_type o2Pos,
+                     double a, double rad)
 {
     object1 = o1;
     object2 = o2;
     q_vec_copy(object1ConnectionPosition,o1Pos);
     q_vec_copy(object2ConnectionPosition,o2Pos);
+    alpha = a;
+    radius = rad;
 }
 
 Connector::~Connector()

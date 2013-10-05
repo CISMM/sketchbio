@@ -226,7 +226,7 @@ int testSelection()
     Connector* s2 = world->addSpring(o3,o2,v1,v1,false,1.0,0.0);
     q_vec_set(v1,3,0,-10);
     bool closerToEnd1;
-    Connector* closestSp = world->getClosestSpring(v1,&dist,&closerToEnd1);
+    Connector* closestSp = world->getClosestConnector(v1,&dist,&closerToEnd1);
     if (closestSp != s1 || !closerToEnd1)
     {
         errors++;
@@ -234,12 +234,15 @@ int testSelection()
     }
 
     s2->getEnd2WorldPosition(v1);
-    closestSp = world->getClosestSpring(v1,&dist,&closerToEnd1);
+    closestSp = world->getClosestConnector(v1,&dist,&closerToEnd1);
     if (closestSp != s2 || dist > Q_EPSILON || closerToEnd1)
     {
         errors++;
         cout << "Wrong closest spring end when giving an end position." << endl;
     }
+
+    // timestep doesn't matter, just make sure no segfault :)
+    world->stepPhysics(1.0);
 
     return errors;
 }

@@ -3,8 +3,6 @@
 
 #include <quat.h>
 
-#include <vtkType.h>
-
 #include "connector.h"
 
 /*
@@ -31,19 +29,11 @@ public:
     inline double getMinRestLength() const { return minRestLength; }
     inline double getMaxRestLength() const { return maxRestLength; }
 
-    inline vtkIdType getEnd1Id() const { return end1;}
-    inline void setEnd1Id(vtkIdType id) { end1 = id;}
-    inline vtkIdType getEnd2Id() const { return end2;}
-    inline void setEnd2Id(vtkIdType id) { end2 = id;}
-    inline vtkIdType getCellId() const { return cellId; }
-    inline void setCellId(vtkIdType id) { cellId = id;}
-
     virtual void addForce();
 
 private:
     double minRestLength, maxRestLength;
     double stiffness;
-    vtkIdType end1, end2, cellId;
 public: // static factories
     /*******************************************************************
      *
