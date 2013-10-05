@@ -27,7 +27,7 @@ using std::endl;
 #define SAVE_TEST_DIR "test/test1"
 #define LOAD_ONLY_TEST_DIR "test/test2"
 
-#define PRINT_OUT_XML_TESTNUM 5
+#define PRINT_OUT_XML_TESTNUM -1
 
 int saveLoadAndTest(SketchProject *proj, int testNum, bool writeToFile = false)
 {
