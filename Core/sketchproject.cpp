@@ -7,6 +7,7 @@
 #include <vtkOBJReader.h>
 #include <vtkPlaneSource.h>
 #include <vtkSphereSource.h>
+#include <vtkCubeSource.h>
 #include <vtkConeSource.h>
 #include <vtkExtractEdges.h>
 #include <vtkArrayCalculator.h>
@@ -57,6 +58,8 @@ static ColorMapType::Type COLORS[] =
     ColorMapType::SOLID_COLOR_CYAN,
 };
 
+//#define DEBUG_TRACKER_ORIENTATIONS
+
 class TrackerObject : public SketchObject {
 public:
     TrackerObject() :
@@ -64,17 +67,29 @@ public:
         actor(vtkSmartPointer< vtkActor >::New()),
         shadowGeometry(vtkSmartPointer< vtkTransformPolyDataFilter >::New())
     {
-        vtkSmartPointer< vtkSphereSource > sphereSource = vtkSmartPointer< vtkSphereSource >::New();
-        sphereSource->SetRadius(4 * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*SCALE_DOWN_FACTOR);
+        double d = TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * SCALE_DOWN_FACTOR *4;
+        vtkSmartPointer< vtkPolyDataMapper > mapper =
+                vtkSmartPointer< vtkPolyDataMapper >::New();
+#ifndef DEBUG_TRACKER_ORIENTATIONS
+        vtkSmartPointer< vtkSphereSource > sphereSource =
+                vtkSmartPointer< vtkSphereSource >::New();
+        sphereSource->SetRadius(d);
         sphereSource->Update();
         shadowGeometry->SetInputConnection(sphereSource->GetOutputPort());
+        mapper->SetInputConnection(sphereSource->GetOutputPort());
+#else
+        vtkSmartPointer< vtkCubeSource > cubeSource =
+                vtkSmartPointer< vtkCubeSource >::New();
+        cubeSource->SetBounds(-d,d,-2*d,2*d,-3*d,3*d);
+        cubeSource->Update();
+        shadowGeometry->SetInputConnection(cubeSource->GetOutputPort());
+        mapper->SetInputConnection(cubeSource->GetOutputPort());
+#endif
         vtkSmartPointer< vtkTransform > sTrans = vtkSmartPointer< vtkTransform >::New();
         sTrans->Identity();
         sTrans->PostMultiply();
         shadowGeometry->SetTransform(sTrans);
         shadowGeometry->Update();
-        vtkSmartPointer< vtkPolyDataMapper > mapper = vtkSmartPointer< vtkPolyDataMapper >::New();
-        mapper->SetInputConnection(sphereSource->GetOutputPort());
         mapper->Update();
         actor->SetMapper(mapper);
         vtkSmartPointer< vtkTransform > transform = vtkSmartPointer< vtkTransform >::New();

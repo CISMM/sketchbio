@@ -22,6 +22,7 @@ TransformManager::TransformManager() {
     worldEyeTransform->Concatenate(roomToEyes);
     roomToTrackerBase = vtkSmartPointer<vtkTransform>::New();
     roomToTrackerBase->Translate(0,0,0); // TBD
+    roomToTrackerBase->RotateWXYZ(90.0,1.0,0.0,0.0);
     roomToTrackerBase->Scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
                              TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE);

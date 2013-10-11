@@ -205,14 +205,10 @@ void VRPN_CALLBACK HydraInputManager::handle_tracker_pos_quat (void *userdata, c
 {
     HydraInputManager *mgr = (HydraInputManager *) userdata;
     q_xyz_quat_type data;
-    // changes coordinates to OpenGL coords, switching y & z and negating y
-    data.xyz[Q_X] = t.pos[Q_X];
-    data.xyz[Q_Y] = -t.pos[Q_Z];
-    data.xyz[Q_Z] = t.pos[Q_Y];
-    data.quat[Q_X] = t.quat[Q_X];
-    data.quat[Q_Y] = -t.quat[Q_Z];
-    data.quat[Q_Z] = t.quat[Q_Y];
-    data.quat[Q_W] = t.quat[Q_W];
+    // TransformManager handles difference between coordinates of trackers and world
+    // no need to do math here
+    q_vec_copy(data.xyz,t.pos);
+    q_copy(data.quat,t.quat);
     // set the correct hand's position
     if (t.sensor == 0) {
         mgr->setLeftPos(&data);
