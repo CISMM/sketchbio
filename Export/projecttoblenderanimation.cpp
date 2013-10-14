@@ -93,7 +93,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("bpy.context.scene.world.light_settings.ao_blend_type = 'MULTIPLY'\n");
     file.write("bpy.context.scene.world.light_settings.distance = 40\n");
     file.write("bpy.context.scene.world.light_settings.samples = 5\n");
-    file.write("bpy.context.scene.world.horizon_color = (0.0, 0.0, 0.0)\n");
+    file.write("bpy.context.scene.world.horizon_color = (0.02, 0.02, 0.02)\n");
     sprintf(buf.data(),"bpy.ops.wm.save_mainfile(filepath=\"%s/project.blend\")\n",
             proj->getProjectDir().toStdString().c_str());
     file.write(buf.data());
