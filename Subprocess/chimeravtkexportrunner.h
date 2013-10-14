@@ -22,7 +22,8 @@ class ChimeraVTKExportRunner : public AbstractSingleProcessRunner
 public:
     // constructor
     ChimeraVTKExportRunner(const QString &pdbId, const QString &vtkFile, int threshold,
-                           const QString &chainsToDelete, QObject *parent = 0);
+                           const QString &chainsToDelete, bool shouldExportWholeBioUnit,
+                           QObject *parent = 0);
     // destructor
     virtual ~ChimeraVTKExportRunner();
     virtual bool isValid();

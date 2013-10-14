@@ -8,8 +8,10 @@
 
 #include "subprocessutils.h"
 
-ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QString &vtkFile, int threshold,
-                                 const QString &chainsToDelete, QObject *parent) :
+ChimeraVTKExportRunner::ChimeraVTKExportRunner(
+        const QString &pdbId, const QString &vtkFile, int threshold,
+        const QString &chainsToDelete, bool shouldExportWholeBioUnit,
+        QObject *parent) :
     AbstractSingleProcessRunner(parent),
     cmdFile(new QTemporaryFile(QDir::tempPath() + "/XXXXXX.py",this)),
     resultFile(vtkFile),
@@ -41,7 +43,17 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(const QString &pdbId, const QStri
         // TODO - change resolution/export multiple resolutions ?
         cmdFile->write("from Midas import MidasError\n");
         cmdFile->write("try:\n");
-        line = "\trunCommand(\"sym #0 surfaces all resolution %1\")\n";
+        if (shouldExportWholeBioUnit)
+        {
+            // this by default exports the whole biological unit
+            line = "\trunCommand(\"sym #0 surfaces all resolution %1\")\n";
+        }
+        else
+        {
+            // this command explicitly defines what to export as just the existing piece
+            // and will work even when no biological unit information is present
+            line = "\trunCommand(\"sym #0 group shift,1,0 surfaces all resolution %1\")\n";
+        }
         cmdFile->write(line.arg(threshold).toStdString().c_str());
         cmdFile->write("except MidasError:\n");
         cmdFile->write("\tprint \"Failed to create Multiscale surface...\"\n");

@@ -32,8 +32,9 @@ QString getChimeraVTKExtensionDir();
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *makeChimeraSurfaceFor(const QString &pdbID, const QString &vtkFile, int threshold,
-                                    const QString &chainsToDelete);
+SubprocessRunner *makeChimeraSurfaceFor(
+        const QString &pdbID, const QString &vtkFile, int threshold,
+        const QString &chainsToDelete, bool shouldExportBiologicalUnit);
 
 /*
  * This method returns a valid SubprocessRunner to make an obj file
@@ -91,8 +92,9 @@ SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *loadFromPDBId(SketchProject *proj, const QString &pdb,
-                                const QString &chainsToDelete);
+SubprocessRunner *loadFromPDBId(
+        SketchProject *proj, const QString &pdb,
+        const QString &chainsToDelete, bool exportWholeBiologicalUnit);
 /*
  * This method returns a valid SubprocessRunner to run various subprocesses to
  * create a model and object from a PDB id or NULL.  There is no need to check
@@ -103,8 +105,9 @@ SubprocessRunner *loadFromPDBId(SketchProject *proj, const QString &pdb,
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *loadFromPDBFile(SketchProject *proj, const QString &pdbfilename,
-                                  const QString &chainsToDelete);
+SubprocessRunner *loadFromPDBFile(
+        SketchProject *proj, const QString &pdbfilename,
+        const QString &chainsToDelete, bool exportWholeBiologicalUnit);
 }
 
 #endif // SUBPROCESSUTILS_H

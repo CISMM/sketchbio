@@ -124,10 +124,12 @@ QString getChimeraVTKExtensionDir()
 #endif
 }
 
-SubprocessRunner *makeChimeraSurfaceFor(const QString &pdbID, const QString &vtkFile,int threshold,
-                                    const QString &chainsToDelete)
+SubprocessRunner *makeChimeraSurfaceFor(
+        const QString &pdbID, const QString &vtkFile,int threshold,
+        const QString &chainsToDelete,bool shouldExportBiologicalUnit)
 {
-    ChimeraVTKExportRunner *maker = new ChimeraVTKExportRunner(pdbID,vtkFile,threshold,chainsToDelete);
+    ChimeraVTKExportRunner *maker = new ChimeraVTKExportRunner(
+                pdbID,vtkFile,threshold,chainsToDelete,shouldExportBiologicalUnit);
     if (!maker->isValid())
     {
         delete maker;
@@ -193,10 +195,12 @@ SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles)
     return runner;
 }
 
-SubprocessRunner *loadFromPDBId(SketchProject *proj, const QString &pdb,
-                                const QString &chainsToDelete)
+SubprocessRunner *loadFromPDBId(
+        SketchProject *proj, const QString &pdb,
+        const QString &chainsToDelete, bool exportWholeBiologicalUnit)
 {
-    ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdb,chainsToDelete);
+    ModelFromPDBRunner *runner = new ModelFromPDBRunner(
+                proj,pdb,chainsToDelete,exportWholeBiologicalUnit);
     if (!runner->isValid())
     {
         delete runner;
@@ -205,12 +209,14 @@ SubprocessRunner *loadFromPDBId(SketchProject *proj, const QString &pdb,
     return runner;
 }
 
-SubprocessRunner *loadFromPDBFile(SketchProject *proj, const QString &pdbfilename,
-                                  const QString &chainsToDelete)
+SubprocessRunner *loadFromPDBFile(
+        SketchProject *proj, const QString &pdbfilename,
+        const QString &chainsToDelete, bool exportWholeBiologicalUnit)
 {
     QString prefix = pdbfilename.mid(pdbfilename.lastIndexOf("/")+1);
-    ModelFromPDBRunner *runner = new ModelFromPDBRunner(proj,pdbfilename,
-                                                        prefix,chainsToDelete);
+    ModelFromPDBRunner *runner = new ModelFromPDBRunner(
+                proj,pdbfilename,
+                prefix,chainsToDelete,exportWholeBiologicalUnit);
     if (!runner->isValid())
     {
         delete runner;

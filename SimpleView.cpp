@@ -502,7 +502,11 @@ void SimpleView::importPDBId()
         {
 
             printf("Importing %s from PDB\n", text.toStdString().c_str());
-            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDBId(project,text,toDelete);
+            // TODO - change dialog to ask about importing the whole biological unit
+            // vs just the part in the pdb file
+            // right now default is ignore biological unit info
+            SubprocessRunner *objMaker = SubprocessUtils::loadFromPDBId(
+                        project,text,toDelete,false);
             if (objMaker == NULL)
             {
                 QMessageBox::warning(NULL, "Could not run subprocess to import molecule ", text);
@@ -544,7 +548,7 @@ void SimpleView::openPDBFile()
     else
     {
         printf("Importing %s\n", fn.toStdString().c_str());
-        SubprocessRunner *objMaker = SubprocessUtils::loadFromPDBFile(project,fn,toDelete);
+        SubprocessRunner *objMaker = SubprocessUtils::loadFromPDBFile(project,fn,toDelete,false);
         if (objMaker == NULL)
         {
             QMessageBox::warning(NULL,"Could not run subprocess to import molecule ", fn);

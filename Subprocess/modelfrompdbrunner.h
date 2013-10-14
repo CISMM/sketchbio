@@ -18,13 +18,15 @@ public:
     // pdb - the 4 character pdb id
     // toDelete - chain identifiers to delete before surfacing
     ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
-                       const QString &toDelete, QObject *parent = 0);
+                       const QString &toDelete, bool shouldExportBiologicalUnit,
+                       QObject *parent = 0);
     // proj - the project
     // filename - the pdb file
     // modelFilePre - the prefix to use for the model files in the project dir
     // toDeltee - chain identifiers to delete before surfacing
     ModelFromPDBRunner(SketchProject *proj, const QString &filename,
                        const QString &modelFilePre, const QString &toDelete,
+                       bool shouldExportBiologicalUnit,
                        QObject *parent = 0);
     ~ModelFromPDBRunner();
 
@@ -49,7 +51,7 @@ private:
     SubprocessRunner *currentRunner;
     // The step number we are on (which subprocess is running)
     int stepNum;
-    bool importFromLocalFile;
+    bool importFromLocalFile, exportWholeBiologicalUnit;
 };
 
 #endif // MODELFROMPDBRUNNER_H

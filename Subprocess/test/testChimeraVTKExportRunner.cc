@@ -49,7 +49,8 @@ void ChimeraTest::setUp()
     QFile f(FILENAME);
     if (f.exists())
         f.remove();
-    runner = SubprocessUtils::makeChimeraSurfaceFor(PDBID,FILENAME,thresh,toDelete);
+    runner = SubprocessUtils::makeChimeraSurfaceFor(
+                PDBID,FILENAME,thresh,toDelete,toDelete.isEmpty());
 }
 
 int ChimeraTest::testResults()

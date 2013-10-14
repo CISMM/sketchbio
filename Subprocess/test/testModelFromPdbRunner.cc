@@ -91,12 +91,12 @@ TestModelFromPDB::~TestModelFromPDB()
 
 void TestModelFromPDBID::setUp()
 {
-    runner = SubprocessUtils::loadFromPDBId(proj,pdbId,"");
+    runner = SubprocessUtils::loadFromPDBId(proj,pdbId,"",false);
 }
 
 void TestModelFromPDBFile::setUp()
 {
-    runner = SubprocessUtils::loadFromPDBFile(proj,filename,"");
+    runner = SubprocessUtils::loadFromPDBFile(proj,filename,"",true);
 }
 
 QString TestModelFromPDBID::getSource()

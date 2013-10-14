@@ -24,8 +24,10 @@
 
 #include "subprocessutils.h"
 
-ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
-                                       const QString &toDelete, QObject *parent) :
+ModelFromPDBRunner::ModelFromPDBRunner(
+        SketchProject *proj, const QString &pdb,
+        const QString &toDelete, bool shouldExportBiologicalUnit,
+        QObject *parent) :
     SubprocessRunner(parent),
     pdbId(pdb.toLower()),
     chainsToDelete(toDelete),
@@ -35,13 +37,15 @@ ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
     conformation(-1),
     currentRunner(NULL),
     stepNum(0),
-    importFromLocalFile(false)
+    importFromLocalFile(false),
+    exportWholeBiologicalUnit(shouldExportBiologicalUnit)
 {
 }
 
 ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &filename,
                                        const QString &modelFilePre,
-                                       const QString &toDelete, QObject *parent) :
+                                       const QString &toDelete,
+                                       bool shouldExportBiologicalUnit, QObject *parent) :
     SubprocessRunner(parent),
     pdbId(filename),
     chainsToDelete(toDelete),
@@ -51,7 +55,8 @@ ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &filen
     conformation(-1),
     currentRunner(NULL),
     stepNum(0),
-    importFromLocalFile(true)
+    importFromLocalFile(true),
+    exportWholeBiologicalUnit(shouldExportBiologicalUnit)
 {
 }
 
@@ -64,7 +69,7 @@ void ModelFromPDBRunner::start()
     QString filename = (project->getProjectDir() + "/" + modelFilePrefix
                         + ".vtk").trimmed();
     currentRunner = SubprocessUtils::makeChimeraSurfaceFor(
-                pdbId,filename,0,chainsToDelete);
+                pdbId,filename,0,chainsToDelete,exportWholeBiologicalUnit);
     if (currentRunner == NULL) {
         emit finished(false);
         deleteLater();
@@ -126,8 +131,9 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
             }
             if (! model->hasFileNameFor(conformation,ModelResolution::SIMPLIFIED_1000))
             {
-                currentRunner = SubprocessUtils::makeChimeraSurfaceFor(pdbId,simplified,
-                                                                   5,chainsToDelete);
+                currentRunner = SubprocessUtils::makeChimeraSurfaceFor(
+                            pdbId,simplified,
+                            5,chainsToDelete,exportWholeBiologicalUnit);
                 if (currentRunner == NULL)
                 {
                     emit finished(true);
