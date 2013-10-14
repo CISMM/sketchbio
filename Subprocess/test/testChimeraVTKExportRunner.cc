@@ -19,8 +19,8 @@ using std::endl;
 
 #include "testqt.h"
 
-#define PDBID   "1atn"
-#define FILENAME (QDir::tempPath() + "/1atn.vtk")
+#define PDBID   "3mfp"
+#define FILENAME (QDir::tempPath() + "/3mfp.vtk")
 
 class ChimeraTest : public Test
 {

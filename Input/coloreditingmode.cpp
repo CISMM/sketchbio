@@ -90,6 +90,10 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
             }
             else if (arr == QString("chainPosition"))
             {
+                arr = QString("charge");
+            }
+            else if (arr == QString("charge"))
+            {
                 arr = QString("modelNum");
             }
             rObj->setArrayToColorBy(arr);

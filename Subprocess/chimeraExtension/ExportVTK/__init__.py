@@ -8,17 +8,6 @@
 # by the NIH (award number 50-P41-EB002025).
 #
 
-# custom exceptions for more descriptive error messages
-# for when a point with a new array is added, but there are
-# already points without that array
-class PointWithUnknownArray(Exception):
-    pass
-
-# For when a point is added but does not have a data array
-# that is currently defined, giving a point without an value
-# for that array
-class MissingDataArray(Exception):
-    pass
 
 # A class to contain and aggregate the data to be saved in the
 # VTK file.
@@ -45,12 +34,17 @@ class DataToSave:
             if (key in self.arrays):
                 self.arrays[key].append(data[key])
             else:
-                self.arrays[key] = list([data[key]])
-                if index > 0:
-                    raise PointWithUnknownArray("Unknown array: %s" % key)
+                if index == 0:
+                    self.arrays[key] = list([data[key]])
+        badArrays = list()
         for key in self.arrays:
             if len(self.arrays[key]) < len(self.points):
-                raise MissingDataArray("Got no value for the %s data array" % key)
+                badArrays.append(key)
+                print "Warning: detected bad array", "'%s'" % key
+        for key in badArrays:
+            del self.arrays[key]
+        if len(badArrays)  > 0:
+            raise ValueError()
 
     # This function writes the data in the object to the given file in the VTK ascii
     # format.  This function contains all the logic about that format and provided that
@@ -109,11 +103,6 @@ class DataToSave:
                 for s in self.arrays[key]:
                     vtkFile.write('%s\n' % s)
 
-# This function gets the list of open models from chimera
-def getModels():
-    from chimera import openModels
-    return openModels.list()
-
 # gets the equivalent model pieces for the pieces that have no associated atoms.  The return
 # value is a dict where the keys are pieces without associated atoms and the values are
 # the equivalent pieces with assoicated atoms.  Note, if ms is not a Multiscale model surface this
@@ -142,6 +131,8 @@ def equivalent_surface_pieces(ms):
 #                       that is before this point (0 is N-terminus, 1 is C-terminus)
 #    resType - a string array with the three letter description of the residue
 #    resNum  - the residue number within the model (absolute residue id, not chain relative)
+#    charge - a double, the atom's charge (if something has put a 'charge' attribute
+#               on the atoms in the models
 # Potential data arrays:
 #   - removed due to VTK not understanding NaN in input files and no other good value for
 #       invalid data:
@@ -162,6 +153,10 @@ def parseModel(m,modelNum,data):
                        'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue),
                        'atomType' : atom.name, 'bFactor' : atom.bfactor,
                        'occupancy' : atom.occupancy }
+            if hasattr(atom,'charge'):
+                arrays['charge'] = atom.charge
+            else:
+                arrays['charge'] = 0.0
             #if atom.residue.kdHydrophobicity != None:
             #    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
             #else:
@@ -218,6 +213,10 @@ def parseModel(m,modelNum,data):
                                'bFactor'  : atom.bfactor,
                                'occupancy': atom.occupancy
                     }
+                    if hasattr(atom,'charge'):
+                        arrays['charge'] = atom.charge
+                    else:
+                        arrays['charge'] = 0.0
                     # I would export hydrophobicity (and may in future versions) here,
                     # but VTK doesn't read in NaN values
                     for r in ranges:
@@ -250,6 +249,10 @@ def parseModel(m,modelNum,data):
                                'bFactor'  : atom.bfactor,
                                'occupancy': atom.occupancy
                     }
+                    if hasattr(atom,'charge'):
+                        arrays['charge'] = atom.charge
+                    else:
+                        arrays['charge'] = 0.0
                     # I would export hydrophobicity here (and may in future versions),
                     # but VTK doesn't read NaN values
                     for r in ranges:
@@ -267,17 +270,20 @@ def parseModel(m,modelNum,data):
             print "\n"
 
 # parses chimera's datastructures and adds the data from each to the data object
-def populate_data_object(data):
-    modelList = getModels()
+def populate_data_object(data,modelList):
     for m in modelList:
         parseModel(m,modelList.index(m),data)
 
-# writes the chimera scene to the file specified by path
-def write_scene_as_vtk(path):
-    data = DataToSave();
-    populate_data_object(data)
+# write the specified models to the given vtk file
+def write_models_as_vtk(path,models):
+    data = DataToSave()
+    populate_data_object(data,models)
     vtkFile = open(path, 'w')
     if len(data.points) > 0:
         data.writeToFile(vtkFile)
     vtkFile.close();
+
+# writes the chimera scene to the file specified by path
+def write_scene_as_vtk(path):
+    write_models_as_vtk(path,chimera.openModels.list())
 
