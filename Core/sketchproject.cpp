@@ -301,6 +301,7 @@ inline void makeTrackerShadow(SketchObject* hand, vtkActor* shadowActor,
 #define OUTLINES_COLOR 0.7,0.7,0.7
 SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     renderer(r),
+	time(),
     models(new ModelManager()),
     transforms(new TransformManager()),
     world(new WorldManager(r)),
@@ -559,6 +560,7 @@ void SketchProject::startAnimation()
     world->clearRightHandSprings();
     world->hideInvisibleObjects();
     setShowShadows(false);
+	time.start();
 }
 
 void SketchProject::stopAnimation()
@@ -650,6 +652,7 @@ void SketchProject::timestep(double dt) {
         world->setShadowPlane(point,vector);
         transforms->copyCurrentHandTransformsToOld();
     } else {
+		double elapsed_time = time.restart();
         if (world->setAnimationTime(timeInAnimation)) {
             // if setAnimationTime returns true, then we are done
             stopAnimation();
@@ -664,7 +667,7 @@ void SketchProject::timestep(double dt) {
                 }
             }
         }
-        timeInAnimation += dt;
+        timeInAnimation += (elapsed_time/1000);
     }
 }
 

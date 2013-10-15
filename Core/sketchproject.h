@@ -22,6 +22,7 @@ class vtkMatrix4x4;
 #include <QList>
 #include <QHash>
 #include <QString>
+#include <QTime>
 class QDir;
 
 // SketchBio dependencies
@@ -193,6 +194,7 @@ private:
 
     // fields
     vtkSmartPointer< vtkRenderer > renderer;
+	QTime time;
     // managers -- these are owned by the project, raw pointers may be passed to other places, but
     //              will be invalid once the project is deleted
     QScopedPointer< ModelManager > models;
