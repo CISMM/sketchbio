@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName("UNC Computer Science");
     app.setOrganizationDomain("sketchbio.org");
 
-    TestModelFromPDBID test("1atn"); // use a small model for quicker processing
+    TestModelFromPDBID test("3mfp"); // use a small model for quicker processing
     TestModelFromPDBFile test2(QDir::currentPath() + "/models/4fun.pdb");
     TestQObject obj(app, test), obj2(app,test2);
 
