@@ -39,6 +39,7 @@ inline void restoreToSavePoint(QSharedPointer< std::string > &savePt,
             return;
         project.clearProject();
         ProjectToXML::xmlToProject(&project,xml);
+		project.setViewTime(project.getViewTime());
     }
 }
 
