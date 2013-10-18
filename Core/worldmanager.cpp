@@ -168,6 +168,15 @@ void WorldManager::clearObjects()
     {
         deleteObject(objects[0]);
     }
+    orientedHalfPlaneOutlines->RemoveAllInputConnections(0);
+    vtkSmartPointer< vtkPoints > pts =
+            vtkSmartPointer< vtkPoints >::New();
+    pts->InsertNextPoint(0.0,0.0,0.0);
+    vtkSmartPointer< vtkPolyData > pdata =
+            vtkSmartPointer< vtkPolyData >::New();
+    pdata->SetPoints(pts);
+    orientedHalfPlaneOutlines->AddInputData(pdata);
+    orientedHalfPlaneOutlines->Update();
 }
 
 //##################################################################################################
