@@ -282,6 +282,29 @@ void WorldManager::stepPhysics(double dt) {
 //##################################################################################################
 //##################################################################################################
 bool WorldManager::setAnimationTime(double t) {
+    bool isDone = true;
+    for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *obj = it.next();
+        bool wasVisible = obj->isVisible();
+        obj->setPositionByAnimationTime(t);
+        if (obj->hasKeyframes()) {
+            if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
+                isDone = false;
+            }
+        }
+        if (obj->isVisible() && !wasVisible) {
+            insertActors(obj);
+        } else if (!obj->isVisible() && wasVisible) {
+            removeActors(obj);
+        }
+    }
+    setKeyframeOutlinesForTime(t);
+    return isDone;
+}
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setKeyframeOutlinesForTime(double t)
+{
     int numberWithKeyframeNow = 0;
     bool isShowingHalfPlaneOutlines =
             orientedHalfPlaneOutlines->GetNumberOfInputConnections(0) > 1;
@@ -293,25 +316,14 @@ bool WorldManager::setAnimationTime(double t) {
             vtkSmartPointer< vtkPolyData >::New();
     pdata->SetPoints(pts);
     orientedHalfPlaneOutlines->AddInputData(pdata);
-    bool isDone = true;
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
-        obj->setPositionByAnimationTime(t);
-        bool wasVisible = obj->isVisible();
         if (obj->hasKeyframes()) {
-            if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
-                isDone = false;
-            }
             if (obj->getKeyframes()->contains(t)) {
                 orientedHalfPlaneOutlines->AddInputConnection(
                             0,obj->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
                 ++numberWithKeyframeNow;
             }
-        }
-        if (obj->isVisible() && !wasVisible) {
-            insertActors(obj);
-        } else if (!obj->isVisible() && wasVisible) {
-            removeActors(obj);
         }
     }
     if (isShowingHalfPlaneOutlines && numberWithKeyframeNow == 0)
@@ -322,7 +334,6 @@ bool WorldManager::setAnimationTime(double t) {
     {
         renderer->AddActor(halfPlanesActor);
     }
-    return isDone;
 }
 
 //##################################################################################################

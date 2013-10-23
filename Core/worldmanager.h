@@ -288,6 +288,15 @@ public:
     bool setAnimationTime(double t);
     /*******************************************************************
      *
+     * Turns on or off the keyframe outlines based on the given time.  If
+     * an object has keyframes at the given time, then the keyframe outlines
+     * will be made visible around that object.  This function, unlike
+     * setAnimationTime() does not modify object positions.
+     *
+     *******************************************************************/
+    void setKeyframeOutlinesForTime(double t);
+    /*******************************************************************
+     *
      * Returns true if object shadows are being shown
      *
      *******************************************************************/

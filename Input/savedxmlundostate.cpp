@@ -6,6 +6,7 @@
 #include <vtkXMLDataElement.h>
 #include <vtkXMLUtilities.h>
 
+#include <worldmanager.h>
 #include <sketchproject.h>
 
 #include <projecttoxml.h>
@@ -39,7 +40,7 @@ inline void restoreToSavePoint(QSharedPointer< std::string > &savePt,
             return;
         project.clearProject();
         ProjectToXML::xmlToProject(&project,xml);
-		project.setViewTime(project.getViewTime());
+        project.getWorldManager()->setKeyframeOutlinesForTime(project.getViewTime());
     }
 }
 
