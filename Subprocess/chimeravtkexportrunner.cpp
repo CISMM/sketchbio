@@ -43,13 +43,17 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(
         }
         // set up to export charge
         cmdFile->write("runCommand(\"surf\")\n");
-        cmdFile->write("runCommand(\"coulombic -10 red 0 white 10 blue\")\n");
+        cmdFile->write("runCommand(\"coulombic gpadding 20.0 gname CoulombicESP -10 red 0 white 10 blue\")\n");
+        cmdFile->write("volume = openModels.list()[2]\n");
         cmdFile->write("modelList = [openModels.list()[0]]\n");
         // TODO - change resolution/export multiple resolutions ?
         cmdFile->write("from Midas import MidasError\n");
         cmdFile->write("try:\n");
         if (shouldExportWholeBioUnit)
         {
+            cmdFile->write("\tvolume = None\n"); // TODO - can't do whole biounit
+            // charge data yet, need to store something about xform used to create
+            // point first
             // this by default exports the whole biological unit
             line = "\trunCommand(\"sym #0 surfaces all resolution %1\")\n";
         }
@@ -60,7 +64,7 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(
             line = "\trunCommand(\"sym #0 group shift,1,0 surfaces all resolution %1\")\n";
         }
         cmdFile->write(line.arg(threshold).toStdString().c_str());
-        cmdFile->write("\tmodelList.append(openModels.list()[2])\n");
+        cmdFile->write("\tmodelList.append(openModels.list()[3])\n");
         cmdFile->write("except MidasError:\n");
         cmdFile->write("\tprint \"Failed to create Multiscale surface...\"\n");
         cmdFile->write("\tmodelList.append(openModels.list()[1])\n");
@@ -69,7 +73,7 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(
         line = line.arg(SubprocessUtils::getChimeraVTKExtensionDir());
         cmdFile->write(line.toStdString().c_str());
         cmdFile->write("import ExportVTK\n");
-        line = "ExportVTK.write_models_as_vtk(\"%1\",modelList)\n";
+        line = "ExportVTK.write_models_as_vtk(\"%1\",modelList,volume)\n";
         cmdFile->write(line.arg(vtkFile).toStdString().c_str());
         cmdFile->write("runCommand(\"close all\")\n");
         cmdFile->write("runCommand(\"stop now\")\n");

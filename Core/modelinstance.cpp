@@ -207,6 +207,11 @@ void ModelInstance::updateColorMap()
     {
         pointData->GetArray(arrayToColorBy.toStdString().c_str())->GetRange(range);
     }
+    if (arrayToColorBy == "charge")
+    {
+        range[0] = -10.0;
+        range[1] =  10.0;
+    }
     vtkSmartPointer< vtkColorTransferFunction > colorFunc =
             vtkSmartPointer< vtkColorTransferFunction >::Take(
                 ColorMapType::getColorMap(colorMap,range[0],range[1])

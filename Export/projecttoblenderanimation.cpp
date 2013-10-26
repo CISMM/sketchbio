@@ -125,6 +125,11 @@ static inline void writeCreateModel(
                 pointData->GetArray(model.arrayToColorBy.toStdString().c_str())
                         ->GetRange(range);
             }
+            if (model.arrayToColorBy == "charge")
+            {
+                range[0] = -10.0;
+                range[1] =  10.0;
+            }
             vtkSmartPointer< vtkColorTransferFunction > colors =
                     vtkSmartPointer< vtkColorTransferFunction >::Take(
                         ColorMapType::getColorMap(model.cmap,range[0],range[1])

@@ -131,8 +131,6 @@ def equivalent_surface_pieces(ms):
 #                       that is before this point (0 is N-terminus, 1 is C-terminus)
 #    resType - a string array with the three letter description of the residue
 #    resNum  - the residue number within the model (absolute residue id, not chain relative)
-#    charge - a double, the atom's charge (if something has put a 'charge' attribute
-#               on the atoms in the models
 # Potential data arrays:
 #   - removed due to VTK not understanding NaN in input files and no other good value for
 #       invalid data:
@@ -153,10 +151,6 @@ def parseModel(m,modelNum,data):
                        'resType' : atom.residue.type, 'resNum' : residues.index(atom.residue),
                        'atomType' : atom.name, 'bFactor' : atom.bfactor,
                        'occupancy' : atom.occupancy }
-            if hasattr(atom,'charge'):
-                arrays['charge'] = atom.charge
-            else:
-                arrays['charge'] = 0.0
             #if atom.residue.kdHydrophobicity != None:
             #    arrays['kdHydrophobicity'] = atom.residue.kdHydrophobicity
             #else:
@@ -213,10 +207,6 @@ def parseModel(m,modelNum,data):
                                'bFactor'  : atom.bfactor,
                                'occupancy': atom.occupancy
                     }
-                    if hasattr(atom,'charge'):
-                        arrays['charge'] = atom.charge
-                    else:
-                        arrays['charge'] = 0.0
                     # I would export hydrophobicity (and may in future versions) here,
                     # but VTK doesn't read in NaN values
                     for r in ranges:
@@ -249,10 +239,6 @@ def parseModel(m,modelNum,data):
                                'bFactor'  : atom.bfactor,
                                'occupancy': atom.occupancy
                     }
-                    if hasattr(atom,'charge'):
-                        arrays['charge'] = atom.charge
-                    else:
-                        arrays['charge'] = 0.0
                     # I would export hydrophobicity here (and may in future versions),
                     # but VTK doesn't read NaN values
                     for r in ranges:
@@ -274,10 +260,37 @@ def populate_data_object(data,modelList):
     for m in modelList:
         parseModel(m,modelList.index(m),data)
 
+# gets the data for an xyz coordinate from a chimera volume data object
+def get_volume_data_xyz(vdata,xyz,bounds):
+    ijk = vdata.xyz_to_ijk(xyz)
+    ijk = (min(max(ijk[2],bounds[0][2]),bounds[1][2]),
+           min(max(ijk[1],bounds[0][1]),bounds[1][1]),
+           min(max(ijk[0],bounds[0][0]),bounds[1][0]))
+    try:
+        return vdata.array[ijk]
+    except IndexError as e:
+        print xyz, ijk, ": Error out of bounds"
+        raise
+
+# adds charge data from the given volume model to the data to be exported
+def add_charge_data_from_volume(data,volume):
+    vdata = volume.data
+    bounds = volume.ijk_bounds()
+    data.arrays['charge'] = list()
+    for i in xrange(len(data.points)):
+        p = data.points[i]
+        try:
+            data.arrays['charge'].append(get_volume_data_xyz(vdata,p,bounds))
+        except:
+            print data.points.index(p)
+            raise
+
 # write the specified models to the given vtk file
-def write_models_as_vtk(path,models):
+def write_models_as_vtk(path,models,volume=None):
     data = DataToSave()
     populate_data_object(data,models)
+    if volume is not None:
+        add_charge_data_from_volume(data,volume)
     vtkFile = open(path, 'w')
     if len(data.points) > 0:
         data.writeToFile(vtkFile)
