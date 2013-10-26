@@ -172,9 +172,9 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
                     vtkSmartPointer< vtkTransform > transform =
                             vtkSmartPointer< vtkTransform >::New();
                     transform->Identity();
-                    transform->PostMultiply();
-                    transform->Concatenate(objectsSelected[0]->getInverseLocalTransform());
+                    transform->PreMultiply();
                     transform->Concatenate(objectsSelected[1]->getLocalTransform());
+                    transform->Concatenate(objectsSelected[0]->getInverseLocalTransform());
                     transform->Update();
                     TransformInputDialog *dialog = new TransformInputDialog(
                                 "Set Transformation from First to Second");
