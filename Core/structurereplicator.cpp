@@ -28,6 +28,10 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     world(w),
     transform(vtkSmartPointer< vtkTransform >::New())
 {
+    // too complicated to figure out how this should work for now, far easier to just make
+    // sure they don't have keyframes from when they are outside the replicated structure
+    obj1->clearKeyframes();
+    obj2->clearKeyframes();
     transform->Identity();
     transform->PostMultiply();
     transform->Concatenate(obj1->getInverseLocalTransform());
@@ -71,6 +75,8 @@ StructureReplicator::StructureReplicator(
       world(w),
       transform(vtkSmartPointer< vtkTransform >::New())
 {
+    // this constructor should only be used to load a StrucutreReplicator object
+    // based on a group that already has that structure.  Thus don't clear out keyframes.
     transform->Identity();
     transform->PostMultiply();
     transform->Concatenate(obj1->getInverseLocalTransform());
@@ -179,15 +185,6 @@ QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
 
 void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
 {
-    if (obj != replicas)
-    {
-        replicas->addKeyframeForCurrentLocation(time);
-        if (obj != obj1 && obj != obj2)
-        {
-            obj1->addKeyframeForCurrentLocation(time);
-            obj2->addKeyframeForCurrentLocation(time);
-        }
-    }
 }
 
 void StructureReplicator::subobjectAdded(SketchObject *parent, SketchObject *child)

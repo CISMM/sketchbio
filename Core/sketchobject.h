@@ -163,8 +163,23 @@ public:
     bool hasKeyframes() const;
     int  getNumKeyframes() const;
     const QMap< double, Keyframe > *getKeyframes() const;
+    // adds a keyframe at the given time, recursively descends to child objects and
+    // notifies ObjectChangeObservers that a keyframe has been added
     void addKeyframeForCurrentLocation(double t);
+    // inserts the given keyframe to the map of keyframes.  Does not recursively descend
+    // to subobjects or cause observers to be notified.
+    void insertKeyframe(double time, const Keyframe& keyframe);
+    // returns true if the object's state is different from the state at the keyframe
+    // at time t.  If there is no keyframe at time t, returns true.  Essentially asks
+    // 'if a keyframe is set at time t, will that change the state of this object or
+    // it's children's keyframes?'
+    bool hasChangedSinceKeyframe(double t);
+    // removes the keyframe at the given time, if any
     void removeKeyframeForTime(double t);
+    // clears all keyframes
+    void clearKeyframes();
+    // sets the position and other data based on this object's keyframes to the correct
+    // state for the given time in the animation
     void setPositionByAnimationTime(double t);
     // visibility methods
     void setIsVisible(bool isVisible);

@@ -22,7 +22,12 @@ class StructureReplicator : public ObjectChangeObserver
 public:
     /*
      * Creates a new StructureRenderer with the given two actors as a baseline, adding
-     * the copies the the world manager passed to the constructor
+     * the copies the the world manager passed to the constructor.
+     *
+     * Note: this constructor clears the keyframes on the base objects before creating
+     * the replica group.  It is too complex a situation if they are allowed to keep
+     * keyframes from before they were part of the structure, especially once parent is
+     * added as a part of the keyframe.
      */
     StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w);
 
@@ -36,7 +41,7 @@ public:
      * they are not already among its members.
      *
      * Note that unlike the other constructor, this one does not add the group to
-     * the world manager.
+     * the world manager.  It also does not remove keyframes on the objects
      */
     StructureReplicator(SketchObject *object1, SketchObject *object2,
                         WorldManager *w, ObjectGroup *grp,

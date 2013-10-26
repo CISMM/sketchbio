@@ -7,6 +7,7 @@
 #include <vtkColorTransferFunction.h>
 
 #include "keyframe.h"
+#include "sketchtests.h"
 #include "objectchangeobserver.h"
 
 
@@ -430,9 +431,69 @@ void SketchObject::addKeyframeForCurrentLocation(double t)
         keyframes.reset(new QMap< double, Keyframe >());
     }
     keyframes->insert(t,frame);
+    QList<SketchObject *> *subObjects = getSubObjects();
+    if (subObjects != NULL)
+    {
+        for (int i = 0; i < subObjects->length(); i++)
+        {
+            subObjects->at(i)->addKeyframeForCurrentLocation(t);
+        }
+    }
     for (QSetIterator<ObjectChangeObserver *> it(observers); it.hasNext();)
     {
         it.next()->objectKeyframed(this,t);
+    }
+}
+
+//#########################################################################
+void SketchObject::insertKeyframe(double time, const Keyframe& keyframe)
+{
+    if (time < 0)
+    { // no negative times allowed
+        return;
+    }
+    if (keyframes.isNull())
+    {
+        keyframes.reset(new QMap< double, Keyframe >());
+    }
+    keyframes->insert(time,keyframe);
+}
+
+//#########################################################################
+bool SketchObject::hasChangedSinceKeyframe(double t)
+{
+    if (keyframes.isNull() || !keyframes->contains(t))
+    {
+        return true;
+    }
+    const Keyframe& frame = keyframes->value(t);
+    q_vec_type framePos;
+    q_type frameOrient;
+    ColorMapType::Type frameCmap = frame.getColorMapType(), cmap = getColorMapType();
+    const QString& frameArray = frame.getArrayToColorBy(), & array = getArrayToColorBy();
+    bool objectChanged = !(q_vec_equals(position,framePos) &&
+                          q_equals(frameOrient,orientation) &&
+                           (cmap == frameCmap) &&
+                          (( ColorMapType::isSolidColor(cmap,array) &&
+                            ColorMapType::isSolidColor(frameCmap,frameArray)) ||
+                           (frameArray == array)));
+    if (objectChanged)
+    {
+        return true;
+    }
+    QList< SketchObject* >* subObjects = getSubObjects();
+    if (subObjects != NULL)
+    {
+        bool changed = false;
+        for (int i = 0; i < subObjects->length() && !changed; i++)
+        {
+            changed |= subObjects->at(i)->hasChangedSinceKeyframe(t);
+        }
+        return changed;
+    }
+    else
+    {
+        return false;
     }
 }
 
@@ -447,6 +508,16 @@ void SketchObject::removeKeyframeForTime(double t)
     {
         keyframes->remove(t);
     }
+}
+
+//#########################################################################
+void SketchObject::clearKeyframes()
+{
+    if (keyframes.isNull())
+    {
+        return;
+    }
+    keyframes->clear();
 }
 
 //#########################################################################

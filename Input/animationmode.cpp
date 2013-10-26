@@ -76,34 +76,11 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
-        if (rDist < DISTANCE_THRESHOLD)
+        if (rDist < DISTANCE_THRESHOLD && rightLevel == 0)
         {
-            // add keyframe
+            // add/update/remove keyframe
             double time = project->getViewTime();
-            bool newFrame = true;
-            q_vec_type pos, fpos;
-            q_type orient, forient;
-            rObj->getPosition(pos);
-            rObj->getOrientation(orient);
-            if (rObj->hasKeyframes() && rObj->getKeyframes()->contains(time))
-            {
-                Keyframe frame = rObj->getKeyframes()->value(time);
-                frame.getPosition(fpos);
-                frame.getOrientation(forient);
-                ColorMapType::Type fcmap, cmap;
-                cmap = rObj->getColorMapType();
-                fcmap = frame.getColorMapType();
-                const QString & farray = frame.getArrayToColorBy(),
-                              & array = rObj->getArrayToColorBy();
-                if (q_vec_equals(pos,fpos) && q_equals(forient,orient)
-                        && (cmap == fcmap) &&
-                        (( ColorMapType::isSolidColor(cmap,array) &&
-                          ColorMapType::isSolidColor(fcmap,farray)) ||
-                         (farray == array)))
-                {
-                    newFrame = false;
-                }
-            }
+            bool newFrame = rObj->hasChangedSinceKeyframe(time);
             if (newFrame)
             {
                 rObj->addKeyframeForCurrentLocation(time);
@@ -111,14 +88,24 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
             else
             {
                 rObj->removeKeyframeForTime(time);
-                // make sure the object doesn't move just because we removed
-                // the keyframe... principle of least astonishment.
-                rObj->setPosAndOrient(pos,orient);
             }
-            project->getWorldManager()->setAnimationTime(time);
+            // make sure the object doesn't move just because we removed
+            // the keyframe... principle of least astonishment.
+            // using this instead of setAnimationTime since it doesn't update
+            // positions
+            project->getWorldManager()->setKeyframeOutlinesForTime(time);
             addXMLUndoState();
+            emit newDirectionsString(" ");
         }
-        emit newDirectionsString(" ");
+        else if (rightLevel > 0)
+        {
+            emit newDirectionsString("Cannot keyframe objects in a group individually,\n"
+                                     "keyframe the group and it will save the state of all of them.");
+        }
+        else
+        {
+            emit newDirectionsString(" ");
+        }
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {

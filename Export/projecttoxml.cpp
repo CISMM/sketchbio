@@ -1340,8 +1340,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(
         return XML_TO_DATA_FAILURE;
     }
     // make sure not to change the color map data, save the old data
-    ColorMapType::Type cMap = object->getColorMapType();
-    const QString& array = object->getArrayToColorBy();
+    ColorMapType::Type colorMap;
+    QString array;
     q_vec_type pos;
     q_type orient;
     bool visA, active;
@@ -1386,13 +1386,11 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(
         c = frame->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
         if (c != NULL)
         {
-            ColorMapType::Type colorMap = ColorMapType::colorMapFromString(c);
+            colorMap = ColorMapType::colorMapFromString(c);
             c = frame->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME);
             if (c != NULL)
             {
-                QString array(c);
-                object->setColorMapType(colorMap);
-                object->setArrayToColorBy(array);
+                array = QString(c);
             }
             else
             {
@@ -1400,16 +1398,21 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(
                 // if you have one, you should have both
             }
         }
+        else
+        {
+            // if not defined default to state of object
+            colorMap = object->getColorMapType();
+            array = object->getArrayToColorBy();
+        }
     }
-    object->setLastLocation(); // so we don't change the object's position
-    object->setPosAndOrient(pos,orient);
-    object->setIsVisible(visA);
-    object->setActive(active);
-    object->addKeyframeForCurrentLocation(time);
-    object->restoreToLastLocation(); // restore the object's position
-    // restore the object's color map
-    object->setColorMapType(cMap);
-    object->setArrayToColorBy(array);
+    else
+    {
+        // if not defined default to state of object
+        colorMap = object->getColorMapType();
+        array = object->getArrayToColorBy();
+    }
+    Keyframe f(pos,orient,colorMap,array,visA,active);
+    object->insertKeyframe(time,f);
     return XML_TO_DATA_SUCCESS;
 }
 
