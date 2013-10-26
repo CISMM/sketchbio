@@ -52,6 +52,10 @@ public:
             vtkLinearTransform* trans, q_vec_type pos, q_type orient);
     static void getPositionAndOrientationFromTransform(
             vtkTransform *trans, q_vec_type pos, q_type orient);
+    // Given a position and orientation and a vtkTransform object,
+    // set up the transform object to have the given position and orientation
+    static void setTransformToPositionAndOrientation(
+            vtkTransform* trans, const q_vec_type pos, const q_type orient);
 public:
     // constructor
     SketchObject();

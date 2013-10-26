@@ -15,14 +15,8 @@ void SketchObject::setParentRelativePositionForAbsolutePosition(
         SketchObject *obj, SketchObject *parent,
         const q_vec_type absPos, const q_type abs_orient)
 {
-    double angle, x, y, z;
-    q_to_axis_angle(&x, &y, &z, &angle, abs_orient);
-    angle = angle * 180.0 / Q_PI;
     vtkNew< vtkTransform > trans;
-    trans->Identity();
-    trans->PostMultiply();
-    trans->RotateWXYZ(angle,x,y,z);
-    trans->Translate(absPos);
+    setTransformToPositionAndOrientation(trans.GetPointer(),absPos,abs_orient);
     trans->Concatenate(parent->getInverseLocalTransform());
     q_vec_type relPos;
     q_type relOrient;
@@ -48,6 +42,19 @@ void SketchObject::getPositionAndOrientationFromTransform(
     trans->GetPosition(pos);
     trans->GetOrientationWXYZ(wxyz);
     q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],Q_PI/180.0 * wxyz[0]);
+}
+
+//#########################################################################
+void SketchObject::setTransformToPositionAndOrientation(
+        vtkTransform* trans, const q_vec_type pos, const q_type orient)
+{
+    double angle, x, y, z;
+    q_to_axis_angle(&x, &y, &z, &angle, orient);
+    angle = angle * 180.0 / Q_PI;
+    trans->Identity();
+    trans->PostMultiply();
+    trans->RotateWXYZ(angle,x,y,z);
+    trans->Translate(pos);
 }
 
 //#########################################################################
@@ -580,13 +587,7 @@ void SketchObject::recalculateLocalTransform()
         localTransformUpdated();
         return;
     }
-    double angle,x,y,z;
-    q_to_axis_angle(&x,&y,&z,&angle,orientation);
-    angle = angle * 180 / Q_PI; // convert to degrees
-    localTransform->PostMultiply();
-    localTransform->Identity();
-    localTransform->RotateWXYZ(angle,x,y,z);
-    localTransform->Translate(position);
+    setTransformToPositionAndOrientation(localTransform.GetPointer(),position,orientation);
     if (parent != NULL)
     {
         localTransform->Concatenate(parent->getLocalTransform());

@@ -109,10 +109,8 @@ const QVector<ObjectPair> *TransformEquals::getPairsList() const {
 void TransformEquals::objectPushed(SketchObject *obj) {
     if (obj == pairsList[0].o1) {
         isMovingBase = true;
-        transform->GetPosition(posOffset);
-        double wxyz[4];
-        transform->GetOrientationWXYZ(wxyz);
-        q_from_axis_angle(orientOffset,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
+        SketchObject::getPositionAndOrientationFromTransform(
+                    transform,posOffset,orientOffset);
         return;
     }
     for (int i = 1; i < pairsList.size(); i++) {
@@ -171,9 +169,7 @@ void TransformEquals::objectMoved(SketchObject *obj) {
         pairsList[0].o2->setPosAndOrient(pos,orient);
 
     } else if (isMovingBase && obj == pairsList[0].o2) {
-        transform->GetPosition(posOffset);
-        double wxyz[4];
-        transform->GetOrientationWXYZ(wxyz);
-        q_from_axis_angle(orientOffset,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
+        SketchObject::getPositionAndOrientationFromTransform(
+                    transform,posOffset,orientOffset);
     }
 }

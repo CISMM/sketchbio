@@ -263,10 +263,7 @@ void TransformEditingMode::setTransformBetweenActiveObjects(
     transform->Concatenate(objectsSelected[0]->getLocalTransform());
     q_vec_type pos;
     q_type orient;
-    transform->GetPosition(pos);
-    double wxyz[4];
-    transform->GetOrientationWXYZ(wxyz);
-    q_from_axis_angle(orient,wxyz[1],wxyz[2],wxyz[3],wxyz[0] * Q_PI / 180.0);
+    SketchObject::getPositionAndOrientationFromTransform(transform,pos,orient);
     objectsSelected[1]->setPosAndOrient(pos,orient);
 }
 
