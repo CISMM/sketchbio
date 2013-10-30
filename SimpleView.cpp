@@ -345,6 +345,106 @@ void SimpleView::openOBJFile()
     }
 }
 
+// Helper function for openVTKFile which needs to call this for various resolutions
+// concats prefix and suffix to get a filename.  If file exists, adds it as the file
+// for resolution to the specified model and conformation
+static inline void addFileToModel(SketchModel* m, int conformation,
+                                  const QString& prefix,
+                                  const QString& suffix,
+                                  const QString& projectDir,
+                                  ModelResolution::ResolutionType resolution)
+{
+    QString fname = prefix + suffix;
+    QFile f(fname);
+    if (f.exists())
+    {
+        printf("Found resolution file: %s\n", fname.toStdString().c_str());
+        QString name = fname.mid(fname.lastIndexOf("/")+1);
+        QDir dir(projectDir);
+        QString localName = dir.absoluteFilePath(name);
+        QFile lF(localName);
+        if ( lF.exists() )
+        {
+            printf("Using version of %s that is already in project directory\n",
+                   localName.toStdString().c_str());
+        }
+        if ( lF.exists() || f.copy(localName) )
+        {
+            m->addSurfaceFileForResolution(conformation,resolution,localName);
+        }
+        else
+        {
+            printf("ERROR:%s:%d: Unable to copy file to project directory!\n",
+                   __FILE__,__LINE__);
+        }
+    }
+}
+
+void SimpleView::openVTKFile()
+{
+    QString fn = QFileDialog::getOpenFileName(this,
+                                              tr("Open VTK file"),
+                                              project->getProjectDir(),
+                                              tr("VTK Files (*.vtk)"));
+    if (fn.length() > 0) {
+        QString prefix;
+        if (fn.endsWith("_isosurface.vtk"))
+        {
+            prefix = fn.left(fn.size() - 15);
+        }
+        else if (fn.endsWith(".decimated.5000.vtk"))
+        {
+            prefix = fn.left(fn.size() - 19);
+        }
+        else if (fn.endsWith(".decimated.2000.vtk"))
+        {
+            prefix = fn.left(fn.size() - 19);
+        }
+        else if (fn.endsWith(".decimated.1000.vtk"))
+        {
+            prefix = fn.left(fn.size() - 19);
+        }
+        else // otherwise assume it is the full resolution surface
+        {
+            prefix = fn.left(fn.size() - 4);
+        }
+        QString fullRes = prefix + ".vtk";
+        QFile f(fullRes);
+        SketchModel* m = new SketchModel(DEFAULT_INVERSE_MASS,DEFAULT_INVERSE_MOMENT);
+        if (f.exists())
+        {
+            printf("Found full resolution file: %s\n", fullRes.toStdString().c_str());
+            int conf = m->addConformation(prefix.right(prefix.lastIndexOf("/")),fullRes);
+            addFileToModel(m,conf,prefix,"_isosurface.vtk",
+                           project->getProjectDir(),
+                           ModelResolution::SIMPLIFIED_FULL_RESOLUTION);
+            addFileToModel(m,conf,prefix,".decimated.5000.vtk",
+                           project->getProjectDir(),
+                           ModelResolution::SIMPLIFIED_5000);
+            addFileToModel(m,conf,prefix,".decimated.2000.vtk",
+                           project->getProjectDir(),
+                           ModelResolution::SIMPLIFIED_2000);
+            addFileToModel(m,conf,prefix,".decimated.1000.vtk",
+                           project->getProjectDir(),
+                           ModelResolution::SIMPLIFIED_1000);
+        }
+        else
+        {
+            printf("Loading %s\n", fn.toStdString().c_str());
+            m->addConformation(fn,fn);
+        }
+        SketchModel* model = project->addModel(m);
+        if (model != m)
+        {
+            delete m;
+            m = NULL;
+        }
+        const q_vec_type origin = Q_NULL_VECTOR;
+        const q_type idquat = Q_ID_QUAT;
+        project->addObject(model,origin,idquat);
+    }
+}
+
 void SimpleView::restartVRPNServer()
 {
     if (VRPN_USE_INTERNAL_SERVER)

@@ -40,6 +40,7 @@
      <addaction name="separator"/>
      <addaction name="actionOBJ"/>
      <addaction name="actionPDB_file"/>
+     <addaction name="actionVTK"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
@@ -255,6 +256,11 @@
   <action name="actionSet_Camera_to_Viewpoint">
    <property name="text">
     <string>Set Camera to Viewpoint</string>
+   </property>
+  </action>
+  <action name="actionVTK">
+   <property name="text">
+    <string>VTK</string>
    </property>
   </action>
  </widget>
@@ -539,6 +545,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionVTK</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>openVTKFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -559,5 +581,6 @@
   <slot>openPDBFile()</slot>
   <slot>createCameraForViewpoint()</slot>
   <slot>setCameraToViewpoint()</slot>
+  <slot>openVTKFile()</slot>
  </slots>
 </ui>
