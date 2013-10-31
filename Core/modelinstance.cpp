@@ -209,8 +209,8 @@ void ModelInstance::updateColorMap()
     }
     if (arrayToColorBy == "charge")
     {
-        range[0] = -10.0;
-        range[1] =  10.0;
+        range[0] =  10.0;
+        range[1] = -10.0;
     }
     vtkSmartPointer< vtkColorTransferFunction > colorFunc =
             vtkSmartPointer< vtkColorTransferFunction >::Take(

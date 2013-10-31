@@ -127,8 +127,8 @@ static inline void writeCreateModel(
             }
             if (model.arrayToColorBy == "charge")
             {
-                range[0] = -10.0;
-                range[1] =  10.0;
+                range[0] =  10.0;
+                range[1] = -10.0;
             }
             vtkSmartPointer< vtkColorTransferFunction > colors =
                     vtkSmartPointer< vtkColorTransferFunction >::Take(
