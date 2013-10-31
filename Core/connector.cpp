@@ -12,6 +12,7 @@ Connector::Connector(SketchObject *o1, SketchObject *o2,
     q_vec_copy(object2ConnectionPosition,o2Pos);
     alpha = a;
     radius = rad;
+	colorMap = ColorMapType::SOLID_COLOR_GRAY;//static_cast<ColorMapType::Type>(rand() % ColorMapType::SOLID_COLOR_CYAN);
 }
 
 Connector::~Connector()

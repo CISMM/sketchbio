@@ -2,6 +2,7 @@
 #define CONNECTOR_H
 
 #include "quat.h"
+#include "colormaptype.h"
 
 #include <vtkSmartPointer.h>
 class vtkLineSource;
@@ -45,6 +46,9 @@ public:
     void getEnd2WorldPosition(q_vec_type out) const;
     void setEnd2WorldPosition(const q_vec_type newPos);
 
+	ColorMapType::Type getColorMapType() const { return colorMap; }
+	void setColorMapType(ColorMapType::Type cmap) { colorMap = cmap; }
+
     // get alpha
     inline double getAlpha() const { return alpha; }
     // get radius
@@ -58,6 +62,8 @@ protected:
     SketchObject* object1, * object2;
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
     double alpha, radius;
+private:
+	ColorMapType::Type colorMap;
 };
 
 #endif // CONNECTOR_H

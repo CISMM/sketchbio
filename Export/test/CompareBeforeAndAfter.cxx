@@ -654,6 +654,11 @@ void compareConnectors(const Connector* c1, const Connector* c2,
         mydiffs++;
         if (printDiffs) PRINT_ERROR("Radius of connector is different");
     }
+	if (c1->getColorMapType() != c2->getColorMapType())
+    {
+		mydiffs++;
+        if (printDiffs) PRINT_ERROR("Color map of connector changed");
+    }
     const SpringConnection* sp1 = dynamic_cast< const SpringConnection* >(c1);
     const SpringConnection* sp2 = dynamic_cast< const SpringConnection* >(c2);
     if (sp1 != NULL && sp2 != NULL)

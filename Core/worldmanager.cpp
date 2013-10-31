@@ -8,6 +8,7 @@ using std::endl;
 #include <vtkTubeFilter.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+#include <vtkColorTransferFunction.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkVersion.h>
 #include <vtkActor.h>
@@ -671,6 +672,16 @@ void WorldManager::addConnector(Connector* spring,QList< Connector* > *list) {
         mapper->Update();
         vtkSmartPointer< vtkActor > actor =
                 vtkSmartPointer< vtkActor >::New();
+
+		double range[2] = { 0.0, 1.0};
+		vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+            vtkSmartPointer< vtkColorTransferFunction >::Take(
+                ColorMapType::getColorMap(spring->getColorMapType(),range[0],range[1])
+            );
+		double rgb[3];
+		colorFunc->GetColor(range[1],rgb);
+		actor->GetProperty()->SetColor(rgb);
+
         actor->SetMapper(mapper);
         if (spring->getAlpha() != 0)
         {
