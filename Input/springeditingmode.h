@@ -29,6 +29,7 @@ private:
     double lSpringDist, rSpringDist;
     bool lAtEnd1, rAtEnd1;
     bool leftGrabbedSpring, rightGrabbedSpring;
+	bool snapMode;
 };
 
 #endif // SPRINGEDITINGMODE_H

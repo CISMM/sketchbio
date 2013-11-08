@@ -1,13 +1,14 @@
 #ifndef CONNECTOR_H
 #define CONNECTOR_H
 
-#include "quat.h"
+#include <quat.h>
 #include "colormaptype.h"
 
 #include <vtkSmartPointer.h>
-class vtkLineSource;
-class vtkPolyDataAlgorithm;
 
+class vtkLineSource;
+class vtkActor;
+class vtkPolyDataMapper;
 class SketchObject;
 
 class Connector
@@ -46,8 +47,12 @@ public:
     void getEnd2WorldPosition(q_vec_type out) const;
     void setEnd2WorldPosition(const q_vec_type newPos);
 
+	void snapToTerminus(double trigger_value);
+
+	vtkLineSource *getLine();
+	vtkActor *getActor(); 
 	ColorMapType::Type getColorMapType() const { return colorMap; }
-	void setColorMapType(ColorMapType::Type cmap) { colorMap = cmap; }
+	void setColorMapType(ColorMapType::Type cmap);
 
     // get alpha
     inline double getAlpha() const { return alpha; }
@@ -59,10 +64,15 @@ public:
     virtual bool addForce() { return false; }
 
 protected:
+	void updateColorMap();
+
     SketchObject* object1, * object2;
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
     double alpha, radius;
 private:
+	vtkSmartPointer< vtkLineSource > line;
+	vtkSmartPointer<vtkActor> actor;
+	vtkSmartPointer< vtkPolyDataMapper > mapper;
 	ColorMapType::Type colorMap;
 };
 

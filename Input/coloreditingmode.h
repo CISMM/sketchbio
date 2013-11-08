@@ -3,6 +3,8 @@
 
 #include "objectgrabmode.h"
 
+class Connector;
+
 class ColorEditingMode : public ObjectGrabMode
 {
     Q_OBJECT
@@ -13,6 +15,11 @@ public:
     virtual void buttonPressed(int vrpn_ButtonNum);
     virtual void buttonReleased(int vrpn_ButtonNum);
     virtual void analogsUpdated();
+	void doUpdatesForFrame();
+private:
+    double springDist;
+	Connector* rSpring;
 };
+
 
 #endif // COLOREDITINGMODE_H
