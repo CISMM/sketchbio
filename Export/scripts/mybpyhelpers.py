@@ -37,6 +37,13 @@ def setMaterial(ob,mat):
     bpy.ops.object.material_slot_assign()
     bpy.ops.object.mode_set(mode='OBJECT')
 
+# sets a unique material to a linked object.  The geometry will be
+# linked, but the material will not.  setMaterial should not be called
+# after this method, it will undo one of the changes made to the object
+def setUniqueMaterialToLinked(ob,mat):
+    ms = ob.material_slots[0]
+    ms.link = 'OBJECT'
+    ms.material = mat
 
 # selects the object with the given name
 def select_named(name):
@@ -134,7 +141,7 @@ def createInstance(modelObj,isCamera,location,orientation_quat,isVisible,isActiv
     if bpy.data.scenes["Scene"].frame_current != 0:
         bpy.data.scenes["Scene"].frame_current = 0
     select_object(modelObj)
-    bpy.ops.object.duplicate(linked=False)
+    bpy.ops.object.duplicate(linked=True)
     obj = bpy.context.active_object
     obj.location = (0,0,0)
     obj.rotation_mode = 'QUATERNION'
@@ -153,7 +160,7 @@ def createInstance(modelObj,isCamera,location,orientation_quat,isVisible,isActiv
         bpy.ops.object.parent_set()
     else:
         mat = makeMaterial('mat_'+obj.name,startColor,(1.0,1.0,1.0),1.0)
-        setMaterial(obj,mat)
+        setUniqueMaterialToLinked(obj,mat)
         mat.use_vertex_color_paint = useVertexColors
         mat.keyframe_insert(data_path='diffuse_color')
         mat.keyframe_insert(data_path='use_vertex_color_paint')
