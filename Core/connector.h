@@ -47,7 +47,7 @@ public:
     void getEnd2WorldPosition(q_vec_type out) const;
     void setEnd2WorldPosition(const q_vec_type newPos);
 
-	void snapToTerminus(double trigger_value);
+	void snapToTerminus(bool on_object1, bool snap_to_n);
 
 	vtkLineSource *getLine();
 	vtkActor *getActor(); 

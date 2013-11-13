@@ -162,40 +162,54 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
 }
 
 void ColorEditingMode::doUpdatesForFrame() {
+	if(rDist < DISTANCE_THRESHOLD) {
+		project->setOutlineObject(RIGHT_SIDE_OUTLINE,rObj);
+	}
+	else if(springDist < SPRING_DISTANCE_THRESHOLD) {
+		project->setOutlineSpring(RIGHT_SIDE_OUTLINE,rSpring,true);
+	}
 	ObjectGrabMode::doUpdatesForFrame();
-	
+
 	//from spring editing mode, now that we want to color springs
 	WorldManager* world = project->getWorldManager();
     SketchObject* rightHand = project->getRightHandObject();
 
-    if ( world->getNumberOfConnectors() > 0 )
-    {
-        // get the tracker positions
-        q_vec_type rightTrackerPos;
-        TransformManager* transformMgr = project->getTransformManager();
-        transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
+	if(rDist > DISTANCE_THRESHOLD) {
+		if ( world->getNumberOfConnectors() > 0 )
+		{
+			// get the tracker positions
+			q_vec_type rightTrackerPos;
+			TransformManager* transformMgr = project->getTransformManager();
+			transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
 
-		Connector* closest;
-        bool newAtEnd1;
-        closest = world->getClosestConnector(rightTrackerPos,&springDist,&newAtEnd1);
-        if (closest != rSpring)
-        {
-            project->setOutlineSpring(RIGHT_SIDE_OUTLINE,closest,newAtEnd1);
-            rSpring = closest;
-        }
-        if (springDist < SPRING_DISTANCE_THRESHOLD)
-        {
-            if (!project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
-            {
-                project->setOutlineVisible(RIGHT_SIDE_OUTLINE,true);
-            }
-        }
-        else if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
-        {
-            project->setOutlineVisible(LEFT_SIDE_OUTLINE,false);
-        }
-        
-    }
+			Connector* closest;
+			bool newAtEnd1;
+			closest = world->getClosestConnector(rightTrackerPos,&springDist,&newAtEnd1);
+			if (closest != rSpring)
+			{
+				project->setOutlineSpring(RIGHT_SIDE_OUTLINE,closest,newAtEnd1);
+				rSpring = closest;
+			}
+			if (springDist < SPRING_DISTANCE_THRESHOLD)
+			{
+				if (!project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
+				{
+					project->setOutlineVisible(RIGHT_SIDE_OUTLINE,true);
+				}
+			}
+			else if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
+			{
+				project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+			}
+		}
+		else
+		{
+			if (project->isOutlineVisible(LEFT_SIDE_OUTLINE))
+				project->setOutlineVisible(LEFT_SIDE_OUTLINE,false);
+			if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
+				project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+		}
+	}
 }
 
 void ColorEditingMode::analogsUpdated()

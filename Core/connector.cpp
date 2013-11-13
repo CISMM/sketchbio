@@ -8,7 +8,12 @@
 #include <vtkActor.h>
 #include <vtkProperty.h>
 
+#include <vtkPolyData.h>
+#include <vtkFieldData.h>
+#include <vtkPointData.h>
+
 #include "sketchobject.h"
+#include "sketchmodel.h"
 
 Connector::Connector(SketchObject *o1, SketchObject *o2,
                      const q_vec_type o1Pos, const q_vec_type o2Pos,
@@ -107,15 +112,25 @@ void Connector::updateColorMap()
     actor->GetProperty()->SetColor(rgb);
 }
 
-void Connector::snapToTerminus(double trigger_val) {
-	q_vec_type modelCoords;
-	if (object2 != NULL) {
-		object2->getPosition(modelCoords);
-		object2->getWorldSpacePointInModelCoordinates(object2ConnectionPosition, modelCoords);
+static inline void snap(SketchObject* o, double value, q_vec_type dst)
+{
+	if (o != NULL) {
+			vtkPolyData* model_data = o->getModel()->getAtomData(o->getModelConformation())->GetOutput();
+			vtkDataArray* chain_positions = model_data->GetPointData()->GetArray("chainPosition");
+			vtkVariant position_val(value);
+			vtkIdType terminus_id = chain_positions->LookupValue(position_val);
+			model_data->GetPoint(terminus_id, dst);
+		}
+}
+
+void Connector::snapToTerminus(bool on_object1, bool snap_to_n) {
+	
+	double chain_position = (snap_to_n) ? 0 : 1; //which terminus to snap to (0 for N, 1 for C)
+	if (on_object1) {
+		snap(object1,chain_position,object1ConnectionPosition);
 	}
-	else if (object1 != NULL) {
-		object1->getPosition(modelCoords);
-		object1->getWorldSpacePointInModelCoordinates(object1ConnectionPosition, modelCoords);
+	else {
+		snap(object2,chain_position,object2ConnectionPosition);
 	}
 }
 

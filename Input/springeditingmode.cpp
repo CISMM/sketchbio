@@ -53,8 +53,10 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
 		snapMode = true;
         emit newDirectionsString("Move to a spring and choose which terminus to snap to.");
-		if (rSpringDist < SPRING_DISTANCE_THRESHOLD) {		
-			rSpring->snapToTerminus(0.0);
+		if (rSpringDist < SPRING_DISTANCE_THRESHOLD) {
+			double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
+			bool snap_to_n = (value < 0.5) ? true : false;
+			rSpring->snapToTerminus(rAtEnd1, snap_to_n);
 		}
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
@@ -147,7 +149,8 @@ void SpringEditingMode::analogsUpdated()
 {
 	if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
         double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
-        rSpring->snapToTerminus(value);
+		bool snap_to_n = (value < 0.5) ? true : false;
+        rSpring->snapToTerminus(rAtEnd1, snap_to_n);
     }
     useLeftJoystickToRotateViewPoint();
 }
