@@ -77,6 +77,8 @@ public slots:
   // Export an animation to blender
   // currently writes the test file so I can see if it is correct
   void exportBlenderAnimation();
+  // Export current state as a Florosim simulation
+  void exportFlorosim();
 
   // Throw a dialog box to browse for an OBJ file to
   // simplify.  Produce multiple simplifications, with smaller

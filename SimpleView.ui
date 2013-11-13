@@ -59,6 +59,7 @@
       <string>Export</string>
      </property>
      <addaction name="actionBlender_Animation"/>
+     <addaction name="actionFlorosim_Simulation"/>
     </widget>
     <addaction name="menuOpen"/>
     <addaction name="menuImport"/>
@@ -261,6 +262,11 @@
   <action name="actionVTK">
    <property name="text">
     <string>VTK</string>
+   </property>
+  </action>
+  <action name="actionFlorosim_Simulation">
+   <property name="text">
+    <string>Florosim Simulation</string>
    </property>
   </action>
  </widget>
@@ -561,6 +567,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionFlorosim_Simulation</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>exportFlorosim()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -582,5 +604,6 @@
   <slot>createCameraForViewpoint()</slot>
   <slot>setCameraToViewpoint()</slot>
   <slot>openVTKFile()</slot>
+  <slot>exportFlorosim()</slot>
  </slots>
 </ui>

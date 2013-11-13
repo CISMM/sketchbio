@@ -8,6 +8,10 @@ projecttoxml.cpp
 projecttoxml.h
 projecttoblenderanimation.cpp
 projecttoblenderanimation.h
+ProjectToFlorosim.cpp
+ProjectToFlorosim.h
+FlorosimExportTopOfFile.h
+FlorosimExportBottomOfFile.h
 )
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/mybpyhelpers.py

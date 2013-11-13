@@ -34,6 +34,7 @@
 #include <sketchproject.h>
 
 #include <projecttoxml.h>
+#include <ProjectToFlorosim.h>
 
 #include <hydrainputmanager.h>
 #include <vrpnserver.h>
@@ -697,6 +698,19 @@ void SimpleView::exportBlenderAnimation() {
     } else {
         runSubprocessAndFreezeGUI(r);
     }
+}
+
+void SimpleView::exportFlorosim()
+{
+    QString fn = QFileDialog::getSaveFileName(this,tr("Select Simulation Location"),
+                                              "./",tr("Simulations (*.xml)"));
+    if (fn.isEmpty())
+        return;
+    if (!fn.endsWith(".xml"))
+    {
+        fn += ".xml";
+    }
+    ProjectToFlorosim::writeProjectToFlorosim(project,fn);
 }
 
 void SimpleView::addUndoStateIfSuccess(bool success)
