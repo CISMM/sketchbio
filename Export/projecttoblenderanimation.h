@@ -30,7 +30,11 @@ public:
     static unsigned timeToBlenderFrameNum(double time, unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
     // Creates a VRML file for the given vtk file so that the data can be used in Blender
     // the data is written with colors from the given color map according to the given array
-    static QString generateVRMLFileFor(QString vtkFile, char const* arrayName = "modelNum",
+    // stores the result in a .wrl file with the given prefix and returns the resulting
+    // filename
+    static QString generateVRMLFileFor(const QString& vtkFile,
+                                       const QString& wrlFilePrefix,
+                                       char const* arrayName = "modelNum",
                                        vtkColorTransferFunction* colorMap = NULL);
 private:
     // Writes some python helper function definitions to the file

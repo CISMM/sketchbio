@@ -10,6 +10,8 @@
 #include <vtkThreshold.h>
 #include <vtkGeometryFilter.h>
 #include <vtkColorTransferFunction.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
@@ -134,8 +136,11 @@ static inline void writeCreateModel(
                     vtkSmartPointer< vtkColorTransferFunction >::Take(
                         ColorMapType::getColorMap(model.cmap,range[0],range[1])
                     );
+            QString wrlFilename = fname + "_" + model.arrayToColorBy + "_" +
+                    ColorMapType::stringFromColorMap(model.cmap);
             fname = ProjectToBlenderAnimation::generateVRMLFileFor(
-                        fname, model.arrayToColorBy.toStdString().c_str(),colors);
+                        fname, wrlFilename, model.arrayToColorBy.toStdString().c_str(),
+                        colors);
         }
     }
 #if defined(_WIN32)
@@ -147,7 +152,7 @@ static inline void writeCreateModel(
     file.write("modelObjects.append(obj)\n");
 }
 
-static inline void computeNewTranslate(q_vec_type pos, q_type orient, SketchObject *obj)
+static inline void computeBlenderCoords(q_vec_type pos, q_type orient, SketchObject *obj)
 {
     q_vec_type tmp;
     obj->getPosition(pos);
@@ -189,17 +194,23 @@ static inline void writeCreateObject(
             while (itr.hasNext())
             {
                 const Keyframe &f = itr.next().value();
-                if (! (ColorMapType::isSolidColor(type,array) || // if neither is a solid color,(demorgan's law)
-                    ColorMapType::isSolidColor(f.getColorMapType(),f.getArrayToColorBy())))
+                QString narray = f.getArrayToColorBy();
+                ColorMapType::Type ntype = f.getColorMapType();
+                if (narray != array || ntype != type)
                 {
-                    std::cerr << "Warning: multiple colormaps with per-pixel color."
-                        << std::endl << "\tThis is not supported for blender animation currently and "
-                        << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
-                }
-                else if (ColorMapType::isSolidColor(type,array))
-                {
-                    type =  f.getColorMapType();
-                    array = f.getArrayToColorBy();
+                    // if neither is a solid color,(demorgan's law)
+                    if (! (ColorMapType::isSolidColor(type,array) ||
+                           ColorMapType::isSolidColor(ntype,narray)))
+                    {
+                        std::cerr << "Warning: multiple colormaps with per-pixel color."
+                                  << std::endl << "\tThis is not supported for blender animation currently and "
+                                  << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
+                    }
+                    else if (ColorMapType::isSolidColor(type,array))
+                    {
+                        type = ntype;
+                        array = narray;
+                    }
                 }
             }
         }
@@ -214,7 +225,7 @@ static inline void writeCreateObject(
         objectIdxs.insert(obj,objectsLen++);
         q_vec_type pos;
         q_type orient, tmp;
-        computeNewTranslate(pos,orient,obj);
+        computeBlenderCoords(pos,orient,obj);
         q_from_axis_angle(tmp,0,1,0,Q_PI);
         bool isCamera = false;
         if (model->getSource(obj->getModelConformation()) == CAMERA_MODEL_KEY)
@@ -320,7 +331,7 @@ bool ProjectToBlenderAnimation::writeKeyframes(
             // keyframes it doesn't move
             SketchObject * obj = it.peekNext().key();
             int idx = it.next().value();
-            computeNewTranslate(pos,orient,obj);
+            computeBlenderCoords(pos,orient,obj);
             if (obj->getModel()->getSource(obj->getModelConformation())
                     == CAMERA_MODEL_KEY)
             {
@@ -388,7 +399,8 @@ bool ProjectToBlenderAnimation::writeHelperFunctions(QFile &file, const QString&
 }
 
 QString ProjectToBlenderAnimation::generateVRMLFileFor(
-        QString vtkFile, const char *arrayName, vtkColorTransferFunction *colorMap)
+        const QString& vtkFile, const QString& wrlFilePrefix,
+        const char *arrayName, vtkColorTransferFunction *colorMap)
 {
     vtkSmartPointer< vtkPolyDataAlgorithm > model =
             vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
@@ -396,10 +408,23 @@ QString ProjectToBlenderAnimation::generateVRMLFileFor(
     vtkSmartPointer< vtkPolyDataAlgorithm > surface =
             vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
                 ModelUtilities::modelSurfaceFrom(model));
+    vtkSmartPointer< vtkTransformPolyDataFilter > tfrmer =
+            vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+    double bb[6];
+    surface->GetOutput()->GetBounds(bb);
+    q_vec_type boundsCenter = {bb[1] + bb[0], bb[3] + bb[2], bb[5] + bb[4]};
+    q_vec_scale(boundsCenter,-0.5,boundsCenter);
+    vtkSmartPointer< vtkTransform > tfrm =
+            vtkSmartPointer< vtkTransform >::New();
+    tfrm->Identity();
+    tfrm->Translate(boundsCenter);
+    tfrmer->SetTransform(tfrm);
+    tfrmer->SetInputConnection(surface->GetOutputPort());
+    tfrmer->Update();
     vtkSmartPointer< vtkVRMLWriter > writer =
             vtkSmartPointer< vtkVRMLWriter >::New();
-    writer->SetInputConnection(surface->GetOutputPort());
-    writer->SetFileName((vtkFile + ".wrl").toStdString().c_str());
+    writer->SetInputConnection(tfrmer->GetOutputPort());
+    writer->SetFileName((wrlFilePrefix + ".wrl").toStdString().c_str());
     if (arrayName != NULL)
     {
         writer->SetArrayToColorBy(arrayName);
@@ -409,5 +434,5 @@ QString ProjectToBlenderAnimation::generateVRMLFileFor(
         writer->SetColorMap(colorMap);
     }
     writer->Write();
-    return vtkFile + ".wrl";
+    return wrlFilePrefix + ".wrl";
 }
