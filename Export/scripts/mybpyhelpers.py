@@ -13,6 +13,8 @@ def makeMaterial(name, diffuse, specular, alpha):
     mat.specular_shader = 'COOKTORR'
     mat.specular_intensity = 0.5
     mat.alpha = alpha
+    if alpha != 1.0:
+        mat.use_transparency = True
     mat.ambient = 1
     mat.use_transparent_shadows = True
     return mat
