@@ -127,9 +127,11 @@ void Connector::snapToTerminus(bool on_object1, bool snap_to_n) {
 	
 	double chain_position = (snap_to_n) ? 0 : 1; //which terminus to snap to (0 for N, 1 for C)
 	if (on_object1) {
+		if(object1->numInstances() != 1) { return; }
 		snap(object1,chain_position,object1ConnectionPosition);
 	}
 	else {
+		if(object1->numInstances() != 1) { return; }
 		snap(object2,chain_position,object2ConnectionPosition);
 	}
 }
