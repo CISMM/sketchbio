@@ -52,7 +52,7 @@ public:
 
     // So that springs don't have to be dynamic casted...
     // default does nothing
-    virtual void addForce() {}
+    virtual bool addForce() { return false; }
 
 protected:
     SketchObject* object1, * object2;

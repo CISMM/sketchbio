@@ -129,57 +129,63 @@ bool collideWithinGroupAndComputeResponse(QSet< SketchObject* >& affectedGroups,
 }
 
 
-void springForcesFromList(QList< Connector* >& list,
+bool springForcesFromList(QList< Connector* >& list,
                           QSet< int >& affectedCollisionGroups,
                           QSet< SketchObject* >& affectedGroups)
 {
+    bool retVal = false;
     for (QListIterator< Connector* > it(list); it.hasNext();)
     {
         Connector* c = it.next();
-        c->addForce();
-        int i = OBJECT_HAS_NO_GROUP;
-        if (c->getObject1() != NULL)
+        bool addedForce = c->addForce();
+        retVal = retVal || addedForce;
+        if (addedForce)
         {
-            SketchObject* o = c->getObject1();
-            i = o->getPrimaryCollisionGroupNum();
-            if (o->getParent() != NULL && !o->isPropagatingForceToParent())
+            int i = OBJECT_HAS_NO_GROUP;
+            if (c->getObject1() != NULL)
             {
-                SketchObject* p = o->getParent();
-                while (p != NULL)
+                SketchObject* o = c->getObject1();
+                i = o->getPrimaryCollisionGroupNum();
+                if (o->getParent() != NULL && !o->isPropagatingForceToParent())
                 {
-                    affectedGroups.insert(p);
-                    affectedCollisionGroups.insert(
-                                p->getPrimaryCollisionGroupNum());
-                    p = p->getParent();
+                    SketchObject* p = o->getParent();
+                    while (p != NULL)
+                    {
+                        affectedGroups.insert(p);
+                        affectedCollisionGroups.insert(
+                                    p->getPrimaryCollisionGroupNum());
+                        p = p->getParent();
+                    }
                 }
             }
-        }
-        if (i != OBJECT_HAS_NO_GROUP)
-        { // if this one isn't the tracker
-            affectedCollisionGroups.insert(i);
-        }
-        i = OBJECT_HAS_NO_GROUP;
-        if (c->getObject2() != NULL)
-        {
-            SketchObject* o = c->getObject2();
-            i = o->getPrimaryCollisionGroupNum();
-            if (o->getParent() != NULL && !o->isPropagatingForceToParent())
+            if (i != OBJECT_HAS_NO_GROUP)
+            { // if this one isn't the tracker
+                affectedCollisionGroups.insert(i);
+            }
+            i = OBJECT_HAS_NO_GROUP;
+            if (c->getObject2() != NULL)
             {
-                SketchObject* p = o->getParent();
-                while (p != NULL)
+                SketchObject* o = c->getObject2();
+                i = o->getPrimaryCollisionGroupNum();
+                if (o->getParent() != NULL && !o->isPropagatingForceToParent())
                 {
-                    affectedGroups.insert(p);
-                    affectedCollisionGroups.insert(
-                                p->getPrimaryCollisionGroupNum());
-                    p = p->getParent();
+                    SketchObject* p = o->getParent();
+                    while (p != NULL)
+                    {
+                        affectedGroups.insert(p);
+                        affectedCollisionGroups.insert(
+                                    p->getPrimaryCollisionGroupNum());
+                        p = p->getParent();
+                    }
                 }
             }
-        }
-        if (i != OBJECT_HAS_NO_GROUP)
-        { // if this one isn't the tracker
-            affectedCollisionGroups.insert(i);
+            if (i != OBJECT_HAS_NO_GROUP)
+            { // if this one isn't the tracker
+                affectedCollisionGroups.insert(i);
+            }
         }
     }
+    return retVal;
 }
 
 

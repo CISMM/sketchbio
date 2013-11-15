@@ -29,7 +29,7 @@ public:
     inline double getMinRestLength() const { return minRestLength; }
     inline double getMaxRestLength() const { return maxRestLength; }
 
-    virtual void addForce();
+    virtual bool addForce();
 
 private:
     double minRestLength, maxRestLength;

@@ -14,9 +14,9 @@ SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double mi
 }
 
 
-void SpringConnection::addForce() {
+bool SpringConnection::addForce() {
     if (object1 == object2)
-        return; // No point if both ends connected to same object
+        return false; // No point if both ends connected to same object
     q_vec_type end1pos, end2pos, difference, f1, f2;
     double length, displacement;
 
@@ -31,7 +31,7 @@ void SpringConnection::addForce() {
     q_vec_subtract(difference,end2pos,end1pos);
     length = q_vec_magnitude(difference);
     if (length < Q_EPSILON) {
-        return; // even if we don't have rest length 0, what direction do we push in?
+        return false; // even if we don't have rest length 0, what direction do we push in?
                 // just return...
     }
     q_vec_normalize(difference,difference);
@@ -48,6 +48,7 @@ void SpringConnection::addForce() {
         object1->addForce(object1ConnectionPosition,f1);
     if (object2 != NULL)
         object2->addForce(object2ConnectionPosition,f2);
+    return true;
 }
 
 SpringConnection *SpringConnection::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

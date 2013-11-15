@@ -768,15 +768,17 @@ void PoseModePhysicsStrategy::poseModeForSprings(QList< Connector* >& springs,
 {
     QSet< SketchObject* > affectedObjectGroups;
     if (!springs.empty()) {
-        PhysicsUtilities::springForcesFromList(
-                    springs,affectedGroups,affectedObjectGroups);
-        PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
-        PhysicsUtilities::applyEulerToListAndGroups(
-                    objs,affectedObjectGroups,dt,true);
-        if (doCollisionCheck)
-            applyPoseModeCollisionResponse(objs,affectedGroups,
-                                           affectedObjectGroups,dt,this);
-        affectedGroups.clear();
+        if (PhysicsUtilities::springForcesFromList(
+                    springs,affectedGroups,affectedObjectGroups))
+        {
+            PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
+            PhysicsUtilities::applyEulerToListAndGroups(
+                        objs,affectedObjectGroups,dt,true);
+            if (doCollisionCheck)
+                applyPoseModeCollisionResponse(objs,affectedGroups,
+                                               affectedObjectGroups,dt,this);
+            affectedGroups.clear();
+        }
     }
 }
 
@@ -856,15 +858,17 @@ void PoseModePCAPhysicsStrategy::poseModePCAForSprings(QList< Connector* >& spri
 {
     QSet< SketchObject *> affectedObjectGroups;
     if (!springs.empty()) {
-        PhysicsUtilities::springForcesFromList(
-                    springs,affectedGroups,affectedObjectGroups);
-        PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
-        PhysicsUtilities::applyEulerToListAndGroups(
-                    objs,affectedObjectGroups,dt,true);
-        if (doCollisionCheck)
-            applyPoseModeCollisionResponse(objs,affectedGroups,affectedObjectGroups,
-                                           dt,this);
-        affectedGroups.clear();
+        if (PhysicsUtilities::springForcesFromList(
+                    springs,affectedGroups,affectedObjectGroups))
+        {
+            PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
+            PhysicsUtilities::applyEulerToListAndGroups(
+                        objs,affectedObjectGroups,dt,true);
+            if (doCollisionCheck)
+                applyPoseModeCollisionResponse(objs,affectedGroups,affectedObjectGroups,
+                                               dt,this);
+            affectedGroups.clear();
+        }
     }
 }
 }

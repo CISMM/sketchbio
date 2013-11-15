@@ -42,7 +42,8 @@ bool collideWithinGroupAndComputeResponse(QSet< SketchObject* >& affectedGroups,
 // of all objects affected by the forces from the springs and the affectedGroups
 // set will contain the parent groups of the objects (if any objects have a parent
 // group)
-void springForcesFromList(QList< Connector* >& list,
+// Returns true if some forces were added, false if this was a no-op
+bool springForcesFromList(QList< Connector* >& list,
                           QSet< int >& affectedCollisionGroups,
                           QSet< SketchObject* >& affectedGroups);
 // Restores each object in the list to its former location and then recurses on the
