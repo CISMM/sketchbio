@@ -42,10 +42,14 @@ static inline void writeObjToFlorosim(QFile& file, SketchObject* obj)
     q_vec_type pos;
     vtkTransform* tfrm = obj->getLocalTransform();
     tfrm->GetPosition(pos);
+    q_vec_scale(pos,0.1,pos);
+    pos[0] += 500;
+    pos[1] += 500;
+    pos[2] += 500;
     double wxyz[4];
     tfrm->GetOrientationWXYZ(wxyz);
     QString fname = obj->getModel()->getFileNameFor(obj->getModelConformation(),
-                                                    ModelResolution::FULL_RESOLUTION);
+                                                    ModelResolution::SIMPLIFIED_1000);
     QString line;
     file.write("<ImportedGeometry>\n");
     file.write("<Name value=\"Geometry\"/>\n");
@@ -68,11 +72,11 @@ static inline void writeObjToFlorosim(QFile& file, SketchObject* obj)
     file.write("<Scale value=\"0.100000\" optimize=\"false\"/>\n");
     line = "<FileName value=\"%1\"/>\n";
     file.write(line.arg(fname).toStdString().c_str());
-    file.write("<SurfaceFluorophoreModel enabled=\"true\" channel=\"all\" "
+    file.write("<SurfaceFluorophoreModel enabled=\"true\" channel=\"green\" "
                "intensityScale=\"1.000000\" optimize=\"false\" density=\""
                "400.000000\" numberOfFluorophores=\"1\" samplingMode=\""
                "fixedDensity\" samplePattern=\"singlePoint\" numberOfRing"
-               "Fluorophores=\"2\" ringRadius=\"10.000000\" randomizePattern"
+               "Fluorophores=\"2000\" ringRadius=\"10.000000\" randomizePattern"
                "Orientations=\"false\"/>\n");
     file.write("<VolumeFluorophoreModel enabled=\"false\" channel=\"all\" "
                "intensityScale=\"1.000000\" optimize=\"false\" density=\""
