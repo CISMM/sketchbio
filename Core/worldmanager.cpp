@@ -300,6 +300,7 @@ bool WorldManager::setAnimationTime(double t) {
         }
     }
     setKeyframeOutlinesForTime(t);
+	updateConnectors();
     return isDone;
 }
 //##################################################################################################
