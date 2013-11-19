@@ -56,7 +56,7 @@ vtkPolyDataAlgorithm *modelSurfaceFrom(vtkPolyDataAlgorithm *rawModel);
  * Note: the returned algorithm has a reference count of 1, you should use
  * vtkSmartPointer::Take() to grab the reference returned by this function
  */
-vtkAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel);
+vtkPolyDataAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel);
 
 // Writes the given algorithm's output to a file whose name is based on the descr string
 // and returns the name of the file it created (file is in the current directory by

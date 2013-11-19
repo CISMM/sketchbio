@@ -46,7 +46,7 @@ public:
                                                   vtkXMLDataElement *elem,
                                                   double *newPos);
 
-private: // no other code should call these (this is the reason for making this a class
+private: // no other code should call these (this is the reason for making this a class)
     static vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &dir,
                                                 QHash<const SketchModel *, QString> &modelIds);
     static vtkXMLDataElement *modelsToXML(const SketchObject *object,

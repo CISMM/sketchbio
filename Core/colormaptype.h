@@ -18,6 +18,7 @@ namespace ColorMapType {
         SOLID_COLOR_YELLOW,
         SOLID_COLOR_PURPLE,
         SOLID_COLOR_CYAN,
+		SOLID_COLOR_GRAY,
         DIM_SOLID_COLOR_RED,
         DIM_SOLID_COLOR_GREEN,
         DIM_SOLID_COLOR_BLUE,

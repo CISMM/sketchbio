@@ -52,7 +52,7 @@ vtkPolyDataAlgorithm *SketchModel::getVTKSurface(int conformationNum)
     return surfaceDataForConf[conformationNum];
 }
 
-vtkAlgorithm *SketchModel::getAtomData(int conformation)
+vtkPolyDataAlgorithm *SketchModel::getAtomData(int conformation)
 {
     return atomDataForConf[conformation];
 }
@@ -145,7 +145,7 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     ifilter->SetTransform(transform);
     ifilter->Update();
     surfaceDataForConf.append(ifilter);
-    atomDataForConf.append(vtkSmartPointer< vtkAlgorithm >::Take(
+    atomDataForConf.append(vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
                                ModelUtilities::modelAtomsFrom(dataSource)));
     QScopedPointer<PQP_Model> collisionModel(new PQP_Model());
     // populate the PQP collision detection model
@@ -223,8 +223,8 @@ void SketchModel::setResolutionForConformation(
         vtkSmartPointer< vtkPolyDataAlgorithm > surface =
                 vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
                     ModelUtilities::modelSurfaceFrom(dataSource));
-        vtkSmartPointer< vtkAlgorithm > atoms =
-                vtkSmartPointer< vtkAlgorithm >::Take(
+        vtkSmartPointer< vtkPolyDataAlgorithm > atoms =
+                vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
                     ModelUtilities::modelAtomsFrom(dataSource));
         surfaceDataForConf[conformation]->SetInputConnection(
                     surface->GetOutputPort());

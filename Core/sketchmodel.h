@@ -59,7 +59,7 @@ public:
     vtkPolyDataAlgorithm *getVTKSurface(int conformationNum);
     // gets the atom data for the model and conformation (if available).
     // this method willl return NULL if no data is available
-    vtkAlgorithm *getAtomData(int conformation);
+    vtkPolyDataAlgorithm *getAtomData(int conformation);
     // Gets the collision model for the given conformation
     PQP_Model *getCollisionModel(int conformationNum);
     // Gets the number of uses for a conformation
@@ -123,7 +123,7 @@ private:
     // are the surface at various resolutions, which may be dynamically switched
     QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > surfaceDataForConf;
     // this is the atom and bond data for the model (if available
-    QVector< vtkSmartPointer< vtkAlgorithm > > atomDataForConf;
+    QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > atomDataForConf;
     // the collision model, indexed by conformation
     QVector< PQP_Model * > collisionModelForConf;
     // the number of uses of the model, indexed by conformation

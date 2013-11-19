@@ -8,6 +8,7 @@ using std::endl;
 #include <vtkTubeFilter.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+#include <vtkColorTransferFunction.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkVersion.h>
 #include <vtkActor.h>
@@ -651,36 +652,46 @@ void WorldManager::addConnector(Connector* spring,QList< Connector* > *list) {
     if (list == &connections)
 #endif
     {
-        q_vec_type p1, p2;
-        // create the line for the connector
-        vtkSmartPointer< vtkLineSource > line =
-                vtkSmartPointer< vtkLineSource >::New();
-        spring->getEnd1WorldPosition(p1);
-        spring->getEnd2WorldPosition(p2);
-        line->SetPoint1(p1);
-        line->SetPoint2(p2);
-        line->Update();
-        vtkSmartPointer< vtkTubeFilter > tube =
-                vtkSmartPointer< vtkTubeFilter >::New();
-        tube->SetInputConnection(line->GetOutputPort());
-        tube->SetRadius(spring->getRadius());
-        tube->Update();
-        vtkSmartPointer< vtkPolyDataMapper > mapper =
-                vtkSmartPointer< vtkPolyDataMapper >::New();
-        mapper->SetInputConnection(tube->GetOutputPort());
-        mapper->Update();
-        vtkSmartPointer< vtkActor > actor =
-                vtkSmartPointer< vtkActor >::New();
-        actor->SetMapper(mapper);
-        if (spring->getAlpha() != 0)
-        {
-            actor->GetProperty()->SetOpacity(spring->getAlpha());
-        }
+        //q_vec_type p1, p2;
+        //// create the line for the connector
+        //vtkSmartPointer< vtkLineSource > line =
+        //        vtkSmartPointer< vtkLineSource >::New();
+        //spring->getEnd1WorldPosition(p1);
+        //spring->getEnd2WorldPosition(p2);
+        //line->SetPoint1(p1);
+        //line->SetPoint2(p2);
+        //line->Update();
+        //vtkSmartPointer< vtkTubeFilter > tube =
+        //        vtkSmartPointer< vtkTubeFilter >::New();
+        //tube->SetInputConnection(line->GetOutputPort());
+        //tube->SetRadius(spring->getRadius());
+        //tube->Update();
+  //      vtkSmartPointer< vtkPolyDataMapper > mapper =
+  //              vtkSmartPointer< vtkPolyDataMapper >::New();
+  //      mapper->SetInputConnection(tube->GetOutputPort());
+  //      mapper->Update();
+  //      vtkSmartPointer< vtkActor > actor =
+  //              vtkSmartPointer< vtkActor >::New();
+
+		//double range[2] = { 0.0, 1.0};
+		//vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+  //          vtkSmartPointer< vtkColorTransferFunction >::Take(
+  //              ColorMapType::getColorMap(spring->getColorMapType(),range[0],range[1])
+  //          );
+		//double rgb[3];
+		//colorFunc->GetColor(range[1],rgb);
+		//actor->GetProperty()->SetColor(rgb);
+
+  //      actor->SetMapper(mapper);
+  //      if (spring->getAlpha() != 0)
+  //      {
+  //          actor->GetProperty()->SetOpacity(spring->getAlpha());
+  //      }
         if (spring->getAlpha() > Q_EPSILON || showInvisible)
         {
-            renderer->AddActor(actor);
+            renderer->AddActor(spring->getActor());
         }
-        lines.insert(spring,ConnectorPair(line,actor));
+        lines.insert(spring,ConnectorPair(spring->getLine(),spring->getActor()));
     }
 }
 

@@ -19,7 +19,8 @@ SpringEditingMode::SpringEditingMode(SketchProject* proj, const bool* buttonStat
     lAtEnd1(true),
     rAtEnd1(true),
     leftGrabbedSpring(false),
-    rightGrabbedSpring(false)
+    rightGrabbedSpring(false),
+	snapMode(false)
 {
 }
 
@@ -47,6 +48,16 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
     else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
         emit newDirectionsString("Move to a spring and release to delete the spring.");
+    }
+	else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+		snapMode = true;
+        emit newDirectionsString("Move to a spring and choose which terminus to snap to.");
+		if (rSpringDist < SPRING_DISTANCE_THRESHOLD) {
+			double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
+			bool snap_to_n = (value < 0.5) ? true : false;
+			rSpring->snapToTerminus(rAtEnd1, snap_to_n);
+		}
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
@@ -98,6 +109,11 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
             rSpring = NULL;
         }
     }
+	else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+        snapMode = false;
+		emit newDirectionsString(" ");
+    }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
         q_vec_type pos1, pos2 = {0, 1, 0};
@@ -131,7 +147,11 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void SpringEditingMode::analogsUpdated()
 {
-    // use the default analogs action
+	if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
+        double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
+		bool snap_to_n = (value < 0.5) ? true : false;
+        rSpring->snapToTerminus(rAtEnd1, snap_to_n);
+    }
     useLeftJoystickToRotateViewPoint();
 }
 

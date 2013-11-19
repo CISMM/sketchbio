@@ -9,6 +9,7 @@
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 #include <vtkTransform.h>
+#include <vtkGeometryFilter.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkOBJReader.h>
 #include <vtkPointData.h>
@@ -269,19 +270,23 @@ vtkPolyDataAlgorithm *modelSurfaceFrom(vtkPolyDataAlgorithm *rawModel)
         return rawModel;
     }
 }
-vtkAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel)
+vtkPolyDataAlgorithm *modelAtomsFrom(vtkPolyDataAlgorithm *rawModel)
 {
     if (rawModel->GetOutput()->GetPointData()->HasArray(MODEL_NUM_ARRAY_NAME))
     {
 
-        vtkThreshold *atoms = vtkThreshold::New();
+        vtkSmartPointer< vtkThreshold > atoms =
+			vtkSmartPointer< vtkThreshold >::New();
         atoms->SetInputConnection(rawModel->GetOutputPort());
         atoms->AllScalarsOn();
         atoms->SetInputArrayToProcess(
                     0,0,0,vtkDataObject::FIELD_ASSOCIATION_POINTS,MODEL_NUM_ARRAY_NAME);
         atoms->ThresholdBetween(ATOMS_MODEL_NUM,ATOMS_MODEL_NUM);
         atoms->Update();
-        return atoms;
+		vtkGeometryFilter* filter = vtkGeometryFilter::New();
+		filter->SetInputConnection(atoms->GetOutputPort());
+		filter->Update();
+        return filter;
     }
     else
     {

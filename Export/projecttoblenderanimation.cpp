@@ -295,11 +295,18 @@ bool ProjectToBlenderAnimation::writeCreateCylinders(
         Connector* c = it.next();
         if (c->getAlpha() > Q_EPSILON)
         {
-            q_vec_type p1, p2;
+			ColorMapType::Type type = c->getColorMapType();
+			vtkSmartPointer< vtkColorTransferFunction > cmap =
+				vtkSmartPointer< vtkColorTransferFunction >::Take(
+                ColorMapType::getColorMap(type,0,1));
+			double color[3];
+			cmap->GetColor(1.0,color);
+            
+			q_vec_type p1, p2;
             c->getEnd1WorldPosition(p1);
             c->getEnd2WorldPosition(p2);
-            sprintf(buf.data(),"obj = createConnector((%f,%f,%f),(%f,%f,%f),%f,%f)\n",
-                    p1[0],p1[1],p1[2],p2[0],p2[1],p2[2],c->getAlpha(),c->getRadius());
+            sprintf(buf.data(),"obj = createConnector((%f,%f,%f),(%f,%f,%f),%f,%f,(%f,%f,%f))\n",
+                    p1[0],p1[1],p1[2],p2[0],p2[1],p2[2],c->getAlpha(),c->getRadius(),color[0],color[1],color[2]);
             file.write(buf.data());
             file.write("myConnectors.append(obj)\n");
             connectorIdxs.insert(c,cylindersLen);

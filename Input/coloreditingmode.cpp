@@ -1,13 +1,17 @@
 #include "coloreditingmode.h"
 
+#include <connector.h>
 #include <sketchioconstants.h>
 #include <sketchobject.h>
+#include <transformmanager.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
 
 ColorEditingMode::ColorEditingMode(SketchProject *proj, const bool * const b,
                                    const double * const a)
-    : ObjectGrabMode(proj,b,a)
+    : ObjectGrabMode(proj,b,a),
+	rSpring(NULL),
+    springDist(std::numeric_limits<double>::max())
 {
 }
 
@@ -78,6 +82,39 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
             rObj->setColorMapType(cmap);
             addXMLUndoState();
         }
+		else if (springDist < SPRING_DISTANCE_THRESHOLD) {
+			ColorMapType::Type cmap = rSpring->getColorMapType();
+            using namespace ColorMapType;
+            switch (cmap)
+            {
+            case SOLID_COLOR_RED:
+                cmap = SOLID_COLOR_GREEN;
+                break;
+            case SOLID_COLOR_GREEN:
+                cmap = SOLID_COLOR_BLUE;
+                break;
+            case SOLID_COLOR_BLUE:
+                cmap = SOLID_COLOR_YELLOW;
+                break;
+            case SOLID_COLOR_YELLOW:
+                cmap = SOLID_COLOR_PURPLE;
+                break;
+            case SOLID_COLOR_PURPLE:
+                cmap = SOLID_COLOR_CYAN;
+                break;
+            case SOLID_COLOR_CYAN:
+                cmap = SOLID_COLOR_GRAY;
+                break;
+            case SOLID_COLOR_GRAY:
+                cmap = SOLID_COLOR_RED;
+                break;
+            default:
+                cmap = SOLID_COLOR_GRAY;
+                break;
+            }
+            rSpring->setColorMapType(cmap);
+            addXMLUndoState();
+		}
         emit newDirectionsString(" ");
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
@@ -122,6 +159,57 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
             world->showInvisibleObjects();
         emit newDirectionsString(" ");
     }
+}
+
+void ColorEditingMode::doUpdatesForFrame() {
+	if(rDist < DISTANCE_THRESHOLD) {
+		project->setOutlineObject(RIGHT_SIDE_OUTLINE,rObj);
+	}
+	else if(springDist < SPRING_DISTANCE_THRESHOLD) {
+		project->setOutlineSpring(RIGHT_SIDE_OUTLINE,rSpring,true);
+	}
+	ObjectGrabMode::doUpdatesForFrame();
+
+	//from spring editing mode, now that we want to color springs
+	WorldManager* world = project->getWorldManager();
+    SketchObject* rightHand = project->getRightHandObject();
+
+	if(rDist > DISTANCE_THRESHOLD) {
+		if ( world->getNumberOfConnectors() > 0 )
+		{
+			// get the tracker positions
+			q_vec_type rightTrackerPos;
+			TransformManager* transformMgr = project->getTransformManager();
+			transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
+
+			Connector* closest;
+			bool newAtEnd1;
+			closest = world->getClosestConnector(rightTrackerPos,&springDist,&newAtEnd1);
+			if (closest != rSpring)
+			{
+				project->setOutlineSpring(RIGHT_SIDE_OUTLINE,closest,newAtEnd1);
+				rSpring = closest;
+			}
+			if (springDist < SPRING_DISTANCE_THRESHOLD)
+			{
+				if (!project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
+				{
+					project->setOutlineVisible(RIGHT_SIDE_OUTLINE,true);
+				}
+			}
+			else if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
+			{
+				project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+			}
+		}
+		else
+		{
+			if (project->isOutlineVisible(LEFT_SIDE_OUTLINE))
+				project->setOutlineVisible(LEFT_SIDE_OUTLINE,false);
+			if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
+				project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+		}
+	}
 }
 
 void ColorEditingMode::analogsUpdated()

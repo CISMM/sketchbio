@@ -157,7 +157,7 @@ def parseModel(m,modelNum,data):
             #    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
             for r in ranges:
                 if atom.residue in r:
-                    arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
+                    arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
             if 'chainPosition' not in arrays:
                 arrays['chainPosition'] = 0.5
             data.addPoint((pt.x, pt.y, pt.z), arrays)
@@ -211,7 +211,7 @@ def parseModel(m,modelNum,data):
                     # but VTK doesn't read in NaN values
                     for r in ranges:
                         if atom.residue in r:
-                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
+                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
                     if 'chainPosition' not in arrays:
                         arrays['chainPosition'] = 0.5
                     norm = normals[i]
@@ -243,7 +243,7 @@ def parseModel(m,modelNum,data):
                     # but VTK doesn't read NaN values
                     for r in ranges:
                         if atom.residue in r:
-                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r))
+                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
                     if 'chainPosition' not in arrays:
                         arrays['chainPosition'] = 0.5
                     norm = normals[i]

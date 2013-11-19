@@ -175,7 +175,7 @@ def createInstance(modelObj,isCamera,location,orientation_quat,isVisible,isActiv
         bpy.context.scene.camera = obj
     return obj
 
-def createConnector(p1,p2,alpha,radius,color=(0.5,0.5,0.5)):
+def createConnector(p1,p2,alpha,radius,color):
     oldKeys = list(bpy.data.objects.keys()) # copies the object names list
     bpy.ops.mesh.primitive_cylinder_add()
     cylinder = None

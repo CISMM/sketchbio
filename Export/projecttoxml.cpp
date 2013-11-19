@@ -652,6 +652,9 @@ vtkXMLDataElement* ProjectToXML::springToXML(
     setPreciseVectorAttribute(child,&v,1,CONNECTOR_ALPHA_ATTRIBUTE_NAME);
     v = conn->getRadius();
     setPreciseVectorAttribute(child,&v,1,CONNECTOR_RADIUS_ATTRIBUTE_NAME);
+	ColorMapType::Type cmap = conn->getColorMapType();
+    child->SetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME, 
+				ColorMapType::stringFromColorMap(cmap));
     if (spring != NULL)
     {
         v = spring->getStiffness();
@@ -1694,6 +1697,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
     bool hasK = false;
     double k, minRLen, maxRLen, alpha, radius;
     q_vec_type o1Pos, o2Pos, wPos;
+	ColorMapType::Type cmap = ColorMapType::SOLID_COLOR_GRAY;
     for (int i = 0; i < elem->GetNumberOfNestedElements(); i++)
     {
         vtkXMLDataElement* child = elem->GetNestedElement(i);
@@ -1730,6 +1734,11 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
         else if (name == QString(PROPERTIES_ELEMENT_NAME))
         {
             seenProperties = true;
+			if (child->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME))
+			{
+				const char* ch = child->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
+				cmap = ColorMapType::colorMapFromString(ch);
+			}
             hasK = (child->GetAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME) != NULL);
             int err = 0;
             err += child->GetScalarAttribute(CONNECTOR_ALPHA_ATTRIBUTE_NAME,alpha);
@@ -1783,6 +1792,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
             conn = new Connector(objectIds.value(obj1Id),NULL,
                                  o1Pos,wPos,alpha,radius);
         }
+		conn->setColorMapType(cmap);
         proj->addConnector(conn);
     }
     else if (objCount == 2)
@@ -1799,6 +1809,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
                                  objectIds.value(obj2Id),
                                  o1Pos,o2Pos,alpha,radius);
         }
+		conn->setColorMapType(cmap);
         proj->addConnector(conn);
     }
     else

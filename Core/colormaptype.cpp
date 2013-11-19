@@ -25,6 +25,8 @@ const char *stringFromColorMap(
         return "solid_purple";
     case SOLID_COLOR_CYAN:
         return "solid_cyan";
+	case SOLID_COLOR_GRAY:
+        return "solid_gray";
     case DIM_SOLID_COLOR_RED:
         return "dim_red";
     case DIM_SOLID_COLOR_GREEN:
@@ -59,6 +61,8 @@ Type colorMapFromString(const char *str)
         return SOLID_COLOR_PURPLE;
     if (s ==  "solid_cyan")
         return SOLID_COLOR_CYAN;
+	if (s ==  "solid_gray")
+        return SOLID_COLOR_GRAY;
     if (s ==  "dim_red")
         return DIM_SOLID_COLOR_RED;
     if (s ==  "dim_green")
@@ -103,6 +107,9 @@ vtkColorTransferFunction *getColorMap(
     case SOLID_COLOR_CYAN:
         ctf->AddRGBPoint(low,0.7,1.0,1.0);
         break;
+	case SOLID_COLOR_GRAY:
+        ctf->AddRGBPoint(low,0.8,0.8,0.8);
+        break;
     case DIM_SOLID_COLOR_RED:
         ctf->AddRGBPoint(low,0.5,0.35,0.35);
         break;
@@ -146,6 +153,7 @@ bool isSolidColor(ColorMapType::Type cMap, const QString& arrayName)
     case SOLID_COLOR_YELLOW:
     case SOLID_COLOR_PURPLE:
     case SOLID_COLOR_CYAN:
+	case SOLID_COLOR_GRAY:
     case DIM_SOLID_COLOR_RED:
     case DIM_SOLID_COLOR_GREEN:
     case DIM_SOLID_COLOR_BLUE:
