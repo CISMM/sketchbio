@@ -162,7 +162,7 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
 }
 
 void ColorEditingMode::doUpdatesForFrame() {
-	if(rDist < DISTANCE_THRESHOLD) {
+	if(rDist < DISTANCE_THRESHOLD && (rBase->numInstances() == 1)) {
 		project->setOutlineObject(RIGHT_SIDE_OUTLINE,rObj);
 	}
 	else if(springDist < SPRING_DISTANCE_THRESHOLD) {
