@@ -10,7 +10,7 @@
 
 SpringEditingMode::SpringEditingMode(SketchProject* proj, const bool* buttonState,
                                      const double* analogState) :
-    HydraInputMode(proj,buttonState,analogState),
+    ObjectGrabMode(proj,buttonState,analogState),
     grabbedWorld(WORLD_NOT_GRABBED),
     lSpring(NULL),
     rSpring(NULL),
@@ -147,6 +147,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
 
 void SpringEditingMode::analogsUpdated()
 {
+	ObjectGrabMode::analogsUpdated();
 	if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
         double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
 		bool snap_to_n = (value < 0.5) ? true : false;
@@ -162,6 +163,7 @@ static inline void processFrameForSide(SketchProject* project,
                                 bool grabbedSpring,
                                 q_vec_type trackerPos,
                                 SketchObject* trackerObj,
+								SketchObject* closestObj,
                                 int side)
 {
     WorldManager* world = project->getWorldManager();
@@ -193,7 +195,8 @@ static inline void processFrameForSide(SketchProject* project,
     {
         // if we have grabbed a spring, move that spring's end
         double objectDist = 0;
-        SketchObject* closestObject = world->getClosestObject(trackerObj,objectDist);
+        SketchObject* closestObject = closestObj;
+		//closestObject = world->getClosestObject(trackerObj,objectDist);
         if (objectDist > DISTANCE_THRESHOLD)
         {
             closestObject = NULL;
@@ -220,6 +223,7 @@ static inline void processFrameForSide(SketchProject* project,
 
 void SpringEditingMode::doUpdatesForFrame()
 {
+	ObjectGrabMode::doUpdatesForFrame();
     // if we are grabbing the world, update the world position for the frame
     if (grabbedWorld == LEFT_GRABBED_WORLD)
         grabWorldWithLeft();
@@ -239,9 +243,9 @@ void SpringEditingMode::doUpdatesForFrame()
         transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
 
         processFrameForSide(project,lSpring,lSpringDist,lAtEnd1,leftGrabbedSpring,
-                            leftTrackerPos,leftHand,LEFT_SIDE_OUTLINE);
+                            leftTrackerPos,leftHand,lObj,LEFT_SIDE_OUTLINE);
         processFrameForSide(project,rSpring,rSpringDist,rAtEnd1,rightGrabbedSpring,
-                            rightTrackerPos,rightHand,RIGHT_SIDE_OUTLINE);
+                            rightTrackerPos,rightHand,rObj,RIGHT_SIDE_OUTLINE);
     }
     else
     {
@@ -254,6 +258,7 @@ void SpringEditingMode::doUpdatesForFrame()
 
 void SpringEditingMode::clearStatus()
 {
+	ObjectGrabMode::clearStatus();
     grabbedWorld = WORLD_NOT_GRABBED;
     lSpring = rSpring = NULL;
     lSpringDist = rSpringDist = std::numeric_limits<double>::max();

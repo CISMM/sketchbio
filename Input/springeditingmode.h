@@ -1,11 +1,11 @@
 #ifndef SPRINGEDITINGMODE_H
 #define SPRINGEDITINGMODE_H
 
-#include "hydrainputmode.h"
+#include "objectgrabmode.h"
 
 class Connector;
 
-class SpringEditingMode : public HydraInputMode
+class SpringEditingMode : public ObjectGrabMode
 {
     Q_OBJECT
 public:
