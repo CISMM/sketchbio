@@ -250,6 +250,9 @@ void setColorMapForObject(SketchObject *obj)
         nextType = ColorMapType::BLUE_TO_RED;
         break;
     case ColorMapType::BLUE_TO_RED:
+        nextType = ColorMapType::SOLID_COLOR_GRAY;
+        break;
+    case ColorMapType::SOLID_COLOR_GRAY:
         nextType = ColorMapType::SOLID_COLOR_RED;
         break;
     }
