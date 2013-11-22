@@ -5,8 +5,8 @@
 
 SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                                    double maxRestLen, double k, const q_vec_type obj1Pos,
-                                   const q_vec_type obj2Pos) :
-    Connector(o1,o2,obj1Pos,obj2Pos,SPRING_ALPHA_VALUE,SPRING_DISPLAY_RADIUS),
+                                   const q_vec_type obj2Pos, bool showLine) :
+    Connector(o1,o2,obj1Pos,obj2Pos,SPRING_ALPHA_VALUE,SPRING_DISPLAY_RADIUS,showLine),
     minRestLength(minRestLen),
     maxRestLength(maxRestLen),
     stiffness(k)
@@ -51,8 +51,11 @@ bool SpringConnection::addForce() {
     return true;
 }
 
-SpringConnection *SpringConnection::makeSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                   const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen) {
+SpringConnection *SpringConnection::makeSpring(
+        SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+        const q_vec_type pos2, bool worldRelativePos, double k,
+        double minLen, double maxLen, bool showLine)
+{
     q_type newPos1, newPos2;
     if (worldRelativePos) {
         if (o1 != NULL)
@@ -67,6 +70,7 @@ SpringConnection *SpringConnection::makeSpring(SketchObject *o1, SketchObject *o
         q_vec_copy(newPos1,pos1);
         q_vec_copy(newPos2,pos2);
     }
-    SpringConnection *spring = new SpringConnection(o1,o2,minLen,maxLen,k,newPos1,newPos2);
+    SpringConnection *spring = new SpringConnection(
+                o1,o2,minLen,maxLen,k,newPos1,newPos2,showLine);
     return spring;
 }

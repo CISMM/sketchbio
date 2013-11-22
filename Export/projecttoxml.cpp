@@ -1785,7 +1785,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
         if (hasK)
         {
             conn = new SpringConnection(objectIds.value(obj1Id),NULL,minRLen,
-                                        maxRLen,k,o1Pos,wPos);
+                                        maxRLen,k,o1Pos,wPos,true);
         }
         else
         {
@@ -1801,7 +1801,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
         {
             conn = SpringConnection::makeSpring(objectIds.value(obj1Id),
                                                 objectIds.value(obj2Id),
-                                                o1Pos,o2Pos,false,k,minRLen,maxRLen);
+                                                o1Pos,o2Pos,false,k,minRLen,maxRLen,
+                                                true);
         }
         else
         {

@@ -4,18 +4,24 @@
 #include <quat.h>
 #include "colormaptype.h"
 
-#include <vtkSmartPointer.h>
+#include <QScopedPointer>
 
 class vtkLineSource;
 class vtkActor;
 class vtkPolyDataMapper;
 class SketchObject;
 
+/*
+ * This class represents a connection between two objects or between an object
+ * and a location in world space.  A connector may just be an indicator of relatedness
+ * or it can apply forces.  It may or may not be displayed to the user.
+ */
 class Connector
 {
 public:
     Connector(SketchObject* o1, SketchObject* o2, const q_vec_type o1Pos,
-              const q_vec_type o2Pos, double a = 1.0, double rad = 10);
+              const q_vec_type o2Pos, double a = 1.0, double rad = 10,
+              bool display = true);
     virtual ~Connector();
 
     inline const SketchObject *getObject1() const { return object1; }
@@ -49,8 +55,10 @@ public:
 
 	void snapToTerminus(bool on_object1, bool snap_to_n);
 
-	vtkLineSource *getLine();
-	vtkActor *getActor(); 
+    // These may return NULL if the connector has no line & actor
+    // some connectors may not have this
+    vtkLineSource *getLine();
+    vtkActor *getActor();
 	ColorMapType::Type getColorMapType() const { return colorMap; }
 	void setColorMapType(ColorMapType::Type cmap);
 
@@ -62,18 +70,25 @@ public:
     // So that springs don't have to be dynamic casted...
     // default does nothing
     virtual bool addForce() { return false; }
+    // updates the displayed line (if there is one)
+    void updateLine();
 
 protected:
-	void updateColorMap();
+    // updates the displayed line with the new color map (if there is one)
+    void updateColorMap();
 
     SketchObject* object1, * object2;
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
     double alpha, radius;
 private:
-	vtkSmartPointer< vtkLineSource > line;
-	vtkSmartPointer<vtkActor> actor;
-	vtkSmartPointer< vtkPolyDataMapper > mapper;
+    // class to represent the visibility state of the connector
+    class VisiblityData;
+    // have to forward declare this here or can't extend VisibilityData
+    class LineVisibilityData;
+    QScopedPointer< VisiblityData > d;
 	ColorMapType::Type colorMap;
 };
+
+
 
 #endif // CONNECTOR_H

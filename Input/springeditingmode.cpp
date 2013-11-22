@@ -128,7 +128,8 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
                     pos2,
                     true,
                     stiffness,
-                    0);
+                    0,
+                    true);
         project->addConnector(spring);
         addXMLUndoState();
         emit newDirectionsString(" ");

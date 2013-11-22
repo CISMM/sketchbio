@@ -21,7 +21,7 @@ public:
 
     SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                      double maxRestLen, double k, const q_vec_type obj1Pos,
-                     const q_vec_type obj2Pos);
+                     const q_vec_type obj2Pos, bool showLine);
     virtual ~SpringConnection() {}
 
     inline double getStiffness() const { return stiffness; }
@@ -53,7 +53,8 @@ public: // static factories
     static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2,
                                         const q_vec_type pos1, const q_vec_type pos2,
                                         bool worldRelativePos, double k,
-                                        double minLen, double maxLen);
+                                        double minLen, double maxLen,
+                                        bool showLine);
     /*******************************************************************
      *
      * Creates the spring between the two objects and returns a pointer to it.
@@ -70,17 +71,21 @@ public: // static factories
      *******************************************************************/
     static SpringConnection *makeSpring(SketchObject *o1, SketchObject *o2,
                                         const q_vec_type pos1, const q_vec_type pos2,
-                                        bool worldRelativePos, double k, double len);
+                                        bool worldRelativePos, double k, double len,
+                                        bool showLine);
 };
 
 
-inline SpringConnection *SpringConnection::makeSpring(SketchObject *o1,
+inline SpringConnection* SpringConnection::makeSpring(SketchObject *o1,
                                                       SketchObject *o2,
                                                       const q_vec_type pos1,
                                                       const q_vec_type pos2,
                                                       bool worldRelativePos,
-                                                      double k, double len) {
-    return makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
+                                                      double k,
+                                                      double len,
+                                                      bool showLine)
+{
+    return makeSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len,showLine);
 }
 
 #endif // SPRINGCONNECTION_H

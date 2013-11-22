@@ -458,19 +458,16 @@ void WorldManager::setCollisionCheckOn(bool on) {
 //##################################################################################################
 // helper function for updateSprings - updates the endpoints of the springs in the vtkPoints object
 static inline void updateLines(
-        QList< Connector* >& list,
         QHash< Connector*, QPair< vtkSmartPointer< vtkLineSource >,
                                   vtkSmartPointer< vtkActor > > >& map)
 {
-    for (QListIterator< Connector* > it(list); it.hasNext();) {
-        Connector* s = it.next();
-        vtkLineSource *line = map.value(s).first;
-        q_vec_type pos1,pos2;
-        s->getEnd1WorldPosition(pos1);
-        line->SetPoint1(pos1);
-        s->getEnd2WorldPosition(pos2);
-        line->SetPoint2(pos2);
-        line->Update();
+    typedef QPair< vtkSmartPointer< vtkLineSource>,
+                   vtkSmartPointer< vtkActor > > ConnectorPair;
+    for (QHashIterator< Connector*, ConnectorPair > it(map);
+         it.hasNext();)
+    {
+        Connector* s = it.next().key();
+        s->updateLine();
     }
 }
 
@@ -478,11 +475,7 @@ static inline void updateLines(
 //##################################################################################################
 void WorldManager::updateConnectors() {
     // set spring ends to new positions
-    updateLines(connections,lines);
-#ifdef SHOW_DEBUGGING_FORCE_LINES
-    updateLines(lHand,lines);
-    updateLines(rHand,lines);
-#endif
+    updateLines(lines);
 }
 
 
@@ -492,7 +485,10 @@ void WorldManager::updateConnectors() {
 // else returns negative how far into the box the point as a fraction of the way through (.5 for halfway through)
 inline double distOutsideAABB(q_vec_type point, double bb[6]) {
     if (bb[0] == bb[1] || bb[2] == bb[3] || bb[4] == bb[5]) {
-        qDebug() << "Error: Bounding box has no volume...";
+        // if bounds have no volume, use distance between point and
+        // bounds point
+        q_vec_type bbPos = {bb[0], bb[2], bb[4]};
+        return q_vec_distance(bbPos,point);
     }
     double xD, yD, zD, dist;
     bool inX = false, inY = false, inZ = false;
@@ -648,50 +644,15 @@ void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 void WorldManager::addConnector(Connector* spring,QList< Connector* > *list) {
     list->push_back(spring);
 
-#ifndef SHOW_DEBUGGING_FORCE_LINES
-    if (list == &connections)
-#endif
+    vtkLineSource* line = spring->getLine();
+    vtkActor* actor = spring->getActor();
+    if (line != NULL && actor != NULL)
     {
-        //q_vec_type p1, p2;
-        //// create the line for the connector
-        //vtkSmartPointer< vtkLineSource > line =
-        //        vtkSmartPointer< vtkLineSource >::New();
-        //spring->getEnd1WorldPosition(p1);
-        //spring->getEnd2WorldPosition(p2);
-        //line->SetPoint1(p1);
-        //line->SetPoint2(p2);
-        //line->Update();
-        //vtkSmartPointer< vtkTubeFilter > tube =
-        //        vtkSmartPointer< vtkTubeFilter >::New();
-        //tube->SetInputConnection(line->GetOutputPort());
-        //tube->SetRadius(spring->getRadius());
-        //tube->Update();
-  //      vtkSmartPointer< vtkPolyDataMapper > mapper =
-  //              vtkSmartPointer< vtkPolyDataMapper >::New();
-  //      mapper->SetInputConnection(tube->GetOutputPort());
-  //      mapper->Update();
-  //      vtkSmartPointer< vtkActor > actor =
-  //              vtkSmartPointer< vtkActor >::New();
-
-		//double range[2] = { 0.0, 1.0};
-		//vtkSmartPointer< vtkColorTransferFunction > colorFunc =
-  //          vtkSmartPointer< vtkColorTransferFunction >::Take(
-  //              ColorMapType::getColorMap(spring->getColorMapType(),range[0],range[1])
-  //          );
-		//double rgb[3];
-		//colorFunc->GetColor(range[1],rgb);
-		//actor->GetProperty()->SetColor(rgb);
-
-  //      actor->SetMapper(mapper);
-  //      if (spring->getAlpha() != 0)
-  //      {
-  //          actor->GetProperty()->SetOpacity(spring->getAlpha());
-  //      }
         if (spring->getAlpha() > Q_EPSILON || showInvisible)
         {
             renderer->AddActor(spring->getActor());
         }
-        lines.insert(spring,ConnectorPair(spring->getLine(),spring->getActor()));
+        lines.insert(spring,ConnectorPair(line,actor));
     }
 }
 
