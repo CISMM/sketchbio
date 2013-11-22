@@ -6,6 +6,8 @@
 #include <vtkProperty.h>
 #include <vtkColorTransferFunction.h>
 
+#include <QDebug>
+
 #include "keyframe.h"
 #include "sketchtests.h"
 #include "objectchangeobserver.h"
@@ -469,14 +471,23 @@ bool SketchObject::hasChangedSinceKeyframe(double t)
     const Keyframe& frame = keyframes->value(t);
     q_vec_type framePos;
     q_type frameOrient;
+    frame.getPosition(framePos);
+    frame.getOrientation(frameOrient);
     ColorMapType::Type frameCmap = frame.getColorMapType(), cmap = getColorMapType();
     const QString& frameArray = frame.getArrayToColorBy(), & array = getArrayToColorBy();
-    bool objectChanged = !(q_vec_equals(position,framePos) &&
-                          q_equals(frameOrient,orientation) &&
-                           (cmap == frameCmap) &&
-                          (( ColorMapType::isSolidColor(cmap,array) &&
-                            ColorMapType::isSolidColor(frameCmap,frameArray)) ||
-                           (frameArray == array)));
+    qDebug() << array;
+    qDebug() << frameArray;
+    qDebug() << "________";
+    bool a, b, c, d, e, f, g;
+    a = q_vec_equals(position,framePos);
+    b = q_equals(orientation,frameOrient);
+    c = cmap == frameCmap;
+    d = ColorMapType::isSolidColor(cmap,array);
+    e = ColorMapType::isSolidColor(frameCmap,frameArray);
+    f = frameArray == array;
+    g = (isVisible() == frame.isVisibleAfter()) && (isActive() == frame.isActive());
+    bool objectChanged = !(a && b && c  &&
+                          (( d  && e ) || f) && g);
     if (objectChanged)
     {
         return true;
@@ -487,7 +498,7 @@ bool SketchObject::hasChangedSinceKeyframe(double t)
         bool changed = false;
         for (int i = 0; i < subObjects->length() && !changed; i++)
         {
-            changed |= subObjects->at(i)->hasChangedSinceKeyframe(t);
+            changed = changed || subObjects->at(i)->hasChangedSinceKeyframe(t);
         }
         return changed;
     }
