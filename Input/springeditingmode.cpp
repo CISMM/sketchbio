@@ -108,6 +108,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
             }
             rSpring = NULL;
         }
+		emit newDirectionsString(" ");
     }
 	else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
     {
