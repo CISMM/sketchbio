@@ -15,41 +15,114 @@
 #include "sketchobject.h"
 #include "sketchmodel.h"
 
-Connector::Connector(SketchObject *o1, SketchObject *o2,
-                     const q_vec_type o1Pos, const q_vec_type o2Pos,
-                     double a, double rad)
-{
-    object1 = o1;
-    object2 = o2;
-    q_vec_copy(object1ConnectionPosition,o1Pos);
-    q_vec_copy(object2ConnectionPosition,o2Pos);
-    alpha = a;
-    radius = rad;
-	colorMap = ColorMapType::SOLID_COLOR_GRAY;
+/*
+ * This class represents the visible state of the connector.  This default implementation
+ * has no visible state
+ */
+class Connector::VisiblityData {
+public:
+    virtual ~VisiblityData() {}
+    virtual vtkLineSource* getLine() const { return NULL; }
+    virtual vtkActor* getActor() const { return NULL; }
+    virtual void updateColorMap(ColorMapType::Type cmap) {}
+    virtual void updateLine(q_vec_type p1, q_vec_type p2) {}
+};
 
-	q_vec_type p1, p2;
-    // create the line for the connector
-    line = vtkSmartPointer< vtkLineSource >::New();
-    getEnd1WorldPosition(p1);
-    getEnd2WorldPosition(p2);
+/*
+ * This subclass of visible state object represents the visible state of the connector
+ * as a (possibly translucent) tube.
+ */
+class Connector::LineVisibilityData : public Connector::VisiblityData
+{
+public:
+    LineVisibilityData(q_vec_type p1, q_vec_type p2, double radius,
+             ColorMapType::Type cmap, double alpha);
+    virtual ~LineVisibilityData() {}
+    virtual vtkLineSource* getLine() const { return line; }
+    virtual vtkActor* getActor() const { return actor; }
+    virtual void updateColorMap(ColorMapType::Type cmap);
+    virtual void updateLine(q_vec_type p1, q_vec_type p2);
+private:
+    vtkSmartPointer< vtkLineSource > line;
+    vtkSmartPointer<vtkActor> actor;
+};
+
+Connector::LineVisibilityData::LineVisibilityData(q_vec_type p1, q_vec_type p2, double radius,
+                   ColorMapType::Type cmap, double alpha)
+    :
+      line(vtkSmartPointer< vtkLineSource >::New()),
+      actor(vtkSmartPointer< vtkActor >::New())
+{
     line->SetPoint1(p1);
     line->SetPoint2(p2);
     line->Update();
     vtkSmartPointer< vtkTubeFilter > tube =
             vtkSmartPointer< vtkTubeFilter >::New();
     tube->SetInputConnection(line->GetOutputPort());
-    tube->SetRadius(getRadius());
+    tube->SetRadius(radius);
     tube->Update();
-    mapper = vtkSmartPointer< vtkPolyDataMapper >::New();
+    vtkSmartPointer< vtkPolyDataMapper > mapper =
+            vtkSmartPointer< vtkPolyDataMapper >::New();
     mapper->SetInputConnection(tube->GetOutputPort());
     mapper->Update();
-    actor = vtkSmartPointer< vtkActor >::New();
-	updateColorMap();
+    updateColorMap(cmap);
     actor->SetMapper(mapper);
-    if (getAlpha() != 0)
+    if (alpha != 0)
     {
-        actor->GetProperty()->SetOpacity(getAlpha());
+        actor->GetProperty()->SetOpacity(alpha);
     }
+}
+
+void Connector::LineVisibilityData::updateColorMap(ColorMapType::Type cmap)
+{
+    double range[2] = { 0.0, 1.0};
+    vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+        vtkSmartPointer< vtkColorTransferFunction >::Take(
+            ColorMapType::getColorMap(cmap,range[0],range[1])
+        );
+    double rgb[3];
+    colorFunc->GetColor(range[1],rgb);
+    actor->GetProperty()->SetColor(rgb);
+}
+
+void Connector::LineVisibilityData::updateLine(q_vec_type p1, q_vec_type p2)
+{
+    line->SetPoint1(p1);
+    line->SetPoint2(p2);
+}
+
+//#########################################################################
+//#########################################################################
+//#########################################################################
+// Implementation of Connector itself
+
+Connector::Connector(SketchObject *o1, SketchObject *o2,
+                     const q_vec_type o1Pos, const q_vec_type o2Pos,
+                     double a, double rad, bool display)
+    :
+    object1(o1),
+    object2(o2),
+    alpha(a),
+    radius(rad),
+    d(NULL),
+    colorMap(ColorMapType::SOLID_COLOR_GRAY)
+{
+    q_vec_copy(object1ConnectionPosition,o1Pos);
+    q_vec_copy(object2ConnectionPosition,o2Pos);
+
+    if (display)
+    {
+        q_vec_type p1, p2;
+        // create the line for the connector
+        getEnd1WorldPosition(p1);
+        getEnd2WorldPosition(p2);
+        d.reset(new LineVisibilityData(p1,p2,radius,colorMap,alpha));
+    }
+    else
+    {
+        d.reset(new VisiblityData);
+    }
+
 }
 
 Connector::~Connector()
@@ -100,17 +173,6 @@ void Connector::setEnd2WorldPosition(const q_vec_type newPos) {
         q_vec_copy(object2ConnectionPosition,newPos);
 }
 
-void Connector::updateColorMap()
-{
-    double range[2] = { 0.0, 1.0};
-	vtkSmartPointer< vtkColorTransferFunction > colorFunc =
-        vtkSmartPointer< vtkColorTransferFunction >::Take(
-            ColorMapType::getColorMap(getColorMapType(),range[0],range[1])
-        );
-    double rgb[3];
-    colorFunc->GetColor(range[1],rgb);
-    actor->GetProperty()->SetColor(rgb);
-}
 
 static inline void snap(SketchObject* o, double value, q_vec_type dst)
 {
@@ -136,15 +198,33 @@ void Connector::snapToTerminus(bool on_object1, bool snap_to_n) {
 	}
 }
 
-vtkLineSource* Connector::getLine() {
-	return line;
-}
-
-vtkActor* Connector::getActor() {
-	return actor;
-}
-
 void Connector::setColorMapType(ColorMapType::Type cmap) {
 	colorMap = cmap;
 	updateColorMap();
+}
+
+// These next four methods are deferred to the VisibilityData
+
+vtkLineSource* Connector::getLine()
+{
+    return d.data()->getLine();
+}
+
+vtkActor* Connector::getActor()
+{
+    return d.data()->getActor();
+}
+
+void Connector::updateLine()
+{
+    // get the line endpoints
+    q_vec_type p1, p2;
+    getEnd1WorldPosition(p1);
+    getEnd2WorldPosition(p2);
+    d.data()->updateLine(p1,p2);
+}
+
+void Connector::updateColorMap()
+{
+    d.data()->updateColorMap(colorMap);
 }

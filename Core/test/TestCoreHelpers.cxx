@@ -454,6 +454,41 @@ int testSketchObjectActions(SketchObject *obj)
         errors++;
         cout << "Incorrect handling of active status when landing on keyframe." << endl;
     }
+    if (obj->hasChangedSinceKeyframe(5.0))
+    {
+        errors++;
+        cout << "Just went to keyframe and we have changed since it?" << endl;
+    }
+    v2[2] += 5;
+    obj->setPosition(v2);
+    if (!obj->hasChangedSinceKeyframe(5.0))
+    {
+        errors++;
+        cout << "Position changed and it has not changed since the keyframe." << endl;
+    }
+    obj->setPosition(v3);
+    q_invert(q2,q2);
+    obj->setOrientation(q2);
+    if (!obj->hasChangedSinceKeyframe(5.0))
+    {
+        errors++;
+        cout << "Orientation changed and it has not changed since the keyframe." << endl;
+    }
+    obj->setOrientation(q3);
+    obj->setActive(!obj->isActive());
+    if (!obj->hasChangedSinceKeyframe(5.0))
+    {
+        errors++;
+        cout << "Active has changed since keyframe and it says it has not changed." << endl;
+    }
+    obj->setActive(!obj->isActive());
+    obj->setIsVisible(!obj->isVisible());
+    if (!obj->hasChangedSinceKeyframe(5.0))
+    {
+        errors++;
+        cout << "Visibility changed since keyframe and it says it has not changed." << endl;
+    }
+    obj->setIsVisible(!obj->isVisible());
     return errors;
 }
 

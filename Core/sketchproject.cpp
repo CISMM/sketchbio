@@ -934,6 +934,11 @@ inline int getMinIdx(const q_vec_type vec) {
 }
 
 void SketchProject::grabObject(SketchObject* objectToGrab, bool grabWithLeft) {
+#ifdef SHOW_DEBUGGING_FORCE_LINES
+#define SHOW true
+#else
+#define SHOW false
+#endif
     SketchObject* tracker = NULL;
     if (grabWithLeft) {
         tracker = leftHand;
@@ -964,7 +969,8 @@ void SketchProject::grabObject(SketchObject* objectToGrab, bool grabWithLeft) {
     q_vec_add(wPos2,tPos,tPer1);
     spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                           OBJECT_GRAB_SPRING_CONST,
-                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN),
+                                          SHOW);
     if (grabWithLeft) {
         world->addLeftHandSpring(spring);
     } else {
@@ -978,7 +984,8 @@ void SketchProject::grabObject(SketchObject* objectToGrab, bool grabWithLeft) {
     q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
     spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                           OBJECT_GRAB_SPRING_CONST,
-                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN),
+                                          SHOW);
     if (grabWithLeft) {
         world->addLeftHandSpring(spring);
     } else {
@@ -991,7 +998,8 @@ void SketchProject::grabObject(SketchObject* objectToGrab, bool grabWithLeft) {
     q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
     spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
                                           OBJECT_GRAB_SPRING_CONST,
-                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN));
+                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN),
+                                          SHOW);
     if (grabWithLeft) {
         world->addLeftHandSpring(spring);
     } else {

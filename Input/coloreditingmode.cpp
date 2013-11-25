@@ -10,8 +10,8 @@
 ColorEditingMode::ColorEditingMode(SketchProject *proj, const bool * const b,
                                    const double * const a)
     : ObjectGrabMode(proj,b,a),
-	rSpring(NULL),
-    springDist(std::numeric_limits<double>::max())
+    springDist(std::numeric_limits<double>::max()),
+    rSpring(NULL)
 {
 }
 
@@ -172,7 +172,6 @@ void ColorEditingMode::doUpdatesForFrame() {
 
 	//from spring editing mode, now that we want to color springs
 	WorldManager* world = project->getWorldManager();
-    SketchObject* rightHand = project->getRightHandObject();
 
 	if(rDist > DISTANCE_THRESHOLD) {
 		if ( world->getNumberOfConnectors() > 0 )
