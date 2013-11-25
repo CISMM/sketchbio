@@ -38,6 +38,46 @@ int testNewModelInstance(SketchObject *obj,bool testSubObjects = true);
 // get/set methods.  Assumes a newly constructed ModelInstance with no modifications
 // made to it yet.
 int testModelInstanceActions(SketchObject *obj);
+
+//#########################################################################
+// This class represents a test for SketchObjects
+class ObjectTest {
+public:
+    virtual ~ObjectTest(){}
+    // Tests the object or some feature of it and returns 0 for a pass and
+    // 1 on failure
+    virtual const char* getTestName() = 0;
+    virtual int testObject(SketchObject* obj) = 0;
+    typedef ObjectTest* (*Factory)(void*);
+};
+// A function that is a factory for ObjectTests
+
+//#########################################################################
+// A class for sets of ObjectTests to extend
+class SetOfObjectTests {
+protected:
+    struct Node {
+    public:
+        Node* next;
+        ObjectTest::Factory test;
+        void* arg;
+    };
+    static int runTests(Node* n, SketchObject* testObject);
+};
+//#########################################################################
+// This class keeps track of the available tests for SketchObject actions
+class ObjectActionTest : SetOfObjectTests {
+private:
+    Node n;
+    static Node* actionHead;
+public:
+    // Make a static one of these to add the given testmaker to the
+    // list of testmakers
+    ObjectActionTest(ObjectTest::Factory testMaker, void* arg);
+    ~ObjectActionTest();
+    // Runs all the tests for SketchObject actions
+    static int runTests(SketchObject* testObject);
+};
 }
 
 #endif // TESTCOREHELPERS_H

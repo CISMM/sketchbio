@@ -68,7 +68,7 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
             double difference;
             difference = bb[3] - bb[2];
             pos[Q_Y] += difference;
-            SketchObject *nObj = obj->deepCopy();
+            SketchObject *nObj = obj->getCopy();
             nObj->setPosition(pos);
             project->addObject(nObj);
             int nCopies = 1;

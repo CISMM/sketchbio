@@ -8,8 +8,6 @@
 #include <vtkCardinalSpline.h>
 #include <vtkMath.h>
 
-#include <QDebug>
-
 #include "keyframe.h"
 #include "sketchtests.h"
 #include "objectchangeobserver.h"
@@ -483,9 +481,6 @@ bool SketchObject::hasChangedSinceKeyframe(double t)
     frame.getOrientation(frameOrient);
     ColorMapType::Type frameCmap = frame.getColorMapType(), cmap = getColorMapType();
     const QString& frameArray = frame.getArrayToColorBy(), & array = getArrayToColorBy();
-    qDebug() << array;
-    qDebug() << frameArray;
-    qDebug() << "________";
     bool a, b, c, d, e, f, g;
     a = q_vec_equals(position,framePos);
     b = q_equals(orientation,frameOrient);
@@ -609,9 +604,10 @@ void SketchObject::setPositionByAnimationTime(double t)
 		pos[2] = zspline->Evaluate(t);
 		setPosition(pos);
 
-		q_type or;
-		q_from_euler(or, yaw_spline->Evaluate(t), pitch_spline->Evaluate(t), roll_spline->Evaluate(t));
-		setOrientation(or);
+        q_type orient;
+        q_from_euler(orient, yaw_spline->Evaluate(t), pitch_spline->Evaluate(t),
+                     roll_spline->Evaluate(t));
+        setOrientation(orient);
 
         if (numInstances() == 1)
         {
@@ -680,17 +676,17 @@ void SketchObject::computeSplines()
 		q_vec_type last_or;
 		while (it.hasNext())
 		{
-			double next = it.next().key();
-			Keyframe f = keyframes->value(next);
-			q_vec_type pos;
-			q_type or;
-			f.getPosition(pos);
-			f.getOrientation(or);
-			q_vec_type euler;
-			q_to_euler(euler, or);
-			xspline->AddPoint(next, pos[0]);
-			yspline->AddPoint(next, pos[1]);
-			zspline->AddPoint(next, pos[2]);
+            double next = it.next().key();
+            Keyframe f = keyframes->value(next);
+            q_vec_type pos;
+            q_type orient;
+            f.getPosition(pos);
+            f.getOrientation(orient);
+            q_vec_type euler;
+            q_to_euler(euler, orient);
+            xspline->AddPoint(next, pos[0]);
+            yspline->AddPoint(next, pos[1]);
+            zspline->AddPoint(next, pos[2]);
 
 			//Make sure we choose the shortest path instead of rotating around the long way
 			if (yaw_spline->GetNumberOfPoints() > 0) {
@@ -840,4 +836,17 @@ void SketchObject::notifyObjectRemoved(SketchObject *child)
     }
     if (parent != NULL)
         parent->notifyObjectRemoved(child);
+}
+
+void SketchObject::makeDeepCopyOf(SketchObject *other)
+{
+    q_vec_copy(position,other->position);
+    q_copy(orientation,other->orientation);
+    visible = other->visible;
+    active = other->active;
+    propagateForce = other->propagateForce;
+    if (other->keyframes.data() != NULL)
+    {
+        keyframes.reset(new QMap<double,Keyframe>(*other->keyframes.data()));
+    }
 }

@@ -141,6 +141,7 @@ public:
     virtual vtkPolyDataAlgorithm* getOrientedBoundingBoxes() { return NULL;}
     virtual vtkAlgorithm* getOrientedHalfPlaneOutlines() { return NULL; }
     virtual void setOrientedHalfPlaneData(double) {}
+    virtual SketchObject* getCopy() { return NULL; }
     virtual SketchObject* deepCopy() { return NULL; }
 
 private:

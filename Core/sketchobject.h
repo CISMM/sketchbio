@@ -194,9 +194,16 @@ public:
     // set/get the 'propagate-force-to-parent' status
     void setPropagateForceToParent(bool propagate);
     bool isPropagatingForceToParent();
-    // copy the object and its sub-objects
+    // copy the object and its sub-objects (only model & position information copied
+    virtual SketchObject *getCopy() = 0;
+    // copies the object including everything copied by makeDeepCopyOf as well as the
+    // data copied by getCopy().  For now this function is just used in testing
     virtual SketchObject *deepCopy() = 0;
 protected: // methods
+    // copies the position, orientation, visiblity active and propagateForce status from
+    // the other object
+    // also copies keyframes
+    void makeDeepCopyOf(SketchObject* other);
     // to deal with local transformation - recomputes from position and orientation unless
     // isLocalTransformPrecomputed is true
     void recalculateLocalTransform();

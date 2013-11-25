@@ -40,8 +40,9 @@ public:
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags);
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
-    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
-    virtual SketchObject *deepCopy();
+    virtual vtkAlgorithm* getOrientedHalfPlaneOutlines();
+    virtual SketchObject* getCopy();
+    virtual SketchObject* deepCopy();
 protected:
     virtual void localTransformUpdated();
 private:

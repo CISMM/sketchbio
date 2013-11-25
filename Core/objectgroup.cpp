@@ -198,13 +198,24 @@ void ObjectGroup::localTransformUpdated()
 }
 
 //#########################################################################
-SketchObject *ObjectGroup::deepCopy()
+SketchObject *ObjectGroup::getCopy()
 {
     ObjectGroup *nObj = new ObjectGroup();
     for (int i = 0; i < children.length(); i++)
     {
-        nObj->addObject(children[i]->deepCopy());
+        nObj->addObject(children[i]->getCopy());
     }
-    // TODO - keyframes, etc.
+    return nObj;
+}
+
+//#########################################################################
+SketchObject* ObjectGroup::deepCopy()
+{
+    ObjectGroup *nObj = new ObjectGroup();
+    nObj->makeDeepCopyOf(this);
+    for (int i = 0; i < children.length(); i++)
+    {
+        nObj->addObject(children[i]->getCopy());
+    }
     return nObj;
 }

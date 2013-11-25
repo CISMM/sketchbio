@@ -39,7 +39,8 @@ public:
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
-    virtual SketchObject *deepCopy();
+    virtual SketchObject *getCopy();
+    virtual SketchObject* deepCopy();
 protected:
     virtual void localTransformUpdated();
     virtual void updateColorMap();

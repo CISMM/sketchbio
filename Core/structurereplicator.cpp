@@ -135,7 +135,7 @@ void StructureReplicator::setNumShown(int num) {
         }
         for (; numShown < num; numShown++) {
             SketchObject *next = (numShown % 2 == 0) ?
-                        obj1->deepCopy() : obj2->deepCopy();
+                        obj1->getCopy() : obj2->getCopy();
             replicaList.append(next);
             replicas->addObject(next);
             vtkSmartPointer<vtkTransform> tform = next->getLocalTransform();

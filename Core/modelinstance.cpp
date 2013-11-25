@@ -187,18 +187,26 @@ void ModelInstance::localTransformUpdated()
 }
 
 //#########################################################################
-SketchObject *ModelInstance::deepCopy()
+SketchObject *ModelInstance::getCopy()
 {
-    SketchObject *nObj = new ModelInstance(model);
+    SketchObject *nObj = new ModelInstance(model,conformation);
     q_vec_type pos;
     q_type orient;
     getPosition(pos);
     getOrientation(orient);
     nObj->setPosAndOrient(pos,orient);
-    // TODO -- keyframes, etc...
     return nObj;
 }
 
+//#########################################################################
+SketchObject* ModelInstance::deepCopy()
+{
+    ModelInstance *nObj = new ModelInstance(model,conformation);
+    nObj->makeDeepCopyOf(this);
+    return nObj;
+}
+
+//#########################################################################
 void ModelInstance::updateColorMap()
 {
     vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();
@@ -233,6 +241,7 @@ void ModelInstance::updateColorMap()
     }
 }
 
+//#########################################################################
 void ModelInstance::setSolidColor(double color[])
 {
     vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();

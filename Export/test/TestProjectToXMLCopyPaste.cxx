@@ -125,8 +125,8 @@ int testPastedGroupIsTheSame()
     SketchObject *obj2 = MakeTestProject::addCameraToProject(proj1.data());
     proj1->getWorldManager()->removeObject(obj1);
     proj1->getWorldManager()->removeObject(obj2);
-    SketchObject *obj3 = obj1->deepCopy();
-    SketchObject *obj4 = obj2->deepCopy();
+    SketchObject *obj3 = obj1->getCopy();
+    SketchObject *obj4 = obj2->getCopy();
 
     q_vec_type vec = {5, 0, 0};
     obj1->setPosition(vec);
