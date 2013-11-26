@@ -124,6 +124,10 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
         project->startAnimation();
         emit newDirectionsString(" ");
     }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+        resetViewPoint();
+    }
 }
 
 void AnimationMode::doUpdatesForFrame()
@@ -133,6 +137,7 @@ void AnimationMode::doUpdatesForFrame()
         return;
     }
     ObjectGrabMode::doUpdatesForFrame();
+	useLeftJoystickToRotateViewPoint();
 }
 
 void AnimationMode::analogsUpdated()

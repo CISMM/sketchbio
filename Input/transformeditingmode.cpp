@@ -223,6 +223,10 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
             emit newDirectionsString("Move to the object that will be paired with the first one\nyou selected and press the button.");
         }
     }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+        resetViewPoint();
+    }
 }
 
 void TransformEditingMode::analogsUpdated()
@@ -242,6 +246,12 @@ void TransformEditingMode::clearStatus()
     objectsSelected.clear();
     positionsSelected.clear();
     operationState = NO_OPERATION;
+}
+
+void TransformEditingMode::doUpdatesForFrame()
+{
+	ObjectGrabMode::doUpdatesForFrame();
+	useLeftJoystickToRotateViewPoint();
 }
 
 void TransformEditingMode::setTransformBetweenActiveObjects(

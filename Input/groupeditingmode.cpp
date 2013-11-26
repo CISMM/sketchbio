@@ -130,6 +130,10 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
         }
         emit newDirectionsString(" ");
     }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+        resetViewPoint();
+    }
 }
 
 void GroupEditingMode::analogsUpdated()
@@ -178,4 +182,5 @@ void GroupEditingMode::doUpdatesForFrame()
         emit newDirectionsString("Select the group with the left hand\n"
                                  "and the object to add/remove with the right hand");
     }
+	useLeftJoystickToRotateViewPoint();
 }

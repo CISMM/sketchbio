@@ -179,6 +179,7 @@ void ObjectGrabMode::clearStatus()
   lObj = rObj = NULL;
   project->getWorldManager()->clearLeftHandSprings();
   project->getWorldManager()->clearRightHandSprings();
+  resetViewPoint();
 }
 
 void ObjectGrabMode::analogsUpdated()

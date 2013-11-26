@@ -45,6 +45,8 @@ public:
     // uses the left joystick position to apply a rotation to the camera independent
     // of the world to tracker transformation
     void useLeftJoystickToRotateViewPoint();
+	// resets the camera to its original viewpoint
+	void resetViewPoint();
     // uses the right joystick left/right to move forward/backward in animation time
     // this internally emits viewTimeChanged so there is no need to re-emit it after
     // the call to this
@@ -72,6 +74,10 @@ protected:
     bool const * const isButtonDown;
     double const * const analogStatus;
     SketchProject *project;
+
+	//for rotation of the view
+	double x_degrees;
+	double y_degrees;
 };
 
 #endif // HYDRAINPUTMODE_H

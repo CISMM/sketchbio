@@ -145,6 +145,10 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
         addXMLUndoState();
         emit newDirectionsString(" ");
     }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+        resetViewPoint();
+    }
 }
 
 void SpringEditingMode::analogsUpdated()
@@ -256,6 +260,7 @@ void SpringEditingMode::doUpdatesForFrame()
         if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
             project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
     }
+	useLeftJoystickToRotateViewPoint();
 }
 
 void SpringEditingMode::clearStatus()

@@ -13,7 +13,9 @@
 HydraInputMode::HydraInputMode(SketchProject *proj, const bool *const b, const double *const a) :
     isButtonDown(b),
     analogStatus(a),
-    project(proj)
+    project(proj),
+	x_degrees(0),
+	y_degrees(0)
 {
 }
 
@@ -33,11 +35,20 @@ void HydraInputMode::useLeftJoystickToRotateViewPoint()
     {
         return;
     }
-    // maybe disable this sometimes?
-    double xdegrees, ydegrees;
-    xdegrees = 90.0 * analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)];
-    ydegrees = 180.0 * analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)];
-    project->getTransformManager()->setRoomEyeOrientation(xdegrees, ydegrees);
+	if (abs(analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)]) > .3) {
+		x_degrees += analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)];
+	}
+    if (abs(analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)]) > .3) {
+		y_degrees += analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)];
+	}
+    project->getTransformManager()->setRoomEyeOrientation(x_degrees, y_degrees);
+}
+
+void HydraInputMode::resetViewPoint()
+{
+	x_degrees = 0;
+	y_degrees = 0;
+	project->getTransformManager()->setRoomEyeOrientation(x_degrees, y_degrees);
 }
 
 void HydraInputMode::useRightJoystickToChangeViewTime()

@@ -159,6 +159,10 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
             world->showInvisibleObjects();
         emit newDirectionsString(" ");
     }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+        resetViewPoint();
+    }
 }
 
 void ColorEditingMode::doUpdatesForFrame() {
@@ -209,6 +213,7 @@ void ColorEditingMode::doUpdatesForFrame() {
 				project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
 		}
 	}
+	useLeftJoystickToRotateViewPoint();
 }
 
 void ColorEditingMode::analogsUpdated()
