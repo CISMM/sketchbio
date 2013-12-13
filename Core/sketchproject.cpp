@@ -560,6 +560,12 @@ void SketchProject::startAnimation()
     world->clearRightHandSprings();
     world->hideInvisibleObjects();
     setShowShadows(false);
+
+	QListIterator<SketchObject *> it = world->getObjectIterator();
+	while(it.hasNext()) {
+		SketchObject* obj = it.next();
+		obj->computeSplines();
+	}
 	time.start();
 }
 
@@ -583,9 +589,10 @@ bool SketchProject::isShowingAnimation()
 
 bool SketchProject::goToAnimationTime(double time)
 {
-    if (!isDoingAnimation) {
+	if (!isDoingAnimation) {
         startAnimation();
     }
+
     timeInAnimation = time;
     return world->setAnimationTime(time);
 }

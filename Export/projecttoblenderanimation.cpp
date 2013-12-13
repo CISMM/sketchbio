@@ -81,7 +81,7 @@ bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProje
     file.write("myObjects = list()\n");
     QHash< SketchObject*, int > objectIdxs;
     QHash< Connector*, int > connectorIdxs;
-    success &= writeCreateObjects(file,objectIdxs, proj);
+	success &= writeCreateObjects(file,objectIdxs, proj);
     success &= writeCreateCylinders(file,connectorIdxs,proj);
     success &= writeKeyframes(file,objectIdxs, connectorIdxs, proj);
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
@@ -265,7 +265,7 @@ bool ProjectToBlenderAnimation::writeCreateObjects(
 {
     QHash< ModelColorMapKey, int > modelIdxs;
     proj->goToAnimationTime(0.0);
-    WorldManager *world = proj->getWorldManager();
+	WorldManager *world = proj->getWorldManager();
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
     int objectsLen = 0;

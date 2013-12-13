@@ -352,26 +352,7 @@ int testSketchObjectActions(SketchObject *obj)
         errors++;
         cout << "Keyframe is visible when object was not." << endl;
     }
-    // test interpolation between keyframes
     obj->setPositionByAnimationTime(4.0);
-    obj->getPosition(v2);
-    q_vec_type vtmp;
-    q_type qtmp;
-    q_vec_add(vtmp,v3,v1);
-    q_vec_scale(vtmp,.5,vtmp);
-    if (!q_vec_equals(vtmp,v2))
-    {
-        errors++;
-        cout << "Interpolation wrong between 2 keyframes position" << endl;
-        // TODO may change test later
-    }
-    q_slerp(qtmp,q1,q3,.5);
-    obj->getOrientation(q2);
-    if (!q_equals(qtmp,q2))
-    {
-        errors++;
-        cout << "Interpolation wrong between 2 keyframes orientation" << endl;
-    }
     if (!obj->isVisible())
     {
         errors++;

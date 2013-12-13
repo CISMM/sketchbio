@@ -5,6 +5,8 @@
 #include <vtkActor.h>
 #include <vtkProperty.h>
 #include <vtkColorTransferFunction.h>
+#include <vtkCardinalSpline.h>
+#include <vtkMath.h>
 
 #include <QDebug>
 
@@ -445,6 +447,9 @@ void SketchObject::addKeyframeForCurrentLocation(double t)
     {
         it.next()->objectKeyframed(this,t);
     }
+	if (keyframes->size() > 1) {
+		computeSplines();
+	}
 }
 
 //#########################################################################
@@ -459,6 +464,9 @@ void SketchObject::insertKeyframe(double time, const Keyframe& keyframe)
         keyframes.reset(new QMap< double, Keyframe >());
     }
     keyframes->insert(time,keyframe);
+	if (keyframes->size() > 1) {
+		computeSplines();
+	}
 }
 
 //#########################################################################
@@ -519,6 +527,7 @@ void SketchObject::removeKeyframeForTime(double t)
     {
         keyframes->remove(t);
     }
+	computeSplines();
 }
 
 //#########################################################################
@@ -570,6 +579,7 @@ void SketchObject::setPositionByAnimationTime(double t)
         Keyframe f = it.next().value();
         f.getPosition(position);
         f.getOrientation(orientation);
+
         // set color map stuff here
         setColorMapType(f.getColorMapType());
         setArrayToColorBy(f.getArrayToColorBy());
@@ -586,18 +596,23 @@ void SketchObject::setPositionByAnimationTime(double t)
         double diff1 = next - last;
         double diff2 = t - last;
         double ratio = diff2 / diff1;
-        // - being lazy and just linearly interpolating... really should use a spline for pos
-        //   but too much effort until we are asked for it
-        q_vec_type pos1, pos2;
-        q_type or1, or2;
-        f1.getPosition(pos1);
-        f1.getOrientation(or1);
-        f2.getPosition(pos2);
-        f2.getOrientation(or2);
-        q_vec_subtract(pos2,pos2,pos1);
-        q_vec_scale(pos2,ratio,pos2);
-        q_vec_add(position,pos1,pos2); // set position to linearly interpolated location between points
-        q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
+        // - being lazy and just linearly interpolating... 
+        //q_type or1, or2;
+        //f1.getOrientation(or1);
+        //f2.getOrientation(or2);
+        //q_slerp(orientation,or1,or2,ratio); // set orientation to SLERP quaternion
+
+		//spline interpolation for position
+		q_vec_type pos;
+		pos[0] = xspline->Evaluate(t);
+		pos[1] = yspline->Evaluate(t);
+		pos[2] = zspline->Evaluate(t);
+		setPosition(pos);
+
+		q_type or;
+		q_from_euler(or, yaw_spline->Evaluate(t), pitch_spline->Evaluate(t), roll_spline->Evaluate(t));
+		setOrientation(or);
+
         if (numInstances() == 1)
         {
             // set color map stuff here
@@ -647,6 +662,64 @@ void SketchObject::setPositionByAnimationTime(double t)
             itr.next()->setPositionByAnimationTime(t);
         }
     }
+}
+
+//#########################################################################
+void SketchObject::computeSplines()
+{
+	double pi = 4*atan(1.0);
+	xspline = vtkSmartPointer< vtkCardinalSpline >::New();
+	yspline = vtkSmartPointer< vtkCardinalSpline >::New();
+	zspline = vtkSmartPointer< vtkCardinalSpline >::New();
+	yaw_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+	pitch_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+	roll_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+
+	if (hasKeyframes()) {
+		QMapIterator< double, Keyframe > it(*keyframes.data());
+		q_vec_type last_or;
+		while (it.hasNext())
+		{
+			double next = it.next().key();
+			Keyframe f = keyframes->value(next);
+			q_vec_type pos;
+			q_type or;
+			f.getPosition(pos);
+			f.getOrientation(or);
+			q_vec_type euler;
+			q_to_euler(euler, or);
+			xspline->AddPoint(next, pos[0]);
+			yspline->AddPoint(next, pos[1]);
+			zspline->AddPoint(next, pos[2]);
+
+			//Make sure we choose the shortest path instead of rotating around the long way
+			if (yaw_spline->GetNumberOfPoints() > 0) {
+				for (int i = 0; i < 3; i++) {
+					while (abs(euler[i] - last_or[i]) > pi) {
+						if (euler[i] - last_or[i] > pi) {
+							euler[i] -= 2*pi;
+						}
+						else if (euler[i] - last_or[i] < -pi) {
+							euler[i] += 2*pi;
+						}
+					}
+				}
+			}
+
+			yaw_spline->AddPoint(next, euler[0]);
+			pitch_spline->AddPoint(next, euler[1]);
+			roll_spline->AddPoint(next, euler[2]);
+
+			q_vec_copy(last_or, euler);
+		}
+
+		xspline->Compute();
+		yspline->Compute();
+		zspline->Compute();
+		yaw_spline->Compute();
+		pitch_spline->Compute();
+		roll_spline->Compute();
+	}
 }
 
 //#########################################################################

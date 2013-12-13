@@ -283,7 +283,7 @@ void WorldManager::stepPhysics(double dt) {
 //##################################################################################################
 //##################################################################################################
 bool WorldManager::setAnimationTime(double t) {
-    bool isDone = true;
+	bool isDone = true;
     for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
         bool wasVisible = obj->isVisible();

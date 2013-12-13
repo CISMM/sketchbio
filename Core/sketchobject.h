@@ -11,6 +11,7 @@ class vtkColorTransferFunction;
 class vtkTransform;
 class vtkLinearTransform;
 class vtkActor;
+class vtkCardinalSpline;
 
 #include <QList>
 #include <QScopedPointer>
@@ -181,6 +182,8 @@ public:
     // sets the position and other data based on this object's keyframes to the correct
     // state for the given time in the animation
     void setPositionByAnimationTime(double t);
+	// Computes interpolating splines for animation
+	void computeSplines();
     // visibility methods
     void setIsVisible(bool isVisible);
     static void setIsVisibleRecursive(SketchObject *obj, bool isVisible);
@@ -228,6 +231,7 @@ private: // fields
     // there are no keyframes.  Otherwise, the map it points to is a mapping from time to frame where frame
     // contains all the information about what happens at that time (position, orientation, visibility, etc.)
     QScopedPointer< QMap< double, Keyframe > > keyframes;
+	vtkSmartPointer< vtkCardinalSpline > xspline, yspline, zspline, yaw_spline, pitch_spline, roll_spline;
 };
 
 
