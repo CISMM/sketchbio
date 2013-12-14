@@ -3,14 +3,12 @@
 
 #include <quat.h>
 
-#include <vtkSmartPointer.h>
-class vtkAlgorithm;
 class vtkPolyDataAlgorithm;
 
 class QString;
 class QDir;
 #include <QVector>
-#include <QHash>
+#include <QObject>
 
 class PQP_Model;
 
@@ -56,6 +54,10 @@ public:
     // this is raw data with surface and atoms (if available)
     vtkPolyDataAlgorithm *getVTKSource(int conformationNum);
     // gets the vtk "source" for the model's surface data
+    // if the surface data for the conformation is switched out within the
+    // model, the external pipeline need not know of it since the
+    // filter returned by this method will still be the external-facing part
+    // of the new pipeline
     vtkPolyDataAlgorithm *getVTKSurface(int conformationNum);
     // gets the atom data for the model and conformation (if available).
     // this method willl return NULL if no data is available
@@ -105,6 +107,7 @@ public slots:
     void setResolutionForConformation(int conformation,
                                       ModelResolution::ResolutionType resolution);
 private:
+    struct ConformationData;
     // sets the resolution level based on the number of uses of the given
     // conformation
     void setResolutionLevelByUses(int conformation);
@@ -114,27 +117,7 @@ private:
     //       without looking up a new model.
     // the number of conformations
     int numConformations;
-    // the resolution, indexed by the conformation
-    QVector< ModelResolution::ResolutionType > resolutionLevelForConf;
-    // the current data in use for each conformation (raw datafile read result)
-    QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > modelDataForConf;
-    // these are identity filters that can be connected to later
-    // parts of the pipeline while their inputs are switched.  The inputs
-    // are the surface at various resolutions, which may be dynamically switched
-    QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > surfaceDataForConf;
-    // this is the atom and bond data for the model (if available
-    QVector< vtkSmartPointer< vtkPolyDataAlgorithm > > atomDataForConf;
-    // the collision model, indexed by conformation
-    QVector< PQP_Model * > collisionModelForConf;
-    // the number of uses of the model, indexed by conformation
-    QVector< int > useCount;
-    // the source of the data (pdb id/file, etc)  -- not the surface but what made it
-    // unless the object is nothing but a surface with no underlying meaning, then this
-    // is the file that defines it -- again indexed by conformation
-    QVector< QString > source;
-    // the file names of the structure data, hashed by a combination of
-    // conformation number and resolution
-    QHash< QPair< int, ModelResolution::ResolutionType >, QString > fileNames;
+    QVector< ConformationData > conformations;
     // mass, but save the trouble of inverting it to divide
     double invMass;
     // moment of inerita, but save the trouble of inverting it to divide

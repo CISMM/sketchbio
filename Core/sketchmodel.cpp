@@ -2,25 +2,102 @@
 
 #include <iostream>
 
+#include <vtkSmartPointer.h>
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 
 #include <QString>
+#include <QHash>
+#include <QSharedPointer>
 
 #include <PQP.h>
 
 #include "modelutilities.h"
 
+struct SketchModel::ConformationData
+{
+public:
+    // The resolution level in use for the conformation
+    ModelResolution::ResolutionType level;
+    // The data read in for the conformation
+    vtkSmartPointer< vtkPolyDataAlgorithm > data;
+    // The surface data for the conformation
+    // Note: this filter is an identity transform that will have its input
+    // changed instead of setting a new filter.  This allows getSurface() to
+    // always return the same filter
+    vtkSmartPointer< vtkPolyDataAlgorithm > surface;
+    // The atoms data for the conformation
+    vtkSmartPointer< vtkPolyDataAlgorithm > atoms;
+    // The collision model for the conformation
+    QSharedPointer< PQP_Model > collisionModel;
+    // The source string for the conformation.  This is not the data file but
+    // what was used to generate it such as a pdb id, unless there is nothing
+    // to define it but the data file, in which case this will be that filename
+    QString src;
+    // The file names for all the resolutions for the conformation
+    QHash< ModelResolution::ResolutionType, QString > filenames;
+    // The count of uses of the conformation
+    int useCount;
+
+    ConformationData() :
+        level(ModelResolution::SIMPLIFIED_FULL_RESOLUTION),
+        collisionModel(new PQP_Model()),
+        useCount(0)
+    {
+        vtkSmartPointer< vtkTransformPolyDataFilter > id =
+                vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+        vtkSmartPointer< vtkTransform > trans =
+                vtkSmartPointer< vtkTransform >::New();
+        trans->Identity();
+        trans->Update();
+        id->SetTransform(trans);
+        surface = id;
+    }
+
+    ConformationData(const ConformationData& other) :
+        level(other.level),
+        data(other.data),
+        surface(other.surface),
+        atoms(other.atoms),
+        collisionModel(other.collisionModel),
+        src(other.src),
+        filenames(other.filenames),
+        useCount(other.useCount)
+    {}
+
+    ConformationData& operator=(const ConformationData& other)
+    {
+        if (&other == this)
+            return *this;
+        level = other.level;
+        data = other.data;
+        surface = other.surface;
+        atoms = other.atoms;
+        collisionModel = other.collisionModel;
+        src = other.src;
+        filenames = other.filenames;
+        useCount = other.useCount;
+        return *this;
+    }
+    void updateData(vtkPolyDataAlgorithm* dataSource)
+    {
+        data = dataSource;
+        vtkSmartPointer< vtkPolyDataAlgorithm > surf =
+                vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
+                    ModelUtilities::modelSurfaceFrom(dataSource));
+        surface->SetInputConnection(surf->GetOutputPort());
+        surface->Update();
+        atoms.TakeReference(ModelUtilities::modelAtomsFrom(dataSource));
+        ModelUtilities::makePQP_Model(collisionModel.data(),
+                                      surface->GetOutput());
+    }
+};
+
 SketchModel::SketchModel(double iMass, double iMoment, QObject *parent) :
     QObject(parent),
     numConformations(0),
-    resolutionLevelForConf(),
-    modelDataForConf(),
-    collisionModelForConf(),
-    useCount(),
-    source(),
-    fileNames(),
+    conformations(),
     invMass(iMass),
     invMomentOfInertia(iMoment)
 {
@@ -28,8 +105,6 @@ SketchModel::SketchModel(double iMass, double iMoment, QObject *parent) :
 
 SketchModel::~SketchModel()
 {
-    qDeleteAll(collisionModelForConf);
-    collisionModelForConf.clear();
 }
 
 int SketchModel::getNumberOfConformations() const
@@ -39,52 +114,49 @@ int SketchModel::getNumberOfConformations() const
 
 ModelResolution::ResolutionType SketchModel::getResolutionLevel(int conformationNum) const
 {
-    return resolutionLevelForConf[conformationNum];
+    return conformations[conformationNum].level;
 }
 
 vtkPolyDataAlgorithm *SketchModel::getVTKSource(int conformationNum)
 {
-    return modelDataForConf[conformationNum];
+    return conformations[conformationNum].data;
 }
 
 vtkPolyDataAlgorithm *SketchModel::getVTKSurface(int conformationNum)
 {
-    return surfaceDataForConf[conformationNum];
+    return conformations[conformationNum].surface;
 }
 
 vtkPolyDataAlgorithm *SketchModel::getAtomData(int conformation)
 {
-    return atomDataForConf[conformation];
+    return conformations[conformation].atoms;
 }
 
 PQP_Model *SketchModel::getCollisionModel(int conformationNum)
 {
-    return collisionModelForConf[conformationNum];
+    return conformations[conformationNum].collisionModel.data();
 }
 
 int SketchModel::getNumberOfUses(int conformation) const
 {
-    return useCount[conformation];
+    return conformations[conformation].useCount;
 }
 
 bool SketchModel::hasFileNameFor(int conformation,
                                  ModelResolution::ResolutionType resolution) const
 {
-    return fileNames.contains(QPair< int,
-                              ModelResolution::ResolutionType >(conformation,
-                                                                resolution));
+    return conformations[conformation].filenames.contains(resolution);
 }
 
 QString SketchModel::getFileNameFor(int conformation,
                                     ModelResolution::ResolutionType resolution) const
 {
-    return fileNames.value(QPair< int,
-                           ModelResolution::ResolutionType >(conformation,resolution));
+    return conformations[conformation].filenames.value(resolution);
 }
 
 const QString &SketchModel::getSource(int conformation) const
 {
-    return source[conformation];
+    return conformations[conformation].src;
 }
 
 double SketchModel::getInverseMass() const
@@ -112,13 +184,10 @@ inline void pqpMatrixToQuat(q_type quat, const PQP_REAL mat[3][3])
 
 int SketchModel::addConformation(const QString &src, const QString &fullResolutionFileName)
 {
-    useCount.append(0);
-    source.append(src);
-    fileNames.insert(
-                QPair< int, ModelResolution::ResolutionType >(
-                    numConformations,ModelResolution::FULL_RESOLUTION),
-                fullResolutionFileName);
-    resolutionLevelForConf.append(ModelResolution::FULL_RESOLUTION);
+    ConformationData newConf;
+    newConf.src = src;
+    newConf.filenames.insert(ModelResolution::FULL_RESOLUTION,fullResolutionFileName);
+    newConf.level = ModelResolution::FULL_RESOLUTION;
     vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
             vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
                 ModelUtilities::read(fullResolutionFileName));
@@ -132,64 +201,40 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     transform->Identity();
     filter->SetTransform(transform);
     filter->Update();
-    modelDataForConf.append(filter);
-    vtkSmartPointer< vtkPolyDataAlgorithm > surface =
-            vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
-                ModelUtilities::modelSurfaceFrom(dataSource));
-    vtkSmartPointer< vtkTransformPolyDataFilter > ifilter =
-            vtkSmartPointer< vtkTransformPolyDataFilter >::New();
-    ifilter->SetInputConnection(surface->GetOutputPort());
-    vtkSmartPointer< vtkTransform > itransform =
-            vtkSmartPointer< vtkTransform >::New();
-    itransform->Identity();
-    ifilter->SetTransform(transform);
-    ifilter->Update();
-    surfaceDataForConf.append(ifilter);
-    atomDataForConf.append(vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
-                               ModelUtilities::modelAtomsFrom(dataSource)));
-    QScopedPointer<PQP_Model> collisionModel(new PQP_Model());
+    newConf.updateData(filter);
     // populate the PQP collision detection model
-    ModelUtilities::makePQP_Model(collisionModel.data(),
-                                  surfaceDataForConf.last()->GetOutput());
+    PQP_Model* collisionModel = newConf.collisionModel.data();
     // get the orientation of the model
-    if (collisionModel.data()->num_tris < 5000)
+    if (collisionModel->num_tris < 5000)
     {
-        fileNames.insert(
-                    QPair< int, ModelResolution::ResolutionType >(
-                        numConformations,ModelResolution::SIMPLIFIED_FULL_RESOLUTION),
-                    fullResolutionFileName);
-        fileNames.insert(
-                    QPair< int, ModelResolution::ResolutionType >(
-                        numConformations,ModelResolution::SIMPLIFIED_5000),
-                    fullResolutionFileName);
+        newConf.filenames.insert(ModelResolution::SIMPLIFIED_FULL_RESOLUTION,
+                                 fullResolutionFileName);
+        newConf.filenames.insert(ModelResolution::SIMPLIFIED_5000,
+                                 fullResolutionFileName);
     }
-    if (collisionModel.data()->num_tris < 2000)
+    if (collisionModel->num_tris < 2000)
     {
-        fileNames.insert(
-                    QPair< int, ModelResolution::ResolutionType >(
-                        numConformations,ModelResolution::SIMPLIFIED_2000),
-                    fullResolutionFileName);
+        newConf.filenames.insert(ModelResolution::SIMPLIFIED_2000,
+                                 fullResolutionFileName);
     }
-    if (collisionModel.data()->num_tris < 1000)
+    if (collisionModel->num_tris < 1000)
     {
-        fileNames.insert(
-                    QPair< int, ModelResolution::ResolutionType >(
-                        numConformations,ModelResolution::SIMPLIFIED_1000),
-                    fullResolutionFileName);
+        newConf.filenames.insert(ModelResolution::SIMPLIFIED_1000,
+                                 fullResolutionFileName);
     }
-    collisionModelForConf.append(collisionModel.take());
+    conformations.append(newConf);
     return numConformations++;
 }
 
 void SketchModel::incrementUses(int conformation)
 {
-    useCount[conformation]++;
+    conformations[conformation].useCount++;
     setResolutionLevelByUses(conformation);
 }
 
 void SketchModel::decrementUses(int conformation)
 {
-    useCount[conformation]--;
+    conformations[conformation].useCount--;
 }
 
 void SketchModel::addSurfaceFileForResolution(
@@ -197,49 +242,31 @@ void SketchModel::addSurfaceFileForResolution(
         ModelResolution::ResolutionType resolution,
         const QString &filename)
 {
-    fileNames.insert(
-                QPair< int, ModelResolution::ResolutionType >(
-                    conformation, resolution),
-                filename);
+    conformations[conformation].filenames.insert(resolution,filename);
     setResolutionLevelByUses(conformation);
 }
 
 void SketchModel::setResolutionForConformation(
         int conformation, ModelResolution::ResolutionType resolution)
 {
-    QPair< int, ModelResolution::ResolutionType > key(conformation, resolution);
-    QPair< int, ModelResolution::ResolutionType > current(
-                conformation, resolutionLevelForConf[conformation]);
-    if (fileNames.contains(key)
-            && resolutionLevelForConf[conformation] != resolution
-            && fileNames.value(key) != fileNames.value(current))
+    ConformationData& conf = conformations[conformation];
+    if (conf.filenames.contains(resolution) && conf.level != resolution
+            && conf.filenames.value(conf.level) != conf.filenames.value(resolution))
     {
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
                 vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
-                    ModelUtilities::read(fileNames.value(key)));
-        modelDataForConf[conformation]->SetInputConnection(
-                    dataSource->GetOutputPort());
-        modelDataForConf[conformation]->Update();
-        vtkSmartPointer< vtkPolyDataAlgorithm > surface =
-                vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
-                    ModelUtilities::modelSurfaceFrom(dataSource));
-        vtkSmartPointer< vtkPolyDataAlgorithm > atoms =
-                vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
-                    ModelUtilities::modelAtomsFrom(dataSource));
-        surfaceDataForConf[conformation]->SetInputConnection(
-                    surface->GetOutputPort());
-        atomDataForConf[conformation] = atoms;
-        resolutionLevelForConf[conformation] = resolution;
-        ModelUtilities::makePQP_Model(collisionModelForConf[conformation],
-                                      surfaceDataForConf[conformation]->GetOutput());
+                    ModelUtilities::read(conf.filenames.value(resolution)));
+        conf.updateData(dataSource);
+        conf.level = resolution;
     }
 }
 
 void SketchModel::setResolutionLevelByUses(int conformation)
 {
-    int uses = useCount[conformation];
+    ConformationData& conf = conformations[conformation];
+    int uses = conf.useCount;
     int res;
-    switch (resolutionLevelForConf[conformation])
+    switch (conf.level)
     {
     case ModelResolution::SIMPLIFIED_1000:
         res = 1000;
