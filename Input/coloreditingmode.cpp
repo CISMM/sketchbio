@@ -1,5 +1,7 @@
 #include "coloreditingmode.h"
 
+#include <limits>
+
 #include <connector.h>
 #include <sketchioconstants.h>
 #include <sketchobject.h>
