@@ -64,7 +64,9 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
     updateColorMap();
     solidMapper->Update();
-    actor->SetMapper(solidMapper);
+//    actor->SetMapper(solidMapper);
+    actor->SetMapper(model->getSolidSurfaceMapper(conformation));
+    actor->SetUserTransform(localTransform);
     model->incrementUses(conformation);
 }
 
@@ -224,7 +226,8 @@ void ModelInstance::updateColorMap()
             vtkSmartPointer< vtkColorTransferFunction >::Take(
                 ColorMapType::getColorMap(colorMap,range[0],range[1])
             );
-    if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
+    if (!ColorMapType::isSolidColor(colorMap,arrayToColorBy) &&
+            pointData->HasArray(arrayToColorBy.toStdString().c_str()))
     {
         solidMapper->ScalarVisibilityOn();
         solidMapper->SetColorModeToMapScalars();
@@ -244,22 +247,5 @@ void ModelInstance::updateColorMap()
 //#########################################################################
 void ModelInstance::setSolidColor(double color[])
 {
-    vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();
-    if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
-    {
-        vtkSmartPointer< vtkColorTransferFunction > colorFunc =
-                vtkSmartPointer< vtkColorTransferFunction >::New();
-        colorFunc->SetScaleToLinear();
-        colorFunc->AddRGBPoint(0.0,color[0],color[1],color[2]);
-        solidMapper->ScalarVisibilityOn();
-        solidMapper->SetColorModeToMapScalars();
-        solidMapper->SetScalarModeToUsePointFieldData();
-        solidMapper->SelectColorArray(arrayToColorBy.toStdString().c_str());
-        solidMapper->SetLookupTable(colorFunc);
-        solidMapper->Update();
-    }
-    else
-    {
-        actor->GetProperty()->SetColor(color);
-    }
+    actor->GetProperty()->SetColor(color);
 }

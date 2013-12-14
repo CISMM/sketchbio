@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <vtkSmartPointer.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
@@ -18,6 +19,10 @@
 struct SketchModel::ConformationData
 {
 public:
+    // The source string for the conformation.  This is not the data file but
+    // what was used to generate it such as a pdb id, unless there is nothing
+    // to define it but the data file, in which case this will be that filename
+    QString src;
     // The resolution level in use for the conformation
     ModelResolution::ResolutionType level;
     // The data read in for the conformation
@@ -29,17 +34,16 @@ public:
     vtkSmartPointer< vtkPolyDataAlgorithm > surface;
     // The atoms data for the conformation
     vtkSmartPointer< vtkPolyDataAlgorithm > atoms;
+    // The mapper for solid-colored objects with this model and conformation
+    vtkSmartPointer< vtkPolyDataMapper > solidMapper;
     // The collision model for the conformation
     QSharedPointer< PQP_Model > collisionModel;
-    // The source string for the conformation.  This is not the data file but
-    // what was used to generate it such as a pdb id, unless there is nothing
-    // to define it but the data file, in which case this will be that filename
-    QString src;
     // The file names for all the resolutions for the conformation
     QHash< ModelResolution::ResolutionType, QString > filenames;
     // The count of uses of the conformation
     int useCount;
 
+    //#########################################################################
     ConformationData() :
         level(ModelResolution::SIMPLIFIED_FULL_RESOLUTION),
         collisionModel(new PQP_Model()),
@@ -53,15 +57,18 @@ public:
         trans->Update();
         id->SetTransform(trans);
         surface = id;
+        solidMapper.TakeReference(vtkPolyDataMapper::New());
+        solidMapper->SetInputConnection(surface->GetOutputPort());
     }
 
     ConformationData(const ConformationData& other) :
+        src(other.src),
         level(other.level),
         data(other.data),
         surface(other.surface),
         atoms(other.atoms),
+        solidMapper(other.solidMapper),
         collisionModel(other.collisionModel),
-        src(other.src),
         filenames(other.filenames),
         useCount(other.useCount)
     {}
@@ -70,12 +77,13 @@ public:
     {
         if (&other == this)
             return *this;
+        src = other.src;
         level = other.level;
         data = other.data;
         surface = other.surface;
         atoms = other.atoms;
+        solidMapper = other.solidMapper;
         collisionModel = other.collisionModel;
-        src = other.src;
         filenames = other.filenames;
         useCount = other.useCount;
         return *this;
@@ -88,6 +96,7 @@ public:
                     ModelUtilities::modelSurfaceFrom(dataSource));
         surface->SetInputConnection(surf->GetOutputPort());
         surface->Update();
+        solidMapper->Update();
         atoms.TakeReference(ModelUtilities::modelAtomsFrom(dataSource));
         ModelUtilities::makePQP_Model(collisionModel.data(),
                                       surface->GetOutput());
@@ -125,6 +134,11 @@ vtkPolyDataAlgorithm *SketchModel::getVTKSource(int conformationNum)
 vtkPolyDataAlgorithm *SketchModel::getVTKSurface(int conformationNum)
 {
     return conformations[conformationNum].surface;
+}
+
+vtkMapper* SketchModel::getSolidSurfaceMapper(int conformationNum)
+{
+    return conformations[conformationNum].solidMapper;
 }
 
 vtkPolyDataAlgorithm *SketchModel::getAtomData(int conformation)

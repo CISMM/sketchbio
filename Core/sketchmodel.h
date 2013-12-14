@@ -4,6 +4,7 @@
 #include <quat.h>
 
 class vtkPolyDataAlgorithm;
+class vtkMapper;
 
 class QString;
 class QDir;
@@ -59,6 +60,7 @@ public:
     // filter returned by this method will still be the external-facing part
     // of the new pipeline
     vtkPolyDataAlgorithm *getVTKSurface(int conformationNum);
+    vtkMapper* getSolidSurfaceMapper(int conformationNum);
     // gets the atom data for the model and conformation (if available).
     // this method willl return NULL if no data is available
     vtkPolyDataAlgorithm *getAtomData(int conformation);
