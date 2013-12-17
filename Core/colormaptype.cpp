@@ -7,6 +7,7 @@
 
 namespace ColorMapType
 {
+ColorMap defaultCMap(SOLID_COLOR_RED,"modelNum");
 
 const char *stringFromColorMap(
         Type cmap)
@@ -80,14 +81,13 @@ Type colorMapFromString(const char *str)
     throw "Unknown color map.";
 }
 
-vtkColorTransferFunction *getColorMap(
-        Type cmapType,
+vtkColorTransferFunction *ColorMap::getColorMap(
         double low,
-        double high)
+        double high) const
 {
     vtkColorTransferFunction *ctf = vtkColorTransferFunction::New();
     ctf->SetScaleToLinear();
-    switch (cmapType)
+    switch (first)
     {
     case SOLID_COLOR_RED:
         ctf->AddRGBPoint(low,1.0,0.7,0.7);
@@ -137,15 +137,15 @@ vtkColorTransferFunction *getColorMap(
     return ctf;
 }
 
-bool isSolidColor(ColorMapType::Type cMap, const QString& arrayName)
+bool ColorMap::isSolidColor() const
 {
     // this array means solid color whatever the color map
-    if (arrayName == "modelNum")
+    if (second == "modelNum")
     {
         return true;
     }
     // test if the color map is solid color
-    switch (cMap)
+    switch (first)
     {
     case SOLID_COLOR_RED:
     case SOLID_COLOR_GREEN:

@@ -76,9 +76,10 @@ Connector::LineVisibilityData::LineVisibilityData(q_vec_type p1, q_vec_type p2, 
 void Connector::LineVisibilityData::updateColorMap(ColorMapType::Type cmap)
 {
     double range[2] = { 0.0, 1.0};
+    ColorMapType::ColorMap map(cmap,"modelNum");
     vtkSmartPointer< vtkColorTransferFunction > colorFunc =
         vtkSmartPointer< vtkColorTransferFunction >::Take(
-            ColorMapType::getColorMap(cmap,range[0],range[1])
+            map.getColorMap(range[0],range[1])
         );
     double rgb[3];
     colorFunc->GetColor(range[1],rgb);

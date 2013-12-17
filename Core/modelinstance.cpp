@@ -30,8 +30,6 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     SketchObject(),
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
-    colorMap(ColorMapType::SOLID_COLOR_RED),
-    arrayToColorBy("modelNum"),
     conformation(confNum),
     modelTransformed(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
     orientedBB(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
@@ -92,32 +90,6 @@ SketchModel *ModelInstance::getModel()
 const SketchModel *ModelInstance::getModel() const
 {
     return model;
-}
-
-//#########################################################################
-ColorMapType::Type ModelInstance::getColorMapType() const
-{
-    return colorMap;
-}
-
-//#########################################################################
-void ModelInstance::setColorMapType(ColorMapType::Type cmap)
-{
-    colorMap = cmap;
-    updateColorMap();
-}
-
-//#########################################################################
-QString ModelInstance::getArrayToColorBy() const
-{
-    return arrayToColorBy;
-}
-
-//#########################################################################
-void ModelInstance::setArrayToColorBy(const QString &arrayName)
-{
-    arrayToColorBy = arrayName;
-    updateColorMap();
 }
 
 //#########################################################################
@@ -211,28 +183,29 @@ SketchObject* ModelInstance::deepCopy()
 //#########################################################################
 void ModelInstance::updateColorMap()
 {
+    const ColorMapType::ColorMap& cmap = getColorMap();
     vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();
     double range[2] = { 0.0, 1.0};
-    if (pointData->HasArray(arrayToColorBy.toStdString().c_str()))
+    if (pointData->HasArray(cmap.second.toStdString().c_str()))
     {
-        pointData->GetArray(arrayToColorBy.toStdString().c_str())->GetRange(range);
+        pointData->GetArray(cmap.second.toStdString().c_str())->GetRange(range);
     }
-    if (arrayToColorBy == "charge")
+    if (cmap.second == "charge")
     {
         range[0] =  10.0;
         range[1] = -10.0;
     }
     vtkSmartPointer< vtkColorTransferFunction > colorFunc =
             vtkSmartPointer< vtkColorTransferFunction >::Take(
-                ColorMapType::getColorMap(colorMap,range[0],range[1])
+                cmap.getColorMap(range[0],range[1])
             );
-    if (!ColorMapType::isSolidColor(colorMap,arrayToColorBy) &&
-            pointData->HasArray(arrayToColorBy.toStdString().c_str()))
+    if (!cmap.isSolidColor() &&
+            pointData->HasArray(cmap.second.toStdString().c_str()))
     {
         solidMapper->ScalarVisibilityOn();
         solidMapper->SetColorModeToMapScalars();
         solidMapper->SetScalarModeToUsePointFieldData();
-        solidMapper->SelectColorArray(arrayToColorBy.toStdString().c_str());
+        solidMapper->SelectColorArray(cmap.second.toStdString().c_str());
         solidMapper->SetLookupTable(colorFunc);
         solidMapper->Update();
     }

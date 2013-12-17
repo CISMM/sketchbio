@@ -1,7 +1,7 @@
 #ifndef COLORMAPTYPE_H_
 #define COLORMAPTYPE_H_
 
-class QString;
+#include <QString>
 
 class vtkColorTransferFunction;
 /*
@@ -27,6 +27,17 @@ namespace ColorMapType {
         DIM_SOLID_COLOR_CYAN,
         BLUE_TO_RED
     };
+
+    class ColorMap : public std::pair< Type, QString >
+    {
+    public:
+        ColorMap( Type t, const QString& s) : std::pair< Type, QString >(t,s)
+        {
+        }
+
+        vtkColorTransferFunction* getColorMap(double low, double high) const;
+        bool isSolidColor() const;
+    };
     // gets the color map corresponding to one of the strings
     // returned by stringFromColorMap
     Type colorMapFromString(const char *str);
@@ -37,13 +48,14 @@ namespace ColorMapType {
     // recieved with vtkSmartPointer<...>::Take()
     // low and high are the lowest and highest values in the interval that the
     // color map should map over.
-    vtkColorTransferFunction *getColorMap(ColorMapType::Type cmapType,
-                                             double low, double high);
+    //vtkColorTransferFunction *getColorMap(ColorMapType::Type cmapType,
+    //                                         double low, double high);
 
     // Returns true if the color map listed has a solid color for the entire object
     // and false if it requires per-vertex coloring
-    bool isSolidColor(ColorMapType::Type cmapType, const QString& arrayName);
+    //bool isSolidColor(ColorMapType::Type cmapType, const QString& arrayName);
 
+    extern ColorMap defaultCMap;
 }
 
 

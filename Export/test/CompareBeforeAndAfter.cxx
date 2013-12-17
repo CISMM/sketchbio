@@ -275,11 +275,11 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
                 const Keyframe& frame1 = it1.next().value();
                 const Keyframe& frame2 = it2.next().value();
                 q_vec_type p1, p2;
-                q_type o1, o2;
+                q_type or1, or2;
                 frame1.getPosition(p1);
                 frame2.getPosition(p2);
-                frame1.getOrientation(o1);
-                frame2.getOrientation(o2);
+                frame1.getOrientation(or1);
+                frame2.getOrientation(or2);
                 double vector_epsilon = max(max(Q_ABS(p1[0]*Q_EPSILON),
                                             Q_ABS(p1[1]*Q_EPSILON)),
                         Q_ABS(p1[2]*Q_EPSILON));
@@ -290,7 +290,7 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
                                          << time1);
                     return;
                 }
-                if (!q_equals(o1,o2,epsilon_modifier * Q_EPSILON))
+                if (!q_equals(or1,or2,epsilon_modifier * Q_EPSILON))
                 {
                     numDifferences++;
                     if (printDiffs) PRINT_ERROR("Keyframe orientations are different at time "
@@ -311,17 +311,20 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
                                          << time1);
                     return;
                 }
-                if (frame1.getColorMapType() != frame2.getColorMapType())
+                if (o1->numInstances() == 1)
                 {
-                    numDifferences++;
-                    if (printDiffs) PRINT_ERROR("Keyframe color changed at time "
-                                         << time1);
-                }
-                if (frame1.getArrayToColorBy() != frame2.getArrayToColorBy())
-                {
-                    numDifferences++;
-                    if (printDiffs) PRINT_ERROR("Keyframe array to color by is different at "
-                                            "time " << time1);
+                    if (frame1.getColorMapType() != frame2.getColorMapType())
+                    {
+                        numDifferences++;
+                        if (printDiffs) PRINT_ERROR("Keyframe color changed at time "
+                                                    << time1);
+                    }
+                    if (frame1.getArrayToColorBy() != frame2.getArrayToColorBy())
+                    {
+                        numDifferences++;
+                        if (printDiffs) PRINT_ERROR("Keyframe array to color by is different at "
+                                                    "time " << time1);
+                    }
                 }
             }
         }

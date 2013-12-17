@@ -79,14 +79,17 @@ public:
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
     // gets the color map for this object (only a valid call if the numInstances() == 1)
-    virtual ColorMapType::Type getColorMapType() const;
+    ColorMapType::Type getColorMapType() const;
     // sets the color map for this object
-    virtual void setColorMapType(ColorMapType::Type cmap) = 0;
+    void setColorMapType(ColorMapType::Type cmap);
     // gets the array that is currently being used for coloring (default: modelNum)
     // only useful when numInstances == 1
-    virtual QString getArrayToColorBy() const;
+    const QString& getArrayToColorBy() const;
     // sets the array that is being used for coloring
-    virtual void setArrayToColorBy(const QString &arrayName) = 0;
+    void setArrayToColorBy(const QString &arrayName);
+    // gets the color map - the previous 4 may eventually be replaced by this and
+    // a corresponding set method
+    const ColorMapType::ColorMap& getColorMap() const;
     // gets the transformed polygonal data of the object (do not modify the return value, but
     // you may use it as input to other filters)
     // this may return NULL if the object has no geometry itself (children may have geometry in
@@ -214,6 +217,7 @@ protected: // methods
     // notifies change observers that the given object has been removed as a child
     void notifyObjectRemoved(SketchObject *child);
     virtual void setSolidColor(double color[3]) {}
+    virtual void updateColorMap() {}
 protected: // fields
     vtkSmartPointer<vtkTransform> localTransform;
     vtkSmartPointer<vtkLinearTransform> invLocalTransform;
@@ -239,6 +243,7 @@ private: // fields
     // contains all the information about what happens at that time (position, orientation, visibility, etc.)
     QScopedPointer< QMap< double, Keyframe > > keyframes;
 	vtkSmartPointer< vtkCardinalSpline > xspline, yspline, zspline, yaw_spline, pitch_spline, roll_spline;
+    ColorMapType::ColorMap map;
 };
 
 
@@ -252,5 +257,30 @@ inline void quatToPQPMatrix(const q_type quat, double mat[3][3]) {
         mat[i][1] = colMat[i][1];
         mat[i][2] = colMat[i][2];
     }
+}
+
+inline const ColorMapType::ColorMap& SketchObject::getColorMap() const
+{
+    return map;
+}
+inline ColorMapType::Type SketchObject::getColorMapType() const
+{
+    return map.first;
+}
+inline void SketchObject::setColorMapType(ColorMapType::Type cmap)
+{
+    map.first = cmap;
+    updateColorMap();
+}
+
+inline const QString& SketchObject::getArrayToColorBy() const
+{
+    return map.second;
+}
+
+inline void SketchObject::setArrayToColorBy(const QString &arrayName)
+{
+    map.second = arrayName;
+    updateColorMap();
 }
 #endif // SKETCHOBJECT_H

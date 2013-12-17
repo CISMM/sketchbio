@@ -33,15 +33,13 @@ struct ModelColorMapKey
 {
     SketchModel *model;
     int conformation;
-    ColorMapType::Type cmap;
-    QString arrayToColorBy;
+    ColorMapType::ColorMap cmap;
     ModelColorMapKey(SketchModel *m, int c, ColorMapType::Type cm,
                      const QString &a)
         :
           model(m),
           conformation(c),
-          cmap(cm),
-          arrayToColorBy(a)
+          cmap(cm,a)
     {
     }
 };
@@ -50,14 +48,14 @@ struct ModelColorMapKey
 inline bool operator ==(const ModelColorMapKey &m1, const ModelColorMapKey &m2)
 {
     return (m1.model == m2.model) && (m1.conformation == m2.conformation) &&
-            (m1.cmap == m2.cmap) && (m1.arrayToColorBy == m2.arrayToColorBy);
+            (m1.cmap.first == m2.cmap.first) && (m1.cmap.second == m2.cmap.second);
 }
 
 // make sure we can hash the key
 inline uint qHash(const ModelColorMapKey &key)
 {
-    return qHash(key.model) ^ qHash(key.conformation) * qHash(key.cmap) ^
-            qHash(key.arrayToColorBy);
+    return qHash(key.model) ^ qHash(key.conformation) * qHash(key.cmap.first) ^
+            qHash(key.cmap.second);
 }
 
 //#########################################################################################
@@ -122,24 +120,24 @@ static inline void writeCreateModel(
             double range[2] = {0.0, 1.0};
             vtkPointData *pointData = model.model->getVTKSurface(model.conformation)
                     ->GetOutput()->GetPointData();
-            if (pointData->HasArray(model.arrayToColorBy.toStdString().c_str()))
+            if (pointData->HasArray(model.cmap.second.toStdString().c_str()))
             {
-                pointData->GetArray(model.arrayToColorBy.toStdString().c_str())
+                pointData->GetArray(model.cmap.second.toStdString().c_str())
                         ->GetRange(range);
             }
-            if (model.arrayToColorBy == "charge")
+            if (model.cmap.second == "charge")
             {
                 range[0] =  10.0;
                 range[1] = -10.0;
             }
             vtkSmartPointer< vtkColorTransferFunction > colors =
                     vtkSmartPointer< vtkColorTransferFunction >::Take(
-                        ColorMapType::getColorMap(model.cmap,range[0],range[1])
+                        model.cmap.getColorMap(range[0],range[1])
                     );
-            QString wrlFilename = fname + "_" + model.arrayToColorBy + "_" +
-                    ColorMapType::stringFromColorMap(model.cmap);
+            QString wrlFilename = fname + "_" + model.cmap.second + "_" +
+                    ColorMapType::stringFromColorMap(model.cmap.first);
             fname = ProjectToBlenderAnimation::generateVRMLFileFor(
-                        fname, wrlFilename, model.arrayToColorBy.toStdString().c_str(),
+                        fname, wrlFilename, model.cmap.second.toStdString().c_str(),
                         colors);
         }
     }
@@ -186,36 +184,33 @@ static inline void writeCreateObject(
         SketchModel *model  = obj->getModel();
         int conformation = obj->getModelConformation();
         // get color map data to figure out which coloring needs to be exported
-        QString array = obj->getArrayToColorBy();
-        ColorMapType::Type type = obj->getColorMapType();
+        ColorMapType::ColorMap map = obj->getColorMap();
         if (obj->hasKeyframes())
         {
             QMapIterator< double, Keyframe > itr(*obj->getKeyframes());
             while (itr.hasNext())
             {
                 const Keyframe &f = itr.next().value();
-                QString narray = f.getArrayToColorBy();
-                ColorMapType::Type ntype = f.getColorMapType();
-                if (narray != array || ntype != type)
+                const ColorMapType::ColorMap& fmap = f.getColorMap();
+                if (map != fmap)
                 {
                     // if neither is a solid color,(demorgan's law)
-                    if (! (ColorMapType::isSolidColor(type,array) ||
-                           ColorMapType::isSolidColor(ntype,narray)))
+                    if (! (map.isSolidColor()||
+                           fmap.isSolidColor()))
                     {
                         std::cerr << "Warning: multiple colormaps with per-pixel color."
                                   << std::endl << "\tThis is not supported for blender animation currently and "
                                   << std::endl << "\tmay result in animations that do not match the previews." << std::endl;
                     }
-                    else if (ColorMapType::isSolidColor(type,array))
+                    else if (map.isSolidColor())
                     {
-                        type = ntype;
-                        array = narray;
+                        map = fmap;
                     }
                 }
             }
         }
         // write out the model data for the object if it isn't already done
-        ModelColorMapKey key(model,conformation,type,array);
+        ModelColorMapKey key(model,conformation,map.first,map.second);
         if (!modelIdxs.contains(key))
         {
             writeCreateModel(file,modelIdxs,key);
@@ -238,12 +233,11 @@ static inline void writeCreateObject(
         isVisibleString = (obj->isVisible()) ? "True" : "False";
         isActiveString = (obj->isActive()) ? "True" : "False";
         // get the current color information
-        array = obj->getArrayToColorBy();
-        type = obj->getColorMapType();
-        bool isSolidColor = ColorMapType::isSolidColor(type,array);
+        map = obj->getColorMap();
+        bool isSolidColor = map.isSolidColor();
         vtkSmartPointer< vtkColorTransferFunction > cmap =
             vtkSmartPointer< vtkColorTransferFunction >::Take(
-                ColorMapType::getColorMap(type,0,1));
+                    map.getColorMap(0,1));
         const char* useVertexColorString = (isSolidColor) ? "False" : "True";
         double color[3];
         cmap->GetColor(1.0,color);
@@ -296,9 +290,10 @@ bool ProjectToBlenderAnimation::writeCreateCylinders(
         if (c->getAlpha() > Q_EPSILON)
         {
 			ColorMapType::Type type = c->getColorMapType();
+            ColorMapType::ColorMap map(type,"modelNum");
 			vtkSmartPointer< vtkColorTransferFunction > cmap =
 				vtkSmartPointer< vtkColorTransferFunction >::Take(
-                ColorMapType::getColorMap(type,0,1));
+                map.getColorMap(0,1));
 			double color[3];
 			cmap->GetColor(1.0,color);
             
@@ -359,12 +354,11 @@ bool ProjectToBlenderAnimation::writeKeyframes(
                 if (std::floor(kfTime * frameRate) == frame &&
                         proj->getCameraModel() != obj->getModel())
                 {
-                    QString array = obj->getArrayToColorBy();
-                    ColorMapType::Type type = obj->getColorMapType();
-                    bool isSolidColor = ColorMapType::isSolidColor(type,array);
+                    const ColorMapType::ColorMap& map = obj->getColorMap();
+                    bool isSolidColor = map.isSolidColor();
                     vtkSmartPointer< vtkColorTransferFunction > cmap =
                             vtkSmartPointer< vtkColorTransferFunction >::Take(
-                                ColorMapType::getColorMap(type,0,1));
+                                map.getColorMap(0,1));
                     const char* useVertexColorString = (isSolidColor) ? "False" : "True";
                     double color[3];
                     cmap->GetColor(1.0,color);

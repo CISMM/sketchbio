@@ -22,13 +22,13 @@ public:
     void getOrientation(q_type orient) const;
     ColorMapType::Type getColorMapType() const;
     const QString& getArrayToColorBy() const;
+    const ColorMapType::ColorMap& getColorMap() const;
     bool isVisibleAfter() const;
     bool isActive() const;
 private:
     q_vec_type position;
     q_type orientation;
-    ColorMapType::Type colorMap;
-    QString arrayToColorBy;
+    ColorMapType::ColorMap colorMap;
     bool visibleAfter;
     bool active;
 };
@@ -43,11 +43,15 @@ inline void Keyframe::getOrientation(q_type orient) const
 }
 inline ColorMapType::Type Keyframe::getColorMapType() const
 {
-    return colorMap;
+    return colorMap.first;
 }
 inline const QString& Keyframe::getArrayToColorBy() const
 {
-    return arrayToColorBy;
+    return colorMap.second;
+}
+inline const ColorMapType::ColorMap& Keyframe::getColorMap() const
+{
+    return colorMap;
 }
 inline bool Keyframe::isVisibleAfter() const
 {

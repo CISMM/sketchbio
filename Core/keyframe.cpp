@@ -1,8 +1,7 @@
 #include "keyframe.h"
 
 Keyframe::Keyframe() :
-  colorMap(ColorMapType::SOLID_COLOR_RED),
-  arrayToColorBy(),
+  colorMap(ColorMapType::SOLID_COLOR_RED,"modelNum"),
   visibleAfter(true),
   active(false)
 {
@@ -12,8 +11,7 @@ Keyframe::Keyframe() :
 
 Keyframe::Keyframe(const q_vec_type pos, const q_type orient, ColorMapType::Type cMap,
                    const QString& array, bool visibleA, bool isActive) :
-  colorMap(cMap),
-  arrayToColorBy(array),
+  colorMap(cMap,array),
   visibleAfter(visibleA),
   active(isActive)
 {

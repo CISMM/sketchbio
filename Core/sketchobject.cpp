@@ -74,7 +74,8 @@ SketchObject::SketchObject() :
     localTransformPrecomputed(false),
     localTransformDefiningPosition(false),
     observers(),
-    keyframes(NULL)
+    keyframes(NULL),
+    map(ColorMapType::SOLID_COLOR_RED,"modelNum")
 {
     q_vec_set(forceAccum,0,0,0);
     q_vec_set(torqueAccum,0,0,0);
@@ -130,16 +131,6 @@ SketchModel *SketchObject::getModel()
 const SketchModel *SketchObject::getModel() const
 {
     return NULL;
-}
-//#########################################################################
-ColorMapType::Type SketchObject::getColorMapType() const
-{
-    return ColorMapType::SOLID_COLOR_RED;
-}
-//#########################################################################
-QString SketchObject::getArrayToColorBy() const
-{
-    return "";
 }
 //#########################################################################
 int SketchObject::getModelConformation() const {
@@ -479,15 +470,14 @@ bool SketchObject::hasChangedSinceKeyframe(double t)
     q_type frameOrient;
     frame.getPosition(framePos);
     frame.getOrientation(frameOrient);
-    ColorMapType::Type frameCmap = frame.getColorMapType(), cmap = getColorMapType();
-    const QString& frameArray = frame.getArrayToColorBy(), & array = getArrayToColorBy();
+    const ColorMapType::ColorMap& frameCMap = frame.getColorMap();
     bool a, b, c, d, e, f, g;
     a = q_vec_equals(position,framePos);
     b = q_equals(orientation,frameOrient);
-    c = cmap == frameCmap;
-    d = ColorMapType::isSolidColor(cmap,array);
-    e = ColorMapType::isSolidColor(frameCmap,frameArray);
-    f = frameArray == array;
+    c = map.first == frameCMap.first;
+    d = map.isSolidColor();
+    e = frameCMap.isSolidColor();
+    f = frameCMap.second == map.second;
     g = (isVisible() == frame.isVisibleAfter()) && (isActive() == frame.isActive());
     bool objectChanged = !(a && b && c  &&
                           (( d  && e ) || f) && g);
@@ -612,21 +602,18 @@ void SketchObject::setPositionByAnimationTime(double t)
         if (numInstances() == 1)
         {
             // set color map stuff here
-            ColorMapType::Type c1,c2;
-            const QString &a1 = f1.getArrayToColorBy(),
-                    &a2 = f2.getArrayToColorBy();
-            c1 = f1.getColorMapType();
-            c2 = f2.getColorMapType();
-            if (ColorMapType::isSolidColor(c1,a1) &&
-                    ColorMapType::isSolidColor(c2,a2))
+            const ColorMapType::ColorMap& c1 = f1.getColorMap(),
+                    & c2 = f2.getColorMap();
+            if (c1.isSolidColor() &&
+                    c2.isSolidColor())
             {
                 vtkSmartPointer< vtkColorTransferFunction > map =
                         vtkSmartPointer< vtkColorTransferFunction >::Take(
-                            ColorMapType::getColorMap(c1,0,1)
+                            c1.getColorMap(0,1)
                             );
                 double color1[3], color2[3], netColor[3];
                 map->GetColor(1.0,color1);
-                map.TakeReference(ColorMapType::getColorMap(c2,0,1));
+                map.TakeReference(c2.getColorMap(0,1));
                 map->GetColor(1.0,color2);
                 double tmpC1[3], tmpC2[3];
                 q_vec_scale(tmpC2,ratio,color2);
