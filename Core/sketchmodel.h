@@ -13,6 +13,11 @@ class QDir;
 
 class PQP_Model;
 
+namespace ColorMapType {
+class ColorMap;
+}
+
+// This enum represents the different levels of detail used by SketchBio.
 namespace ModelResolution
 {
 enum ResolutionType
@@ -61,6 +66,8 @@ public:
     // of the new pipeline
     vtkPolyDataAlgorithm *getVTKSurface(int conformationNum);
     vtkMapper* getSolidSurfaceMapper(int conformationNum);
+    vtkMapper* getColoredSurfaceMapper(int conformationNum,
+                                       const ColorMapType::ColorMap& cmap);
     // gets the atom data for the model and conformation (if available).
     // this method willl return NULL if no data is available
     vtkPolyDataAlgorithm *getAtomData(int conformation);

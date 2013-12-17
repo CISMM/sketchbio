@@ -35,7 +35,14 @@ namespace ColorMapType {
         {
         }
 
+    // This function takes a color map type and constructs the color map as
+    // a vtkColorTransferFunction.  The returned vtkColorTransferFunction should
+    // recieved with vtkSmartPointer<...>::Take()
+    // low and high are the lowest and highest values in the interval that the
+    // color map should map over.
         vtkColorTransferFunction* getColorMap(double low, double high) const;
+    // Returns true if the color map listed has a solid color for the entire object
+    // and false if it requires per-vertex coloring
         bool isSolidColor() const;
     };
     // gets the color map corresponding to one of the strings
@@ -43,20 +50,14 @@ namespace ColorMapType {
     Type colorMapFromString(const char *str);
     // gets a string representation of the color map
     const char *stringFromColorMap(Type cmap);
-    // This function takes a color map type and constructs the color map as
-    // a vtkColorTransferFunction.  The returned vtkColorTransferFunction should
-    // recieved with vtkSmartPointer<...>::Take()
-    // low and high are the lowest and highest values in the interval that the
-    // color map should map over.
-    //vtkColorTransferFunction *getColorMap(ColorMapType::Type cmapType,
-    //                                         double low, double high);
 
-    // Returns true if the color map listed has a solid color for the entire object
-    // and false if it requires per-vertex coloring
-    //bool isSolidColor(ColorMapType::Type cmapType, const QString& arrayName);
+    int qHash(const ColorMapType::ColorMap& cmap);
+
+    bool operator==(const ColorMapType::ColorMap& c1, const ColorMapType::ColorMap& c2);
 
     extern ColorMap defaultCMap;
 }
+
 
 
 #endif

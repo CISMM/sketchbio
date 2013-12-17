@@ -90,12 +90,6 @@ public:
     // gets the color map - the previous 4 may eventually be replaced by this and
     // a corresponding set method
     const ColorMapType::ColorMap& getColorMap() const;
-    // gets the transformed polygonal data of the object (do not modify the return value, but
-    // you may use it as input to other filters)
-    // this may return NULL if the object has no geometry itself (children may have geometry in
-    // this case, but if the object has a model (numInstances==1), it should return a valid
-    // vtkPolyDataAlgorithm
-    virtual vtkTransformPolyDataFilter *getTransformedGeometry() = 0;
     // the conformation of the model used by this object.  If numInstances returns 1, this
     // must return a valid conformation of the model returned by getModel.  Otherwise, let
     // this default implementation return -1

@@ -24,6 +24,7 @@ using std::endl;
 
 #include "sketchtests.h"
 #include "keyframe.h"
+#include "sketchmodel.h"
 #include "sketchobject.h"
 #include "modelinstance.h"
 #include "objectgroup.h"
@@ -616,9 +617,14 @@ void WorldManager::setShadowPlane(q_vec_type point, q_vec_type nVector)
     QHashIterator< SketchObject *, ShadowPair > itr(shadows);
     while (itr.hasNext())
     {
+        SketchObject* obj = itr.peekNext().key();
         vtkProjectToPlane *filter = itr.next().value().first;
-        filter->SetPointOnPlane(point);
-        filter->SetPlaneNormalVector(nVector);
+        vtkLinearTransform* trans = obj->getInverseLocalTransform();
+        q_vec_type tpoint, tVector;
+        trans->TransformVector(nVector,tVector);
+        trans->TransformPoint(point,tpoint);
+        filter->SetPointOnPlane(tpoint);
+        filter->SetPlaneNormalVector(tVector);
         filter->Update();
     }
 }
@@ -672,7 +678,10 @@ void WorldManager::insertActors(SketchObject *obj)
         {
             vtkSmartPointer< vtkProjectToPlane > projection =
                     vtkSmartPointer< vtkProjectToPlane >::New();
-            projection->SetInputConnection(obj->getTransformedGeometry()->GetOutputPort());
+            SketchModel* model = obj->getModel();
+            int confNum = obj->getModelConformation();
+            projection->SetInputConnection(
+                        model->getVTKSurface(confNum)->GetOutputPort());
             projection->SetPointOnPlane(0.0,0.0,0.0);
             projection->SetPlaneNormalVector(0.0,1.0,0.0);
             projection->Update();
@@ -683,6 +692,7 @@ void WorldManager::insertActors(SketchObject *obj)
             vtkSmartPointer< vtkActor > shadowActor =
                     vtkSmartPointer< vtkActor >::New();
             shadowActor->SetMapper(mapper);
+            shadowActor->SetUserTransform(obj->getLocalTransform());
             shadowActor->GetProperty()->LightingOff();
             shadowActor->GetProperty()->SetColor(SHADOW_COLOR);
             shadows.insert(obj,ShadowPair(projection,shadowActor));

@@ -25,7 +25,6 @@ public:
     virtual void setColorMapType(ColorMapType::Type cmap);
     virtual QString getArrayToColorBy() const;
     virtual void setArrayToColorBy(const QString &arrayName);
-    virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     // methods to add/remove objects
     // note: this method gives ObjectGroup ownership until the object is removed
     // so these objects are cleaned up in ObjectGroup's destructor

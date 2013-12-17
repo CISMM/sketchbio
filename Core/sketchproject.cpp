@@ -60,7 +60,7 @@ static ColorMapType::Type COLORS[] =
 
 //#define DEBUG_TRACKER_ORIENTATIONS
 
-class TrackerObject : public SketchObject {
+class SketchProject::TrackerObject : public SketchObject {
 public:
     TrackerObject() :
         SketchObject(),
@@ -135,7 +135,7 @@ public:
     virtual void setArrayToColorBy(const QString &) {}
     virtual int numInstances() const { return 0; }
     virtual vtkActor* getActor() { return actor; }
-    virtual vtkTransformPolyDataFilter* getTransformedGeometry() { return shadowGeometry; }
+    vtkTransformPolyDataFilter* getTransformedGeometry() { return shadowGeometry; }
     virtual bool collide(SketchObject* other, PhysicsStrategy* physics, int pqp_flags) { return false;}
     virtual void getBoundingBox(double bb[]) {}
     virtual vtkPolyDataAlgorithm* getOrientedBoundingBoxes() { return NULL;}
@@ -149,9 +149,9 @@ private:
     vtkSmartPointer< vtkTransformPolyDataFilter > shadowGeometry;
 };
 
-inline SketchObject* addTracker(vtkRenderer* r) {
+inline SketchProject::TrackerObject* SketchProject::addTracker(vtkRenderer* r) {
     vtkSmartPointer<vtkActor> actor;
-    SketchObject* tracker = new TrackerObject();
+    TrackerObject* tracker = new TrackerObject();
     actor = tracker->getActor();
     r->AddActor(actor);
     return tracker;
@@ -280,7 +280,7 @@ inline void makeFloorAndLines(vtkPlaneSource*  shadowFloorSource,
 // the color of the trackers' shadows
 #define TRACKER_SHADOW_COLOR 0.0,0.0,0.0
 
-inline void makeTrackerShadow(SketchObject* hand, vtkActor* shadowActor,
+void SketchProject::makeTrackerShadow(TrackerObject* hand, vtkActor* shadowActor,
                               vtkLinearTransform* roomToWorldTransform)
 {
     vtkSmartPointer< vtkProjectToPlane > projection =
@@ -1104,3 +1104,14 @@ void SketchProject::setCameraToVTKCameraPosition(SketchObject* cam, vtkCamera* v
 
     cam->setPosAndOrient(pos,orient);
 }
+
+SketchObject* SketchProject::getLeftHandObject()
+{
+    return leftHand;
+}
+
+SketchObject* SketchProject::getRightHandObject()
+{
+    return rightHand;
+}
+

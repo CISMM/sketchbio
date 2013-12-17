@@ -3,7 +3,9 @@
 #include <iostream>
 
 #include <vtkSmartPointer.h>
+#include <vtkColorTransferFunction.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkPointData.h>
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
@@ -15,6 +17,7 @@
 #include <PQP.h>
 
 #include "modelutilities.h"
+#include "colormaptype.h"
 
 struct SketchModel::ConformationData
 {
@@ -36,6 +39,7 @@ public:
     vtkSmartPointer< vtkPolyDataAlgorithm > atoms;
     // The mapper for solid-colored objects with this model and conformation
     vtkSmartPointer< vtkPolyDataMapper > solidMapper;
+    QHash< ColorMapType::ColorMap, vtkSmartPointer< vtkMapper > > mappers;
     // The collision model for the conformation
     QSharedPointer< PQP_Model > collisionModel;
     // The file names for all the resolutions for the conformation
@@ -139,6 +143,52 @@ vtkPolyDataAlgorithm *SketchModel::getVTKSurface(int conformationNum)
 vtkMapper* SketchModel::getSolidSurfaceMapper(int conformationNum)
 {
     return conformations[conformationNum].solidMapper;
+}
+
+vtkMapper* SketchModel::getColoredSurfaceMapper(int conformationNum,
+                                                const ColorMapType::ColorMap &cmap)
+{
+    ConformationData& conf = conformations[conformationNum];
+    if (!conf.mappers.contains(cmap))
+    {
+        // create it
+        vtkSmartPointer< vtkPolyDataMapper > mapper =
+                vtkSmartPointer< vtkPolyDataMapper >::New();
+
+        vtkPointData *pointData = conf.surface->GetOutput()->GetPointData();
+        double range[2] = { 0.0, 1.0};
+        if (pointData->HasArray(cmap.second.toStdString().c_str()))
+        {
+            pointData->GetArray(cmap.second.toStdString().c_str())->GetRange(range);
+        }
+        if (cmap.second == "charge")
+        {
+            range[0] =  10.0;
+            range[1] = -10.0;
+        }
+
+        if (!cmap.isSolidColor() &&
+                pointData->HasArray(cmap.second.toStdString().c_str()))
+        {
+            vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+                    vtkSmartPointer< vtkColorTransferFunction >::Take(
+                        cmap.getColorMap(range[0],range[1]));
+            mapper->SetInputConnection(conf.surface->GetOutputPort());
+            mapper->ScalarVisibilityOn();
+            mapper->SetColorModeToMapScalars();
+            mapper->SetScalarModeToUsePointFieldData();
+            mapper->SelectColorArray(cmap.second.toStdString().c_str());
+            mapper->SetLookupTable(colorFunc);
+            mapper->Update();
+            // add it to the datastructure
+            conf.mappers.insert(cmap,mapper.GetPointer());
+        }
+        else
+        {
+            return conf.solidMapper;
+        }
+    }
+    return conf.mappers.value(cmap);
 }
 
 vtkPolyDataAlgorithm *SketchModel::getAtomData(int conformation)

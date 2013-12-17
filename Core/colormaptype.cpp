@@ -1,6 +1,7 @@
 #include "colormaptype.h"
 
 #include <QString>
+#include <QHash>
 
 #include <vtkNew.h>
 #include <vtkColorTransferFunction.h>
@@ -167,6 +168,24 @@ bool ColorMap::isSolidColor() const
         break;
     }
     return false;
+}
+
+
+int qHash(const ColorMapType::ColorMap& cmap)
+{
+    return cmap.first ^ qHash(cmap.second);
+}
+
+bool operator==(const ColorMapType::ColorMap& c1, const ColorMapType::ColorMap& c2)
+{
+    if (c1.isSolidColor() && c2.isSolidColor())
+    {
+        return c1.first == c2.first;
+    }
+    else
+    {
+        return (c1.first == c2.first) && (c1.second == c2.second);
+    }
 }
 
 }

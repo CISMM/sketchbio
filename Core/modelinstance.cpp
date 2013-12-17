@@ -31,10 +31,8 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
     conformation(confNum),
-    modelTransformed(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
     orientedBB(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
-    orientedHalfPlaneOutlines(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
-    solidMapper(vtkSmartPointer< vtkPolyDataMapper >::New())
+    orientedHalfPlaneOutlines(vtkSmartPointer< vtkTransformPolyDataFilter >::New())
 {
     vtkSmartPointer< vtkCubeSource > cube =
             vtkSmartPointer< vtkCubeSource >::New();
@@ -55,14 +53,7 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     orientedHalfPlaneOutlines->SetInputConnection(ribbons->GetOutputPort());
     orientedHalfPlaneOutlines->SetTransform(getLocalTransform());
     orientedHalfPlaneOutlines->Update();
-    modelTransformed->SetInputConnection(model->getVTKSurface(conformation)
-                                         ->GetOutputPort());
-    modelTransformed->SetTransform(getLocalTransform());
-    modelTransformed->Update();
-    solidMapper->SetInputConnection(modelTransformed->GetOutputPort());
     updateColorMap();
-    solidMapper->Update();
-//    actor->SetMapper(solidMapper);
     actor->SetMapper(model->getSolidSurfaceMapper(conformation));
     actor->SetUserTransform(localTransform);
     model->incrementUses(conformation);
@@ -90,12 +81,6 @@ SketchModel *ModelInstance::getModel()
 const SketchModel *ModelInstance::getModel() const
 {
     return model;
-}
-
-//#########################################################################
-vtkTransformPolyDataFilter *ModelInstance::getTransformedGeometry()
-{
-    return modelTransformed;
 }
 
 //#########################################################################
@@ -155,12 +140,6 @@ vtkAlgorithm *ModelInstance::getOrientedHalfPlaneOutlines()
 }
 
 //#########################################################################
-void ModelInstance::localTransformUpdated()
-{
-    modelTransformed->Update();
-}
-
-//#########################################################################
 SketchObject *ModelInstance::getCopy()
 {
     SketchObject *nObj = new ModelInstance(model,conformation);
@@ -184,36 +163,20 @@ SketchObject* ModelInstance::deepCopy()
 void ModelInstance::updateColorMap()
 {
     const ColorMapType::ColorMap& cmap = getColorMap();
-    vtkPointData *pointData = modelTransformed->GetOutput()->GetPointData();
-    double range[2] = { 0.0, 1.0};
-    if (pointData->HasArray(cmap.second.toStdString().c_str()))
+    if (cmap.isSolidColor())
     {
-        pointData->GetArray(cmap.second.toStdString().c_str())->GetRange(range);
-    }
-    if (cmap.second == "charge")
-    {
-        range[0] =  10.0;
-        range[1] = -10.0;
-    }
-    vtkSmartPointer< vtkColorTransferFunction > colorFunc =
-            vtkSmartPointer< vtkColorTransferFunction >::Take(
-                cmap.getColorMap(range[0],range[1])
-            );
-    if (!cmap.isSolidColor() &&
-            pointData->HasArray(cmap.second.toStdString().c_str()))
-    {
-        solidMapper->ScalarVisibilityOn();
-        solidMapper->SetColorModeToMapScalars();
-        solidMapper->SetScalarModeToUsePointFieldData();
-        solidMapper->SelectColorArray(cmap.second.toStdString().c_str());
-        solidMapper->SetLookupTable(colorFunc);
-        solidMapper->Update();
+        actor->SetMapper(model->getSolidSurfaceMapper(conformation));
+        vtkSmartPointer< vtkColorTransferFunction > colorFunc =
+                vtkSmartPointer< vtkColorTransferFunction >::Take(
+                    cmap.getColorMap(0,1)
+                );
+        double rgb[3];
+        colorFunc->GetColor(1,rgb);
+        actor->GetProperty()->SetColor(rgb);
     }
     else
     {
-        double rgb[3];
-        colorFunc->GetColor(range[1],rgb);
-        actor->GetProperty()->SetColor(rgb);
+        actor->SetMapper(model->getColoredSurfaceMapper(conformation,cmap));
     }
 }
 

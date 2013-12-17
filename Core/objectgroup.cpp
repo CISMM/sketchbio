@@ -80,12 +80,6 @@ void ObjectGroup::setArrayToColorBy(const QString &arrayName)
 }
 
 //#########################################################################
-vtkTransformPolyDataFilter *ObjectGroup::getTransformedGeometry()
-{
-    return NULL;
-}
-
-//#########################################################################
 void ObjectGroup::addObject(SketchObject *obj)
 {
     SketchObject *p = this;

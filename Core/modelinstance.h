@@ -26,7 +26,6 @@ public:
     // getters for data this subclass holds
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    virtual vtkTransformPolyDataFilter *getTransformedGeometry();
     virtual int getModelConformation() const;
     virtual vtkActor *getActor();
     // collision function that depend on data in this subclass
@@ -38,17 +37,14 @@ public:
     virtual SketchObject *getCopy();
     virtual SketchObject* deepCopy();
 protected:
-    virtual void localTransformUpdated();
     virtual void updateColorMap();
     virtual void setSolidColor(double color[3]);
 private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
     int conformation;
-    vtkSmartPointer< vtkTransformPolyDataFilter > modelTransformed;
     vtkSmartPointer< vtkTransformPolyDataFilter > orientedBB;
     vtkSmartPointer< vtkTransformPolyDataFilter > orientedHalfPlaneOutlines;
-    vtkSmartPointer< vtkPolyDataMapper > solidMapper;
 };
 
 #endif

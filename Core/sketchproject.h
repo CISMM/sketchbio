@@ -8,6 +8,7 @@
 #include <vtkSmartPointer.h>
 class vtkRenderer;
 class vtkPlaneSource;
+class vtkLinearTransform;
 class vtkActor;
 class vtkPolyDataMapper;
 class vtkCamera;
@@ -187,10 +188,14 @@ public:
     // SketchObject.  Should only pass cameras for the SketchObject...
     static void setUpVtkCamera(SketchObject* cam, vtkCamera* vCam);
 private:
+    class TrackerObject;
     // helper functions
     // input related functions
     void handleInput();
     void updateTrackerObjectConnections();
+    static TrackerObject* addTracker(vtkRenderer* r);
+    static void makeTrackerShadow(TrackerObject* hand, vtkActor* shadowActor,
+                                  vtkLinearTransform* roomToWorldTransform);
 
     // fields
     vtkSmartPointer< vtkRenderer > renderer;
@@ -213,7 +218,7 @@ private:
     QList< UndoState* > undoStack, redoStack;
 
     // other ui stuff
-    SketchObject* leftHand, * rightHand; // the objects for the left and right hand trackers
+    TrackerObject* leftHand, * rightHand; // the objects for the left and right hand trackers
     // the left and right trackers' shadows
     vtkSmartPointer< vtkActor > leftShadowActor, rightShadowActor;
     // outline actors are added to the renderer when the object is close enough to
@@ -258,16 +263,6 @@ inline const WorldManager* SketchProject::getWorldManager() const
 inline WorldManager* SketchProject::getWorldManager()
 {
     return world.data();
-}
-
-inline SketchObject* SketchProject::getLeftHandObject()
-{
-    return leftHand;
-}
-
-inline SketchObject* SketchProject::getRightHandObject()
-{
-    return rightHand;
 }
 
 inline const QList< StructureReplicator* >* SketchProject::getReplicas() const
