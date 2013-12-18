@@ -237,7 +237,6 @@ void TransformEditingMode::analogsUpdated()
         int nCopies =  min( floor( pow(2.0,value / .125)), 64);
         project->getReplicas()->back()->setNumShown(nCopies);
     }
-    useLeftJoystickToRotateViewPoint();
 }
 
 void TransformEditingMode::clearStatus()

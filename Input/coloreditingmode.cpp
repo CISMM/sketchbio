@@ -221,5 +221,4 @@ void ColorEditingMode::doUpdatesForFrame() {
 void ColorEditingMode::analogsUpdated()
 {
     ObjectGrabMode::analogsUpdated();
-    useLeftJoystickToRotateViewPoint();
 }

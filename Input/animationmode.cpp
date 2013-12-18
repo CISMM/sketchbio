@@ -147,7 +147,6 @@ void AnimationMode::analogsUpdated()
         return;
     }
     ObjectGrabMode::analogsUpdated();
-    useLeftJoystickToRotateViewPoint();
 }
 
 void AnimationMode::clearStatus()

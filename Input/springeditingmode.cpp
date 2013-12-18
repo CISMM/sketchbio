@@ -159,7 +159,6 @@ void SpringEditingMode::analogsUpdated()
 		bool snap_to_n = (value < 0.5) ? true : false;
         rSpring->snapToTerminus(rAtEnd1, snap_to_n);
     }
-    useLeftJoystickToRotateViewPoint();
 }
 
 static inline void processFrameForSide(SketchProject* project,

@@ -35,12 +35,12 @@ void HydraInputMode::useLeftJoystickToRotateViewPoint()
     {
         return;
     }
-	if (abs(analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)]) > .3) {
+    if (std::abs(analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)]) > .3) {
 		x_degrees += analogStatus[ANALOG_LEFT(UP_DOWN_ANALOG_IDX)];
-	}
-    if (abs(analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)]) > .3) {
+    }
+    if (std::abs(analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)]) > .3) {
 		y_degrees += analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)];
-	}
+    }
     project->getTransformManager()->setRoomEyeOrientation(x_degrees, y_degrees);
 }
 
