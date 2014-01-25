@@ -27,25 +27,19 @@ macro( make_export_test name source )
 endmacro( make_export_test )
 
 # copy the files needed for the tests into place
-FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
-)
-FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/project.xml"
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test/test2
-)
-FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1m1j.obj.decimated.0.1.obj"
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test/test2
-)
-FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1fzc.obj.decimated.0.1.obj"
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test/test2
-)
+FILE(GLOB test_project "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/*")
+FILE(GLOB model_files "${CMAKE_SOURCE_DIR}/models/*")
 
-SOURCE_GROUP("Resources" FILES
-    "${CMAKE_SOURCE_DIR}/models/1m1j.obj"
-    "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1m1j.obj.decimated.0.1.obj"
-    "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/1fzc.obj.decimated.0.1.obj"
-    "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/project.xml"
-)
+add_custom_target(CopyModelsForExportTests ALL COMMENT
+    "Copying models and projects for save tests..."
+    SOURCES ${test_project} ${model_files})
+
+copyFilesIfDifferent("CopyModelsForExportTests"
+    "${test_project}"
+    "${CMAKE_CURRENT_BINARY_DIR}/test/test2")
+copyFilesIfDifferent("CopyModelsForExportTests"
+    "${model_files}"
+    "${CMAKE_CURRENT_BINARY_DIR}/models")
 
 # make the tests
 make_export_test( ProjectToXMLSave      TestProjectToXMLSave.cxx      )

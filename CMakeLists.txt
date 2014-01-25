@@ -59,6 +59,21 @@ macro(addmodule name)
     SET(SketchBioLibraries "SketchBio${name}" ${SketchBioLibraries} )
 endmacro()
 
+# This is a neat macro.  Its arguments are a target (library, executable, or custom),
+# a GLOB of files to copy from the source tree and a destination folder in which to
+# place the files.  For each file, it will generate a command to copy the file only
+# if it has changed since the last time it was copied.
+#
+# Unfortunately, you must reconfigure to get a new file to show up :(
+macro(copyFilesIfDifferent trgt files dest)
+    foreach( f ${files} )
+        add_custom_command(TARGET ${trgt} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${f}
+            ${dest})
+    endforeach(f)
+endmacro(copyFilesIfDifferent)
+
 ENABLE_TESTING()
 
 addmodule( CustomVtkFilters )

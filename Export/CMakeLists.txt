@@ -14,12 +14,15 @@ FlorosimExportTopOfFile.h
 FlorosimExportBottomOfFile.h
 )
 
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/mybpyhelpers.py
-        DESTINATION ${CMAKE_BINARY_DIR}/scripts )
+FILE(GLOB mybpyhelpers "${CMAKE_CURRENT_SOURCE_DIR}/scripts/mybpyhelpers.py")
 
-SOURCE_GROUP( "Resources" FILES
-${CMAKE_CURRENT_SOURCE_DIR}/scripts/mybpyhelpers.py
-)
+add_custom_target(CopyScriptsToBuild ALL COMMENT
+    "Copying blender python helper script to scripts directory..." ${mybpyhelpers})
+
+add_custom_command(TARGET CopyScriptsToBuild POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+    ${CMAKE_BINARY_DIR}/scripts)
 
 ADD_LIBRARY(SketchBioExport ${SketchBioExportSrcs})
 

@@ -20,14 +20,18 @@ SOURCE_GROUP( "Generated" FILES
 
 ADD_LIBRARY(SketchBioSubprocess ${Subprocess_src} ${Subprocess_MOC_Srcs} ${Subprocess_non_qt_headers})
 
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/chimeraExtension/ExportVTK/__init__.py
-        DESTINATION ${CMAKE_BINARY_DIR}/scripts/ExportVTK )
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/chimeraExtension/ExportVTK/ChimeraExtension.py
-        DESTINATION ${CMAKE_BINARY_DIR}/scripts/ExportVTK )
+FILE(GLOB chimera_ext_src "${CMAKE_CURRENT_SOURCE_DIR}/chimeraExtension/ExportVTK/*")
+add_custom_target(CopyChimeraExtension ALL COMMENT
+    "Copying Chimera extension to scripts directory..." SOURCES
+    ${chimera_ext_src})
 
-SOURCE_GROUP("Resources" FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/chimeraExtension/ExportVTK/__init__.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/chimeraExtension/ExportVTK/ChimeraExtension.py
-)
+# do a directory copy so that new files in the extension also will be copied
+#
+# could do copyFilesIfDifferent, but then wierd errors if files added and no
+# reconfigure performed
+add_custom_command(TARGET CopyChimeraExtension POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/chimeraExtension/ExportVTK
+    ${CMAKE_BINARY_DIR}/scripts/ExportVTK)
 
 ADD_SUBDIRECTORY(test)
