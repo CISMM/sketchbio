@@ -1232,84 +1232,84 @@ ProjectToXML::XML_Read_Status ProjectToXML::readObjectList(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(
-    SketchObject* object, vtkXMLDataElement* frame)
+	SketchObject* object, vtkXMLDataElement* frame)
 {
-  if (QString(OBJECT_KEYFRAME_ELEMENT_NAME) != QString(frame->GetName())) {
-    return XML_TO_DATA_FAILURE;
-  }
-  // make sure not to change the color map data, save the old data
-  ColorMapType::Type colorMap;
-  QString array;
-  q_vec_type pos;
-  q_type orient;
-  bool visA, active;
-  double time;
-  int numRead = 0;
-  numRead =
-      frame->GetScalarAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME, time);
-  if (numRead != 1)
-    return XML_TO_DATA_FAILURE;  // if frame has no time, then don't know what
-                                 // to do with it
-  vtkXMLDataElement* kTrans =
-      frame->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
-  if (kTrans == NULL) return XML_TO_DATA_FAILURE;  // if no transform, fail
-  numRead = kTrans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME, 3, pos);
-  if (numRead != 3) return XML_TO_DATA_FAILURE;  // position wrong length.. fail
-  numRead = kTrans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME, 4, orient);
-  if (numRead != 4)
-    return XML_TO_DATA_FAILURE;  // orientation wrong length... fail
-  vtkXMLDataElement* properties =
-      frame->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
-  if (properties == NULL)
-    return XML_TO_DATA_FAILURE;  // if no visiblitly status.. fail
-  const char* c = properties->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME);
-  if (c != NULL) {
-    QString strA(c);
-    if (strA.toLower() == QString("true")) {
-      visA = true;
-    } else if (strA.toLower() == QString("false")) {
-      visA = false;
-    } else {
-      return XML_TO_DATA_FAILURE;
-    }
-  } else {
-    return XML_TO_DATA_FAILURE;
-  }
-  c = properties->GetAttribute(OBJECT_KEYFRAME_ACTIVE_ATTR_NAME);
-  if (c != NULL) {
-    QString strA(c);
-    if (strA.toLower() == QString("true")) {
-      active = true;
-    } else {
-      active = false;
-    }
-  } else {
-    return XML_TO_DATA_FAILURE;
-  }
-  if (object->numInstances() == 1) {
-    c = frame->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
-    if (c != NULL) {
-      colorMap = ColorMapType::colorMapFromString(c);
-      c = frame->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME);
-      if (c != NULL) {
-        array = QString(c);
-      } else {
-        return XML_TO_DATA_FAILURE;  // can have neither array or color, but
-                                     // if you have one, you should have both
-      }
-    } else {
-      // if not defined default to state of object
-      colorMap = object->getColorMapType();
-      array = object->getArrayToColorBy();
-    }
-  } else {
-    // if not defined default to state of object
-    colorMap = object->getColorMapType();
-    array = object->getArrayToColorBy();
-  }
-  Keyframe f(pos, orient, colorMap, array, visA, active);
-  object->insertKeyframe(time, f);
-  return XML_TO_DATA_SUCCESS;
+	if (QString(OBJECT_KEYFRAME_ELEMENT_NAME) != QString(frame->GetName())) {
+		return XML_TO_DATA_FAILURE;
+	}
+	// make sure not to change the color map data, save the old data
+	ColorMapType::Type colorMap;
+	QString array;
+	q_vec_type pos;
+	q_type orient;
+	bool visA, active;
+	double time;
+	int numRead = 0;
+	numRead =
+		frame->GetScalarAttribute(OBJECT_KEYFRAME_TIME_ATTRIBUTE_NAME, time);
+	if (numRead != 1)
+		return XML_TO_DATA_FAILURE;  // if frame has no time, then don't know what
+	// to do with it
+	vtkXMLDataElement* kTrans =
+		frame->FindNestedElementWithName(TRANSFORM_ELEMENT_NAME);
+	if (kTrans == NULL) return XML_TO_DATA_FAILURE;  // if no transform, fail
+	numRead = kTrans->GetVectorAttribute(POSITION_ATTRIBUTE_NAME, 3, pos);
+	if (numRead != 3) return XML_TO_DATA_FAILURE;  // position wrong length.. fail
+	numRead = kTrans->GetVectorAttribute(ROTATION_ATTRIBUTE_NAME, 4, orient);
+	if (numRead != 4)
+		return XML_TO_DATA_FAILURE;  // orientation wrong length... fail
+	vtkXMLDataElement* properties =
+		frame->FindNestedElementWithName(PROPERTIES_ELEMENT_NAME);
+	if (properties == NULL)
+		return XML_TO_DATA_FAILURE;  // if no visiblitly status.. fail
+	const char* c = properties->GetAttribute(OBJECT_KEYFRAME_VIS_AF_ATTR_NAME);
+	if (c != NULL) {
+		QString strA(c);
+		if (strA.toLower() == QString("true")) {
+			visA = true;
+		} else if (strA.toLower() == QString("false")) {
+			visA = false;
+		} else {
+			return XML_TO_DATA_FAILURE;
+		}
+	} else {
+		return XML_TO_DATA_FAILURE;
+	}
+	c = properties->GetAttribute(OBJECT_KEYFRAME_ACTIVE_ATTR_NAME);
+	if (c != NULL) {
+		QString strA(c);
+		if (strA.toLower() == QString("true")) {
+			active = true;
+		} else {
+			active = false;
+		}
+	} else {
+		return XML_TO_DATA_FAILURE;
+	}
+	if (object->numInstances() == 1) {
+		c = frame->GetAttribute(OBJECT_COLOR_MAP_ATTRIBUTE_NAME);
+		if (c != NULL) {
+			colorMap = ColorMapType::colorMapFromString(c);
+			c = frame->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME);
+			if (c != NULL) {
+				array = QString(c);
+			} else {
+				return XML_TO_DATA_FAILURE;  // can have neither array or color, but
+				// if you have one, you should have both
+			}
+		} else {
+			// if not defined default to state of object
+			colorMap = object->getColorMapType();
+			array = object->getArrayToColorBy();
+		}
+	} else {
+		// if not defined default to state of object
+		colorMap = object->getColorMapType();
+		array = object->getArrayToColorBy();
+	}
+	Keyframe f(pos,pos,orient,colorMap,array,0,NULL,visA,active);
+	object->insertKeyframe(time,f);
+	return XML_TO_DATA_SUCCESS;
 }
 
 SketchObject* ProjectToXML::readObject(
