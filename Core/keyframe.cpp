@@ -10,8 +10,8 @@ Keyframe::Keyframe() :
 }
 
 Keyframe::Keyframe(const q_vec_type pos, const q_vec_type absPos, const q_type orient, 
-					ColorMapType::Type cMap, const QString& arr, int group_level, 
-					SketchObject *parent, bool visibleA, bool isActive) :
+					const q_type absOr, ColorMapType::Type cMap, const QString& arr, 
+					int group_level, SketchObject *parent, bool visibleA, bool isActive) :
   colorMap(cMap,arr),
   level(group_level),
   group(parent),
@@ -21,6 +21,7 @@ Keyframe::Keyframe(const q_vec_type pos, const q_vec_type absPos, const q_type o
     q_vec_copy(position,pos);
 	q_vec_copy(absolutePosition,absPos);
     q_copy(orientation,orient);
+	q_copy(absoluteOrientation, absOr);
 }
 
 int Keyframe::getLevel() {

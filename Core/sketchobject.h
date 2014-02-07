@@ -183,6 +183,7 @@ public:
     void setPositionByAnimationTime(double t);
 	// Computes interpolating splines for animation
 	void computeSplines();
+	void getPositionFromSpline(q_vec_type dest, double t);
     // visibility methods
     void setIsVisible(bool isVisible);
     static void setIsVisibleRecursive(SketchObject *obj, bool isVisible);
@@ -239,8 +240,8 @@ private: // fields
     // there are no keyframes.  Otherwise, the map it points to is a mapping from time to frame where frame
     // contains all the information about what happens at that time (position, orientation, visibility, etc.)
     QScopedPointer< QMap< double, Keyframe > > keyframes;
-	QScopedPointer< QMap< double, vtkSmartPointer< vtkCardinalSpline > >> xsplines, ysplines, zsplines;
-	vtkSmartPointer< vtkCardinalSpline > yaw_spline, pitch_spline, roll_spline;
+	QScopedPointer< QMap< double, vtkSmartPointer< vtkCardinalSpline > >> xsplines, ysplines, zsplines, 
+																yaw_splines, pitch_splines, roll_splines;
 };
 
 

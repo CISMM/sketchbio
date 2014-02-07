@@ -1307,7 +1307,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(
 		colorMap = object->getColorMapType();
 		array = object->getArrayToColorBy();
 	}
-	Keyframe f(pos,pos,orient,colorMap,array,0,NULL,visA,active);
+	Keyframe f(pos,pos,orient,orient,colorMap,array,0,NULL,visA,active);
 	object->insertKeyframe(time,f);
 	return XML_TO_DATA_SUCCESS;
 }

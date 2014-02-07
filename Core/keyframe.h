@@ -18,12 +18,13 @@ class Keyframe
 public:
     Keyframe(); // creates a keyframe with all default values
     Keyframe(const q_vec_type pos, const q_vec_type absPos, 
-				const q_type orient, ColorMapType::Type cMap, 
-				const QString& arr, int group_level, 
+				const q_type orient, const q_type absOr,
+				ColorMapType::Type cMap, const QString& arr, int group_level, 
 				SketchObject *parent, bool visibleA, bool isActive);
     void getPosition(q_vec_type pos) const;
 	void getAbsolutePosition(q_vec_type pos) const;
     void getOrientation(q_type orient) const;
+	void getAbsoluteOrientation(q_type orient) const;
     ColorMapType::Type getColorMapType() const;
     const QString& getArrayToColorBy() const;
     const ColorMapType::ColorMap& getColorMap() const;
@@ -35,6 +36,7 @@ private:
     q_vec_type position;
 	q_vec_type absolutePosition;
     q_type orientation;
+	q_type absoluteOrientation;
     ColorMapType::ColorMap colorMap;
     bool visibleAfter;
     bool active;
@@ -53,6 +55,10 @@ inline void Keyframe::getAbsolutePosition(q_vec_type pos) const
 inline void Keyframe::getOrientation(q_type orient) const
 {
     q_copy(orient,orientation);
+}
+inline void Keyframe::getAbsoluteOrientation(q_type orient) const
+{
+    q_copy(orient,absoluteOrientation);
 }
 inline ColorMapType::Type Keyframe::getColorMapType() const
 {

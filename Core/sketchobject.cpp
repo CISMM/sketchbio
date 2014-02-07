@@ -439,14 +439,17 @@ void SketchObject::addKeyframeForCurrentLocation(double t)
         return;
     }
 	q_vec_type keyframe_position;
+	q_type keyframe_orientation;
 	if (getParent() == NULL) {
 		q_vec_copy(keyframe_position, position);
+		q_copy(keyframe_orientation, orientation);
 	}
 	else {
 		getPosition(keyframe_position);
+		getOrientation(keyframe_orientation);
 	}
-	Keyframe frame(position, keyframe_position, orientation,getColorMapType(),
-		getArrayToColorBy(), getGroupingLevel(), getParent(),visible,active);
+	Keyframe frame(position, keyframe_position, orientation, keyframe_orientation,
+		getColorMapType(), getArrayToColorBy(), getGroupingLevel(), getParent(),visible,active);
     if (keyframes.isNull())
     {
         keyframes.reset(new QMap< double, Keyframe >());
@@ -609,14 +612,11 @@ void SketchObject::setPositionByAnimationTime(double t)
         double diff1 = next - last;
         double diff2 = t - last;
         double ratio = diff2 / diff1;
-
-		q_type or;
-		q_from_euler(or, yaw_spline->Evaluate(t), pitch_spline->Evaluate(t), roll_spline->Evaluate(t));
-		setOrientation(or);
 		
 		//if object is in a group, just keep its position static relative to the group
 		if (getParent() != NULL) {
 			f1.getPosition(position);
+			f1.getOrientation(orientation);
 		}
 		else { //otherwise, find the spline for the current time and evaluate position there
 			//spline interpolation for position
@@ -629,26 +629,25 @@ void SketchObject::setPositionByAnimationTime(double t)
 				last = it.next().key();
 			}
 			
-			/*printf("\n\nNumber of splines: %d", xsplines->count());*/
-			fflush(stdout);
 			double spline_end = last;
 			if (it.hasNext()) {
 				spline_end = it.peekNext().key();
-				/*printf("\nSTILL HAS SPLINES:\nIn group: %d\nTime: %f\nSpline end: %f\n\n", numInstances(), t, spline_end);
-				fflush(stdout);*/
-			}
-			else {
-				/*printf("\nON LAST SPLINE:\nIn group: %d\nTime: %f\nSpline end: %f\n\n", numInstances(), t, spline_end);
-				fflush(stdout);*/
 			}
 			vtkSmartPointer< vtkCardinalSpline > xspline = xsplines->value(spline_end);
 			vtkSmartPointer< vtkCardinalSpline > yspline = ysplines->value(spline_end);
 			vtkSmartPointer< vtkCardinalSpline > zspline = zsplines->value(spline_end);
+			vtkSmartPointer< vtkCardinalSpline > yaw_spline = yaw_splines->value(spline_end);
+			vtkSmartPointer< vtkCardinalSpline > pitch_spline = pitch_splines->value(spline_end);
+			vtkSmartPointer< vtkCardinalSpline > roll_spline = roll_splines->value(spline_end);
 
 			pos[0] = xspline->Evaluate(t);
 			pos[1] = yspline->Evaluate(t);
 			pos[2] = zspline->Evaluate(t);
 			setPosition(pos);
+
+			q_type orient;
+			q_from_euler(orient, yaw_spline->Evaluate(t), pitch_spline->Evaluate(t), roll_spline->Evaluate(t));
+			setOrientation(orient);
 		}
 
         if (numInstances() == 1)
@@ -706,18 +705,21 @@ void SketchObject::computeSplines()
 	vtkSmartPointer< vtkCardinalSpline > xspline = vtkSmartPointer< vtkCardinalSpline >::New();
 	vtkSmartPointer< vtkCardinalSpline > yspline = vtkSmartPointer< vtkCardinalSpline >::New();
 	vtkSmartPointer< vtkCardinalSpline > zspline = vtkSmartPointer< vtkCardinalSpline >::New();
-	yaw_spline = vtkSmartPointer< vtkCardinalSpline >::New();
-	pitch_spline = vtkSmartPointer< vtkCardinalSpline >::New();
-	roll_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+	vtkSmartPointer< vtkCardinalSpline > yaw_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+	vtkSmartPointer< vtkCardinalSpline > pitch_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+	vtkSmartPointer< vtkCardinalSpline > roll_spline = vtkSmartPointer< vtkCardinalSpline >::New();
     xsplines.reset(new QMap< double, vtkSmartPointer< vtkCardinalSpline > >());
 	ysplines.reset(new QMap< double, vtkSmartPointer< vtkCardinalSpline > >());
 	zsplines.reset(new QMap< double, vtkSmartPointer< vtkCardinalSpline > >());
+	yaw_splines.reset(new QMap< double, vtkSmartPointer< vtkCardinalSpline > >());
+	pitch_splines.reset(new QMap< double, vtkSmartPointer< vtkCardinalSpline > >());
+	roll_splines.reset(new QMap< double, vtkSmartPointer< vtkCardinalSpline > >());
 	
 	if (hasKeyframes()) {
 		QMapIterator< double, Keyframe > it(*keyframes.data());
 		q_vec_type last_or;
 		int last_level = 1;
-		double next = it.peekNext().key(), last_time = 0;
+		double next = it.peekNext().key();
 		Keyframe f = keyframes->value(next);
 		q_type or;
 		f.getOrientation(or);
@@ -726,80 +728,14 @@ void SketchObject::computeSplines()
 
 		while (it.hasNext())
 		{
-
 			next = it.next().key();
 			f = keyframes->value(next);
 			q_vec_type pos;
 			f.getAbsolutePosition(pos);
-			f.getOrientation(or);
+			f.getAbsoluteOrientation(or);
 			q_vec_type euler;
 			q_to_euler(euler, or);
 			int current_level = f.getLevel();
-
-			if (first_keyframe) {
-				first_keyframe = false;
-				if (current_level == 0) {
-					//start off not in a group, so create the first spline
-						xspline = vtkSmartPointer< vtkCardinalSpline >::New();
-						yspline = vtkSmartPointer< vtkCardinalSpline >::New();
-						zspline = vtkSmartPointer< vtkCardinalSpline >::New();
-						xspline->AddPoint(next, pos[0]);
-						yspline->AddPoint(next, pos[1]);
-						zspline->AddPoint(next, pos[2]);
-					}
-			}
-			else {
-				//if level changes:
-				if (current_level != last_level) {
-					if (last_level == 0) {
-					//we are entering a grouped phase, so add ending point of spline and compute
-						xspline->AddPoint(next, pos[0]);
-						yspline->AddPoint(next, pos[1]);
-						zspline->AddPoint(next, pos[2]);
-						xspline->Compute();
-						yspline->Compute();
-						zspline->Compute();
-						xsplines->insert(next, xspline);
-						ysplines->insert(next, yspline);
-						zsplines->insert(next, zspline);
-					}
-					else {
-						if (current_level == 0) {
-						//we are coming out of a grouped phase, so start a new spline
-							fflush(stdout);
-							xspline = vtkSmartPointer< vtkCardinalSpline >::New();
-							yspline = vtkSmartPointer< vtkCardinalSpline >::New();
-							zspline = vtkSmartPointer< vtkCardinalSpline >::New();
-							Keyframe last_frame = keyframes->value(last_time);
-							q_vec_type last_pos;
-							last_frame.getAbsolutePosition(last_pos);
-							xspline->AddPoint(last_time, last_pos[0]);
-							yspline->AddPoint(last_time, last_pos[1]);
-							zspline->AddPoint(last_time, last_pos[2]);
-							xspline->AddPoint(next, pos[0]);
-							yspline->AddPoint(next, pos[1]);
-							zspline->AddPoint(next, pos[2]);
-						}
-					}
-				}
-				else {
-					if (current_level == 0) {
-					//currently in an ungrouped phase, so add a point to the current spline
-						xspline->AddPoint(next, pos[0]);
-						yspline->AddPoint(next, pos[1]);
-						zspline->AddPoint(next, pos[2]);
-					}
-				}
-
-				if (current_level == 0 && !it.hasNext()) {
-					xspline->Compute();
-					yspline->Compute();
-					zspline->Compute();
-					xsplines->insert(next, xspline);
-					ysplines->insert(next, yspline);
-					zsplines->insert(next, zspline);
-				}
-			}
 
 			//Make sure we choose the shortest path instead of rotating around the long way
 			if (yaw_spline->GetNumberOfPoints() > 0) {
@@ -815,18 +751,115 @@ void SketchObject::computeSplines()
 				}
 			}
 
-			yaw_spline->AddPoint(next, euler[0]);
-			pitch_spline->AddPoint(next, euler[1]);
-			roll_spline->AddPoint(next, euler[2]);
+			//Add to, finish, or start splines based on grouping status
+			if (first_keyframe) {
+				first_keyframe = false;
+				if (current_level == 0) {
+					//start off not in a group, so create the first spline
+						xspline = vtkSmartPointer< vtkCardinalSpline >::New();
+						yspline = vtkSmartPointer< vtkCardinalSpline >::New();
+						zspline = vtkSmartPointer< vtkCardinalSpline >::New();
+						yaw_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+						pitch_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+						roll_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+						
+						xspline->AddPoint(next, pos[0]);
+						yspline->AddPoint(next, pos[1]);
+						zspline->AddPoint(next, pos[2]);
+						yaw_spline->AddPoint(next, euler[0]);
+						pitch_spline->AddPoint(next, euler[1]);
+						roll_spline->AddPoint(next, euler[2]);
+					}
+			}
+			else {
+				//if level changes:
+				if (current_level != last_level) {
+					if (last_level == 0) {
+					//we are entering a grouped phase, so add ending point of spline and compute
+						xspline->AddPoint(next, pos[0]);
+						yspline->AddPoint(next, pos[1]);
+						zspline->AddPoint(next, pos[2]);
+						yaw_spline->AddPoint(next, euler[0]);
+						pitch_spline->AddPoint(next, euler[1]);
+						roll_spline->AddPoint(next, euler[2]);
+						
+						xspline->Compute();
+						yspline->Compute();
+						zspline->Compute();
+						yaw_spline->Compute();
+						pitch_spline->Compute();
+						roll_spline->Compute();
+						
+						xsplines->insert(next, xspline);
+						ysplines->insert(next, yspline);
+						zsplines->insert(next, zspline);
+						yaw_splines->insert(next, yaw_spline);
+						pitch_splines->insert(next, pitch_spline);
+						roll_splines->insert(next, roll_spline);
+					}
+					else {
+						if (current_level == 0) {
+							xspline->AddPoint(next, pos[0]);
+							yspline->AddPoint(next, pos[1]);
+							zspline->AddPoint(next, pos[2]);
+							yaw_spline->AddPoint(next, euler[0]);
+							pitch_spline->AddPoint(next, euler[1]);
+							roll_spline->AddPoint(next, euler[2]);
+						}
+					}
+				}
+				else {
+					if (current_level == 0) {
+					//currently in an ungrouped phase, so add a point to the current spline
+						xspline->AddPoint(next, pos[0]);
+						yspline->AddPoint(next, pos[1]);
+						zspline->AddPoint(next, pos[2]);
+						yaw_spline->AddPoint(next, euler[0]);
+						pitch_spline->AddPoint(next, euler[1]);
+						roll_spline->AddPoint(next, euler[2]);
+					}
+					else {
+						double next_time = it.peekNext().key();
+						Keyframe frame = keyframes->value(next_time);
+						if (frame.getLevel() == 0) {
+						//will come out of grouped phase in next keyframe, so start new spline
+							xspline = vtkSmartPointer< vtkCardinalSpline >::New();
+							yspline = vtkSmartPointer< vtkCardinalSpline >::New();
+							zspline = vtkSmartPointer< vtkCardinalSpline >::New();
+							yaw_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+							pitch_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+							roll_spline = vtkSmartPointer< vtkCardinalSpline >::New();
+
+							xspline->AddPoint(next, pos[0]);
+							yspline->AddPoint(next, pos[1]);
+							zspline->AddPoint(next, pos[2]);
+							yaw_spline->AddPoint(next, euler[0]);
+							pitch_spline->AddPoint(next, euler[1]);
+							roll_spline->AddPoint(next, euler[2]);
+						}
+					}
+				}
+
+				if (current_level == 0 && !it.hasNext()) {
+					xspline->Compute();
+					yspline->Compute();
+					zspline->Compute();
+					yaw_spline->Compute();
+					pitch_spline->Compute();
+					roll_spline->Compute();
+
+					xsplines->insert(next, xspline);
+					ysplines->insert(next, yspline);
+					zsplines->insert(next, zspline);
+					yaw_splines->insert(next, yaw_spline);
+					pitch_splines->insert(next, pitch_spline);
+					roll_splines->insert(next, roll_spline);
+				}
+			}
 
 			q_vec_copy(last_or, euler);
 			last_level = current_level;
-			last_time = next;
 		}
-
-		yaw_spline->Compute();
-		pitch_spline->Compute();
-		roll_spline->Compute();
 	}
 
 	QList< SketchObject* >* subObjects = getSubObjects();
@@ -837,6 +870,31 @@ void SketchObject::computeSplines()
             subObjects->at(i)->computeSplines();
         }
     }
+}
+
+//#########################################################################
+void SketchObject::getPositionFromSpline(q_vec_type dest, double t) {
+	q_vec_type pos;
+	QMapIterator< double, vtkSmartPointer< vtkCardinalSpline > > it(*xsplines.data());
+	// last is the last keyframe we passed
+	double last = it.peekNext().key();
+	while (it.hasNext() && it.peekNext().key() < t)
+	{
+		last = it.next().key();
+	}
+			
+	double spline_end = last;
+	if (it.hasNext()) {
+		spline_end = it.peekNext().key();
+	}
+	vtkSmartPointer< vtkCardinalSpline > xspline = xsplines->value(spline_end);
+	vtkSmartPointer< vtkCardinalSpline > yspline = ysplines->value(spline_end);
+	vtkSmartPointer< vtkCardinalSpline > zspline = zsplines->value(spline_end);
+
+	pos[0] = xspline->Evaluate(t);
+	pos[1] = yspline->Evaluate(t);
+	pos[2] = zspline->Evaluate(t);
+	q_vec_copy(dest, pos);
 }
 
 //#########################################################################

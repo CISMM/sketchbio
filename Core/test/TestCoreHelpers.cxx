@@ -17,6 +17,7 @@
 #include <sketchmodel.h>
 #include <keyframe.h>
 #include <sketchobject.h>
+#include <objectgroup.h>
 
 namespace TestCoreHelpers
 {
@@ -602,6 +603,81 @@ public:
     ObjectKeyframeTestNewMacro(HasChangedSinceKeyframeTest)
 };
 
+class RemoveFromGroupPositionTest : public ObjectTest
+{
+public:
+    virtual ~RemoveFromGroupPositionTest() {}
+    ObjectTestNameMacro("RemoveFromGroupPosition")
+    virtual int testObject(SketchObject *obj)
+    {
+        int errors = 0;
+		//3 keyframes. Two in group, final one out of group
+		SketchObject* obj2(obj->deepCopy());
+        q_vec_type pos, obj2pos, pos2, objPos2, framePos, removedPos, pos3;
+        q_type orient, orient2;
+        q_vec_set(pos,4004,5.827,Q_PI);
+		q_vec_set(obj2pos,3800,5,Q_PI);
+		q_vec_set(pos2,3000,5.827,.5*Q_PI);
+        q_vec_set(pos3,5,9332.222,.1*Q_PI);
+        q_make(orient,5.63453894834839,7.23232232323232,5.4*Q_PI,Q_PI*.7);
+        q_normalize(orient,orient);
+        q_from_axis_angle(orient2,0,-1,0,-.45);
+		obj->setPosAndOrient(pos,orient);
+		obj->setPosAndOrient(obj2pos,orient);
+        obj->setIsVisible(true);
+		obj->setIsVisible(true);
+		ObjectGroup *grp = new ObjectGroup();
+        grp->addObject(obj2);
+		grp->addObject(obj);
+		grp->addKeyframeForCurrentLocation(0.0);
+		grp->setPosAndOrient(pos2,orient);
+		obj->getPosition(objPos2);
+		grp->addKeyframeForCurrentLocation(5.0);
+		const QMap<double, Keyframe> *frames = obj->getKeyframes();
+		Keyframe f = frames->value(5.0);
+		f.getAbsolutePosition(framePos);
+		errors += vectors_should_be_equal(
+                    objPos2,framePos,"Keyframe absolute position is wrong");
+
+		grp->removeObject(obj);
+		obj->setPosAndOrient(pos3, orient2);
+		obj->addKeyframeForCurrentLocation(10.0);
+		grp->addKeyframeForCurrentLocation(10.0);
+		obj->getPositionFromSpline(removedPos, 5.016);
+
+		//Test position before, during, and after keyframe of group removal
+		q_vec_type pos0, pos5, posAfterRemove, pos10;
+		obj->setPosAndOrient(pos,orient);
+		grp->setPositionByAnimationTime(0.0);
+		grp->addObject(obj);
+		obj->getPosition(pos0);
+		errors += vectors_should_be_equal(
+                    pos,pos0,"Position wrong on first (grouped) keyframe.");
+
+		grp->setPositionByAnimationTime(5.0);
+		obj->getPosition(pos5);
+		errors += vectors_should_be_equal(
+                    objPos2,pos5,"Position wrong on second (group removal) keyframe.");
+
+		grp->removeObject(obj);
+		grp->setPositionByAnimationTime(5.016);
+		obj->setPositionByAnimationTime(5.016);
+		obj->getPosition(posAfterRemove);
+		errors += vectors_should_be_equal(
+                    removedPos,posAfterRemove,"Position wrong after removal from group.");
+
+		grp->setPositionByAnimationTime(10.0);
+		obj->setPositionByAnimationTime(10.0);
+		obj->getPosition(pos10);
+		errors += vectors_should_be_equal(
+                    pos3,pos10,"Position wrong on third (ungrouped) keyframe.");
+
+        return errors;
+    }
+
+    ObjectTestNewMacro(RemoveFromGroupPositionTest)
+};
+
 static ObjectActionTest positionActionTest(PositionTest::New,NULL);
 static ObjectActionTest orientationActionTest(OrientationTest::New,NULL);
 static ObjectActionTest saveAndRestoreTest(SaveAndRestoreTest::New,NULL);
@@ -612,6 +688,7 @@ static ObjectActionTest keyframeCreationTest(KeyframeCreationTest::New,NULL);
 static ObjectActionTest visibilityAndActiveTest(VisibilityAndActiveTest::New,NULL);
 static ObjectActionTest interpolationTest(KeyframeInterpolationTest::New,NULL);
 static ObjectActionTest changeSinceKeyframeTest(HasChangedSinceKeyframeTest::New,NULL);
+static ObjectActionTest GroupRemovalPositionTest(RemoveFromGroupPositionTest::New,NULL);
 //###############################################################################
 //###############################################################################
 int testSketchObjectActions(SketchObject *obj)

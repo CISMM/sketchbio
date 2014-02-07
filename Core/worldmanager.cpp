@@ -173,6 +173,8 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 		if (lastUpdate >= last && lastUpdate != t) {
 			return;
 		}
+		printf("\nGROUP UPDATE: after last keyframe\n");
+		fflush(stdout);
 		lastGroupUpdate = t;
 		Keyframe f = it.value();
 		if (object->getGroupingLevel() > f.getLevel()) {
@@ -190,6 +192,8 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
     else if (it.peekNext().key() == t ||
                it.peekNext().key() == last)
     {
+		printf("\nGROUP UPDATE: On keyframe or before first\n");
+		fflush(stdout);
 		lastGroupUpdate = t;
 		Keyframe f = it.next().value();
 		if (object->getGroupingLevel() > f.getLevel()) {
@@ -207,15 +211,15 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
     else
     {
         double next = it.peekNext().key();
-        if (lastUpdate > last && lastUpdate < next && lastUpdate != t) {
-			return;
-		}
-		
+		lastGroupUpdate = t;
+	
         Keyframe f1 = object->getKeyframes()->value(last), f2 = it.next().value();
 		int objLevel = object->getGroupingLevel(), f1Level = f1.getLevel(), f2Level = f2.getLevel();
-		printf("\nTime: %f\nGrouped: %d\nObject Level: %d\nFrame1 Level: %d (t:%f)\nFrame2 level: %d (t:%f)\n", t, object->numInstances(),
+		
+		printf("\nGROUP UPDATE\nGrouped: %d\nObject Level: %d\nFrame1 Level: %d (t:%f)\nFrame2 level: %d (t:%f)\n", object->numInstances(),
 			objLevel, f1Level, last, f2Level, next);
 		fflush(stdout);
+		
 		if (f1Level != f2Level) {
 		// grouping level between frames is different, must float freely to new group or away from old
 			if (f1Level == 0 || f2Level == 0) {
@@ -268,9 +272,9 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 	QList<SketchObject *> *subObjects = object->getSubObjects();
 	if (subObjects != NULL)
 	{
-		for (int i = 0; i < subObjects->length(); i++)
-		{
-			updateGroupStatus(subObjects->at(i), t, lastUpdate);
+		QMutableListIterator<SketchObject *> it(*subObjects);
+		while (it.hasNext()) {
+			updateGroupStatus(it.next(), t, lastGroupUpdate);
 		}
 	}
 }
@@ -418,6 +422,8 @@ bool WorldManager::setAnimationTime(double t) {
 	bool isDone = true;
 	
 	//Do any necessary grouping/ungrouping of objects
+	printf("\n**** TIME: %f **** \n", t);
+	fflush(stdout);
 
 	for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
