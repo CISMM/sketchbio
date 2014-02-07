@@ -163,6 +163,10 @@ QListIterator< SketchObject * > WorldManager::getObjectIterator() const
 //##################################################################################################
 void WorldManager::clearObjects()
 {
+  for (int i = 0; i < objects.size(); ++i) {
+    removeActors(objects[i]);
+    removeShadows(objects[i]);
+  }
   qDeleteAll(objects);
   objects.clear();
   shadows.clear();
