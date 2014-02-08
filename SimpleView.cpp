@@ -2,6 +2,7 @@
 #include "SimpleView.h"
 
 #include <stdexcept>
+#include <cassert>
 #include <limits>
 
 #include <vtkRenderWindow.h>
@@ -473,18 +474,16 @@ void SimpleView::saveProjectAs() {
 void SimpleView::saveProject() {
     QString path = project->getProjectDir();
     project->getTransformManager()->setRoomEyeOrientation(0,0);
-    if (path.length() == 0) {
-        // maybe eventually allow them to select if nothing exists... but for now,
-        // enforce dir as part of project.
-//        saveProjectAs();
-        return;
-    }
+    assert(path.length() > 0);
     QDir dir(path);
+    assert(dir.exists());
     QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
-    vtkXMLDataElement *root = ProjectToXML::projectToXML(project);
+    vtkSmartPointer< vtkXMLDataElement > root =
+        vtkSmartPointer< vtkXMLDataElement >::Take(
+          ProjectToXML::projectToXML(project)
+          );
     vtkIndent indent(0);
     vtkXMLUtilities::WriteElementToFile(root,file.toStdString().c_str(),&indent);
-    root->Delete();
 }
 
 void SimpleView::loadProject() {

@@ -1114,7 +1114,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
         fullRes->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
     if (fileString == NULL) return XML_TO_DATA_FAILURE;
 
-    QString filename = proj->getFileInProjDir(fileString);
+    QString filename;
+    proj->getFileInProjDir(fileString, filename);
     QString source = srcString;
     if (source == CAMERA_MODEL_KEY) {
       model.reset(proj->getCameraModel());
@@ -1132,7 +1133,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
         const char* r = elt->GetAttribute(ID_ATTRIBUTE_NAME);
         if (r == NULL) return XML_TO_DATA_FAILURE;
         ModelResolution::ResolutionType res = getResolutionTypeFromId(r);
-        QString fName = proj->getFileInProjDir(f);
+        QString fName;
+        proj->getFileInProjDir(f,fName);
         model->addSurfaceFileForResolution(
             model->getNumberOfConformations() - 1, res, fName);
       }

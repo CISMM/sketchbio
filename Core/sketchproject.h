@@ -24,7 +24,6 @@ class vtkMatrix4x4;
 #include <QHash>
 #include <QString>
 #include <QTime>
-class QDir;
 
 // SketchBio dependencies
 class SketchModel;
@@ -135,7 +134,9 @@ public:
     // gets the file in the project directory that matches the given file
     // this will copy the file to the project directory if it can, and if
     // that fails will return the file as-is if it is outside the project directory
-    QString getFileInProjDir(const QString& filename);
+    // the new filename is returned in the newName parameter and the bool return
+    // value indicates that the project directory now contains the given file
+    bool getFileInProjDir(const QString& filename, QString& newName);
     // gets the camera model
     SketchModel* getCameraModel();
 
@@ -212,7 +213,8 @@ private:
     QVector< QSharedPointer< TransformEquals > > transformOps;
 
     // project dir
-    QDir *projectDir;
+    //QDir *projectDir;
+    QString projectDirName;
 
     // undo states:
     QList< UndoState* > undoStack, redoStack;
