@@ -157,7 +157,10 @@ def parseModel(m,modelNum,data):
             #    arrays['kdHydrophobicity'] = 0.0 # float('NaN')
             for r in ranges:
                 if atom.residue in r:
-                    arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
+                    if len(r) <= 1:
+                        arrays['chainPosition'] = 0
+                    else:
+                        arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
             if 'chainPosition' not in arrays:
                 arrays['chainPosition'] = 0.5
             data.addPoint((pt.x, pt.y, pt.z), arrays)
@@ -211,7 +214,10 @@ def parseModel(m,modelNum,data):
                     # but VTK doesn't read in NaN values
                     for r in ranges:
                         if atom.residue in r:
-                            arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
+                            if len(r) <= 1:
+                                arrays['chainPosition'] = 0
+                            else:
+                                arrays['chainPosition'] = r.index(atom.residue) / float(len(r)-1)
                     if 'chainPosition' not in arrays:
                         arrays['chainPosition'] = 0.5
                     norm = normals[i]
@@ -298,5 +304,6 @@ def write_models_as_vtk(path,models,volume=None):
 
 # writes the chimera scene to the file specified by path
 def write_scene_as_vtk(path):
+    import chimera
     write_models_as_vtk(path,chimera.openModels.list())
 
