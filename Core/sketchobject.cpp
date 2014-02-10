@@ -873,7 +873,7 @@ void SketchObject::computeSplines()
 }
 
 //#########################################################################
-void SketchObject::getPositionFromSpline(q_vec_type dest, double t) {
+void SketchObject::getPosAndOrFromSpline(q_vec_type pos_dest, q_type or_dest, double t) {
 	q_vec_type pos;
 	QMapIterator< double, vtkSmartPointer< vtkCardinalSpline > > it(*xsplines.data());
 	// last is the last keyframe we passed
@@ -890,11 +890,15 @@ void SketchObject::getPositionFromSpline(q_vec_type dest, double t) {
 	vtkSmartPointer< vtkCardinalSpline > xspline = xsplines->value(spline_end);
 	vtkSmartPointer< vtkCardinalSpline > yspline = ysplines->value(spline_end);
 	vtkSmartPointer< vtkCardinalSpline > zspline = zsplines->value(spline_end);
+	vtkSmartPointer< vtkCardinalSpline > yaw_spline = yaw_splines->value(spline_end);
+	vtkSmartPointer< vtkCardinalSpline > pitch_spline = pitch_splines->value(spline_end);
+	vtkSmartPointer< vtkCardinalSpline > roll_spline = roll_splines->value(spline_end);
 
 	pos[0] = xspline->Evaluate(t);
 	pos[1] = yspline->Evaluate(t);
 	pos[2] = zspline->Evaluate(t);
-	q_vec_copy(dest, pos);
+	q_vec_copy(pos_dest, pos);
+	q_from_euler(or_dest, yaw_spline->Evaluate(t), pitch_spline->Evaluate(t), roll_spline->Evaluate(t));
 }
 
 //#########################################################################

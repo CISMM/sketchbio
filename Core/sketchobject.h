@@ -183,7 +183,7 @@ public:
     void setPositionByAnimationTime(double t);
 	// Computes interpolating splines for animation
 	void computeSplines();
-	void getPositionFromSpline(q_vec_type dest, double t);
+	void getPosAndOrFromSpline(q_vec_type pos_dest, q_type or_dest, double t);
     // visibility methods
     void setIsVisible(bool isVisible);
     static void setIsVisibleRecursive(SketchObject *obj, bool isVisible);
