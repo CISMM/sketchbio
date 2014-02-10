@@ -265,15 +265,20 @@ void TransformEditingMode::setTransformBetweenActiveObjects(
     vtkSmartPointer< vtkTransform > transform =
             vtkSmartPointer< vtkTransform >::New();
     transform->Identity();
-    transform->Translate(translateX,translateY,translateZ);
-    transform->RotateZ(rotateZ);
-    transform->RotateX(rotateX);
-    transform->RotateY(rotateY);
     transform->Concatenate(objectsSelected[0]->getLocalTransform());
+    transform->RotateY(rotateY);
+    transform->RotateX(rotateX);
+    transform->RotateZ(rotateZ);
+    transform->Translate(translateX,translateY,translateZ);
     q_vec_type pos;
     q_type orient;
     SketchObject::getPositionAndOrientationFromTransform(transform,pos,orient);
-    objectsSelected[1]->setPosAndOrient(pos,orient);
+    if (objectsSelected[1]->getParent() != NULL) {
+      SketchObject::setParentRelativePositionForAbsolutePosition(
+            objectsSelected[1],objectsSelected[1]->getParent(),pos,orient);
+    } else {
+      objectsSelected[1]->setPosAndOrient(pos,orient);
+    }
 }
 
 void TransformEditingMode::cancelSetTransforms()
