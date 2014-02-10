@@ -57,6 +57,8 @@ public:
     ~SketchProject();
     // setters
     // sets the directory path for this project (should be an absolute path)
+    // note, the folder will get deleted and replaced with the contents of the
+    // current project folder.
     bool setProjectDir(const QString& dir);
     // sets the left hand position/orientation from vrpn
     void setLeftHandPos(q_xyz_quat_type* loc);

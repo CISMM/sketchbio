@@ -58,7 +58,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     serverThread(new QThread(this)),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer(), QDir::currentPath())),
+    project(new SketchProject(renderer.GetPointer(), projDir)),
     inputManager(new HydraInputManager(project))
 {
     this->ui = new Ui_SimpleView;
@@ -83,7 +83,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     dummyRenderer->SetViewport(0,0,1,1);
     dummyRenderer->SetBackground(0,0,0);
 
-    project->setProjectDir(projDir);
     QDir pd(project->getProjectDir());
     QString file = pd.absoluteFilePath(PROJECT_XML_FILENAME);
     QFile f(file);
@@ -461,14 +460,24 @@ void SimpleView::restartVRPNServer()
     }
 }
 
-void SimpleView::saveProjectAs() {
-    QString path = QFileDialog::getExistingDirectory(this,tr("Save Project As..."),"./");
-    if (path.length() == 0) {
-        return;
+void SimpleView::saveProjectAs()
+{
+  QString path = QFileDialog::getExistingDirectory(this,tr("Save Project As..."),
+                                                   project->getProjectDir());
+  if (path.length() == 0) {
+     return;
+  } else if (path == project->getProjectDir()) {
+    saveProject();
+  } else {
+    if (project->setProjectDir(path)) {
+      saveProject();
     } else {
-        project->setProjectDir(path);
-        saveProject();
+      QMessageBox::warning(this,"Failed to save in new location...",
+                           "There was an error saving your project in %1.\n"
+                           "Check your permissions to access this folder and"
+                           " try again.\nYOUR PROJECT WAS NOT SAVED");
     }
+  }
 }
 
 void SimpleView::saveProject() {
@@ -487,7 +496,9 @@ void SimpleView::saveProject() {
 }
 
 void SimpleView::loadProject() {
-    QString dirPath = QFileDialog::getExistingDirectory(this,tr("Select Project Directory (New or Existing)"), "./");
+    QString dirPath = QFileDialog::getExistingDirectory(
+          this,tr("Select Project Directory (New or Existing)"),
+          project->getProjectDir());
     if (dirPath.length() == 0) {
         return;
     }

@@ -352,7 +352,6 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     renderer->AddActor(shadowFloorActor);
     renderer->AddActor(leftShadowActor);
     renderer->AddActor(rightShadowActor);
-    setProjectDir(projDir);
 }
 
 SketchProject::~SketchProject()
@@ -373,22 +372,77 @@ SketchProject::~SketchProject()
     rightHand = NULL;
 }
 
+//###############################################################
+// Code for rmDir and cpDir taken from mosg's StackOverflow answer
+// to this question:
+// http://stackoverflow.com/questions/2536524/copy-directory-using-qt
+
+// This function implementes the shell command 'rm -r'
+static bool rmDir(const QString &dirPath)
+{
+  QDir dir(dirPath);
+  if (!dir.exists())
+    return true;
+  foreach(const QFileInfo &info, dir.entryInfoList(QDir::Dirs | QDir::Files
+                                                   | QDir::NoDotAndDotDot)) {
+    if (info.isDir()) {
+      if (!rmDir(info.filePath()))
+        return false;
+    } else {
+      if (!dir.remove(info.fileName()))
+        return false;
+    }
+  }
+  QDir parentDir(QFileInfo(dirPath).path());
+  return parentDir.rmdir(QFileInfo(dirPath).fileName());
+}
+
+// This function implements the shell command 'cp -r' except that it runs
+// 'rm -r' on the destination folder first
+static bool cpDir(const QString& srcPath, const QString &dstPath)
+{
+  rmDir(dstPath);
+  QDir parentDstDir(QFileInfo(dstPath).path());
+  if (!parentDstDir.mkpath(QFileInfo(dstPath).fileName()))
+    return false;
+
+  QDir srcDir(srcPath);
+  foreach(const QFileInfo &info, srcDir.entryInfoList(QDir::Dirs | QDir::Files
+                                                      | QDir::NoDotAndDotDot)) {
+    QString srcItemPath = srcDir.absoluteFilePath(info.fileName());
+    QString dstItemPath = dstPath + "/" + info.fileName();
+    if (info.isDir()) {
+      if (!cpDir(srcItemPath, dstItemPath)) {
+        return false;
+      }
+    } else if (info.isFile()) {
+      if (!QFile::copy(srcItemPath, dstItemPath)) {
+        return false;
+      }
+    } else {
+      qDebug() << "Unhandled item " << info.filePath() << " in cpDir";
+    }
+  }
+  return true;
+}
+// end code taken from StackOverflow
+//###############################################################
+
 bool SketchProject::setProjectDir(const QString &dir)
 {
-    QDir tmp = QDir(dir);
-    if (tmp.isRelative())
-    {
-        QString abs = QDir::current().absoluteFilePath(dir);
-        tmp = QDir(abs);
-    }
-    bool exists;
-    if (!(exists = tmp.exists()))
-    {
-        tmp.mkpath(".");
-        exists = tmp.exists();
-    }
-    projectDirName = dir;
-    return exists;
+if (dir == projectDirName)
+  return true;
+  QDir tmp = QDir(dir);
+  if (tmp.isRelative())
+  {
+    QString abs = QDir::current().absoluteFilePath(dir);
+    if (abs == projectDirName)
+      return true;
+  }
+  if (!cpDir(projectDirName,dir))
+    return false;
+  projectDirName = dir;
+  return true;
 }
 
 void SketchProject::setLeftHandPos(q_xyz_quat_type* loc)
