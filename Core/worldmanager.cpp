@@ -150,7 +150,132 @@ void WorldManager::deleteObject(SketchObject *object)
 
 //##################################################################################################
 //##################################################################################################
-int WorldManager::getNumberOfObjects() const { return objects.size(); }
+void WorldManager::updateGroupStatus(SketchObject *object, double t, double lastUpdate) {
+	
+	if (!object->hasKeyframes())
+    {
+        return;
+    }
+
+	QMapIterator< double, Keyframe > it(*(object->getKeyframes()));
+    // last is the last keyframe we passed
+    double last = it.peekNext().key();
+    // go until the next one is greater than the time (the last one
+    // will be less than the time unless the time is less than the first
+    // time in the keyframes list
+    while (it.hasNext() && it.peekNext().key() < t)
+    {
+        last = it.next().key();
+    }
+    // if we are after the end of the last keyframe defined
+    if (!it.hasNext())
+    {
+		if (lastUpdate >= last && lastUpdate != t) {
+			return;
+		}
+		lastGroupUpdate = t;
+		Keyframe f = it.value();
+		if (object->getGroupingLevel() > f.getLevel()) {
+			ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
+			grp->removeObject(object);
+			addObject(object);
+		}
+		if (object->getGroupingLevel() < f.getLevel()) {
+			ObjectGroup *grp = dynamic_cast<ObjectGroup * >(f.getParent());
+			removeObject(object);
+			grp->addObject(object);
+		}	
+    }
+	// if we happenned to land on a keyframe or before the first one
+    else if (it.peekNext().key() == t ||
+               it.peekNext().key() == last)
+    {
+		lastGroupUpdate = t;
+		Keyframe f = it.next().value();
+		if (object->getGroupingLevel() > f.getLevel()) {
+			ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
+			grp->removeObject(object);
+			addObject(object);
+		}
+		if (object->getGroupingLevel() < f.getLevel()) {
+			ObjectGroup *grp = dynamic_cast<ObjectGroup * >(f.getParent());
+			removeObject(object);
+			grp->addObject(object);
+		}		
+    }
+	// if we are at a time between two keyframes
+    else
+    {
+        double next = it.peekNext().key();
+		lastGroupUpdate = t;
+	
+        Keyframe f1 = object->getKeyframes()->value(last), f2 = it.next().value();
+		int objLevel = object->getGroupingLevel(), f1Level = f1.getLevel(), f2Level = f2.getLevel();
+		
+		if (f1Level != f2Level) {
+		// grouping level between frames is different, must float freely to new group or away from old
+			if (f1Level == 0 || f2Level == 0) {
+				if (objLevel > 0) {
+					ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
+					grp->removeObject(object);
+					addObject(object);
+				}
+			}
+			else if (f1.getParent() != f2.getParent()) {
+				ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
+				grp->removeObject(object);
+				addObject(object);
+			}
+		}
+		else if (f1Level == 0) {
+		// the object is not in a group at either keyframe, make sure it is not now
+			if (objLevel > 0) {
+				ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
+				grp->removeObject(object);
+				addObject(object);
+			}
+		}
+		else if (f1.getParent() == f2.getParent()) {
+		// the object is in the same group at both frames, so add it to that group if
+		// it is not there already
+			if (objLevel > 0 && object->getParent() != f1.getParent()) {
+				ObjectGroup *old_grp = dynamic_cast< ObjectGroup * >(object->getParent());
+				old_grp->removeObject(object);
+				ObjectGroup *new_grp = dynamic_cast<ObjectGroup * >(f1.getParent());
+				new_grp->addObject(object);
+			}
+			if (objLevel == 0) {
+				removeObject(object);
+				ObjectGroup *new_grp = dynamic_cast<ObjectGroup * >(f1.getParent());
+				new_grp->addObject(object);
+			}
+		}
+		else { //the object is in a group at both frames but not the same one,
+			   //let it float freely between the old and new group
+			if (objLevel > 0) {
+				ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
+				grp->removeObject(object);
+				addObject(object);
+			}
+		}
+    }
+
+	//Do grouping updates for all the subobjects of this object
+	QList<SketchObject *> *subObjects = object->getSubObjects();
+	if (subObjects != NULL)
+	{
+		QMutableListIterator<SketchObject *> it(*subObjects);
+		while (it.hasNext()) {
+			updateGroupStatus(it.next(), t, lastGroupUpdate);
+		}
+	}
+}
+
+//##################################################################################################
+//##################################################################################################
+int WorldManager::getNumberOfObjects() const {
+    return objects.size();
+}
 
 //##################################################################################################
 //##################################################################################################
@@ -289,24 +414,30 @@ void WorldManager::stepPhysics(double dt)
 
 //##################################################################################################
 //##################################################################################################
-bool WorldManager::setAnimationTime(double t)
-{
-  bool isDone = true;
-  for (QListIterator< SketchObject * > it(objects); it.hasNext();) {
-    SketchObject *obj = it.next();
-    bool wasVisible = obj->isVisible();
-    obj->setPositionByAnimationTime(t);
-    if (obj->hasKeyframes()) {
-      if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
-        isDone = false;
-      }
+bool WorldManager::setAnimationTime(double t) {
+	bool isDone = true;
+	
+	//Do any necessary grouping/ungrouping of objects
+	for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *obj = it.next();
+		updateGroupStatus(obj, t, lastGroupUpdate); 
     }
-    if (obj->isVisible() && !wasVisible) {
-      insertActors(obj);
-    } else if (!obj->isVisible() && wasVisible) {
-      removeActors(obj);
+
+    for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
+        SketchObject *obj = it.next();
+        bool wasVisible = obj->isVisible();
+        obj->setPositionByAnimationTime(t);
+        if (obj->hasKeyframes()) {
+            if (obj->getKeyframes()->upperBound(t) != obj->getKeyframes()->end()) {
+                isDone = false;
+            }
+        }
+        if (obj->isVisible() && !wasVisible) {
+            insertActors(obj);
+        } else if (!obj->isVisible() && wasVisible) {
+            removeActors(obj);
+        }
     }
-  }
   setKeyframeOutlinesForTime(t);
   updateConnectors();
   return isDone;

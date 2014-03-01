@@ -20,11 +20,11 @@ void compareModels(const SketchModel* m1, const SketchModel* m2, int& numDiffere
                    bool printDiffs);
 
 void compareObjects(const SketchObject* o1, const SketchObject* o2,
-                    int& numDifferences, bool printDiffs);
+                    int& numDifferences, bool printDiffs, bool compareKeyframes);
 
 void compareObjectLists(const QList< SketchObject* >& list1,
                         const QList< SketchObject* >& list2,
-                        int& retVal, bool printDiffs);
+                        int& retVal, bool printDiffs, bool compareKeyframes);
 
 void compareCameras(SketchProject* proj1, SketchProject* proj2, int& retVal);
 
