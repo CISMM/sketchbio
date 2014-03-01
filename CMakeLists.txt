@@ -75,6 +75,7 @@ macro(copyFilesIfDifferent trgt files dest)
 endmacro(copyFilesIfDifferent)
 
 ENABLE_TESTING()
+INCLUDE(CTest)
 
 addmodule( CustomVtkFilters )
 addmodule( Core )
