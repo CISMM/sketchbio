@@ -1076,6 +1076,10 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
         objList[i]->setPosition(pos);
       }
     }
+	if (readKeyframesForObjectList(objs, objectIds) ==
+	  XML_TO_DATA_FAILURE) {
+	return XML_TO_DATA_FAILURE;
+    }
   } else {
     return XML_TO_DATA_FAILURE;
   }
