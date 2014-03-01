@@ -100,7 +100,7 @@ int testPastedItemIsTheSame()
     }
     SketchObject *pasted = list->at(0);
 
-    CompareBeforeAndAfter::compareObjects(obj.data(),pasted,retVal,true);
+    CompareBeforeAndAfter::compareObjects(obj.data(),pasted,retVal,true,true);
 
     return retVal;
 }
@@ -160,7 +160,7 @@ int testPastedGroupIsTheSame()
     SketchObject *pasted = list->at(0);
     pasted->setPosition(pos1); // position is not preserved by copy/paste
 
-    CompareBeforeAndAfter::compareObjects(obj.data(),pasted,retVal,true);
+    CompareBeforeAndAfter::compareObjects(obj.data(),pasted,retVal,true,true);
 
     return retVal;
 }

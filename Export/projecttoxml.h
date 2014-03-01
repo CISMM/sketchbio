@@ -64,7 +64,7 @@ private: // no other code should call these (this is the reason for making this 
                                               QHash<const SketchObject *, QString> &objectIds);
 
     static vtkXMLDataElement *objectToXML(const SketchObject *object, const QHash<const SketchModel *, QString> &modelIds,
-                                          QHash<const SketchObject *, QString> &objectIds, const QString &id);
+                                          QHash<const SketchObject *, QString> &objectIds);
 
     static vtkXMLDataElement *replicatorListToXML(
             const QList<StructureReplicator *> *replicaList,
@@ -86,7 +86,8 @@ private: // no other code should call these (this is the reason for making this 
 
     // this is used by readObject to read in each keyframe to the object.  Note that any state that
     // is set in the object to create the keyframe is also restored by the end of the function
-    static XML_Read_Status readKeyframe(SketchObject *object, vtkXMLDataElement *frame);
+    static XML_Read_Status readKeyframe(SketchObject *object, QHash<QString,SketchObject *> &objectIds,
+										vtkXMLDataElement *frame);
     // these are for reading objects from the xml... need recursively defined functions for groups
     // if there is an error, they will clean up any created objects as they fail
     // this one returns the object or NULL on an error
@@ -98,6 +99,10 @@ private: // no other code should call these (this is the reason for making this 
     // the case
     static XML_Read_Status readObjectList(QList<SketchObject *> &list, vtkXMLDataElement *elem,
                                            QHash<QString,SketchModel *> &modelIds,
+                                           QHash<QString,SketchObject *> &objectIds);
+	// this reads in the keyframes for each object in a list, and is used after calling readObjectList()
+	// so that all potential keyframe parents have already been loaded
+	static XML_Read_Status readKeyframesForObjectList(vtkXMLDataElement *elem,
                                            QHash<QString,SketchObject *> &objectIds);
     // these all return an error code, XML_TO_DATA_SUCCESS for succeeded
     // and XML_TO_DATA_FAILURE for failed

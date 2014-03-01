@@ -173,8 +173,6 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 		if (lastUpdate >= last && lastUpdate != t) {
 			return;
 		}
-		printf("\nGROUP UPDATE: after last keyframe\n");
-		fflush(stdout);
 		lastGroupUpdate = t;
 		Keyframe f = it.value();
 		if (object->getGroupingLevel() > f.getLevel()) {
@@ -183,7 +181,7 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 			addObject(object);
 		}
 		if (object->getGroupingLevel() < f.getLevel()) {
-			ObjectGroup *grp = dynamic_cast<ObjectGroup * >(f.getGroup());
+			ObjectGroup *grp = dynamic_cast<ObjectGroup * >(f.getParent());
 			removeObject(object);
 			grp->addObject(object);
 		}	
@@ -192,8 +190,6 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
     else if (it.peekNext().key() == t ||
                it.peekNext().key() == last)
     {
-		printf("\nGROUP UPDATE: On keyframe or before first\n");
-		fflush(stdout);
 		lastGroupUpdate = t;
 		Keyframe f = it.next().value();
 		if (object->getGroupingLevel() > f.getLevel()) {
@@ -202,7 +198,7 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 			addObject(object);
 		}
 		if (object->getGroupingLevel() < f.getLevel()) {
-			ObjectGroup *grp = dynamic_cast<ObjectGroup * >(f.getGroup());
+			ObjectGroup *grp = dynamic_cast<ObjectGroup * >(f.getParent());
 			removeObject(object);
 			grp->addObject(object);
 		}		
@@ -216,10 +212,6 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
         Keyframe f1 = object->getKeyframes()->value(last), f2 = it.next().value();
 		int objLevel = object->getGroupingLevel(), f1Level = f1.getLevel(), f2Level = f2.getLevel();
 		
-		printf("\nGROUP UPDATE\nGrouped: %d\nObject Level: %d\nFrame1 Level: %d (t:%f)\nFrame2 level: %d (t:%f)\n", object->numInstances(),
-			objLevel, f1Level, last, f2Level, next);
-		fflush(stdout);
-		
 		if (f1Level != f2Level) {
 		// grouping level between frames is different, must float freely to new group or away from old
 			if (f1Level == 0 || f2Level == 0) {
@@ -229,7 +221,7 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 					addObject(object);
 				}
 			}
-			else if (f1.getGroup() != f2.getGroup()) {
+			else if (f1.getParent() != f2.getParent()) {
 				ObjectGroup *grp = dynamic_cast< ObjectGroup * >(object->getParent());
 				grp->removeObject(object);
 				addObject(object);
@@ -243,18 +235,18 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t, double last
 				addObject(object);
 			}
 		}
-		else if (f1.getGroup() == f2.getGroup()) {
+		else if (f1.getParent() == f2.getParent()) {
 		// the object is in the same group at both frames, so add it to that group if
 		// it is not there already
-			if (objLevel > 0 && object->getParent() != f1.getGroup()) {
+			if (objLevel > 0 && object->getParent() != f1.getParent()) {
 				ObjectGroup *old_grp = dynamic_cast< ObjectGroup * >(object->getParent());
 				old_grp->removeObject(object);
-				ObjectGroup *new_grp = dynamic_cast<ObjectGroup * >(f1.getGroup());
+				ObjectGroup *new_grp = dynamic_cast<ObjectGroup * >(f1.getParent());
 				new_grp->addObject(object);
 			}
 			if (objLevel == 0) {
 				removeObject(object);
-				ObjectGroup *new_grp = dynamic_cast<ObjectGroup * >(f1.getGroup());
+				ObjectGroup *new_grp = dynamic_cast<ObjectGroup * >(f1.getParent());
 				new_grp->addObject(object);
 			}
 		}
@@ -422,9 +414,6 @@ bool WorldManager::setAnimationTime(double t) {
 	bool isDone = true;
 	
 	//Do any necessary grouping/ungrouping of objects
-	printf("\n**** TIME: %f **** \n", t);
-	fflush(stdout);
-
 	for (QListIterator<SketchObject *> it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
 		updateGroupStatus(obj, t, lastGroupUpdate); 

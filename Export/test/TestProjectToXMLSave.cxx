@@ -62,7 +62,6 @@ int saveLoadAndTest(SketchProject *proj, int testNum, bool writeToFile = false)
                         file.toStdString().c_str())
                     );
     }
-
     if (ProjectToXML::xmlToProject(proj2.data(),root)
             == ProjectToXML::XML_TO_DATA_FAILURE)
     {
@@ -123,8 +122,8 @@ int testSave3()
             MakeTestProject::addReplicationToProject(proj1.data(),12);
     // Bug840 - undo clears keyframes on the replication group, test this
     MakeTestProject::addKeyframesToObject(rep->getReplicaGroup(),3);
-
-    return saveLoadAndTest(proj1.data(),3);
+   
+	return saveLoadAndTest(proj1.data(),3);
 }
 
 int testSave4()
@@ -221,6 +220,7 @@ int testSave8()
 
 int testSave9()
 {
+	//reads a version 0 save file to see if it can convert up correctly
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer< SketchProject > project(
@@ -233,7 +233,6 @@ int testSave9()
             vtkSmartPointer< vtkXMLDataElement >::Take(
                 vtkXMLUtilities::ReadElementFromFile(file.toStdString().c_str())
                 );
-
     if (ProjectToXML::xmlToProject(project.data(),root)
             == ProjectToXML::XML_TO_DATA_SUCCESS)
     {
@@ -241,6 +240,8 @@ int testSave9()
     }
     else
     {
+		/*vtkXMLUtilities::FlattenElement(root,cout);
+        cout << endl;*/
         cout << "Reading xml for test 9 failed..." << endl;
         return 1;
     }

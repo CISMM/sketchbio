@@ -20,7 +20,7 @@ public:
     Keyframe(const q_vec_type pos, const q_vec_type absPos, 
 				const q_type orient, const q_type absOr,
 				ColorMapType::Type cMap, const QString& arr, int group_level, 
-				SketchObject *parent, bool visibleA, bool isActive);
+				SketchObject *objParent, bool visibleA, bool isActive);
     void getPosition(q_vec_type pos) const;
 	void getAbsolutePosition(q_vec_type pos) const;
     void getOrientation(q_type orient) const;
@@ -30,8 +30,8 @@ public:
     const ColorMapType::ColorMap& getColorMap() const;
     bool isVisibleAfter() const;
     bool isActive() const;
-	int getLevel();
-	SketchObject *getGroup();
+	int getLevel() const;
+	SketchObject *getParent() const;
 private:
     q_vec_type position;
 	q_vec_type absolutePosition;
@@ -40,7 +40,7 @@ private:
     ColorMapType::ColorMap colorMap;
     bool visibleAfter;
     bool active;
-	SketchObject *group;
+	SketchObject *parent;
 	int level;
 };
 
@@ -80,5 +80,10 @@ inline bool Keyframe::isActive() const
 {
     return active;
 }
-
+inline int Keyframe::getLevel() const {
+	return level;
+}
+inline SketchObject *Keyframe::getParent() const {
+	return parent;
+}
 #endif // KEYFRAME_H

@@ -127,7 +127,7 @@ void compareModels(const SketchModel* m1, const SketchModel* m2, int& numDiffere
 }
 
 void compareObjects(const SketchObject* o1, const SketchObject* o2,
-                    int& numDifferences, bool printDiffs)
+                    int& numDifferences, bool printDiffs, bool compareKeyframes)
 {
     if (o1 == NULL || o2 == NULL)
     {
@@ -138,7 +138,7 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
         else
         {
             numDifferences++;
-            if (printDiffs) PRINT_ERROR("One object is NULL.");
+            if (printDiffs) PRINT_ERROR("One object is NULL.");	
             return;
         }
     }
@@ -168,7 +168,7 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
     double vector_epsilon = max(max(Q_ABS(pos1[0]*Q_EPSILON),
                    Q_ABS(pos1[1]*Q_EPSILON)),
             Q_ABS(pos1[2]*Q_EPSILON));
-    o2->getOrientation(orient1);
+    o1->getOrientation(orient1);
     o2->getPosition(pos2);
     o2->getOrientation(orient2);
     if (!q_vec_equals(pos1,pos2,epsilon_modifier *vector_epsilon))
@@ -241,9 +241,14 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
     }
     else
     { // test group specific stuff
-        compareObjectLists(*o1->getSubObjects(),*o2->getSubObjects(),numDifferences,printDiffs);
+		if (compareKeyframes) {
+			compareObjectLists(*o1->getSubObjects(),*o2->getSubObjects(),numDifferences,printDiffs,true);
+		}
+		else {
+			compareObjectLists(*o1->getSubObjects(),*o2->getSubObjects(),numDifferences,printDiffs,false);
+		}
     }
-    if (o1->getNumKeyframes() != o2->getNumKeyframes())
+    if (o1->getNumKeyframes() != o2->getNumKeyframes() && compareKeyframes)
     {
         numDifferences++;
         if (printDiffs)
@@ -254,7 +259,7 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
         }
         return;
     }
-    else if (o1->getNumKeyframes() > 0)
+    else if (o1->getNumKeyframes() > 0 && compareKeyframes)
     {
         QMapIterator< double,Keyframe > it1(*o1->getKeyframes());
         QMapIterator< double,Keyframe > it2(*o2->getKeyframes());
@@ -274,15 +279,22 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
             {
                 const Keyframe& frame1 = it1.next().value();
                 const Keyframe& frame2 = it2.next().value();
-                q_vec_type p1, p2;
-                q_type or1, or2;
+                q_vec_type p1, p2, p1Abs, p2Abs;
+                q_type or1, or2, or1Abs, or2Abs;
                 frame1.getPosition(p1);
                 frame2.getPosition(p2);
+				frame1.getAbsolutePosition(p1Abs);
+				frame2.getAbsolutePosition(p2Abs);
                 frame1.getOrientation(or1);
                 frame2.getOrientation(or2);
+				frame1.getAbsoluteOrientation(or1Abs);
+				frame2.getAbsoluteOrientation(or2Abs);
                 double vector_epsilon = max(max(Q_ABS(p1[0]*Q_EPSILON),
                                             Q_ABS(p1[1]*Q_EPSILON)),
                         Q_ABS(p1[2]*Q_EPSILON));
+				double abs_vector_epsilon = max(max(Q_ABS(p1Abs[0]*Q_EPSILON),
+                                            Q_ABS(p1Abs[1]*Q_EPSILON)),
+                        Q_ABS(p1Abs[2]*Q_EPSILON));
                 if (!q_vec_equals(p1,p2,epsilon_modifier * vector_epsilon))
                 {
                     numDifferences++;
@@ -297,6 +309,20 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
                                          << time1);
                     return;
                 }
+				if (!q_vec_equals(p1Abs,p2Abs,epsilon_modifier * abs_vector_epsilon))
+                {
+                    numDifferences++;
+                    if (printDiffs) PRINT_ERROR("Keyframe absolute positions are different at time "
+                                         << time1);
+                    return;
+                }
+                if (!q_equals(or1Abs,or2Abs,epsilon_modifier * Q_EPSILON))
+                {
+                    numDifferences++;
+                    if (printDiffs) PRINT_ERROR("Keyframe absolute orientations are different at time "
+                                         << time1);
+                    return;
+                }
                 if (frame1.isVisibleAfter() != frame2.isVisibleAfter())
                 {
                     numDifferences++;
@@ -308,6 +334,13 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
                 {
                     numDifferences++;
                     if (printDiffs) PRINT_ERROR("Keyframe active state is different at time "
+                                         << time1);
+                    return;
+                }
+				if (frame1.getLevel() != frame2.getLevel())
+                {
+                    numDifferences++;
+                    if (printDiffs) PRINT_ERROR("Keyframe grouping level is different at time "
                                          << time1);
                     return;
                 }
@@ -326,6 +359,7 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
                                                     "time " << time1);
                     }
                 }
+				compareObjects(frame1.getParent(), frame2.getParent(), numDifferences, printDiffs, false);
             }
         }
     }
@@ -333,7 +367,7 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
 
 void compareObjectLists(const QList< SketchObject* >& list1,
                         const QList< SketchObject* >& list2,
-                        int& retVal, bool printDiffs)
+                        int& retVal, bool printDiffs, bool compareKeyframes)
 {
     if (list1.size() != list2.size())
     {
@@ -357,7 +391,7 @@ void compareObjectLists(const QList< SketchObject* >& list1,
             if (!used.data()[i])
             {
                 int diffs = 0;
-                compareObjects(n1,n2,diffs,true);
+                compareObjects(n1,n2,diffs,true,(compareKeyframes) ? true:false);
                 if (diffs == 0)
                 {
                     used.data()[i] = true;
@@ -391,7 +425,7 @@ void compareCameras(SketchProject* proj1, SketchProject* proj2, int& retVal)
         {
             SketchObject* obj2 = it2.next().key();
             int numDiffs = 0;
-            compareObjects(obj1,obj2,numDiffs,true);
+            compareObjects(obj1,obj2,numDiffs,true,true);
             if (numDiffs == 0)
             {
                 match = true;
@@ -433,8 +467,8 @@ void compareTransformOps(QSharedPointer< TransformEquals > t1,
             if (!used.data()[j])
             {
                 int diffs = 0;
-                compareObjects(l1->at(i).o1,l2->at(j).o1,diffs,false);
-                compareObjects(l1->at(i).o2,l2->at(j).o2,diffs,false);
+                compareObjects(l1->at(i).o1,l2->at(j).o1,diffs,false,true);
+                compareObjects(l1->at(i).o2,l2->at(j).o2,diffs,false,true);
                 if (diffs == 0)
                 {
                     failed = false;
@@ -499,21 +533,21 @@ void compareWorldObjects(SketchProject* proj1, SketchProject* proj2, int& retVal
 {
     compareObjectLists(*proj1->getWorldManager()->getObjects(),
                        *proj2->getWorldManager()->getObjects(),
-                       retVal,true);
+                       retVal,true,true);
 }
 
 void compareReplications(const StructureReplicator* rep1, const StructureReplicator* rep2,
                         int& diffs, bool printDiffs)
 {
     int v = 0;
-    compareObjects(rep1->getFirstObject(),rep2->getFirstObject(),v,printDiffs);
+    compareObjects(rep1->getFirstObject(),rep2->getFirstObject(),v,printDiffs,true);
     if ( v != 0)
     {
         diffs++;
         if (printDiffs) PRINT_ERROR("First objects didn't match");
     }
     v = 0;
-    compareObjects(rep1->getSecondObject(),rep2->getSecondObject(),v,printDiffs);
+    compareObjects(rep1->getSecondObject(),rep2->getSecondObject(),v,printDiffs,true);
     if ( v != 0)
     {
         diffs++;
@@ -577,11 +611,11 @@ void compareConnectors(const Connector* c1, const Connector* c2,
     int mydiffs = 0;
     int v = 0;
     q_vec_type pos1, pos2;
-    compareObjects(c1->getObject1(),c2->getObject1(),v,printDiffs);
+    compareObjects(c1->getObject1(),c2->getObject1(),v,printDiffs,true);
     if (v != 0)
     {
         v = 0;
-        compareObjects(c1->getObject1(),c2->getObject2(),v,printDiffs);
+        compareObjects(c1->getObject1(),c2->getObject2(),v,printDiffs,true);
         if (v != 0)
         {
             mydiffs++;
@@ -597,7 +631,7 @@ void compareConnectors(const Connector* c1, const Connector* c2,
                 if (printDiffs) PRINT_ERROR("Object connection positions don't match");
             }
             v = 0;
-            compareObjects(c1->getObject2(),c2->getObject1(),v,printDiffs);
+            compareObjects(c1->getObject2(),c2->getObject1(),v,printDiffs,true);
             if (v != 0)
             {
                 mydiffs++;
@@ -625,7 +659,7 @@ void compareConnectors(const Connector* c1, const Connector* c2,
             if (printDiffs) PRINT_ERROR("Object connection positions don't match");
         }
         v = 0;
-        compareObjects(c1->getObject2(),c2->getObject2(),v,printDiffs);
+        compareObjects(c1->getObject2(),c2->getObject2(),v,printDiffs,true);
         if (v != 0)
         {
             mydiffs++;
