@@ -240,7 +240,7 @@ private: // fields
     // there are no keyframes.  Otherwise, the map it points to is a mapping from time to frame where frame
     // contains all the information about what happens at that time (position, orientation, visibility, etc.)
     QScopedPointer< QMap< double, Keyframe > > keyframes;
-	QScopedPointer< QMap< double, vtkSmartPointer< vtkCardinalSpline > >> xsplines, ysplines, zsplines, 
+	QScopedPointer< QMap< double, vtkSmartPointer< vtkCardinalSpline > > > xsplines, ysplines, zsplines, 
 																yaw_splines, pitch_splines, roll_splines;
 };
 

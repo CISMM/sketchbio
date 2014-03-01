@@ -721,9 +721,9 @@ void SketchObject::computeSplines()
 		int last_level = 1;
 		double next = it.peekNext().key();
 		Keyframe f = keyframes->value(next);
-		q_type or;
-		f.getOrientation(or);
-		q_to_euler(last_or, or);
+		q_type orient;
+		f.getOrientation(orient);
+		q_to_euler(last_or, orient);
 		bool first_keyframe = true;
 
 		while (it.hasNext())
@@ -732,9 +732,9 @@ void SketchObject::computeSplines()
 			f = keyframes->value(next);
 			q_vec_type pos;
 			f.getAbsolutePosition(pos);
-			f.getAbsoluteOrientation(or);
+			f.getAbsoluteOrientation(orient);
 			q_vec_type euler;
-			q_to_euler(euler, or);
+			q_to_euler(euler, orient);
 			int current_level = f.getLevel();
 
 			//Make sure we choose the shortest path instead of rotating around the long way
