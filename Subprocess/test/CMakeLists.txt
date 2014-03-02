@@ -28,41 +28,35 @@ macro (make_subprocess_test name source)
 endmacro (make_subprocess_test)
 
 # create the necessary model files for the tests to run
+FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
+)
 
 FILE(GLOB test_project "${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj/*")
-FILE(GLOB model_files "${CMAKE_SOURCE_DIR}/models/*")
 
-add_custom_target(CopySubprocessTestModels ALL COMMENT
-    "Copying subprocess test models..." SOURCES ${model_files})
 add_custom_target(CopySubprocessTestProject ALL COMMENT
     "Copying subprocess test projects..." SOURCES ${test_project})
 
 
-copyFilesIfDifferent("CopySubprocessTestModels"
-    "${model_files}"
-    "${CMAKE_CURRENT_BINARY_DIR}/models")
-copyFilesIfDifferent("CopySubprocessTestProject"
-    "${test_project}"
-    "${CMAKE_CURRENT_BINARY_DIR}/projects/animation")
-
-FILE(GLOB chimera_ext_files 
-    "${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK/*")
-add_custom_target(CopyChimeraExtensionForTest ALL COMMENT
-    "Copying Chimera extension for tests...")
-add_custom_command(TARGET CopyChimeraExtensionForTest POST_BUILD
+add_custom_command(TARGET CopySubprocessTestProject POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension/ExportVTK
-    ${CMAKE_CURRENT_BINARY_DIR}/scripts/ExportVTK)
-
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/testproj
+    ${CMAKE_CURRENT_BINARY_DIR}/projects/animation)
 
 FILE(GLOB mybpyhelpers "${CMAKE_SOURCE_DIR}/Export/scripts/mybpyhelpers.py")
 
-add_custom_target(CopyBlenderPythonScriptForSubprocessTest COMMENT
-    "Copying bpy helper script for Subprocess test")
+add_custom_target(CopyBlenderPythonScriptForSubprocessTest ALL COMMENT
+    "Copying helper scripts for Subprocess test")
 
 add_custom_command(TARGET CopyBlenderPythonScriptForSubprocessTest POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/Export/scripts/mybpyhelpers.py
+    ${CMAKE_CURRENT_BINARY_DIR}/scripts/mybpyhelpers.py)
+add_custom_target(CopyChimeraExtensionForTests ALL COMMENT
+"Copying chimera extension for tests...")
+add_custom_command(TARGET CopyChimeraExtensionForTests POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Export/scripts
+    ${CMAKE_SOURCE_DIR}/Subprocess/chimeraExtension
     ${CMAKE_CURRENT_BINARY_DIR}/scripts)
 
 make_subprocess_test( ChimeraVTKExportRunner testChimeraVTKExportRunner.cc)
