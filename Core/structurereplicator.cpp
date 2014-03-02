@@ -1,6 +1,7 @@
 #include "structurereplicator.h"
 
 #include <iostream>
+#include <cassert>
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
@@ -28,6 +29,8 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     world(w),
     transform(vtkSmartPointer< vtkTransform >::New())
 {
+    assert(obj1 != NULL);
+    assert(obj2 != NULL);
     // too complicated to figure out how this should work for now, far easier to just make
     // sure they don't have keyframes from when they are outside the replicated structure
     obj1->clearKeyframes();

@@ -325,6 +325,11 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     timeInAnimation(0.0),
     viewTime(0.0)
 {
+    QDir dir(projectDirName);
+    if (!dir.exists())
+    {
+        QDir::current().mkpath(projectDirName);
+    }
     // set up initial transforms
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     // set up initial camera

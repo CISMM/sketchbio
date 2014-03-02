@@ -2,6 +2,8 @@
 
 #include <QScopedPointer>
 #include <QTime>
+#include <QDir>
+#include <QCoreApplication>
 
 #include <vtkCubeSource.h>
 #include <vtkRenderer.h>
@@ -352,12 +354,13 @@ int testVTKSegfault()
     QScopedPointer<SketchProject> project(
                 new SketchProject(renderer,"test/testModels/replicatorTest"));
 
-    QString filename = "models/1m1j.obj";
+    SketchModel *m = TestCoreHelpers::getCubeModel();
+    project->addModel(m);
 
-    SketchObject *o1 = project->addObject(filename,filename);
-    SketchObject *o2 = project->addObject(filename,filename);
-    SketchObject *o3 = project->addObject(filename,filename);
-    SketchObject *o4 = project->addObject(filename,filename);
+    SketchObject *o1 = project->addObject(new ModelInstance(m));
+    SketchObject *o2 = project->addObject(new ModelInstance(m));
+    SketchObject *o3 = project->addObject(new ModelInstance(m));
+    SketchObject *o4 = project->addObject(new ModelInstance(m));
 
     project->addReplication(o1,o2,5);
     QWeakPointer<TransformEquals> equals = project->addTransformEquals(o1,o2);
@@ -408,7 +411,9 @@ int testVTKSegfault()
     return 0;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    QCoreApplication app(argc,argv);
+    QDir::setCurrent(app.applicationDirPath());
     return test1() + test2() + test3() + test4() +
             testVTKSegfault();
 }
