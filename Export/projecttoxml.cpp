@@ -964,6 +964,9 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
     SketchProject* proj, vtkXMLDataElement* elem)
 {
+  if (elem == NULL) {
+    return XML_TO_DATA_FAILURE;
+  }
   if (QString(elem->GetName()) == QString(ROOT_ELEMENT_NAME)) {
     if (convertToCurrent(elem) == XML_TO_DATA_FAILURE) {
       // if failed to convert file to readable format version, exit we cannot do
