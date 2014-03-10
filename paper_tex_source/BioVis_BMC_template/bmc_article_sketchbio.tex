@@ -98,7 +98,11 @@
    %corref={aff1},                       % id of corresponding address, if any
    %noteref={n1},                        % id's of article notes, if any
   email={taylorr@cs.unc.edu}   % email address
-]{\inits{RT}\fnm{Russell} \snm{Taylor II}}
+]{\inits{RT}\fnm{Russell} \snm{Taylor} \suffix{II}}
+\author[
+	addressref={aff1},
+	email={pthomps@live.unc.edu}
+]{\inits{PT}\fnm{Peter} \snm{Thompson}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                          %%
@@ -227,15 +231,18 @@
 %%
 \section*{Background}
 
-Molecular modelling for animation is usually done with programs that are difficult to learn use, and which are controlled by keyboard and a 2D mouse. Discussions among collaborators are often done using 2D whiteboard sketches. Many scientists hire professional computer programmers and/or animators and work with them to create the models and animations for them rather than learn the complex programs typically used for modelling and animation.  
+Molecular modelling for animation is usually done with programs that are difficult to learn use, and which are controlled by keyboard and a 2D mouse. Discussions among collaborators are often done using 2D whiteboard sketches. Many scientists hire professional computer programmers and/or animators and work with them to create the models and animations for them rather than learn the complex programs typically used for modelling and animation.  Our aim is to provide scientists with a tool that is easy enough to learn and use that they can create these models and animations themselves.
 
-Several other applications target similar goals including UCSF Chimera, a tool that SketchBio delegates to internally \cite{pettersen2004ucsf}.  While this application has many features that can be useful to scientists, its complex nature makes it difficult to learn, and the mouse and keyboard controls it supports are not optimal for manipulating objects in three dimensions.  The Molecular Control Toolkit is also aimed at molecular modeling, providing an additional user interface for existing tools using gestures to control motions of objects with a Kinect or Leap Motion device \cite{sabirmolecular}.  However, mapping separate inputs to different degrees of freedom for manipulation usually decreases the user's performance\cite{bowman20043d} and the Molecular Control Toolkit maps a separate gesture to each degree of freedom.  Another tool aimed at simplifying the creation of molecular animations, PresentaBALL uses an interactive web interface to an existing molecular modeling tool \cite{nickelspresentaball}.  This allows widespread use but does nothing to assist in the difficult problem of placing things in 6 degrees of freedom.
+Several other applications target similar goals including UCSF Chimera \cite{pettersen2004ucsf}, the Molecular Control Toolkit \cite{sabirmolecular} and PresentaBALL \cite{nickelspresentaball}.  While this application has many features that can be useful to scientists, its complex nature makes it difficult to learn, and the mouse and keyboard controls it supports are not optimal for manipulating objects in three dimensions.  The Molecular Control Toolkit is also aimed at molecular modeling, providing an additional user interface for existing tools using gestures to control motions of objects with a Kinect or Leap Motion device \cite{sabirmolecular}.  However, mapping separate inputs to different degrees of freedom for manipulation usually decreases the user's performance\cite{bowman20043d} and the Molecular Control Toolkit maps a separate gesture to each degree of freedom.  Another tool aimed at simplifying the creation of molecular animations, PresentaBALL uses an interactive web interface to an existing molecular modeling tool \cite{nickelspresentaball}.  This allows widespread use but does nothing to assist in the difficult problem of placing things in 6 degrees of freedom.
 
-A common bottleneck in interactive modeling and animation applications is the speed of rendering a complex scene.  A key technique in improving the rendering speed of an application is reducing the complexity of the objects that are drawn.  This is done by replacing objects with imposters which are simpler pieces of geometry that result in the same or a very similar result being rendered.  Imposters can be difficult to notice, especially if they are far from the camera and the resulting screen area is small.  One type of imposter is a simplified version of the geometry that is textured to look like the more complex version \cite{decoret2003billboard}\cite{erikson1998simplification}\cite{cohen1998appearance}.  Another common imposter is a square that has a pre-rendered image of the more complex object as its texture.  As long as the viewpoint stays near the same position the discrepancies between this and the actual geometry will be small \cite{aliaga1996visualization}\cite{maciel1995visual}.  The level of simplification of an object can also be dynamically determined according to the amount of the allotted rendering time that is needed to draw each level of detail [XXX cite vtkLODActor.  How?].
+% we aren't really talking about the simplification here... leaving this paragraph out for now
+%A common bottleneck in interactive modeling and animation applications is the speed of rendering a complex scene.  A key technique in improving the rendering speed of an application is reducing the complexity of the objects that are drawn.  This is done by replacing objects with imposters which are simpler pieces of geometry that result in the same or a very similar result being rendered.  Imposters can be difficult to notice, especially if they are far from the camera and the resulting screen area is small.  One type of imposter is a simplified version of the geometry that is textured to look like the more complex version \cite{decoret2003billboard}\cite{erikson1998simplification}\cite{cohen1998appearance}.  Another common imposter is a square that has a pre-rendered image of the more complex object as its texture.  As long as the viewpoint stays near the same position the discrepancies between this and the actual geometry will be small \cite{aliaga1996visualization}\cite{maciel1995visual}.  The level of simplification of an object can also be dynamically determined according to the amount of the allotted rendering time that is needed to draw each level of detail [XXX cite vtkLODActor.  How?].
 
-Another advantage to simplifying the geometry of objects is its effect on the collision detection system.  Collision detection has a complexity of $\mathcal{O}(n^2)$ in the number of primitives since there can be $\mathcal{O}(n^2)$ collisions.  However, in more realistic examples, there will typically be far fewer collisions than potential collisions and so optimizations can be done on the search to reduce the expected complexity.  The best expected complexity uses sweep and prune methods and assumes the primitives are sorted in some dimension to get a complexity of $\mathcal{O}(n + c)$ where c is the number of colliding pairs \cite{tracy2009efficient}.  Described in Tracy, Buss \& Woods is a complex method of keeping the list of primitives sorted in some dimension to avoid the $\mathcal{O}(n lg(n))$ cost of sorting the list at each timestep as objects move \cite{tracy2009efficient}.  A somewhat simpler approach is to use a space partitioning method to rule out tests that do not need to be performed.  Space partitioning can be done using a tree of primitives and the volumes that bound them, called a bounding volume hierarchy.  This approach is used by libraries such as PQP, the collision library that SketchBio uses \cite{PQP}.  An alternate kind of space partitioning is to divide space into “bins” and group the objects by which bin they are in.  Then only the other primitives in the same bin need to be tested against them.  This type of algorithm is especially effective on GPUs where many local groups may be run in parallel \cite{oat2008efficient}.
+In order to create a model or animation that is useful, collisions between molecules must be detected and handled or reported to the user.  If there are $n$ molecules in the scene, then each of the $n\choose 2$ pairs of molecules must be tested for collisions.  Between each pair of molecules tested, each single unit in one must be tested against each single unit in the other.  This means that collision detection has a complexity of $\mathcal{O}(n^2)$ in the number of primitives since there can be $\mathcal{O}(n^2)$ collisions if everything is colliding with everything else.  However, in more realistic examples, there will typically be far fewer collisions than potential collisions and so optimizations can be done on the search to reduce the expected complexity.  The best expected complexity uses sweep and prune methods and assumes the primitives are sorted in some dimension to get a complexity of $\mathcal{O}(n + c)$ where c is the number of colliding pairs \cite{tracy2009efficient}.  Described in Tracy, Buss \& Woods is a complex method of keeping the list of primitives sorted in some dimension to avoid the $\mathcal{O}(n lg(n))$ cost of sorting the list at each timestep as objects move \cite{tracy2009efficient}.  A somewhat simpler approach is to use a space partitioning method to rule out tests that do not need to be performed.  Space partitioning can be done using a tree of primitives and the volumes that bound them, called a bounding volume hierarchy.  This approach is used by libraries such as the PQP library created by the UNC GAMMA group \cite{PQP}.  An alternate kind of space partitioning is to divide space into “bins” and group the objects by which bin they are in.  Then only the other primitives in the same bin or very nearby bins need to be tested against them.  This type of algorithm is especially effective on GPUs where many local groups may be run in parallel \cite{oat2008efficient}.
 
 As more and more computers move to multicore processors, applications can take advantage of the background CPUs to do work that is not immediately necessary.  This can include calls to other applications in the background to precompute results or even to create images to be rendered.  A system for seamless integration of applications for visualization was done by Rungta et. al by adding a layer above all of the applications of interest to pass events back and forth \cite{rungta2013manyvis}.
+
+This work presents SketchBio, a tool for creating models and animations of proteins and other molecular structures.  In order to promote usability, SketchBio is designed to run on a laptop such as a scientist would have and use only commercial hardware that is not cost prohibitive for our users.  The hardware of choice is the Razer Hydra, a pair of six degree of freedom trackers with buttons and high-hats that could be purchased for about \$100.
 
 \section*{Methods}
 
@@ -257,7 +264,7 @@ A primary goal of SketchBio is to be something that is usable by a scientist in 
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.8\columnwidth]{../actinVinculin.png}
+\includegraphics[width=0.8\columnwidth]{actinVinculin.png}
 \caption{A screen shot from SketchBio showing three actin monomers on the left colored yellow and the tail region of the vinculin protein on the right colored by surface charge.}
 \label{fig:actin_vinculin}
 \end{figure}
@@ -268,7 +275,7 @@ SketchBio generates the molecular surfaces using UCSF Chimera.  This subprocess 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{../shadow_plane.png}
+\includegraphics[width=0.8\columnwidth]{shadow_plane.png}
 \caption{A screenshot from SketchBio showing colored molecules and a different camera angle to emphasize the shadow plane's effect.}
 \label{fig:shadow_plane}
 \end{figure}
@@ -277,7 +284,7 @@ Selection in SketchBio involves moving the tracker to a location within the boun
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{../blender_interface.png}
+\includegraphics[width=0.8\columnwidth]{blender_interface.png}
 \caption{A screenshot showing the complexity of Blender's user interface.}
 \label{fig:blender_interface}
 \end{figure}
@@ -286,7 +293,7 @@ For scientists creating animations of molecules, SketchBio provides a basic inte
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{../crystalByExample.png}
+\includegraphics[width=0.8\columnwidth]{crystalByExample.png}
 \caption{A screenshot from SketchBio showing a contrived crystal-by-example structure that forms a helix.}
 \label{fig:crystal_by_example}
 \end{figure}
@@ -294,7 +301,7 @@ SketchBio has some features that allow quick creation of typical biological stru
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{../crystal_actin.png}
+\includegraphics[width=0.8\columnwidth]{crystal_actin.png}
 \caption{A screenshot from SketchBio showing an actin filament created with the crystal-by-example function and using the transformation matrix from the PDB data from one monomer to the next.}
 \label{fig:crystal_actin}
 \end{figure}
@@ -326,7 +333,7 @@ There are two ways that the user can interact with a crystal-by-example structur
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{../joe_test.png}
+\includegraphics[width=0.8\columnwidth]{joe_test.png}
 \caption{A view of the model Joe Hsiao created with SketchBio to compare usibility with UCSF Chimera}
 \label{fig:joe_test}
 \end{figure}
@@ -335,7 +342,7 @@ Constructing the protofibril models for Susan Lord took Resource computer scient
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{../peter_model.png}
+\includegraphics[width=0.8\columnwidth]{peter_model.png}
 \caption{A scene from a video created by Peter Thompson in SketchBio.  Approximately the same timestep is shown rendered at its full resolution in Figure \ref{fig:peter_video}}
 \label{fig:peter_model}
 \end{figure}
@@ -346,7 +353,7 @@ Recently, collaborator Peter Thompson, a biochemisty graduate student, created a
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=0.8\columnwidth]{../peter_video.png}
+\includegraphics[width=0.8\columnwidth]{peter_video.png}
 \caption{A frame from the video created by Peter Thompson.  This shows the tail domains of vinculin binding to an actin filament and slowing its motion.  This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and rendered via the export to Blender feature.}
 \label{fig:peter_video}
 \end{figure}
@@ -394,7 +401,7 @@ The authors declare that they have no competing interests.
 
 % if your bibliography is in bibtex format, use those commands:
 \bibliographystyle{bmc-mathphys} % Style BST file
-\bibliography{bmc_article}      % Bibliography file (usually '*.bib' )
+\bibliography{sources}      % Bibliography file (usually '*.bib' )
 
 % or include bibliography directly:
 % \begin{thebibliography}
