@@ -28,18 +28,19 @@ endmacro( make_export_test )
 
 # copy the files needed for the tests into place
 FILE(GLOB test_project "${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2/*")
-FILE(GLOB model_files "${CMAKE_SOURCE_DIR}/models/*")
 
-add_custom_target(CopyModelsForExportTests ALL COMMENT
-    "Copying models and projects for save tests..."
+add_custom_target(CopyProjectForExportTests ALL COMMENT
+    "Copying projects for save tests..."
     SOURCES ${test_project} ${model_files})
 
-copyFilesIfDifferent("CopyModelsForExportTests"
-    "${test_project}"
-    "${CMAKE_CURRENT_BINARY_DIR}/test/test2")
-copyFilesIfDifferent("CopyModelsForExportTests"
-    "${model_files}"
-    "${CMAKE_CURRENT_BINARY_DIR}/models")
+add_custom_command(TARGET CopyProjectForExportTests POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/saveTest2
+    ${CMAKE_CURRENT_BINARY_DIR}/test/test2)
+# create the necessary model files for the tests to run
+FILE(COPY ${CMAKE_SOURCE_DIR}/models/1m1j.obj
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models
+)
 
 # make the tests
 make_export_test( ProjectToXMLSave      TestProjectToXMLSave.cxx      )

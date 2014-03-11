@@ -94,6 +94,15 @@ public:
      *******************************************************************/
     void deleteObject(SketchObject *object);
 
+	/*******************************************************************
+     *
+     * Takes an object and either removes it from its group or adds it to
+     * one if necessary based on the animation time. Also does the same
+	 * for its subobjects recursively.
+     *
+     *******************************************************************/
+	void updateGroupStatus(SketchObject *object, double t, double lastGroupUpdate);
+
     /*******************************************************************
      *
      * Returns the number of SketchObjects that are stored in the
@@ -473,6 +482,8 @@ private:
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;
     PhysicsMode::Type collisionResponseMode;
+
+	double lastGroupUpdate;
 };
 
 inline SpringConnection* WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

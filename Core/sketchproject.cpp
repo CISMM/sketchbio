@@ -309,7 +309,7 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     replicas(),
     cameras(),
     transformOps(),
-    projectDir(NULL),
+    projectDirName(projDir),
     undoStack(),
     redoStack(),
     leftHand(addTracker(r)),
@@ -325,6 +325,11 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     timeInAnimation(0.0),
     viewTime(0.0)
 {
+    QDir dir(projectDirName);
+    if (!dir.exists())
+    {
+        QDir::current().mkpath(projectDirName);
+    }
     // set up initial transforms
     transforms->scaleWorldRelativeToRoom(SCALE_DOWN_FACTOR);
     // set up initial camera
@@ -352,7 +357,6 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     renderer->AddActor(shadowFloorActor);
     renderer->AddActor(leftShadowActor);
     renderer->AddActor(rightShadowActor);
-    setProjectDir(projDir);
 }
 
 SketchProject::~SketchProject()
@@ -371,32 +375,79 @@ SketchProject::~SketchProject()
     leftHand = NULL;
     delete rightHand;
     rightHand = NULL;
-    if (projectDir != NULL)
-    {
-        delete projectDir;
-    }
 }
+
+//###############################################################
+// Code for rmDir and cpDir taken from mosg's StackOverflow answer
+// to this question:
+// http://stackoverflow.com/questions/2536524/copy-directory-using-qt
+
+// This function implementes the shell command 'rm -r'
+static bool rmDir(const QString &dirPath)
+{
+  QDir dir(dirPath);
+  if (!dir.exists())
+    return true;
+  foreach(const QFileInfo &info, dir.entryInfoList(QDir::Dirs | QDir::Files
+                                                   | QDir::NoDotAndDotDot)) {
+    if (info.isDir()) {
+      if (!rmDir(info.filePath()))
+        return false;
+    } else {
+      if (!dir.remove(info.fileName()))
+        return false;
+    }
+  }
+  QDir parentDir(QFileInfo(dirPath).path());
+  return parentDir.rmdir(QFileInfo(dirPath).fileName());
+}
+
+// This function implements the shell command 'cp -r' except that it runs
+// 'rm -r' on the destination folder first
+static bool cpDir(const QString& srcPath, const QString &dstPath)
+{
+  rmDir(dstPath);
+  QDir parentDstDir(QFileInfo(dstPath).path());
+  if (!parentDstDir.mkpath(QFileInfo(dstPath).fileName()))
+    return false;
+
+  QDir srcDir(srcPath);
+  foreach(const QFileInfo &info, srcDir.entryInfoList(QDir::Dirs | QDir::Files
+                                                      | QDir::NoDotAndDotDot)) {
+    QString srcItemPath = srcDir.absoluteFilePath(info.fileName());
+    QString dstItemPath = dstPath + "/" + info.fileName();
+    if (info.isDir()) {
+      if (!cpDir(srcItemPath, dstItemPath)) {
+        return false;
+      }
+    } else if (info.isFile()) {
+      if (!QFile::copy(srcItemPath, dstItemPath)) {
+        return false;
+      }
+    } else {
+      qDebug() << "Unhandled item " << info.filePath() << " in cpDir";
+    }
+  }
+  return true;
+}
+// end code taken from StackOverflow
+//###############################################################
 
 bool SketchProject::setProjectDir(const QString &dir)
 {
-    QDir tmp = QDir(dir);
-    if (tmp.isRelative())
-    {
-        QString abs = QDir::current().absoluteFilePath(dir);
-        tmp = QDir(abs);
-    }
-    bool exists;
-    if (!(exists = tmp.exists()))
-    {
-        tmp.mkpath(".");
-        exists = tmp.exists();
-    }
-    if (projectDir != NULL)
-    {
-        delete projectDir;
-    }
-    projectDir = new QDir(tmp.absolutePath());
-    return exists;
+if (dir == projectDirName)
+  return true;
+  QDir tmp = QDir(dir);
+  if (tmp.isRelative())
+  {
+    QString abs = QDir::current().absoluteFilePath(dir);
+    if (abs == projectDirName)
+      return true;
+  }
+  if (!cpDir(projectDirName,dir))
+    return false;
+  projectDirName = dir;
+  return true;
 }
 
 void SketchProject::setLeftHandPos(q_xyz_quat_type* loc)
@@ -432,38 +483,23 @@ void SketchProject::setWorldSpringsEnabled(bool enabled)
 
 QString SketchProject::getProjectDir() const
 {
-    if (projectDir == NULL)
-        return "";
-    return projectDir->absolutePath();
+  return projectDirName;
 }
 
-QString SketchProject::getFileInProjDir(const QString& filename)
+bool SketchProject::getFileInProjDir(const QString& filename, QString& newName)
 {
-    QString result;
-    if (QFile(projectDir->absolutePath() + "/" + filename).exists())
+    QDir projectDir(projectDirName);
+    QString localname = filename.mid(filename.lastIndexOf("/") +1);
+    QString fullpath = projectDir.absoluteFilePath(localname);
+    QFile file(fullpath);
+    if ( file.exists() || file.copy(filename,fullpath))
     {
-        result = projectDir->absolutePath() + "/" + filename;
+      newName = fullpath;
+      return true;
+    } else {
+      newName = filename;
+      return false;
     }
-    else if (filename.startsWith(projectDir->absolutePath()))
-    {
-        result = filename;
-    }
-    else
-    {
-        QString localname = filename.mid(filename.lastIndexOf("/") +1);
-        QString fullpath = projectDir->absoluteFilePath(localname);
-        QFile file(filename);
-        if ( QFile(fullpath).exists() || file.copy(filename,fullpath))
-        {
-            result = fullpath;
-        }
-        else
-        {
-            qDebug() << "Failed to copy file to project directory!";
-            result = filename;
-        }
-    }
-    return result;
 }
 
 void SketchProject::clearProject()
@@ -689,24 +725,14 @@ SketchModel* SketchProject::addModel(SketchModel* model)
 SketchModel* SketchProject::addModelFromFile(const QString& source, const QString& fileName,
                                              double iMass, double iMoment)
 {
-    QFile file(fileName);
-//    qDebug() << "Trying to open file: " << fileName;
-    QString localname = fileName.mid(fileName.lastIndexOf("/") +1);
-    QString fullpath = projectDir->absoluteFilePath(localname);
-//    qDebug() << fullpath;
-    if ( QFile(fullpath).exists() || file.copy(fileName,fullpath))
+    QString newFileName;
+    if (getFileInProjDir(fileName,newFileName))
     {
-        SketchModel *model = models->makeModel(source,fullpath,iMass, iMoment);
-        return model;
-    }
-    else
-    {
-        // Can't throw, called from Qt slot
-		if (!QFile(fullpath).exists() )
-		{
-			qDebug() << "Failed to create file: " << fullpath;
-		}
-        return NULL;
+      return models->makeModel(source,newFileName,iMass,iMoment);
+    } else {
+      // Can't throw, called from Qt slot
+      qDebug() << "Failed to copy file to project directory: " << fileName;
+      return NULL;
     }
 }
 
@@ -750,7 +776,8 @@ SketchObject* SketchProject::addObject(SketchObject* object) {
     world->addObject(object);
     // this is for when the object is read in from a file, this method is called
     // with the objects instead of addCamera.  So this needs to recognize cameras
-    if (object->getModel() == models->getCameraModel(*projectDir)) {
+    QDir projectDir(projectDirName);
+    if (object->getModel() == models->getCameraModel(projectDir)) {
         cameras.insert(object,vtkSmartPointer<vtkCamera>::New());
         // cameras are not visible! make sure they are not.
         if (object->isVisible()) {
@@ -777,7 +804,8 @@ bool SketchProject::addObjects(const QVector<QString>& filenames)
 
 SketchObject* SketchProject::addCamera(const q_vec_type pos, const q_type orient)
 {
-    SketchModel* model = models->getCameraModel(*projectDir);
+    QDir projectDir(projectDirName);
+    SketchModel* model = models->getCameraModel(projectDir);
     SketchObject* obj = addObject(model,pos,orient);
     // cameras are invisible (from the animation's standpoint)
     obj->setIsVisible(false);
@@ -918,7 +946,8 @@ bool SketchProject::isOutlineVisible(int outlineIdx)
 }
 
 SketchModel* SketchProject::getCameraModel() {
-    return models->getCameraModel(*projectDir);
+  QDir projectDir(projectDirName);
+  return models->getCameraModel(projectDir);
 }
 
 /*

@@ -161,6 +161,8 @@ public:
     bool hasKeyframes() const;
     int  getNumKeyframes() const;
     const QMap< double, Keyframe > *getKeyframes() const;
+	// return the level of the object within groups to be used in a keyframe
+	int getGroupingLevel();
     // adds a keyframe at the given time, recursively descends to child objects and
     // notifies ObjectChangeObservers that a keyframe has been added
     void addKeyframeForCurrentLocation(double t);
@@ -181,6 +183,7 @@ public:
     void setPositionByAnimationTime(double t);
 	// Computes interpolating splines for animation
 	void computeSplines();
+	void getPosAndOrFromSpline(q_vec_type pos_dest, q_type or_dest, double t);
     // visibility methods
     void setIsVisible(bool isVisible);
     static void setIsVisibleRecursive(SketchObject *obj, bool isVisible);
@@ -232,12 +235,13 @@ private: // fields
     QList<int> collisionGroups;
     bool localTransformPrecomputed, localTransformDefiningPosition;
     QSet<ObjectChangeObserver *> observers;
+	ColorMapType::ColorMap map;
     // this smart pointer contains the keyframes of the object.  If the pointer it contains is null, then
     // there are no keyframes.  Otherwise, the map it points to is a mapping from time to frame where frame
     // contains all the information about what happens at that time (position, orientation, visibility, etc.)
     QScopedPointer< QMap< double, Keyframe > > keyframes;
-	vtkSmartPointer< vtkCardinalSpline > xspline, yspline, zspline, yaw_spline, pitch_spline, roll_spline;
-    ColorMapType::ColorMap map;
+	QScopedPointer< QMap< double, vtkSmartPointer< vtkCardinalSpline > > > xsplines, ysplines, zsplines, 
+																yaw_splines, pitch_splines, roll_splines;
 };
 
 

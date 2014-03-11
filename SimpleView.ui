@@ -65,7 +65,9 @@
     <addaction name="menuImport"/>
     <addaction name="menuExport"/>
     <addaction name="menuFilter"/>
+    <addaction name="separator"/>
     <addaction name="actionSave_Project"/>
+    <addaction name="actionSave_Project_As_2"/>
     <addaction name="actionLoad_Project"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
@@ -267,6 +269,11 @@
   <action name="actionFlorosim_Simulation">
    <property name="text">
     <string>Florosim Simulation</string>
+   </property>
+  </action>
+  <action name="actionSave_Project_As_2">
+   <property name="text">
+    <string>Save Project As...</string>
    </property>
   </action>
  </widget>
@@ -572,6 +579,22 @@
    <signal>triggered()</signal>
    <receiver>SimpleView</receiver>
    <slot>exportFlorosim()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave_Project_As_2</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>saveProjectAs()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
