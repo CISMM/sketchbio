@@ -21,11 +21,15 @@ INCLUDE_DIRECTORIES(
 FIND_PACKAGE(Qt4 REQUIRED)
 INCLUDE(${QT_USE_FILE})  # include UseQt4.cmake
 
-FIND_PACKAGE(VTK 6.1 COMPONENTS vtkGUISupportQt vtkIOGeometry vtkIOLegacy
+FIND_PACKAGE(VTK COMPONENTS vtkGUISupportQt vtkIOGeometry vtkIOLegacy
                                 vtkRenderingFreeType vtkRenderingFreeTypeOpenGL
                                 vtkIOXMLParser
                                 NO_MODULE)
 INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
+
+IF(${VTK_VERSION} VERSION_LESS 6.1)
+   ERROR("VTK version must be greater than or equal to 6.1!")
+ENDIF(${VTK_VERSION} VERSION_LESS 6.1)
 
 ###
 # Libusb1
