@@ -94,6 +94,9 @@ inline void computeClosestObject(SketchProject *proj,
 
     if (baseObj != closest) {
         proj->setOutlineObject(side,closest);
+		proj->setNearest(side,obj);
+		proj->setDistance(side,distance);
+
         baseObj = obj = closest;
         level = 0;
     }
@@ -132,6 +135,8 @@ inline void computeClosestObject(SketchProject *proj,
             }
             obj = levelObj;
             distance = dist;
+			proj->setNearest(side,obj);
+			proj->setDistance(side,distance);
         }
         else
         {

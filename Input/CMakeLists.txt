@@ -29,6 +29,8 @@ transformeditingmode.cpp  # h file used by Moc, no need to include here
 springeditingmode.cpp  # h file used by Moc, no need to include here
 animationmode.cpp  # h file used by Moc, no need to include here
 TransformInputDialog.cpp  # h file used by Moc, no need to include here
+controlFunctions.cpp
+controlFunctions.h
 savedxmlundostate.cpp
 savedxmlundostate.h
 ${SketchBioInputMoc}

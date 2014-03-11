@@ -190,10 +190,12 @@ void ColorEditingMode::doUpdatesForFrame() {
 			Connector* closest;
 			bool newAtEnd1;
 			closest = world->getClosestConnector(rightTrackerPos,&springDist,&newAtEnd1);
+			project->setSpringDistance(1, springDist);
 			if (closest != rSpring)
 			{
 				project->setOutlineSpring(RIGHT_SIDE_OUTLINE,closest,newAtEnd1);
 				rSpring = closest;
+				project->setNearestSpring(1, rSpring);
 			}
 			if (springDist < SPRING_DISTANCE_THRESHOLD)
 			{
