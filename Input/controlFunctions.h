@@ -22,6 +22,13 @@ namespace ControlFunctions
 	void toggleObjectVisibility(SketchProject*, int, bool);
 	void toggleShowInvisibleObjects(SketchProject*, int, bool);
 
+	// SPRING EDITING functions:
+	void grabSpringOrWorld(SketchProject*, int, bool); // !! INCOMPLETE !! - needs a "hand-oriented" state mechanism
+	void deleteSpring(SketchProject*, int, bool);
+	void snapSpringToTerminus(SketchProject*, int, bool); // !! INCOMPLETE !!
+	void createSpring(SketchProject*, int, bool); // !! INCOMPLETE !! & !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
+	void createTransparentConnector(SketchProject*, int, bool); // !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
+
 	// UTILITY functions:
 	void resetViewPoint(SketchProject*, int, bool);
 }

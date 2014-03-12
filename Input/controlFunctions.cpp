@@ -16,6 +16,7 @@
 #include <keyframe.h>
 #include <objectgroup.h>
 #include <projecttoxml.h>
+#include <springconnection.h>
 #include <transformmanager.h>
 #include <worldmanager.h>
 
@@ -461,6 +462,173 @@ namespace ControlFunctions
 	}
 
 	// ===== END COLOR EDITING FUNCTIONS =====
+
+	// ===== BEGIN SPRING EDITING FUNCTIONS =====
+
+	// !! INCOMPLETE !! - Needs a "hand-oriented" state mechanism
+	void grabSpringOrWorld(SketchProject *project, int hand, bool wasPressed)
+	{
+	/*	if (wasPressed)
+		{
+			Connector* nearestSpring = project->getNearestSpring(hand);
+			double nearestSpringDist = project->getSpringDistance(hand);
+
+			// NOTE: If the "hand-oriented" state mechanism takes (int hand) as an argument,
+			//       then we won't need the outer IF-ELSE statement.
+			if (hand == 1) // right hand
+			{
+				if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD)
+					rightGrabbedSpring = true;
+				else if (grabbedWorld == WORLD_NOT_GRABBED)
+					grabbedWorld = RIGHT_GRABBED_WORLD;
+			}
+			else // left hand
+			{
+				if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD)
+					leftGrabbedSpring = true;
+				else if (grabbedWorld == WORLD_NOT_GRABBED)
+					grabbedWorld = LEFT_GRABBED_WORLD;
+			}
+		}
+		else // button released
+		{
+			Connector* nearestSpring = project->getNearestSpring(hand);
+			double nearestSpringDist = project->getSpringDistance(hand);
+
+			if (hand == 1) // right hand
+			{
+				if (grabbedWorld == RIGHT_GRABBED_WORLD)
+				{
+					grabbedWorld = WORLD_NOT_GRABBED;
+				}
+				else if (rightGrabbedSpring)
+				{
+					rightGrabbedSpring = false;
+					project->setOutlineSpring(RIGHT_SIDE_OUTLINE,nearestSpring,rAtEnd1);
+					addXMLUndoState(project);
+				}
+			}
+			else // left hand
+			{
+				if (grabbedWorld == LEFT_GRABBED_WORLD)
+				{
+					grabbedWorld = WORLD_NOT_GRABBED;
+				}
+				else if (leftGrabbedSpring)
+				{
+					leftGrabbedSpring = false;
+					project->setOutlineSpring(LEFT_SIDE_OUTLINE,nearestSpring,lAtEnd1);
+					addXMLUndoState(project);
+				}
+			}
+		}
+	*/	return;
+	}
+
+	void deleteSpring(SketchProject *project, int hand, bool wasPressed)
+	{
+		if (wasPressed)
+		{
+			//emit newDirectionsString("Move to a spring and release to delete the spring.");
+		}
+		else // button released
+		{
+			Connector* thisHandNearestSpring = project->getNearestSpring(hand);
+			double thisHandNearestSpringDist = project->getSpringDistance(hand);
+
+			Connector* otherHandNearestSpring = project->getNearestSpring((hand + 1) % 2);
+
+			if (thisHandNearestSpringDist < SPRING_DISTANCE_THRESHOLD)
+			{
+				project->getWorldManager()->removeSpring(thisHandNearestSpring);
+				if (thisHandNearestSpring == otherHandNearestSpring)
+				{
+					otherHandNearestSpring = NULL;
+				}
+				thisHandNearestSpring = NULL;
+			}
+			//emit newDirectionsString(" ");
+		}
+		return;
+	}
+
+	// !! INCOMPLETE !!
+	void snapSpringToTerminus(SketchProject *project, int hand, bool wasPressed)
+	{
+	/*	if (wasPressed)
+		{
+			Connector* nearestSpring = project->getNearestSpring(hand);
+			double nearestSpringDist = project->getSpringDistance(hand);
+
+			snapMode = true;
+			//emit newDirectionsString("Move to a spring and choose which terminus to snap to.");
+			if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD) {
+				double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
+				bool snap_to_n = (value < 0.5) ? true : false;
+				nearestSpring->snapToTerminus(rAtEnd1, snap_to_n);
+			}
+		}
+		else // button released
+		{
+			snapMode = false;
+			//emit newDirectionsString(" ");
+		}
+	*/	return;
+	}
+
+	// !! INCOMPLETE !!
+	// ...also...
+	// !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
+	void createSpring(SketchProject *project, int hand, bool wasPressed)
+	{
+	/*	if (wasPressed)
+		{
+			//emit newDirectionsString("Release at location of new spring.");
+		}
+		else // button released
+		{
+			q_vec_type pos1, pos2 = {0, 1, 0};
+			project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
+			q_vec_add(pos2,pos1,pos2);
+			double stiffness;
+			stiffness = ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
+			SpringConnection* spring = SpringConnection::makeSpring(
+						NULL,
+						NULL,
+						pos1,
+						pos2,
+						true,
+						stiffness,
+						0,
+						true);
+			project->addConnector(spring);
+			addXMLUndoState(project);
+			//emit newDirectionsString(" ");
+		}
+	*/	return;
+	}
+
+	// !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
+	void createTransparentConnector(SketchProject *project, int hand, bool wasPressed)
+	{
+		if (wasPressed)
+		{
+			//emit newDirectionsString("Release to create a transparent connector at the current location.");
+		}
+		else // button released
+		{
+			q_vec_type pos1, pos2 = {0, 1, 0};
+			project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
+			q_vec_add(pos2,pos1,pos2);
+			Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.3,10);
+			project->addConnector(conn);
+			addXMLUndoState(project);
+			//emit newDirectionsString(" ");
+		}
+		return;
+	}
+
+	// ===== END SPRING EDITING FUNCTIONS =====
 
 	// ===== BEGIN UTILITY FUNCTIONS =====
 
