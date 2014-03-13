@@ -74,7 +74,11 @@ ChimeraVTKExportRunner::ChimeraVTKExportRunner(
         cmdFile->write(line.toStdString().c_str());
         cmdFile->write("import ExportVTK\n");
         line = "ExportVTK.write_models_as_vtk(\"%1\",modelList,volume)\n";
+#ifdef _WIN32
+		cmdFile->write(line.arg(QString(vtkFile).replace("/","\\\\")).toStdString().c_str());
+#else
         cmdFile->write(line.arg(vtkFile).toStdString().c_str());
+#endif
         cmdFile->write("runCommand(\"close all\")\n");
         cmdFile->write("runCommand(\"stop now\")\n");
         cmdFile->close();
