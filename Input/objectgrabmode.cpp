@@ -25,6 +25,10 @@ ObjectGrabMode::~ObjectGrabMode()
 
 void ObjectGrabMode::buttonPressed(int vrpn_ButtonNum)
 {
+  if (project->isShowingAnimation()) // ignore grabbing during an animation preview
+  {
+	  return;
+  }
   if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
   {
       if (lDist > DISTANCE_THRESHOLD)
@@ -54,6 +58,10 @@ void ObjectGrabMode::buttonPressed(int vrpn_ButtonNum)
 
 void ObjectGrabMode::buttonReleased(int vrpn_ButtonNum)
 {
+  if (project->isShowingAnimation()) // ignore grabbing during an animation preview
+  {
+	  return;
+  }
   if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
   {
       if (worldGrabbed == LEFT_GRABBED_WORLD)
