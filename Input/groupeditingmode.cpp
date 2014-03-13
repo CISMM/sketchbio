@@ -17,6 +17,9 @@
 #include <sketchproject.h>
 #include <projecttoxml.h>
 
+// initial port to controlFunctions (i.e. "generalized input")
+#include <controlFunctions.h>
+
 GroupEditingMode::GroupEditingMode(SketchProject *proj, bool const * const b,
                                    double const * const a) :
     ObjectGrabMode(proj,b,a)
@@ -29,6 +32,20 @@ GroupEditingMode::~GroupEditingMode()
 
 void GroupEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
+	ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
+	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+		ControlFunctions::toggleGroupMembership(project, 1, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+		ControlFunctions::copyObject(project, 1, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+		ControlFunctions::pasteObject(project, 1, true);
+    }
+	/*
     ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
@@ -43,10 +60,29 @@ void GroupEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
         emit newDirectionsString("Release the button to paste");
     }
+	*/
 }
 
 void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
+	ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
+	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+		ControlFunctions::toggleGroupMembership(project, 1, false);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+		ControlFunctions::copyObject(project, 1, false);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+		ControlFunctions::pasteObject(project, 1, false);
+    }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+		ControlFunctions::resetViewPoint(project, 0, false);
+    }
+	/*
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
     WorldManager *world = project->getWorldManager();
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
@@ -134,6 +170,7 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
     {
         resetViewPoint();
     }
+	*/
 }
 
 void GroupEditingMode::analogsUpdated()

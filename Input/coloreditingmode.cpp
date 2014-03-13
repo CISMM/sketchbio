@@ -9,6 +9,9 @@
 #include <worldmanager.h>
 #include <sketchproject.h>
 
+// initial port to controlFunctions (i.e. "generalized input")
+#include <controlFunctions.h>
+
 ColorEditingMode::ColorEditingMode(SketchProject *proj, const bool * const b,
                                    const double * const a)
     : ObjectGrabMode(proj,b,a),
@@ -23,6 +26,24 @@ ColorEditingMode::~ColorEditingMode()
 
 void ColorEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
+	ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
+    if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+		ControlFunctions::changeObjectColor(project, 1, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+		ControlFunctions::changeObjectColorVariable(project, 1, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
+    {
+		ControlFunctions::toggleObjectVisibility(project, 1, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+		ControlFunctions::toggleShowInvisibleObjects(project, 1, true);
+    }
+	/*
     ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
@@ -43,10 +64,33 @@ void ColorEditingMode::buttonPressed(int vrpn_ButtonNum)
     {
         emit newDirectionsString("Release to toggle whether invisible objects are shown.");
     }
+	*/
 }
 
 void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
+	ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
+	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    {
+		ControlFunctions::changeObjectColor(project, 1, false);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
+    {
+		ControlFunctions::changeObjectColorVariable(project, 1, false);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
+    {
+		ControlFunctions::toggleObjectVisibility(project, 1, false);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
+    {
+		ControlFunctions::toggleShowInvisibleObjects(project, 1, false);
+    }
+	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
+    {
+        ControlFunctions::resetViewPoint(project, 0, false);
+    }
+	/*
     ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
     if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
@@ -165,6 +209,7 @@ void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
     {
         resetViewPoint();
     }
+	*/
 }
 
 void ColorEditingMode::doUpdatesForFrame() {

@@ -24,6 +24,7 @@ AnimationMode::~AnimationMode()
 
 void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 {
+	ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
 	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
 		ControlFunctions::keyframeAll(project, 1, true); 
@@ -73,6 +74,7 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 
 void AnimationMode::buttonReleased(int vrpn_ButtonNum)
 {
+	ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
 	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
 		ControlFunctions::keyframeAll(project, 1, false); 
