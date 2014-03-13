@@ -374,9 +374,13 @@ There are two ways that the user can interact with a crystal-by-example structur
 
 \subsection*{Success Measures}
 
-XXX - write this
+XXX - do we want this subsection?  if so:
+% note: since we haven't met any of the goals yet, maybe we don't want to talk about them?
 
-\section*{Results}
+% some wording borrowed from renewal proposal
+Our primary success metric will be the ability the extent to which collaborators are able to use SketchBio themselves to construct models and animations for which they previously required programmers.  A secondary success metric is the speed at which they are able to construct these models and animations.  Our tertiary success metric is the extent to which we are able to to reuse existing functionality instead of reimplementing it within SketchBio with a goal ratio of five reused features to one reimplemented feature.
+
+\section*{Results and Discussion}
 \subsection*{Model Creation}
 
 \begin{figure}[h]
@@ -386,7 +390,10 @@ XXX - write this
 \label{fig:joe_test}
 \end{figure}
 
-Constructing the protofibril models for Susan Lord took Resource computer scientist Joe Hsiao 3-3.5 hours by hand-editing transformations within Chimera (a task challenging to teach to biologists).  Using an early prototype of SketchBio, he constructed the protofibril seen in Figure \ref{fig:joe_test} in 1.5 hours (a task we'd expect a collaborator to do just as rapidly).  From this demonstration the lack of depth cues became apparent and later the shadow plane was added.  This should reduce the amount of time needed to construct the protofibril model in SketchBio even further.  XXX - get new time for Joe
+Constructing the protofibril models for Susan Lord took Resource computer scientist Joe Hsiao 3-3.5 hours by hand-editing transformations within Chimera (a task challenging to teach to biologists).  Using an early prototype of SketchBio, he constructed the protofibril seen in Figure \ref{fig:joe_test} in 1.5 hours (a task we'd expect a collaborator to do just as rapidly).  From this demonstration the lack of depth cues became apparent.  With the addition of the shadow plane below the objects to give better depth information and a few other UI tweaks, Joe created the model in 35 minutes after about an hour of training.  This demonstrations shows that a small about of time spent using SketchBio can allow someone to create a model about 6 times as fast.
+% note: UI tweaks may not be the best way of describing almost a year's worth of changes...
+
+% XXX - picture of model Joe made yesterday?
 
 \begin{figure}[h]
 \centering
@@ -410,7 +417,8 @@ Collaborator Peter Thompson, a biochemisty graduate student, created an animatio
 
 \subsection*{Collision Detection Speed-ups}
 
-\section*{Discussion}
+%\section*{Discussion} % XXX - possibly combine with results?  I'm writing it that way for now
+
 
 \section*{Conclusions} % XXX - rewrite this
 The current state of SketchBio allows users to position molecules with collision detection, create repeated structures with crystal-by-example, and create animations by placing keyframes in time to specify the paths the objects take.  It has already been used by a scientist to create a video that he feels is usable in a presentation to others in his field.  This animation was based on a model from a paper he had read and wished to present.  He also created a model based on a second paper using the charge-colored surfaces to see the interaction propsed.  The developers of the tool were able to create an animation showing an approximation of the interaction between several of the molecules in about 30 minutes.  Although more work is required, this use shows that this tool is capable of letting scientists create models and animations without directly including a computer scientist or animator in the process.
