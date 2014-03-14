@@ -290,10 +290,40 @@ Individual capabilities of web-based applications such as Google maps and real-e
 
 SketchBio is a system for understanding subcellular biology through the building of complex 3D macromolecular structures, and animating the structures over time.
 
-XXX The modeling, and rendering of these hypothetical situations currently involves accessing and using a number of tools and databases (PDB, UCSF Chimera, Blender, and MicroscopeSimulator) and then converting files and data to pass between tools.
+The modeling and rendering of these hypothetical structures currently involves using a number of tools and databases and converting files and data to pass between tools.
+
+SketchBio consolidates state-of-the-art tools and libraries into a seamless workflow, enabling two-handed 6-degree-of-freedom real-time direct interaction with groups of molecules.  It adds several novel features that accelerate this workflow for three different user groups.
+
+\subsection*{System Overview}
+
+Figure \ref{fig:actin_vinculin} shows a screenshot of the SketchBio user interface with a group of three actin molecules (left) and the tail region of a vinculin molecule (right).  The small white spheres in the center represent the two tracked hand-held controllers. Status information about the current system state is shown in the lower left.  Animation timepoint in seconds is shown in the lower right.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\columnwidth]{actinVinculin.png}
+\caption{A screen shot from SketchBio showing three actin monomers on the left colored yellow and the tail region of the vinculin protein on the right colored by surface charge.}
+\label{fig:actin_vinculin}
+\end{figure}
+
+\subsection*{Bimanual Interaction}
+Bill Buxton and others have described the benefits of two-handed (bimanual) interaction.  He and others observed in \ref{leganchuk1998} that bimanual manipulation brings ``two types of advantages to human-computer interaction: manual and cognitive. Manual benefits come from increased time-motion efficiency, due to the twice as many degrees of freedom simultaneously available to the user. Cognitive benefits arise as a result of reducing the load of mentally composing and visualizing the task at an unnaturally low level imposed by traditional unimanual techniques."
+
+As seen in Figure \ref{fig:two_hands}, SketchBio brings these important benefits to the construction of macromolecular structures.  The entire interface is built around a set of world and root-object manipulation controls in the non-dominant hand and a set of individual-element manipulation controls using the dominant hand.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\columnwidth]{two_hands.png}
+\caption{The left hand sets the base molecule while the right hand positions the copies in this two-handed construction of an actin fiber.}
+\label{fig:two_hands}
+\end{figure}
+
+SketchBio uses a pair of Razer Hydra controllers to provide two 6-DOF trackers, each of which also has several buttons, a hi-hat controller, and an analog input.  This enables a very expressive set of verbs (buttons), nouns (selection via 3-DOF positioning), and adjectives (magnitude via analog inputs, viewpoint via hi-hat, and pose via a combined 12-DOF tracking).  This avoids the need for the system to recognize a large set of ambiguous gestures, as is the case for video-based user input.
+
+Using one of the buttons to switch between modes provides a sufficiently-large space of commands that almost all operations can be performed without putting down the controllers.  The keyboard and mouse are used to name proteins and files on initial loading, and to set precise values as needed for one or two operations.
 
 \subsection*{Architecture}
-XXX Figure (full width) showing internal and external.
+
+The architecture of SketchBio is shown in Figure \ref{fig:architecture}.  Objects can be loaded into SketchBio as .obj files from any program that writes this format or directly through the GUI (via harnessing UCSF Chimera from the PDB or a local .pdb file).  Since VTK is used in SketchBio, any file format that VTK can read can be imported with relatively minor changes.  Exporting data to Blender is done by writing a script to be run on Blender's python interface to produce the animation.  When exporting to MicroscopeSimulator, SketchBio writes out a Microscope Simulator XML project file and loads the project into MicroscopeSimulator.  SketchBio harnesses external programs when possible (PyMOL, Chimera, Blender) and uses existing libraries for other core functions (VTK, PQP, VRPN).  It maps from dozens of controls in Chimera and hundreds of controls in Blender down to 4 input options and about 20 animation controls to streamline the tasks needed for creating structures and animations.  This provides a streamlined workflow that is easy to learn and use.
 
 \begin{figure*}[ht]
     \begin{center}
@@ -304,10 +334,6 @@ XXX Figure (full width) showing internal and external.
 \label{fig:architecture}
 \end{figure*}
 
-The architecture of SketchBio is shown in Figure \ref{fig:architecture}.  Objects can be loaded into SketchBio as .obj files from any program that writes this format or via UCSF Chimera from the PDB or a local .pdb file.  Since VTK is used in SketchBio, any file format that VTK can read can be imported with relatively minor changes.  Exporting data to Blender is done by writing a script to be run on Blender's python interface to produce the animation.  When exporting to MicroscopeSimulator, SketchBio writes out a Microscope Simulator XML project file and loads the project into MicroscopeSimulator.  We harness external programs when possible (PyMOL, Chimera, Blender) and use existing libraries for other core functions (VTK, PQP, VRPN).  We map from dozens of controls on Chimera and hundreds of controls in Blender down to 4 input options and about 20 animation controls to streamline the tasks needed for creating structures and animations.  This provides a streamlined workflow that is easy to learn and use. XXX how's this?
-
-XXX Desribe how we use multiple input options (Chimera, OBJ files, ...) and multiple output options (Blender, MicroscopeSimulator, ...).  We harness external programs when possible (Pymol, Chimera, Blender) and use existing libraries for other core functions (VTK, PQP, VRPN).  XXX We map from XXX controls on Chimera and XXX controls in Blender down to XXX controls to streamline the tasks needed for creating structures and animations down to XXX.  We provide a streamlined workflow that is easy to use.
-
 \subsection*{Design Decisions}
 XXX Do not re-implement existing algorithms.  Extend.
 
@@ -316,32 +342,16 @@ The design of SketchBio avoids reimplementing existing features where possible, 
 As computers increasingly use multicore processors, applications can take advantage of the background CPUs to do work that is not immediately necessary.  This can include calls to other applications in the background to precompute results or even to create images to be rendered.  This works well with the goal of utilizing other existing programs as subprocesses of SketchBio since these subprocesses can use the background CPUs without affecting SketchBio's responsiveness.  XXX Move elsewhere and expand.
 
 
-\paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays.  \cite{Arthur}\cite{Grant1998}\cite{Marshburn2005}\cite{Taylor1999}\cite{Taylor1997}\cite{Taylor1994}  We found that few scientists were willing to travel to our laboratories to use them.  Those scientists received great benefit from the applications, but we wanted SketchBio to be broadly available.  Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.  To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and uses inexpensive commercial input devices (either the Razer Hydra or a pair of WiiMotes).
+\paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays.  \cite{Arthur}\cite{Grant1998}\cite{Marshburn2005}\cite{Taylor1999}\cite{Taylor1997}\cite{Taylor1994}  The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.  Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.  To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and uses inexpensive commercial input devices.
 
 Scientists are not likely to adopt a tool that requires them to spend a lot of time working on the computer for little payout.  SketchBio aims to minimize and consolidate the time that the scientist spends in front of the computer by running many jobs in the background.  Almost all systems in use in labs have multiple processors and in many cases the background processors can be utilized without interfering with other applications.  SketchBio takes advantage of this in two ways: using background threads to do non-immediate work and calling subprocesses to perform tasks that are already implemented externally.  This allows the scientist to avoid waiting on non-essential background output--to continue working and to perform long-running operations in the background while they work on other things.
-
-\subsection*{System Overview}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.8\columnwidth]{actinVinculin.png}
-\caption{A screen shot from SketchBio showing three actin monomers on the left colored yellow and the tail region of the vinculin protein on the right colored by surface charge.}
-\label{fig:actin_vinculin}
-\end{figure}
-
-Figure \ref{fig:actin_vinculin} shows a screenshot of the SketchBio user interface with three actin molecules (left) and the tail region of a vinculin molecule (right).  The small white spheres in the center represent the two tracked hand-held controllers.  In the lower left, status information about the current state of the system can be seen.  One of the main uses of SketchBio is creating animations, this project is an animation and the time in the animation is seen on the lower right in seconds.  This image also shows SketchBio coloring the objects, both solid colors like the yellow actin and according to some dataset like the vinculin tail on the right that is colored by surface charge.
-
-\subsection*{Bimanual Interaction}
-XXX Why binanual interaction.
-XXX Why Razer Hydra (vs. mouse) (vs. Kinect or Leap).
-XXX Most mapped to modes, shows info on screen, few require keyboard.
 
 \paragraph*{Importing Molecules:}
 SketchBio generates the molecular surfaces using UCSF Chimera.  This subprocess is controlled via python scripting and a custom plugin was written for Chimera's python interface in order to export data from Chimera in the VTK file format.  (This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.)  This data includes not only the surface geometry but other data sets as well such as residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.  These datasets allow the objects to be colored similar to the vinculin tail on the right in figure \ref{fig:actin_vinculin}.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{shadow_plane.png}
+\includegraphics[width=0.9\columnwidth]{shadow_plane.png}
 \caption{A screenshot from SketchBio showing colored molecules and a different camera angle to emphasize the shadow plane's effect.}
 \label{fig:shadow_plane}
 \end{figure}
@@ -351,7 +361,7 @@ Selection in SketchBio involves moving the tracker to a location within the boun
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{blender_interface.png}
+\includegraphics[width=0.9\columnwidth]{blender_interface.png}
 \caption{A screenshot showing the complexity of Blender's user interface.}
 \label{fig:blender_interface}
 \end{figure}
@@ -361,7 +371,7 @@ For scientists creating animations of molecules, SketchBio provides a basic inte
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{crystalByExample.png}
+\includegraphics[width=0.9\columnwidth]{crystalByExample.png}
 \caption{A screenshot from SketchBio showing a contrived crystal-by-example structure that forms a helix.}
 \label{fig:crystal_by_example}
 \end{figure}
@@ -370,7 +380,7 @@ SketchBio has some features that allow quick creation of typical biological stru
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{crystal_actin.png}
+\includegraphics[width=0.9\columnwidth]{crystal_actin.png}
 \caption{A screenshot from SketchBio showing an actin filament created with the crystal-by-example function and using the transformation matrix from the PDB data from one monomer to the next.}
 \label{fig:crystal_actin}
 \end{figure}
@@ -399,15 +409,34 @@ There are two ways that the user can interact with a crystal-by-example structur
 %\end{figure*}
 
 \section*{Results and Discussion}
-\subsection*{Model Creation}
-
-(XXX reword) The current state of SketchBio lets users position molecules with collision detection, create repeated structures with crystal-by-example, and create animations by placing keyframes in time to specify the paths the objects take.  It has already been used by a scientist to create a video that he feels is usable in a presentation to others in his field.  This animation was based on a model from a paper he had read and wished to present.  He also created a model based on a second paper using the charge-colored surfaces to see the interaction propsed.  The developers of the tool were able to create an animation showing an approximation of the interaction between several of the molecules in about 30 minutes.  Although more work is required, this use shows that this tool is capable of letting scientists create models and animations without directly including a computer scientist or animator in the process.
+SketchBio has been used by a several scientists and has demonstrated success in meeting its design goals.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{joe_test.png}
+\includegraphics[width=0.9\columnwidth]{joe_test.png}
 \caption{A view of the model Joe Hsiao created with SketchBio to compare usibility with UCSF Chimera}
 \label{fig:joe_test}
+\end{figure}
+
+\subsection*{Use Case}
+Collaborator Peter Thompson, a biochemisty graduate student, created an animation of vinculin binding to an actin fiber.  The animation is based on the model presented in a recent paper.  He was able to create the video with minimal help from a computer scientist and plans to use it in an upcoming talk.  The model in SketchBio is shown in Figure \ref{fig:peter_model} and a frame from the resulting video at approximately the same time is shown in Figure \ref{fig:peter_video}.   This animation was based on a model from a paper he had read and wished to present.
+
+Peter also created a model based on a second paper using the charge-colored surfaces to gain a better understanding of the proposed model.
+
+He reports that its improved quality over Powerpoint-based animations and ease of use make learning SketchBio worth the effort to a scientist that wants to make more than one animation.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\columnwidth]{peter_model.png}
+\caption{A scene from a video created by Peter Thompson in SketchBio.  Approximately the same timestep is shown rendered at its full resolution in Figure \ref{fig:peter_video}}
+\label{fig:peter_model}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\columnwidth]{peter_video.png}
+\caption{A frame from the video created by Peter Thompson.  This shows the tail domains of vinculin binding to an actin filament and slowing its motion.  This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and rendered via the export to Blender feature.}
+\label{fig:peter_video}
 \end{figure}
 
 \subsection*{Success Metrics}
@@ -422,29 +451,14 @@ A direct comparison between SketchBio and an existing production pipeline for a 
 
 To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation); (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation); and (3) custom operations (crystal by example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.  Furthermore, the scripting interfaces enable rapid inclusion of additional features from external programs without re-implementation.
 
-\subsection*{Use Case}
-Collaborator Peter Thompson, a biochemisty graduate student, created an animation of vinculin binding to an actin fiber.  The animation is based on the model presented in a recent paper.  He was able to create the video with minimal help from a computer scientist and plans to use it in an upcoming talk.  The model in SketchBio is shown in Figure \ref{fig:peter_model} and a frame from the resulting video at approximately the same time is shown in Figure \ref{fig:peter_video}.  Peter reported that learning SketchBio is worth the effort to a scientist that wants to make more than one animation using the tool.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.8\columnwidth]{peter_model.png}
-\caption{A scene from a video created by Peter Thompson in SketchBio.  Approximately the same timestep is shown rendered at its full resolution in Figure \ref{fig:peter_video}}
-\label{fig:peter_model}
-\end{figure}
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.8\columnwidth]{peter_video.png}
-\caption{A frame from the video created by Peter Thompson.  This shows the tail domains of vinculin binding to an actin filament and slowing its motion.  This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and rendered via the export to Blender feature.}
-\label{fig:peter_video}
-\end{figure}
-
 \subsection*{Collision Detection Speed-ups}
 XXX
 
 %\section*{Discussion} % XXX - possibly combine with results?  I'm writing it that way for now
 
 \section*{Limitations and future work} % XXX - rewrite this
+Our collaborators' projects have so far involved hand-placed molecules of density sufficient small to be understood when all of them are visible.  Thus, SketchBio does not yet support automatically-placed molecules to fill the space, nor does it require complex occlusion-handling procedures.  As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle this large number of background molecules.
+
 SketchBio currently lacks an internal mechanism to do modeling of structures not found in the PDB.  This can be done using external modeling tools and importing models from .obj files, but collaborators have indicated that the ability to create ellipsoids whose orientation and per-axis flatness would be a way to rapidly fill in notional structures without having to leave the workflow.  We expect this to be included in the next month.
 
 To avoid dependence on a particular hardware vendor, SketchBio is being actively ported to use a pair of Nintendo WiiMote controllers instead of the Razer Hydra controller.  Its use of the VRPN library supports switching devices by renaming the device and input for each function; a general-purpose mapping layer is being added that reads from a configuration file to enable the user to customize this remapping.  This will enable new SketchBio users to continue to use the tool until the next-generation Razer Hydra is released.
@@ -468,9 +482,9 @@ This work was supported by NIH grant 5-P41-EB002025.
 
 Molecular graphics and analyses were performed with the UCSF Chimera package. Chimera is developed by the Resource for Biocomputing, Visualization, and Informatics at the University of California, San Francisco (supported by NIGMS P41-GM103311).
 
-3D rendering was performed using Blender. Blender is an open source project supported by the Blender Foundation and the online community.  XXX Blender.
+3D rendering was performed using Blender (blender.org). Blender is an open source project supported by the Blender Foundation and the online community.
 
-Early versions of SketchBio used PyMOL to import data from the PDB.  PyMOL is an open source project maintained and distributed by Schrödinger.  XXX Early versions used Pymol.
+Early versions of SketchBio used PyMOL (pymol.org) to import data from the PDB.  PyMOL is an open source project maintained and distributed by Schrödinger.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%                                          %%
