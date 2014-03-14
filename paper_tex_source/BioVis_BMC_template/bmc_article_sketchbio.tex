@@ -305,7 +305,9 @@ Figure \ref{fig:actin_vinculin} shows a screenshot of the SketchBio user interfa
 \label{fig:actin_vinculin}
 \end{figure}
 
-\subsection*{Bimanual Interaction}
+\subsection*{Capabilities}
+
+\paragraph*{Bimanual Interaction:}
 Bill Buxton and others have described the benefits of two-handed (bimanual) interaction.  He and others observed in \ref{leganchuk1998} that bimanual manipulation brings ``two types of advantages to human-computer interaction: manual and cognitive. Manual benefits come from increased time-motion efficiency, due to the twice as many degrees of freedom simultaneously available to the user. Cognitive benefits arise as a result of reducing the load of mentally composing and visualizing the task at an unnaturally low level imposed by traditional unimanual techniques."
 
 As seen in Figure \ref{fig:two_hands}, SketchBio brings these important benefits to the construction of macromolecular structures.  The entire interface is built around a set of world and root-object manipulation controls in the non-dominant hand and a set of individual-element manipulation controls using the dominant hand.
@@ -321,11 +323,6 @@ SketchBio uses a pair of Razer Hydra controllers to provide two 6-DOF trackers, 
 
 Using one of the buttons to switch between modes provides a sufficiently-large space of commands that almost all operations can be performed without putting down the controllers.  The keyboard and mouse are used to name proteins and files on initial loading, and to set precise values as needed for one or two operations.
 
-\subsection*{Capabilities}
-
-\paragraph*{Importing Molecules:}
-SketchBio generates the molecular surfaces using UCSF Chimera.  This subprocess is controlled via python scripting and a custom plugin was written for Chimera's python interface in order to export data from Chimera in the VTK file format.  (This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.)  This data includes not only the surface geometry but other data sets as well such as residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.  These datasets allow the objects to be colored similar to the vinculin tail on the right in figure \ref{fig:actin_vinculin}.
-
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\columnwidth]{shadow_plane.png}
@@ -334,7 +331,7 @@ SketchBio generates the molecular surfaces using UCSF Chimera.  This subprocess 
 \end{figure}
 
 \paragraph*{Shadows:}
-Selection in SketchBio involves moving the tracker to a location within the bounding box of the object, determining the relative depth between the tracker and the object is an important and often-performed task.  To provide additional depth cues, SketchBio displays a ground plane that is always rendered below the viewpoint no matter the direction or position of the viewpoint and projects the "shadows" of objects onto this plane.  The trackers also cast shadows onto this plane and these are darker to easily distinguish between the two.  Hendrix and Barfield found the most effective techniques for aiding in depth estimation are a textured plane and lines dropped from the center of an object to the textured plane \cite{Hendrix1995103}.  SketchBio assumes a light infinitely far away in the default camera's up direction which gives the same absolute position against the textured surface as the drop-lines while also giving information about how close the boundaries of two objects are to each other.  The user can also rotate the camera while leaving the light and shadow plane fixed to get a better understanding of the scene through motion parallax [See Figure \ref{fig:shadow_plane}].
+Selection in SketchBio involves moving the tracker to a location within the bounding box of the object, determining the relative depth between the tracker and the object is an important and often-performed task.  Initial testing of the application revealed that determining the relative depth between an object and the user's hand or between two objects was the most difficult part of using SketchBio.  Because widespread adoption would be limited by the use of stereo displays and head tracking, we sought another solution.  To provide additional depth cues, SketchBio displays a ground plane that is always rendered below the viewpoint no matter the direction or position of the viewpoint and projects the "shadows" of objects onto this plane.  The trackers also cast shadows onto this plane and these are darker to easily distinguish between the two.  Hendrix and Barfield found the most effective techniques for aiding in depth estimation are a textured plane and lines dropped from the center of an object to the textured plane \cite{Hendrix1995103}.  SketchBio assumes a light infinitely far away in the default camera's up direction which gives the same absolute position against the textured surface as the drop-lines while also giving information about how close the boundaries of two objects are to each other.  The user can also rotate the camera while leaving the light and shadow plane fixed to get a better understanding of the scene through motion parallax [See Figure \ref{fig:shadow_plane}].
 
 \begin{figure}[h]
 \centering
@@ -349,6 +346,9 @@ For scientists creating animations of molecules, SketchBio provides a basic inte
 \paragraph*{Grouping:}
 Grouping of molecules into larger units is also supported to make constructing larger order structures easier.  This also allows smooth animation of objects that are moving together without the small variations that even the most careful hand-placement will create.  Copy and paste is also implemented and both single objects and groups can be copied and pasted, even between sessions.
 
+\paragraph*{Importing Molecules:}
+SketchBio generates the molecular surfaces using UCSF Chimera.  This subprocess is controlled via python scripting and a custom plugin was written for Chimera's python interface in order to export data from Chimera in the VTK file format.  (This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.)  This data includes not only the surface geometry but other data sets as well such as residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.  These datasets allow the objects to be colored similar to the vinculin tail on the right in figure \ref{fig:actin_vinculin}.
+
 \subsection*{Novel Capabilities}
 
 \begin{figure}[h]
@@ -358,7 +358,7 @@ Grouping of molecules into larger units is also supported to make constructing l
 \label{fig:crystal_by_example}
 \end{figure}
 \paragraph*{Crystal-by-example:}
-SketchBio has some features that allow quick creation of typical biological structures.  Repeated structures that are formed from a single type of protein such as the contrived example in figure \ref{fig:crystal_by_example} are somewhat common in biology, so the ‘crystal-by-example' feature was added.  This feature allows example molecules A and B to define the entire repeated structure.  Given $T_A$ and $T_B$, the transformation matrices that define the positions of A and B relative to the world origin, the transformation from A's coordinate system to B's coordinate system, $T_{AB} = T_A^-1*T_B$, can be computed.  Then B's position can be rewritten $T_B = T_A*T_{AB}$.  This allows the creation of the next repeated molecule, C, with position $T_C = T_B*T_{AB} = T_A*T_{AB}^2$.  This can be extended to generate arbitrary numbers of molecules in a structure that is determined simply by the first two.  Many biological structures including actin fibers and microtubules form in structures that can be defined this way.  Figure \ref{fig:crystal_actin} shows an actin fiber generated this way in SketchBio.  By allowing live updates of the entire structure as the initial two objects are manipulated, SketchBio allows the scientist to explore possibilities of these structures in real time.  Some of these structures have a known transformation from one molecule to the next.  Similar to many other programs, SketchBio also allows the user to input the transformation to use between any two molecules to allow for more accurate construction of this kind of structure.
+SketchBio has a novel features that enables rapid creation of repeated biological structures.  Repeated structures that are formed from a single type of protein such as the contrived example in figure \ref{fig:crystal_by_example} are common in biology (actin, microtubules, fibrin, etc.), so the ‘crystal-by-example' feature was added.  Our collaborators wanted to construct variants of such structures to study the changes caused by mutant proteins and to understand their native packing for comparison to TEM images.  This feature allows example molecules A and B to define the entire repeated structure.  Given $T_A$ and $T_B$, the transformation matrices that define the positions of A and B relative to the world origin, the transformation from A's coordinate system to B's coordinate system, $T_{AB} = T_A^-1*T_B$, can be computed.  Then B's position can be rewritten $T_B = T_A*T_{AB}$.  This allows the creation of the next repeated molecule, C, with position $T_C = T_B*T_{AB} = T_A*T_{AB}^2$.  This can be extended to generate arbitrary numbers of molecules in a structure that is determined simply by the first two.  Many biological structures including actin fibers and microtubules form in structures that can be defined this way.  Figure \ref{fig:crystal_actin} shows an actin fiber generated this way in SketchBio.  By allowing live updates of the entire structure as the initial two objects are manipulated, SketchBio allows the scientist to explore possibilities of these structures in real time.  Some of these structures have a known transformation from one molecule to the next.  Similar to many other programs, SketchBio also allows the user to input the transformation to use between any two molecules to allow for more accurate construction of this kind of structure.
 
 \begin{figure}[h]
 \centering
@@ -372,10 +372,6 @@ An observation about the motions of objects in SketchBio is: for most of the tim
 
 \paragraph*{Crystal-by-example Collision Detection}
 There are two ways that the user can interact with a crystal-by-example structure: moving the entire structure as a unit, or adjusting the internal transformation to change the shape of the structure.  In the first case, only collision tests between the structure and the other objects in the scene need to be done, and the above bound applies to the number of tests  Since the structure was moved as a unit, its internal geometry did not change and if there were no internal collisions to begin with, there will be none after it was moved.  In the second case, the internal structure did change and both internal and external collisions must be tested.  External collisions must test every object in the structure with every external object as above.  Let $X_i$ be the ith object in the crystal by example structure with $X_0$ and $X_1$ being the two base object in the structure.  Let $T_{i,j}$ be the transformation matrix from $X_i$ to $X_j$.  The definition of the crystal-by-example structure is that $T_{i,i+1}$ is the same for all $i$ and the geometries of all the $X_i$s are the same.  Since the geometries and transformations are the same, if there is a collision between the $ith$ and $(i+1)th$ objects anywhere in the structure, then there is also a collision between the $0th$ and $1st$ objects.  Thus testing only this one pair performs the work of n-1 tests where n is the number of objects in the structure.  This same argument holds for any $i$ and $i+k$, the $0th$ and $kth$ objects have the same relative positions and the same collisions.  Thus only the $0th$ object in the structure needs to be tested against the others which allows $\mathcal{O}(n)$ tests to suffice for all internal collisions in a repetitive structure of $n$ elements.
-
-% a possible alternate talking about shadow technique XXX - Russ look at this please.
-%\subsection*{Drop Shadows}
-%Initial testing of the application revealed that determining the relative depth between an object and the user's hand or between two objects was the most difficult part of using SketchBio.  Since the budget constraints of our potential users prevented the use of stereo displays and head tracking, the next best techniques according to Hendrix are drop lines from the centers of objects and shadows \cite{Hendrix1995103}.  Drop lines give the best information about absolute positions of objects while shadows give better information about distances between objects since the radius of the object must still be estimated using drop lines.  Combining these two ideas, SketchBio uses drop shadows, the geometry of the object projected onto a plane below the camera.  The result is similar to shadows with a light source at infinity and gives both absolute position information but also relative depth between objects.
 
 %\begin{figure*}[t!]
 %  \centering
@@ -461,14 +457,14 @@ XXX
 
 %\section*{Discussion} % XXX - possibly combine with results?  I'm writing it that way for now
 
-\section*{Limitations and future work} % XXX - rewrite this
+\section*{Limitations and future work}
 Our collaborators' projects have so far involved hand-placed molecules of density sufficient small to be understood when all of them are visible.  Thus, SketchBio does not yet support automatically-placed molecules to fill the space, nor does it require complex occlusion-handling procedures.  As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle this large number of background molecules.
 
 SketchBio currently lacks an internal mechanism to do modeling of structures not found in the PDB.  This can be done using external modeling tools and importing models from .obj files, but collaborators have indicated that the ability to create ellipsoids whose orientation and per-axis flatness would be a way to rapidly fill in notional structures without having to leave the workflow.  We expect this to be included in the next month.
 
 To avoid dependence on a particular hardware vendor, SketchBio is being actively ported to use a pair of Nintendo WiiMote controllers instead of the Razer Hydra controller.  Its use of the VRPN library supports switching devices by renaming the device and input for each function; a general-purpose mapping layer is being added that reads from a configuration file to enable the user to customize this remapping.  This will enable new SketchBio users to continue to use the tool until the next-generation Razer Hydra is released.
 
-\section*{Conclusions} % XXX - rewrite this
+\section*{Conclusions}
 SketchBio is a new tool that enables scientists to rapidly construct and validate hypothetical macromolecular structures, to animate these structures, and to produce high-quality rendered animations.  It has been tested and shown to meet its design goals:
 \begin{description}
   \item[$\bullet$ Ease to learn and use.] Scientists can construct models and animations on their own.
