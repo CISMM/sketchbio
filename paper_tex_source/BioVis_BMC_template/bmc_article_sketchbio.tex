@@ -321,30 +321,7 @@ SketchBio uses a pair of Razer Hydra controllers to provide two 6-DOF trackers, 
 
 Using one of the buttons to switch between modes provides a sufficiently-large space of commands that almost all operations can be performed without putting down the controllers.  The keyboard and mouse are used to name proteins and files on initial loading, and to set precise values as needed for one or two operations.
 
-\subsection*{Architecture}
-
-The architecture of SketchBio is shown in Figure \ref{fig:architecture}.  Objects can be loaded into SketchBio as .obj files from any program that writes this format or directly through the GUI (via harnessing UCSF Chimera from the PDB or a local .pdb file).  Since VTK is used in SketchBio, any file format that VTK can read can be imported with relatively minor changes.  Exporting data to Blender is done by writing a script to be run on Blender's python interface to produce the animation.  When exporting to MicroscopeSimulator, SketchBio writes out a Microscope Simulator XML project file and loads the project into MicroscopeSimulator.  SketchBio harnesses external programs when possible (PyMOL, Chimera, Blender) and uses existing libraries for other core functions (VTK, PQP, VRPN).  It maps from dozens of controls in Chimera and hundreds of controls in Blender down to 4 input options and about 20 animation controls to streamline the tasks needed for creating structures and animations.  This provides a streamlined workflow that is easy to learn and use.
-
-\begin{figure*}[ht]
-    \begin{center}
-    \noindent\includegraphics[width=0.9\textwidth]
-    {system_diagram.png}
-    \end{center}
-\caption{Architecture.  SketchBio harnesses existing libraries and programs (shown in pink) to avoid replicating existing state-of-the-art algorithms.  It also makes use of standard file formats, devices, and services (shown in purple) to provide maximum interoperability with existing modeling, rendering, and analysis workflows.  Some techniques are internal, some are harnessed to appear to the user as internal (double arrows) and some are accessed via standard formats.  SketchBio currently includes three types of output: real-time rendering for model and structure comprehension, high-quality offline rendering for animation (through Blender), and simulated confocal microscopy stacks for analysis and comparison to experiment (through UNC's Microscope Simulator).  It includes custom code only for the real-time interaction, animation, and modeling portions and for its novel features.}
-\label{fig:architecture}
-\end{figure*}
-
-\subsection*{Design Decisions}
-XXX Do not re-implement existing algorithms.  Extend.
-
-The design of SketchBio avoids reimplementing existing features where possible, instead using python scripting to control subprocesses to perform these operations.  When reading in PDB files, instead of writing a PDB file reader, SketchBio calls UCSF Chimera as a subprocess to read in the protein and create a displayable surface from it.  Instead of writing a new rendering library, SketchBio uses the python scripting interface of Blender to create a Blender project that will produce the desired animation.  SketchBio uses the open source Qt and VTK\cite{VTKbook} libraries for its user interface and internal rendering and the open source Proximity Query Package (PQP) for collision detection \cite{PQP}.  The VRPN library is used to communicate with the Razer Hydra input device \cite{taylor2001vrpn}.
-
-As computers increasingly use multicore processors, applications can take advantage of the background CPUs to do work that is not immediately necessary.  This can include calls to other applications in the background to precompute results or even to create images to be rendered.  This works well with the goal of utilizing other existing programs as subprocesses of SketchBio since these subprocesses can use the background CPUs without affecting SketchBio's responsiveness.  XXX Move elsewhere and expand.
-
-
-\paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays.  \cite{Arthur}\cite{Grant1998}\cite{Marshburn2005}\cite{Taylor1999}\cite{Taylor1997}\cite{Taylor1994}  The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.  Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.  To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and uses inexpensive commercial input devices.
-
-Scientists are not likely to adopt a tool that requires them to spend a lot of time working on the computer for little payout.  SketchBio aims to minimize and consolidate the time that the scientist spends in front of the computer by running many jobs in the background.  Almost all systems in use in labs have multiple processors and in many cases the background processors can be utilized without interfering with other applications.  SketchBio takes advantage of this in two ways: using background threads to do non-immediate work and calling subprocesses to perform tasks that are already implemented externally.  This allows the scientist to avoid waiting on non-essential background output--to continue working and to perform long-running operations in the background while they work on other things.
+\subsection*{Capabilities}
 
 \paragraph*{Importing Molecules:}
 SketchBio generates the molecular surfaces using UCSF Chimera.  This subprocess is controlled via python scripting and a custom plugin was written for Chimera's python interface in order to export data from Chimera in the VTK file format.  (This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.)  This data includes not only the surface geometry but other data sets as well such as residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.  These datasets allow the objects to be colored similar to the vinculin tail on the right in figure \ref{fig:actin_vinculin}.
@@ -407,6 +384,30 @@ There are two ways that the user can interact with a crystal-by-example structur
 %  \caption{Example two-column figure. To insert a single column figure, remove the * in the two figure tags. }
 %  \label{fig:interface}
 %\end{figure*}
+
+\subsection*{Architecture}
+
+The architecture of SketchBio is shown in Figure \ref{fig:architecture}.  Objects can be loaded into SketchBio as .obj files from any program that writes this format or directly through the GUI (via harnessing UCSF Chimera from the PDB or a local .pdb file).  Because VTK is used in SketchBio, any file format that VTK can read can be imported with relatively minor changes.  Exporting data to Blender is done by writing a script to be run on Blender's python interface to produce the animation.  When exporting to MicroscopeSimulator, SketchBio writes out a Microscope Simulator XML project file and loads the project into MicroscopeSimulator.  SketchBio harnesses external programs when possible (PyMOL, Chimera, Blender) and uses existing libraries for other core functions (VTK, PQP, VRPN).  It maps from dozens of controls in Chimera and hundreds of controls in Blender down to 4 input options and about 20 animation controls to streamline the tasks needed for creating structures and animations.  This provides a streamlined workflow that is easy to learn and use.
+
+\begin{figure*}[ht]
+    \begin{center}
+    \noindent\includegraphics[width=0.9\textwidth]
+    {system_diagram.png}
+    \end{center}
+\caption{Architecture.  SketchBio harnesses existing libraries and programs (shown in pink) to avoid replicating existing state-of-the-art algorithms.  It also makes use of standard file formats, devices, and services (shown in purple) to provide maximum interoperability with existing modeling, rendering, and analysis workflows.  Some techniques are internal, some are harnessed to appear to the user as internal (double arrows) and some are accessed via standard formats.  SketchBio currently includes three types of output: real-time rendering for model and structure comprehension, high-quality offline rendering for animation (through Blender), and simulated confocal microscopy stacks for analysis and comparison to experiment (through UNC's Microscope Simulator).  It includes custom code only for the real-time interaction, animation, and modeling portions and for its novel features.}
+\label{fig:architecture}
+\end{figure*}
+
+\subsection*{Design Decisions}
+XXX Do not re-implement existing algorithms.  Extend.
+
+The design of SketchBio avoids reimplementing existing features where possible, instead using python scripting to control subprocesses to perform these operations.  When reading in PDB files, instead of writing a PDB file reader, SketchBio calls UCSF Chimera as a subprocess to read in the protein and create a displayable surface from it.  Instead of writing a new rendering library, SketchBio uses the python scripting interface of Blender to create a Blender project that will produce the desired animation.  SketchBio uses the open source Qt and VTK\cite{VTKbook} libraries for its user interface and internal rendering and the open source Proximity Query Package (PQP) for collision detection \cite{PQP}.  The VRPN library is used to communicate with the Razer Hydra input device \cite{taylor2001vrpn}.
+
+As computers increasingly use multicore processors, applications can take advantage of the background CPUs to do work that is not immediately necessary.  This can include calls to other applications in the background to precompute results or even to create images to be rendered.  This works well with the goal of utilizing other existing programs as subprocesses of SketchBio since these subprocesses can use the background CPUs without affecting SketchBio's responsiveness.  XXX Move elsewhere and expand.
+
+\paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays.  \cite{Arthur}\cite{Grant1998}\cite{Marshburn2005}\cite{Taylor1999}\cite{Taylor1997}\cite{Taylor1994}  The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.  Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.  To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and uses inexpensive commercial input devices.
+
+Scientists are not likely to adopt a tool that requires them to spend a lot of time working on the computer for little payout.  SketchBio aims to minimize and consolidate the time that the scientist spends in front of the computer by running many jobs in the background.  Almost all systems in use in labs have multiple processors and in many cases the background processors can be utilized without interfering with other applications.  SketchBio takes advantage of this in two ways: using background threads to do non-immediate work and calling subprocesses to perform tasks that are already implemented externally.  This allows the scientist to avoid waiting on non-essential background output--to continue working and to perform long-running operations in the background while they work on other things.
 
 \section*{Results and Discussion}
 SketchBio has been used by a several scientists and has demonstrated success in meeting its design goals.
