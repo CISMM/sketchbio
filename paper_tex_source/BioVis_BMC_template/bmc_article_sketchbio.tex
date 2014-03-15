@@ -94,15 +94,15 @@
    email={swaldon@cs.unc.edu}
 ]{\inits{SW}\fnm{Shawn} \snm{Waldon}}
 \author[
-	addressref={aff1},
-	email={pthomps@live.unc.edu}
-]{\inits{PT}\fnm{Peter} \snm{Thompson}}
-\author[
    addressref={aff1},                   % id's of addresses, e.g. {aff1,aff2}
    %corref={aff1},                       % id of corresponding address, if any
    %noteref={n1},                        % id's of article notes, if any
   email={taylorr@cs.unc.edu}   % email address
 ]{\inits{RT}\fnm{Russell} \snm{Taylor} \suffix{II}}
+\author[
+	addressref={aff1},
+	email={pthomps@live.unc.edu}
+]{\inits{PT}\fnm{Peter} \snm{Thompson}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                          %%
@@ -267,7 +267,7 @@ model or animation. We aim to reduce this to a single person working for hours o
 There are many excellent molecular modeling applications that have been extended to include some aspects of high-quality rendering and animation.  UCSF Chimera \cite{pettersen2004ucsf}, Pymol \cite{pymol2013}, and Visual Molecular Dynamics (VMD) \cite{humphrey1996} are three of the most relevant.  VMD already includes direct force-feedback-based placement and manipulation of molecules.  We considered the approach of extending the interaction and rendering capabilities of one of these tools, but this would mean replicating existing rendering pipelines and techniques that are already implemented elsewhere.  It would also require continual updating as new rendering advances are made.  We instead decided to harness the power of the existing tools through their built-in scripting languages (SketchBio has used both Pymol and Chimera to load, surface, select, and label molecules by partial charge and other inputs).
 
 \paragraph*{Rendering:}
-There are also excellent general-purpose rendering programs (such as the commercial Maya and open-source Blender applications) and microscope-simulation rendering tools (such as UNC's Microscope Simulator \cite{quammen2008}).  Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson 2013}, Molecular Flipbook \cite{flipbook2013}, and Molecular Maya \cite{molecularmaya}.  We also considered this approach, but providing full capability would require replicating the many existing capabilities in molecular modeling tools and tracking new features as they are developed.  We decided to harness the animation and rendering capabilities of Blender using its built-in Python scripting interface.
+There are also excellent general-purpose rendering programs (such as the commercial Maya and open-source Blender applications) and microscope-simulation rendering tools (such as UNC's Microscope Simulator \cite{quammen2008}).  Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson2013}, Molecular Flipbook \cite{flipbook2013}, and Molecular Maya \cite{molecularmaya}.  We also considered this approach, but providing full capability would require replicating the many existing capabilities in molecular modeling tools and tracking new features as they are developed.  We decided to harness the animation and rendering capabilities of Blender using its built-in Python scripting interface.
 
 \paragraph*{Interactive Animation:}
 The Molecular Control Toolkit \cite{sabirmolecular} is also aimed at molecular modeling, providing gesture- and speech-based user interface primitives to control motions of molecules with a Kinect or Leap Motion device \cite{sabirmolecular}; they provide an API that can be used to connect their controls to existing molecular modeling applications.  SketchBio uses similar two-handed 6-degree-of-freedom input devices (the Razer Hydra or two WiiMote controllers), adding collision detection and several custom capabilities, and tying the resulting system into existing powerful molecular modeling and rendering tools to produce a complete system for modeling, thinking, and rendering.  Another tool aimed at simplifying the creation of molecular animations, PresentaBALL\cite{nickelspresentaball}, uses an interactive web interface to an existing molecular modeling tool \cite{nickelspresentaball}.  This allows widespread use by non-experts to develop presentation materials for training.  SketchBio provides a custom interface for experts to use as a thinking aid that is tied to a powerful rendering engine to produce animations.
@@ -382,7 +382,7 @@ Many biological structures including actin fibers and microtubules form in struc
 
 \paragraph*{Crystal-by-example Collision Detection:}
 There are two ways that the user can interact with a crystal-by-example structure: moving the entire structure as a unit, or adjusting the internal transformation to change the shape of the structure.  In the first case, only collision tests between the structure and the other objects in the scene need to be done, and the above bound applies to the number of tests.  Because the structure is moved as a unit, its internal geometry does not change so if there were no internal collisions to begin with, there will be none after it was moved. 
-% XXX What is the above bound?  Where is it mentioned?
+
 
 In the second case, the internal structure does change and both internal and external collisions must be tested.  External collisions must test every object in the structure with every external object as above.
 
@@ -418,7 +418,7 @@ We list here some design decisions that helped SketchBio achieve its goals.
 
 \paragraph*{Harness, don't re-implement:} The design of SketchBio avoids reimplementing existing features where possible, instead using python scripting to control subprocesses to perform these operations.  When reading in PDB files, instead of writing a PDB file reader, SketchBio calls UCSF Chimera as a subprocess to read in the protein and create a displayable surface from it.  Instead of writing a new rendering library, SketchBio uses the python scripting interface of Blender to create a Blender project that will produce the desired animation.  SketchBio uses the open source Qt and VTK\cite{VTKbook} libraries for its user interface and internal rendering and the open source Proximity Query Package (PQP) for collision detection \cite{PQP}.  The VRPN library is used to communicate with the Razer Hydra input device \cite{taylor2001vrpn}.
 
-\paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays.  \cite{Arthur}\cite{Grant1998}\cite{Marshburn2005}\cite{Taylor1999}\cite{Taylor1997}\cite{Taylor1994}  The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.  Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.  To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and uses inexpensive commercial input devices.
+\paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays.  \cite{Arthur}\cite{Grant1998}\cite{Marshburn2005}\cite{Taylor1999}\cite{Taylor1997}\cite{Taylor1993}  The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.  Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.  To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and uses inexpensive commercial input devices.
 
 \paragraph*{Exploit multi-core:} SketchBio aims to minimize and consolidate the time that the scientist spends in front of the computer by running many jobs in the background.  Almost all systems in use in labs have multiple processors and in many cases the background processors can be utilized without interfering with other applications.  SketchBio takes advantage of this in two ways: using background threads to do non-immediate work and calling subprocesses to perform tasks that are already implemented externally.  This allows the scientist to avoid waiting on non-essential background output--to continue working and to perform long-running operations in the background while they work on other things.
 
@@ -467,10 +467,6 @@ A direct comparison between SketchBio and an existing production pipeline for a 
 
 To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation); (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation); and (3) custom operations (crystal by example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.  Furthermore, the scripting interfaces enable rapid inclusion of additional features from external programs without re-implementation.
 
-\subsection*{Collision Detection Speed-ups}
-XXX
-
-%\section*{Discussion} % XXX - possibly combine with results?  I'm writing it that way for now
 
 \section*{Limitations and future work}
 Our collaborators' projects have so far involved hand-placed molecules of density sufficient small to be understood when all of them are visible.  Thus, SketchBio does not yet support automatically-placed molecules to fill the space, nor does it require complex occlusion-handling procedures.  As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle this large number of background molecules.
