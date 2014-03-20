@@ -31,7 +31,7 @@ public:
     virtual ~SimplePhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& uiSprings,
                                                  QList< Connector* >& physicsSprings, bool doPhysicsSprings,
                                                  QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
@@ -53,7 +53,7 @@ public:
     virtual ~PoseModePhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& uiSprings,
                                                  QList< Connector* >& physicsSprings, bool doPhysicsSprings,
                                                  QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
@@ -76,7 +76,7 @@ public:
     virtual ~BinaryCollisionSearchStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& uiSprings,
                                                  QList< Connector* >& physicsSprings, bool doPhysicsSprings,
                                                  QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
@@ -100,7 +100,7 @@ public:
     virtual ~PoseModePCAPhysicsStrategy();
 
     virtual
-    void performPhysicsStepAndCollisionDetection(QList< Connector* >& lHand, QList< Connector* >& rHand,
+    void performPhysicsStepAndCollisionDetection(QList< Connector* >& uiSprings,
                                                  QList< Connector* >& physicsSprings, bool doPhysicsSprings,
                                                  QList< SketchObject* >& objects, double dt, bool doCollisionCheck);
     virtual
@@ -691,14 +691,13 @@ SimplePhysicsStrategy::~SimplePhysicsStrategy() {}
 
 //######################################################################################
 void SimplePhysicsStrategy::performPhysicsStepAndCollisionDetection(
-        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& uiSprings,
         QList< Connector* >& physicsSprings, bool doPhysicsSprings,
         QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
     QSet< int > affectedCollisionGroups;
     QSet< SketchObject * > affectedGroups;
-    PhysicsUtilities::springForcesFromList(rHand,affectedCollisionGroups,affectedGroups);
-    PhysicsUtilities::springForcesFromList(lHand,affectedCollisionGroups,affectedGroups);
+    PhysicsUtilities::springForcesFromList(uiSprings,affectedCollisionGroups,affectedGroups);
     if (doPhysicsSprings)
     {
         PhysicsUtilities::springForcesFromList(
@@ -735,14 +734,12 @@ PoseModePhysicsStrategy::~PoseModePhysicsStrategy() {}
 
 //######################################################################################
 void PoseModePhysicsStrategy::performPhysicsStepAndCollisionDetection(
-        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& uiSprings,
         QList< Connector* >& physicsSprings, bool doPhysicsSprings,
         QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
-        // spring forces for right hand interacton
-        poseModeForSprings(rHand,objects,dt,doCollisionCheck);
-        // spring forces for left hand interaction
-        poseModeForSprings(lHand,objects,dt,doCollisionCheck);
+        // spring forces for user interacton
+        poseModeForSprings(uiSprings,objects,dt,doCollisionCheck);
 
         // spring forces for physics springs interaction
         if (doPhysicsSprings) {
@@ -794,12 +791,11 @@ BinaryCollisionSearchStrategy::~BinaryCollisionSearchStrategy() {}
 
 //######################################################################################
 void BinaryCollisionSearchStrategy::performPhysicsStepAndCollisionDetection(
-        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& uiSprings,
         QList< Connector* >& physicsSprings, bool doPhysicsSprings,
         QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
-    binaryCollisionSearch(rHand,objects,dt,doCollisionCheck,this);
-    binaryCollisionSearch(lHand,objects,dt,doCollisionCheck,this);
+    binaryCollisionSearch(uiSprings,objects,dt,doCollisionCheck,this);
     if (doPhysicsSprings) {
         binaryCollisionSearch(physicsSprings,objects,dt,doCollisionCheck,this);
     }
@@ -825,14 +821,12 @@ PoseModePCAPhysicsStrategy::~PoseModePCAPhysicsStrategy() {}
 
 //######################################################################################
 void PoseModePCAPhysicsStrategy::performPhysicsStepAndCollisionDetection(
-        QList< Connector* >& lHand, QList< Connector* >& rHand,
+        QList< Connector* >& uiSprings,
         QList< Connector* >& physicsSprings, bool doPhysicsSprings,
         QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
-        // spring forces for right hand interacton
-        poseModePCAForSprings(rHand,objects,dt,doCollisionCheck);
-        // spring forces for left hand interaction
-        poseModePCAForSprings(lHand,objects,dt,doCollisionCheck);
+        // spring forces for user interacton
+        poseModePCAForSprings(uiSprings,objects,dt,doCollisionCheck);
 
         // spring forces for physics springs interaction
         if (doPhysicsSprings) {

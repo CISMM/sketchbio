@@ -126,21 +126,20 @@ void HydraInputManager::handleCurrentInput() {
     // handle input
     activeMode->doUpdatesForFrame();
 
-    // update the main camera
-    project->getTransformManager()->updateCameraForFrame();
-
     // set tracker locations
     project->updateTrackerPositions();
+
+    // update the main camera
+    // this has to be last since updateTrackerPositions performs
+    // grab world
+    project->getTransformManager()->updateCameraForFrame();
 }
 
 
-void HydraInputManager::setLeftPos(q_xyz_quat_type *newPos) {
-    project->setLeftHandPos(newPos);
+void HydraInputManager::setHandPos(q_xyz_quat_type *newPos, SketchBioHandId::Type side) {
+  project->getTransformManager()->setHandTransform(newPos,side);
 }
 
-void HydraInputManager::setRightPos(q_xyz_quat_type *newPos) {
-    project->setRightHandPos(newPos);
-}
 
 void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
     if (buttonPressed) {
@@ -210,11 +209,7 @@ void VRPN_CALLBACK HydraInputManager::handle_tracker_pos_quat (void *userdata, c
     q_vec_copy(data.xyz,t.pos);
     q_copy(data.quat,t.quat);
     // set the correct hand's position
-    if (t.sensor == 0) {
-        mgr->setLeftPos(&data);
-    } else {
-        mgr->setRightPos(&data);
-    }
+    mgr->setHandPos(&data,(t.sensor == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
 }
 
 void VRPN_CALLBACK HydraInputManager::handle_button(void *userdata, const vrpn_BUTTONCB b) {

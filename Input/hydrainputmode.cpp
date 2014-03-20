@@ -91,7 +91,7 @@ void HydraInputMode::scaleWithLeftFixed()
     TransformManager *transforms = project->getTransformManager();
     double dist = transforms->getOldWorldDistanceBetweenHands();
     double delta = transforms->getWorldDistanceBetweenHands() / dist;
-    transforms->scaleWithLeftTrackerFixed(delta);
+    transforms->scaleWithTrackerFixed(delta,SketchBioHandId::LEFT);
 }
 
 void HydraInputMode::scaleWithRightFixed()
@@ -103,55 +103,7 @@ void HydraInputMode::scaleWithRightFixed()
     TransformManager *transforms = project->getTransformManager();
     double dist = transforms->getOldWorldDistanceBetweenHands();
     double delta = transforms->getWorldDistanceBetweenHands() / dist;
-    transforms->scaleWithRightTrackerFixed(delta);
-}
-
-void HydraInputMode::grabWorldWithLeft()
-{
-    if (project->isShowingAnimation())
-    {
-        return;
-    }
-    TransformManager *transforms = project->getTransformManager();
-    q_vec_type beforePos, afterPos;
-    q_type beforeOrient, afterOrient;
-    transforms->getLeftTrackerPosInWorldCoords(afterPos);
-    transforms->getOldLeftTrackerPosInWorldCoords(beforePos);
-    transforms->getLeftTrackerOrientInWorldCoords(afterOrient);
-    transforms->getOldLeftTrackerOrientInWorldCoords(beforeOrient);
-    // translate
-    q_vec_type delta;
-    q_vec_subtract(delta,afterPos,beforePos);
-    transforms->translateWorldRelativeToRoom(delta);
-    // rotate
-    q_type inv, rotation;
-    q_invert(inv,beforeOrient);
-    q_mult(rotation,afterOrient,inv);
-    transforms->rotateWorldRelativeToRoomAboutLeftTracker(rotation);
-}
-
-void HydraInputMode::grabWorldWithRight()
-{
-    if (project->isShowingAnimation())
-    {
-        return;
-    }
-    TransformManager *transforms = project->getTransformManager();
-    q_vec_type beforePos, afterPos;
-    q_type beforeOrient, afterOrient;
-    transforms->getRightTrackerPosInWorldCoords(afterPos);
-    transforms->getOldRightTrackerPosInWorldCoords(beforePos);
-    transforms->getRightTrackerOrientInWorldCoords(afterOrient);
-    transforms->getOldRightTrackerOrientInWorldCoords(beforeOrient);
-    // translate
-    q_vec_type delta;
-    q_vec_subtract(delta,afterPos,beforePos);
-    transforms->translateWorldRelativeToRoom(delta);
-    // rotate
-    q_type inv, rotation;
-    q_invert(inv,beforeOrient);
-    q_mult(rotation,afterOrient,inv);
-    transforms->rotateWorldRelativeToRoomAboutRightTracker(rotation);
+    transforms->scaleWithTrackerFixed(delta,SketchBioHandId::RIGHT);
 }
 
 void HydraInputMode::addXMLUndoState()

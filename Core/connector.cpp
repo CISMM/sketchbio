@@ -97,6 +97,11 @@ void Connector::LineVisibilityData::updateLine(q_vec_type p1, q_vec_type p2)
 //#########################################################################
 // Implementation of Connector itself
 
+Connector::Connector()
+  : d(NULL)
+{
+}
+
 Connector::Connector(SketchObject *o1, SketchObject *o2,
                      const q_vec_type o1Pos, const q_vec_type o2Pos,
                      double a, double rad, bool display)
@@ -128,6 +133,29 @@ Connector::Connector(SketchObject *o1, SketchObject *o2,
 
 Connector::~Connector()
 {
+}
+
+void Connector::initConnector(SketchObject *o1, SketchObject *o2, const q_vec_type o1Pos, const q_vec_type o2Pos, double a, double rad, bool display) {
+  object1 = o1;
+  object2 = o2;
+  q_vec_copy(object1ConnectionPosition,o1Pos);
+  q_vec_copy(object2ConnectionPosition,o2Pos);
+  alpha = a;
+  radius = rad;
+  colorMap = ColorMapType::SOLID_COLOR_GRAY;
+  if (display) {
+    q_vec_type p1, p2;
+    // create the line for the connector
+    getEnd1WorldPosition(p1);
+    getEnd2WorldPosition(p2);
+    d.reset(new LineVisibilityData(p1,p2,radius,colorMap,alpha));
+  } else {
+    d.reset(new VisiblityData);
+  }
+}
+
+bool Connector::isInitialized() {
+  return !d.isNull();
 }
 
 void Connector::setObject1(SketchObject *obj)

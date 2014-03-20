@@ -124,11 +124,12 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			TransformManager *transforms = project->getTransformManager();
 			q_vec_type pos;
 			q_type orient;
-			transforms->getRightTrackerPosInWorldCoords(pos);
-			transforms->getRightTrackerOrientInWorldCoords(orient);
+      SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                           SketchBioHandId::RIGHT);
+      handObj.getPosition(pos);
+      handObj.getOrientation(orient);
 			project->addCamera(pos,orient);
 			addXMLUndoState(project);
 			//emit newDirectionsString(" ");
@@ -194,14 +195,15 @@ namespace ControlFunctions
 				{
 					if (grp == NULL)
 						return;
-					SketchObject *rHand = project->getRightHandObject();
-					SketchObject *obj = WorldManager::getClosestObject(
-								*grp->getSubObjects(),rHand,rightNearestObjDist);
-					if (rightNearestObjDist < DISTANCE_THRESHOLD)
-					{
-						grp->removeObject(obj);
-						world->addObject(obj);
-					}
+          // TODO - reimplement with new hand object on project
+//					SketchObject *rHand = project->getRightHandObject();
+//					SketchObject *obj = WorldManager::getClosestObject(
+//								*grp->getSubObjects(),rHand,rightNearestObjDist);
+//					if (rightNearestObjDist < DISTANCE_THRESHOLD)
+//					{
+//						grp->removeObject(obj);
+//						world->addObject(obj);
+//					}
 				}
 				else
 				{
@@ -270,7 +272,8 @@ namespace ControlFunctions
 			if (elem)
 			{
 				q_vec_type rpos;
-				project->getTransformManager()->getRightTrackerPosInWorldCoords(rpos);
+        project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                       SketchBioHandId::RIGHT).getPosition(rpos);
 				if (ProjectToXML::objectFromClipboardXML(project,elem,rpos) ==
 						ProjectToXML::XML_TO_DATA_FAILURE)
 				{

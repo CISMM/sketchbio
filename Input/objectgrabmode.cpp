@@ -27,26 +27,26 @@ void ObjectGrabMode::buttonPressed(int vrpn_ButtonNum)
 {
   if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
   {
-      if (lDist > DISTANCE_THRESHOLD)
+    SketchBio::Hand &hand = project->getHand(SketchBioHandId::LEFT);
+      if (hand.getNearestObjectDistance() > DISTANCE_THRESHOLD)
       {
-          if (worldGrabbed == WORLD_NOT_GRABBED)
-              worldGrabbed = LEFT_GRABBED_WORLD;
+        hand.grabWorld();
       }
       else
       {
-          project->grabObject(lObj,true);
+        hand.grabNearestObject();
       }
   }
   else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
   {
-      if (rDist > DISTANCE_THRESHOLD)
+    SketchBio::Hand &hand = project->getHand(SketchBioHandId::RIGHT);
+      if (hand.getNearestObjectDistance() > DISTANCE_THRESHOLD)
       {
-          if (worldGrabbed == WORLD_NOT_GRABBED)
-              worldGrabbed = RIGHT_GRABBED_WORLD;
+        hand.grabWorld();
       }
       else
       {
-          project->grabObject(rObj,false);
+        hand.grabNearestObject();
       }
 
   }
@@ -56,27 +56,15 @@ void ObjectGrabMode::buttonReleased(int vrpn_ButtonNum)
 {
   if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
   {
-      if (worldGrabbed == LEFT_GRABBED_WORLD)
-      {
-          worldGrabbed = WORLD_NOT_GRABBED;
-      }
-      else if (!project->getWorldManager()->getLeftSprings()->empty())
-      {
-          project->getWorldManager()->clearLeftHandSprings();
-          addXMLUndoState();
-      }
+    SketchBio::Hand &hand = project->getHand(SketchBioHandId::LEFT);
+    hand.releaseGrabbed();
+    addXMLUndoState();
   }
   else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
   {
-      if (worldGrabbed == RIGHT_GRABBED_WORLD)
-      {
-          worldGrabbed = WORLD_NOT_GRABBED;
-      }
-      else if (!project->getWorldManager()->getRightSprings()->empty())
-      {
-          project->getWorldManager()->clearRightHandSprings();
-          addXMLUndoState();
-      }
+    SketchBio::Hand &hand = project->getHand(SketchBioHandId::RIGHT);
+    hand.releaseGrabbed();
+    addXMLUndoState();
   }
 }
 
@@ -154,27 +142,7 @@ inline void computeClosestObject(SketchProject *proj,
 
 void ObjectGrabMode::doUpdatesForFrame()
 {
-  if (worldGrabbed == LEFT_GRABBED_WORLD)
-      grabWorldWithLeft();
-  else if (worldGrabbed == RIGHT_GRABBED_WORLD)
-      grabWorldWithRight();
-  WorldManager *world = project->getWorldManager();
-  SketchObject *leftHand = project->getLeftHandObject();
-  SketchObject *rightHand = project->getRightHandObject();
-
-  // we don't want to show bounding boxes during animation
-  if (world->getNumberOfObjects() > 0) {
-
-      if (world->getLeftSprings()->size() == 0 ) {
-          computeClosestObject(project,lObj,lBase,lDist,
-                               leftLevel,leftHand,LEFT_SIDE_OUTLINE);
-      }
-
-      if (world->getRightSprings()->size() == 0 ) {
-          computeClosestObject(project,rObj,rBase,rDist,
-                               rightLevel,rightHand,RIGHT_SIDE_OUTLINE);
-      }
-  }
+  project->setOutlineType(SketchProject::OUTLINE_OBJECTS);
 }
 
 void ObjectGrabMode::clearStatus()
@@ -182,8 +150,6 @@ void ObjectGrabMode::clearStatus()
   worldGrabbed = WORLD_NOT_GRABBED;
   lDist = rDist = std::numeric_limits<double>::max();
   lObj = rObj = NULL;
-  project->getWorldManager()->clearLeftHandSprings();
-  project->getWorldManager()->clearRightHandSprings();
   resetViewPoint();
 }
 

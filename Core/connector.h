@@ -19,10 +19,17 @@ class SketchObject;
 class Connector
 {
 public:
+    Connector();
     Connector(SketchObject* o1, SketchObject* o2, const q_vec_type o1Pos,
               const q_vec_type o2Pos, double a = 1.0, double rad = 10,
               bool display = true);
     virtual ~Connector();
+
+    void initConnector(SketchObject* o1, SketchObject* o2, const q_vec_type o1Pos,
+                      const q_vec_type o2Pos, double a = 1.0, double rad = 10,
+                      bool display = true);
+
+    virtual bool isInitialized();
 
     inline const SketchObject *getObject1() const { return object1; }
     // if we have a non-const connector, get a non-const object

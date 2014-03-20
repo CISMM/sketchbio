@@ -109,11 +109,11 @@ void AnimationMode::buttonReleased(int vrpn_ButtonNum)
     }
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
-        TransformManager *transforms = project->getTransformManager();
         q_vec_type pos;
         q_type orient;
-        transforms->getRightTrackerPosInWorldCoords(pos);
-        transforms->getRightTrackerOrientInWorldCoords(orient);
+        SketchBio::Hand& rhand = project->getHand(SketchBioHandId::RIGHT);
+        rhand.getPosition(pos);
+        rhand.getOrientation(orient);
         project->addCamera(pos,orient);
         addXMLUndoState();
         emit newDirectionsString(" ");

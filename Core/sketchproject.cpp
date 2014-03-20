@@ -58,105 +58,6 @@ static ColorMapType::Type COLORS[] =
     ColorMapType::SOLID_COLOR_CYAN,
 };
 
-//#define DEBUG_TRACKER_ORIENTATIONS
-
-class SketchProject::TrackerObject : public SketchObject {
-public:
-    TrackerObject() :
-        SketchObject(),
-        actor(vtkSmartPointer< vtkActor >::New()),
-        shadowGeometry(vtkSmartPointer< vtkTransformPolyDataFilter >::New())
-    {
-        double d = TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * SCALE_DOWN_FACTOR *4;
-        vtkSmartPointer< vtkPolyDataMapper > mapper =
-                vtkSmartPointer< vtkPolyDataMapper >::New();
-#ifndef DEBUG_TRACKER_ORIENTATIONS
-        vtkSmartPointer< vtkSphereSource > sphereSource =
-                vtkSmartPointer< vtkSphereSource >::New();
-        sphereSource->SetRadius(d);
-        sphereSource->Update();
-        shadowGeometry->SetInputConnection(sphereSource->GetOutputPort());
-        mapper->SetInputConnection(sphereSource->GetOutputPort());
-#else
-        vtkSmartPointer< vtkCubeSource > cubeSource =
-                vtkSmartPointer< vtkCubeSource >::New();
-        cubeSource->SetBounds(-d,d,-2*d,2*d,-3*d,3*d);
-        cubeSource->Update();
-        shadowGeometry->SetInputConnection(cubeSource->GetOutputPort());
-        mapper->SetInputConnection(cubeSource->GetOutputPort());
-#endif
-        vtkSmartPointer< vtkTransform > sTrans = vtkSmartPointer< vtkTransform >::New();
-        sTrans->Identity();
-        sTrans->PostMultiply();
-        shadowGeometry->SetTransform(sTrans);
-        shadowGeometry->Update();
-        mapper->Update();
-        actor->SetMapper(mapper);
-        vtkSmartPointer< vtkTransform > transform = vtkSmartPointer< vtkTransform >::New();
-        transform->Identity();
-        actor->SetUserTransform(transform);
-        setLocalTransformPrecomputed(true);
-        setLocalTransformDefiningPosition(false);
-    }
-
-    // I'm using disabling localTransform, so I need to reimplement these
-    virtual void getModelSpacePointInWorldCoordinates(const q_vec_type modelPoint, q_vec_type worldCoordsOut) const {
-        q_vec_type pos; q_type orient;
-        getPosition(pos);
-        getOrientation(orient);
-        q_xform(worldCoordsOut,orient,modelPoint);
-        q_vec_add(worldCoordsOut,pos,worldCoordsOut);
-    }
-    virtual void getWorldSpacePointInModelCoordinates(const q_vec_type worldPoint, q_vec_type modelCoordsOut) const {
-        q_vec_type pos;
-        q_type orient;
-        getPosition(pos);
-        getOrientation(orient);
-        q_invert(orient,orient);
-        q_vec_invert(pos,pos);
-        q_vec_add(modelCoordsOut,pos,worldPoint);
-        q_xform(modelCoordsOut,orient,modelCoordsOut);
-    }
-    virtual void getWorldVectorInModelSpace(const q_vec_type worldVec, q_vec_type modelVecOut) const {
-        q_type orient;
-        getOrientation(orient);
-        q_type orientInv;
-        q_invert(orientInv,orient);
-        q_xform(modelVecOut,orientInv,worldVec);
-
-    }
-    virtual void getModelVectorInWorldSpace(const q_vec_type modelVec, q_vec_type worldVecOut) const {
-        q_type orient;
-        getOrientation(orient);
-        q_xform(worldVecOut,orient,modelVec);
-    }
-
-    virtual void setColorMapType(ColorMapType::Type) {}
-    virtual void setArrayToColorBy(const QString &) {}
-    virtual int numInstances() const { return 0; }
-    virtual vtkActor* getActor() { return actor; }
-    vtkTransformPolyDataFilter* getTransformedGeometry() { return shadowGeometry; }
-    virtual bool collide(SketchObject* other, PhysicsStrategy* physics, int pqp_flags) { return false;}
-    virtual void getBoundingBox(double bb[]) {}
-    virtual vtkPolyDataAlgorithm* getOrientedBoundingBoxes() { return NULL;}
-    virtual vtkAlgorithm* getOrientedHalfPlaneOutlines() { return NULL; }
-    virtual void setOrientedHalfPlaneData(double) {}
-    virtual SketchObject* getCopy() { return NULL; }
-    virtual SketchObject* deepCopy() { return NULL; }
-
-private:
-    vtkSmartPointer< vtkActor > actor;
-    vtkSmartPointer< vtkTransformPolyDataFilter > shadowGeometry;
-};
-
-inline SketchProject::TrackerObject* SketchProject::addTracker(vtkRenderer* r) {
-    vtkSmartPointer<vtkActor> actor;
-    TrackerObject* tracker = new TrackerObject();
-    actor = tracker->getActor();
-    r->AddActor(actor);
-    return tracker;
-}
-
 inline void makeFloorAndLines(vtkPlaneSource*  shadowFloorSource,
                               vtkActor* shadowFloorActor,
                               vtkActor* floorLinesActor,
@@ -164,8 +65,7 @@ inline void makeFloorAndLines(vtkPlaneSource*  shadowFloorSource,
 {
 // the half x-length of the plane in room units
 #define PLANE_HALF_LENGTH 30
-// the y height of the plane in room units
-#define PLANE_Y -6
+#define PLANE_Y PLANE_ROOM_Y
 // the depth of the plane in z away from the camera
 #define PLANE_DEPTH PLANE_HALF_LENGTH*3
 
@@ -186,9 +86,6 @@ inline void makeFloorAndLines(vtkPlaneSource*  shadowFloorSource,
 
 // the number of lines across in X
 #define NUM_LINES_IN_X 9
-// the offset in room space of the lines above the plane to prevent OpenGL
-// depth problems
-#define LINE_FROM_PLANE_OFFSET 0.3
 
 // The color of the lines over the plane (R, G, and B components all set by this)
 #define LINES_COLOR 0.3,0.3,0.3
@@ -275,30 +172,6 @@ inline void makeFloorAndLines(vtkPlaneSource*  shadowFloorSource,
 #undef PLANE_HALF_LENGTH
 }
 
-// the tracker are so small that we need to scale their shadows up to be visible
-#define TRACKER_SHADOW_SCALE 50,50,50
-// the color of the trackers' shadows
-#define TRACKER_SHADOW_COLOR 0.0,0.0,0.0
-
-void SketchProject::makeTrackerShadow(TrackerObject* hand, vtkActor* shadowActor,
-                              vtkLinearTransform* roomToWorldTransform)
-{
-    vtkSmartPointer< vtkProjectToPlane > projection =
-            vtkSmartPointer< vtkProjectToPlane >::New();
-    projection->SetInputConnection(hand->getTransformedGeometry()->GetOutputPort());
-    projection->SetPointOnPlane(0,PLANE_Y + 0.1 * LINE_FROM_PLANE_OFFSET,0);
-    projection->SetPlaneNormalVector(0,1,0);
-    projection->Update();
-    vtkSmartPointer< vtkPolyDataMapper > mapper =
-            vtkSmartPointer< vtkPolyDataMapper >::New();
-    mapper->SetInputConnection(projection->GetOutputPort());
-    mapper->Update();
-    shadowActor->SetMapper(mapper);
-    shadowActor->GetProperty()->SetColor(TRACKER_SHADOW_COLOR);
-    shadowActor->GetProperty()->LightingOff();
-    shadowActor->SetUserTransform(roomToWorldTransform);
-}
-
 #define OUTLINES_COLOR 0.7,0.7,0.7
 SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     renderer(r),
@@ -312,10 +185,6 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     projectDirName(projDir),
     undoStack(),
     redoStack(),
-    leftHand(addTracker(r)),
-    rightHand(addTracker(r)),
-    leftShadowActor(vtkSmartPointer< vtkActor >::New()),
-    rightShadowActor(vtkSmartPointer< vtkActor >::New()),
     outlines(),
     shadowFloorSource(vtkSmartPointer< vtkPlaneSource >::New()),
     shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
@@ -323,8 +192,13 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     isDoingAnimation(false),
     showingShadows(true),
     timeInAnimation(0.0),
+    outlineType(SketchProject::OUTLINE_OBJECTS),
     viewTime(0.0)
 {
+    hand[SketchBioHandId::LEFT].init(transforms.data(),world.data(),SketchBioHandId::LEFT);
+    hand[SketchBioHandId::RIGHT].init(transforms.data(),world.data(),SketchBioHandId::RIGHT);
+    renderer->AddActor(hand[SketchBioHandId::LEFT].getHandActor());
+    renderer->AddActor(hand[SketchBioHandId::RIGHT].getHandActor());
     QDir dir(projectDirName);
     if (!dir.exists())
     {
@@ -349,14 +223,11 @@ SketchProject::SketchProject(vtkRenderer* r, const QString& projDir) :
     // make the floor and lines
     makeFloorAndLines(shadowFloorSource,shadowFloorActor,floorLinesActor,
                       transforms.data());
-    // make shadows for the trackers
-    makeTrackerShadow(leftHand,leftShadowActor,transforms->getRoomToWorldTransform());
-    makeTrackerShadow(rightHand,rightShadowActor,transforms->getRoomToWorldTransform());
     // add the floor and lines
     renderer->AddActor(floorLinesActor);
     renderer->AddActor(shadowFloorActor);
-    renderer->AddActor(leftShadowActor);
-    renderer->AddActor(rightShadowActor);
+    renderer->AddActor(hand[SketchBioHandId::LEFT].getShadowActor());
+    renderer->AddActor(hand[SketchBioHandId::RIGHT].getShadowActor());
 }
 
 SketchProject::~SketchProject()
@@ -371,10 +242,6 @@ SketchProject::~SketchProject()
     transformOps.clear();
     qDeleteAll(replicas);
     replicas.clear();
-    delete leftHand;
-    leftHand = NULL;
-    delete rightHand;
-    rightHand = NULL;
 }
 
 //###############################################################
@@ -450,16 +317,6 @@ if (dir == projectDirName)
   return true;
 }
 
-void SketchProject::setLeftHandPos(q_xyz_quat_type* loc)
-{
-    transforms->setLeftHandTransform(loc);
-}
-
-void SketchProject::setRightHandPos(q_xyz_quat_type* loc)
-{
-    transforms->setRightHandTransform(loc);
-}
-
 void SketchProject::setViewpoint(vtkMatrix4x4* worldToRoom, vtkMatrix4x4* roomToEyes)
 {
     transforms->setWorldToRoomMatrix(worldToRoom);
@@ -512,12 +369,12 @@ void SketchProject::clearProject()
     cameras.clear();
     qDeleteAll(replicas);
     replicas.clear();
-    world->clearLeftHandSprings();
-    world->clearRightHandSprings();
     world->clearObjects();
     world->clearConnectors();
     setOutlineVisible(LEFT_SIDE_OUTLINE,false);
     setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+    hand[SketchBioHandId::LEFT].clearState();
+    hand[SketchBioHandId::RIGHT].clearState();
 }
 
 UndoState* SketchProject::getLastUndoState()
@@ -584,8 +441,8 @@ void SketchProject::startAnimation()
 {
     isDoingAnimation = true;
     timeInAnimation = 0.0;
-    renderer->RemoveActor(leftHand->getActor());
-    renderer->RemoveActor(rightHand->getActor());
+    renderer->RemoveActor(hand[SketchBioHandId::LEFT].getHandActor());
+    renderer->RemoveActor(hand[SketchBioHandId::RIGHT].getHandActor());
     for (int i = 0; i < outlines.size(); i++)
     {
         if (renderer->HasViewProp(outlines[i].second))
@@ -593,8 +450,8 @@ void SketchProject::startAnimation()
             renderer->RemoveViewProp(outlines[i].second);
         }
     }
-    world->clearLeftHandSprings();
-    world->clearRightHandSprings();
+    hand[SketchBioHandId::LEFT].clearState();
+    hand[SketchBioHandId::RIGHT].clearState();
     world->hideInvisibleObjects();
     setShowShadows(false);
 
@@ -609,8 +466,8 @@ void SketchProject::startAnimation()
 void SketchProject::stopAnimation()
 {
     isDoingAnimation = false;
-    renderer->AddActor(leftHand->getActor());
-    renderer->AddActor(rightHand->getActor());
+    renderer->AddActor(hand[SketchBioHandId::LEFT].getHandActor());
+    renderer->AddActor(hand[SketchBioHandId::RIGHT].getHandActor());
     // distances and outlines actors will refresh themselves
     // handed springs and world grab should refresh themselves too
     world->showInvisibleObjects();
@@ -648,15 +505,15 @@ void SketchProject::setShowShadows(bool show)
     {
         renderer->AddActor(shadowFloorActor);
         renderer->AddActor(floorLinesActor);
-        renderer->AddActor(leftShadowActor);
-        renderer->AddActor(rightShadowActor);
+        renderer->AddActor(hand[SketchBioHandId::LEFT].getShadowActor());
+        renderer->AddActor(hand[SketchBioHandId::RIGHT].getShadowActor());
     }
     else
     {
         renderer->RemoveActor(shadowFloorActor);
         renderer->RemoveActor(floorLinesActor);
-        renderer->RemoveActor(leftShadowActor);
-        renderer->RemoveActor(rightShadowActor);
+        renderer->RemoveActor(hand[SketchBioHandId::LEFT].getShadowActor());
+        renderer->RemoveActor(hand[SketchBioHandId::RIGHT].getShadowActor());
     }
     world->setShowShadows(show);
 }
@@ -855,27 +712,25 @@ QWeakPointer<TransformEquals> SketchProject::addTransformEquals(
  */
 void SketchProject::updateTrackerPositions()
 {
-    q_vec_type pos;
-    q_type orient;
-    transforms->getLeftTrackerPosInWorldCoords(pos);
-    transforms->getLeftTrackerOrientInWorldCoords(orient);
-    leftHand->setPosAndOrient(pos,orient);
-    transforms->getLeftTrackerPosInRoomCoords(pos);
-    vtkSmartPointer< vtkTransform > trans =
-            vtkTransform::SafeDownCast(leftHand->getTransformedGeometry()->GetTransform());
-    trans->Identity();
-    trans->Scale(TRACKER_SHADOW_SCALE);
-    trans->Translate(pos);
-    transforms->getLeftTrackerTransformInEyeCoords((vtkTransform*)leftHand->getActor()->GetUserTransform());
-    transforms->getRightTrackerPosInWorldCoords(pos);
-    transforms->getRightTrackerOrientInWorldCoords(orient);
-    rightHand->setPosAndOrient(pos,orient);
-    transforms->getRightTrackerPosInRoomCoords(pos);
-    trans = vtkTransform::SafeDownCast(rightHand->getTransformedGeometry()->GetTransform());
-    trans->Identity();
-    trans->Scale(TRACKER_SHADOW_SCALE);
-    trans->Translate(pos);
-    transforms->getRightTrackerTransformInEyeCoords((vtkTransform*)rightHand->getActor()->GetUserTransform());
+  for (int i = 0; i < 2; ++i) {
+    SketchObject *oldNearest = hand[i].getNearestObject();
+    bool oldAtEnd1;
+    Connector *oldConnector = hand[i].getNearestConnector(&oldAtEnd1);
+    hand[i].updatePositionAndOrientation();
+    hand[i].updateGrabbed();
+    hand[i].computeNearestObjectAndConnector();
+    SketchObject *nearest = hand[i].getNearestObject();
+    bool atEnd1;
+    Connector *connector = hand[i].getNearestConnector(&atEnd1);
+    if (oldNearest != nearest && outlineType == OUTLINE_OBJECTS) {
+      setOutlineObject(i,nearest);
+    }
+    if (((oldConnector != connector) || (oldAtEnd1 != atEnd1)) &&
+        outlineType == OUTLINE_CONNECTORS) {
+      setOutlineSpring(i,connector,atEnd1);
+    }
+    updateOutlines(i ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+  }
 }
 
 void SketchProject::setOutlineObject(int outlineIdx, SketchObject* obj)
@@ -945,6 +800,37 @@ bool SketchProject::isOutlineVisible(int outlineIdx)
     return renderer->HasViewProp(outlines[outlineIdx].second);
 }
 
+void SketchProject::setOutlineType(OutlineType type)
+{
+  outlineType = type;
+  updateOutlines(SketchBioHandId::LEFT);
+  updateOutlines(SketchBioHandId::RIGHT);
+}
+
+void SketchProject::updateOutlines(SketchBioHandId::Type side)
+{
+  bool outlinesShowing = isOutlineVisible(side);
+  bool shouldOutlinesShow;
+  double dist;
+  switch(outlineType) {
+  case OUTLINE_OBJECTS:
+    dist = hand[side].getNearestObjectDistance();
+    shouldOutlinesShow = dist < DISTANCE_THRESHOLD;
+    break;
+  case OUTLINE_CONNECTORS:
+    dist = hand[side].getNearestConnectorDistance();
+    shouldOutlinesShow = dist < SPRING_DISTANCE_THRESHOLD;
+    break;
+  }
+  // don't show outlines during animation
+  if (isShowingAnimation()) {
+    shouldOutlinesShow = false;
+  }
+  if (shouldOutlinesShow != outlinesShowing) {
+    setOutlineVisible(side,shouldOutlinesShow);
+  }
+}
+
 SketchModel* SketchProject::getCameraModel() {
   QDir projectDir(projectDirName);
   return models->getCameraModel(projectDir);
@@ -970,79 +856,6 @@ inline int getMinIdx(const q_vec_type vec) {
     }
 }
 
-void SketchProject::grabObject(SketchObject* objectToGrab, bool grabWithLeft) {
-#ifdef SHOW_DEBUGGING_FORCE_LINES
-#define SHOW true
-#else
-#define SHOW false
-#endif
-    SketchObject* tracker = NULL;
-    if (grabWithLeft) {
-        tracker = leftHand;
-    } else {
-        tracker = rightHand;
-    }
-
-    q_vec_type oPos, tPos, vec;
-    objectToGrab->getPosition(oPos);
-    tracker->getPosition(tPos);
-    q_vec_subtract(vec,tPos,oPos);
-    q_vec_normalize(vec,vec);
-    q_vec_type axis = Q_NULL_VECTOR;
-    axis[getMinIdx(vec)] = 1; // this gives an axis that is guaranteed not to be
-                        // parallel to vec
-    q_vec_type per1, per2; // create two perpendicular unit vectors
-    q_vec_cross_product(per1,axis,vec);
-    q_vec_normalize(per1,per1);
-    q_vec_cross_product(per2,per1,vec); // should already be length 1
-    // create scaled perpendicular vectors
-    q_vec_type tPer1, tPer2;
-    q_vec_scale(tPer1,TRACKER_SIDE_LEN,per1);
-    q_vec_scale(tPer2,TRACKER_SIDE_LEN,per2);
-    q_vec_type /*wPos1,*/ wPos2;
-    // create springs and add them
-    // first spring --defined along the "x" axis (per1)
-    SpringConnection *spring;
-    q_vec_add(wPos2,tPos,tPer1);
-    spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                          OBJECT_GRAB_SPRING_CONST,
-                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN),
-                                          SHOW);
-    if (grabWithLeft) {
-        world->addLeftHandSpring(spring);
-    } else {
-        world->addRightHandSpring(spring);
-    }
-    // second spring --defined as rotated 120 degrees about "z" axis.
-    // coordinates in terms of x and y: (-1/2x, sqrt(3)/2y)
-    q_vec_scale(tPer1,-.5,tPer1);
-    q_vec_scale(tPer2,sqrt(3.0)/2,tPer2);
-    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-    q_vec_add(wPos2,wPos2,tPer2); // + sqrt(3)/2 y
-    spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                          OBJECT_GRAB_SPRING_CONST,
-                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN),
-                                          SHOW);
-    if (grabWithLeft) {
-        world->addLeftHandSpring(spring);
-    } else {
-        world->addRightHandSpring(spring);
-    }
-    // third spring --defined as rotated 240 degrees about "z" axis.
-    // coordinates in terms of x and y: (-1/2x, -sqrt(3)/2y)
-    q_vec_invert(tPer2,tPer2);
-    q_vec_add(wPos2,tPos,tPer1); // origin - 1/2 x
-    q_vec_add(wPos2,wPos2,tPer2); // - sqrt(3)/2 y
-    spring = SpringConnection::makeSpring(objectToGrab,tracker,wPos2,wPos2,true,
-                                          OBJECT_GRAB_SPRING_CONST,
-                                          abs(OBJECT_SIDE_LEN-TRACKER_SIDE_LEN),
-                                          SHOW);
-    if (grabWithLeft) {
-        world->addLeftHandSpring(spring);
-    } else {
-        world->addRightHandSpring(spring);
-    }
-}
 
 void SketchProject::setUpVtkCamera(SketchObject* cam, vtkCamera* vCam) {
     vtkSmartPointer<vtkTransform> trans = cam->getLocalTransform();
@@ -1133,14 +946,3 @@ void SketchProject::setCameraToVTKCameraPosition(SketchObject* cam, vtkCamera* v
 
     cam->setPosAndOrient(pos,orient);
 }
-
-SketchObject* SketchProject::getLeftHandObject()
-{
-    return leftHand;
-}
-
-SketchObject* SketchProject::getRightHandObject()
-{
-    return rightHand;
-}
-

@@ -21,6 +21,10 @@
 // input constants
 #define HYDRA_SCALE_FACTOR 8.0f
 
+namespace SketchBioHandId {
+enum Type { LEFT=0, RIGHT=1 };
+}
+
 #define BUTTON_LEFT(x) (x+0)
 #define BUTTON_RIGHT(x) (x+8)
 
@@ -70,5 +74,15 @@
 #define SPRING_ALPHA_VALUE 0.0
 // radius is 5 so that it looks the same as the old display of springs
 #define SPRING_DISPLAY_RADIUS 5.0
+
+// shadow plane constants
+
+// the y height of the plane in room units
+#define PLANE_ROOM_Y -6
+// the offset in room space of the lines above the plane to prevent OpenGL
+// depth problems
+#define LINE_FROM_PLANE_OFFSET 0.3
+
+// end shadow plane constants
 
 #endif // SKETCHIOCONSTANTS_H

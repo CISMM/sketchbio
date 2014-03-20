@@ -18,11 +18,16 @@
 class SpringConnection : public Connector
 {
 public:
-
+    SpringConnection();
     SpringConnection(SketchObject *o1, SketchObject *o2, double minRestLen,
                      double maxRestLen, double k, const q_vec_type obj1Pos,
                      const q_vec_type obj2Pos, bool showLine);
     virtual ~SpringConnection() {}
+
+    void initSpring(SketchObject *o1, SketchObject *o2, double minRestLen,
+                    double maxRestLen, double k, const q_vec_type obj1Pos,
+                    const q_vec_type obj2Pos, bool showLine);
+    virtual bool isInitialized();
 
     inline double getStiffness() const { return stiffness; }
     inline void setStiffness(double newK) { stiffness = newK; }
