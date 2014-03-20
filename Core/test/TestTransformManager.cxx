@@ -15,7 +15,7 @@ int testLeftTrackerPosition() {
     TransformManager mgr = TransformManager();
     q_vec_type vec;
     mgr.translateWorldRelativeToRoom(0,0,-10);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     // the default tracker base offset is <0,0,10> (all other default translations
     // are identity)
     if (vec[0] != vec[1] || vec[1] != 0 || vec[2] != 10) {
@@ -25,14 +25,14 @@ int testLeftTrackerPosition() {
     }
     // this should put the tracker at the origin
     mgr.translateWorldRelativeToRoom(0,0,10);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     if (vec[0] != vec[1] || vec[1] != 0 || vec[2] != 0) {
         failures++;
         std::cout << "Tracker position after translation wrong" << std::endl;
         q_vec_print(vec);
     }
     mgr.translateWorldRelativeToRoom(5,2,0);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     if (vec[0] != -5 || vec[1] != -2 || vec[2] != 0) {
         failures++;
         std::cout << "Tracker position after second translation wrong";
@@ -43,7 +43,7 @@ int testLeftTrackerPosition() {
     q_from_two_vecs(quat,z_axis,vec);
     q_from_two_vecs(qInv,vec,z_axis);
     mgr.rotateWorldRelativeToRoom(quat);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     if (Q_ABS(vec[0]) > Q_EPSILON || Q_ABS(vec[1]) > Q_EPSILON
             || Q_ABS(vec[2]*vec[2] - 29) > Q_EPSILON) {
         failures++;
@@ -52,7 +52,7 @@ int testLeftTrackerPosition() {
     }
     mgr.translateWorldRelativeToRoom(vec);
     mgr.rotateWorldRelativeToRoom(qInv);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     if (Q_ABS(vec[0]) > Q_EPSILON || Q_ABS(vec[1]) > Q_EPSILON
             || Q_ABS(vec[2]) > Q_EPSILON) {
         failures++;
@@ -63,8 +63,8 @@ int testLeftTrackerPosition() {
     q_xyz_quat_type tracker;
     q_copy(tracker.quat,ident);
     q_vec_set(tracker.xyz,0,1,0);
-    mgr.setLeftHandTransform(&tracker);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.setHandTransform(&tracker,SketchBioHandId::LEFT);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[0]) > Q_EPSILON
             || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[1]) > Q_EPSILON
             || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[2]) > Q_EPSILON) {
@@ -74,7 +74,7 @@ int testLeftTrackerPosition() {
     }
     // test in combination with scaling
     mgr.scaleWorldRelativeToRoom(2);
-    mgr.getLeftTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
     if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[0]) > Q_EPSILON
             || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[1]) > Q_EPSILON
             || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[2]) > Q_EPSILON) {
@@ -95,7 +95,7 @@ int testRightTrackerPosition() {
     TransformManager mgr = TransformManager();
     q_vec_type vec;
     mgr.translateWorldRelativeToRoom(0,0,-10);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     // the default tracker base offset is <0,0,10> (all other default translations
     // are identity)
     if (vec[0] != vec[1] || vec[1] != 0 || vec[2] != 10) {
@@ -105,14 +105,14 @@ int testRightTrackerPosition() {
     }
     // this should put the tracker at the origin
     mgr.translateWorldRelativeToRoom(0,0,10);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     if (vec[0] != vec[1] || vec[1] != 0 || vec[2] != 0) {
         failures++;
         std::cout << "Tracker position after translation wrong" << std::endl;
         q_vec_print(vec);
     }
     mgr.translateWorldRelativeToRoom(5,2,0);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     if (vec[0] != -5 || vec[1] != -2 || vec[2] != 0) {
         failures++;
         std::cout << "Tracker position after second translation wrong";
@@ -123,7 +123,7 @@ int testRightTrackerPosition() {
     q_from_two_vecs(quat,vec,z_axis);
     q_from_two_vecs(qInv,z_axis,vec);
     mgr.rotateWorldRelativeToRoom(quat);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     if (Q_ABS(vec[0]) > Q_EPSILON || Q_ABS(vec[1]) > Q_EPSILON
             || Q_ABS(vec[2]*vec[2] - 29) > Q_EPSILON) {
         failures++;
@@ -132,7 +132,7 @@ int testRightTrackerPosition() {
     }
     mgr.translateWorldRelativeToRoom(vec);
     mgr.rotateWorldRelativeToRoom(qInv);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     if (Q_ABS(vec[0]) > Q_EPSILON || Q_ABS(vec[1]) > Q_EPSILON
             || Q_ABS(vec[2]) > Q_EPSILON) {
         failures++;
@@ -143,8 +143,8 @@ int testRightTrackerPosition() {
     q_xyz_quat_type tracker;
     q_copy(tracker.quat,ident);
     q_vec_set(tracker.xyz,0,1,0);
-    mgr.setRightHandTransform(&tracker);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.setHandTransform(&tracker,SketchBioHandId::RIGHT);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[0]) > Q_EPSILON
             || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[1]) > Q_EPSILON
             || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[2]) > Q_EPSILON) {
@@ -154,7 +154,7 @@ int testRightTrackerPosition() {
     }
     // test in combination with scaling
     mgr.scaleWorldRelativeToRoom(2);
-    mgr.getRightTrackerPosInWorldCoords(vec);
+    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
     if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[0]) > Q_EPSILON
             || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[1]) > Q_EPSILON
             || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[2]) > Q_EPSILON) {
@@ -192,13 +192,13 @@ int testRotateAboutLeftTracker() {
     q_vec_copy(xyz2.xyz,pos2);
     q_copy(xyz1.quat,ident);
     q_copy(xyz2.quat,ident);
-    mgr.setLeftHandTransform(&xyz1);
-    mgr.setRightHandTransform(&xyz2);
+    mgr.setHandTransform(&xyz1,SketchBioHandId::LEFT);
+    mgr.setHandTransform(&xyz2,SketchBioHandId::RIGHT);
 
 
     q_vec_type lpos1, rpos1, difference1;
-    mgr.getLeftTrackerPosInWorldCoords(lpos1);
-    mgr.getRightTrackerPosInWorldCoords(rpos1);
+    mgr.getTrackerPosInWorldCoords(lpos1,SketchBioHandId::LEFT);
+    mgr.getTrackerPosInWorldCoords(rpos1,SketchBioHandId::RIGHT);
 
     q_vec_subtract(difference1,rpos1,lpos1);
 
@@ -218,11 +218,11 @@ int testRotateAboutLeftTracker() {
     q_from_two_vecs(q,a,b); // q rotates a to b
     q_from_two_vecs(qinv,b,a); // qinv rotates b to a
 
-    mgr.rotateWorldRelativeToRoomAboutLeftTracker(qinv);
+    mgr.rotateWorldRelativeToRoomAboutTracker(qinv,SketchBioHandId::LEFT);
 
     q_vec_type lpos2, rpos2, difference2;
-    mgr.getLeftTrackerPosInWorldCoords(lpos2);
-    mgr.getRightTrackerPosInWorldCoords(rpos2);
+    mgr.getTrackerPosInWorldCoords(lpos2,SketchBioHandId::LEFT);
+    mgr.getTrackerPosInWorldCoords(rpos2,SketchBioHandId::RIGHT);
 
     q_vec_subtract(difference2,rpos2,lpos2);
 
@@ -274,13 +274,13 @@ int testRotateAboutRightTracker() {
     q_vec_copy(xyz2.xyz,pos2);
     q_copy(xyz1.quat,ident);
     q_copy(xyz2.quat,ident);
-    mgr.setRightHandTransform(&xyz1);
-    mgr.setLeftHandTransform(&xyz2);
+    mgr.setHandTransform(&xyz1,SketchBioHandId::RIGHT);
+    mgr.setHandTransform(&xyz2,SketchBioHandId::LEFT);
 
 
     q_vec_type lpos1, rpos1, difference1;
-    mgr.getLeftTrackerPosInWorldCoords(lpos1);
-    mgr.getRightTrackerPosInWorldCoords(rpos1);
+    mgr.getTrackerPosInWorldCoords(lpos1,SketchBioHandId::LEFT);
+    mgr.getTrackerPosInWorldCoords(rpos1,SketchBioHandId::RIGHT);
 
     q_vec_subtract(difference1,lpos1,rpos1);
 
@@ -298,11 +298,11 @@ int testRotateAboutRightTracker() {
 
     // note that rotating the world by qinv gives the left tracker (whose initial difference
     // from the right tracker was a) a difference of b from the other
-    mgr.rotateWorldRelativeToRoomAboutRightTracker(qinv);
+    mgr.rotateWorldRelativeToRoomAboutTracker(qinv,SketchBioHandId::RIGHT);
 
     q_vec_type lpos2, rpos2, difference2;
-    mgr.getLeftTrackerPosInWorldCoords(lpos2);
-    mgr.getRightTrackerPosInWorldCoords(rpos2);
+    mgr.getTrackerPosInWorldCoords(lpos2,SketchBioHandId::LEFT);
+    mgr.getTrackerPosInWorldCoords(rpos2,SketchBioHandId::RIGHT);
 
     q_vec_subtract(difference2,lpos2,rpos2);
 

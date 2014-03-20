@@ -148,54 +148,29 @@ public:
      *
      *******************************************************************/
     Connector* addConnector(Connector* spring);
+
     /*******************************************************************
      *
-     * Adds the given spring to the list of springs for the left hand
+     * Adds the given spring to the list of springs for the user interface
      *
-     * This passes ownership of the Connector to the world manager
-     * and the connector will be deleted in clearRightHandSprings
-     * or the world manager's destructor
+     * This does NOT pass ownership of the Connector to the world manager
      *
      * spring - the spring to add
      *
      *******************************************************************/
-    inline void addLeftHandSpring(Connector *spring) {addConnector(spring,&lHand); }
-    /*******************************************************************
-     *
-     * Adds the given spring to the list of springs for the right hand
-     *
-     * This passes ownership of the Connector to the world manager
-     * and the connector will be deleted in clearRightHandSprings
-     * or the world manager's destructor
-     *
-     * spring - the spring to add
-     *
-     *******************************************************************/
-    inline void addRightHandSpring(Connector *spring) {addConnector(spring,&rHand); }
+    inline void addUISpring(Connector* spring) { addConnector(spring,uiSprings); }
     /*******************************************************************
      *
      * Gets the list of connectors (springs) for the left hand
      *
      *******************************************************************/
-    inline const QList< Connector* >* getLeftSprings() const { return &lHand; }
+    inline const QList< Connector* > *getUISprings() const { return &uiSprings; }
     /*******************************************************************
      *
-     * Gets the list of connectors (springs) for the right hand
+     * Removes the connector from the user interface connectors
      *
      *******************************************************************/
-    inline const QList< Connector* >* getRightSprings() const { return &rHand; }
-    /*******************************************************************
-     *
-     * Clears the list of connectors (springs) for the left hand
-     *
-     *******************************************************************/
-    void clearLeftHandSprings();
-    /*******************************************************************
-     *
-     * Clears the list of connectors (springs) for the right hand
-     *
-     *******************************************************************/
-    void clearRightHandSprings();
+    void removeUISpring(Connector *spring);
 
     /*******************************************************************
      *
@@ -433,7 +408,7 @@ private:
      * other steps necessary for the connector to be shown onscreen
      *
      *******************************************************************/
-    void addConnector(Connector* spring, QList< Connector* > *list);
+    void addConnector(Connector* spring, QList< Connector* > &list);
 
     /*******************************************************************
      *
@@ -472,7 +447,7 @@ private:
     QList< SketchObject* > objects;
     QHash< SketchObject*, ShadowPair > shadows;
     QHash< Connector* , ConnectorPair > lines;
-    QList< Connector* > connections, lHand, rHand;
+    QList< Connector* > connections, uiSprings;
     QVector< QSharedPointer< PhysicsStrategy > > strategies;
 
     vtkSmartPointer< vtkRenderer > renderer;

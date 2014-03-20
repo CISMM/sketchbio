@@ -27,8 +27,7 @@ public:
     QString getModeName();
 
     // called by the callback functions
-    void setLeftPos(q_xyz_quat_type *newPos);
-    void setRightPos(q_xyz_quat_type *newPos);
+    void setHandPos(q_xyz_quat_type *newPos,SketchBioHandId::Type side);
     void setButtonState(int buttonNum, bool buttonPressed);
     void setAnalogStates(const double state[]);
 

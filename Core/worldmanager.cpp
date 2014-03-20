@@ -42,8 +42,7 @@ WorldManager::WorldManager(vtkRenderer *r)
       shadows(),
       lines(),
       connections(),
-      lHand(),
-      rHand(),
+      uiSprings(),
       strategies(),
       renderer(r),
       orientedHalfPlaneOutlines(vtkSmartPointer< vtkAppendPolyData >::New()),
@@ -77,12 +76,9 @@ WorldManager::~WorldManager()
   lines.clear();
   shadows.clear();
   qDeleteAll(connections);
-  qDeleteAll(lHand);
-  qDeleteAll(rHand);
   qDeleteAll(objects);
   connections.clear();
-  lHand.clear();
-  rHand.clear();
+  uiSprings.clear();
   objects.clear();
 }
 
@@ -308,39 +304,21 @@ void WorldManager::clearObjects()
 //##################################################################################################
 Connector *WorldManager::addConnector(Connector *spring)
 {
-  addConnector(spring, &connections);
+  addConnector(spring, connections);
 
   return spring;
 }
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::clearLeftHandSprings()
-{
-  for (QMutableListIterator< Connector * > it(lHand); it.hasNext();) {
-    Connector *spring = it.next();
-    renderer->RemoveActor(lines.value(spring).second);
-    lines.remove(spring);
-    it.remove();
-    delete spring;
-  }
-  lHand.clear();
+void WorldManager::removeUISpring(Connector *spring) {
+  renderer->RemoveActor(lines.value(spring).second);
+  lines.remove(spring);
+  uiSprings.removeOne(spring);
 }
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::clearRightHandSprings()
-{
-  for (QMutableListIterator< Connector * > it(rHand); it.hasNext();) {
-    Connector *spring = it.next();
-    renderer->RemoveActor(lines.value(spring).second);
-    lines.remove(spring);
-    it.remove();
-    delete spring;
-  }
-  rHand.clear();
-}
-
 void WorldManager::clearConnectors()
 {
   while (!connections.empty()) {
@@ -358,7 +336,7 @@ SpringConnection *WorldManager::addSpring(SketchObject *o1, SketchObject *o2,
 {
   SpringConnection *spring = SpringConnection::makeSpring(
       o1, o2, pos1, pos2, worldRelativePos, k, minLen, maxLen);
-  addConnector(spring, &connections);
+  addConnector(spring, connections);
   return spring;
 }
 
@@ -406,7 +384,7 @@ void WorldManager::stepPhysics(double dt)
     obj->setLastLocation();
   }
   strategies[collisionResponseMode]->performPhysicsStepAndCollisionDetection(
-      lHand, rHand, connections, doPhysicsSprings, objects, dt,
+      uiSprings, connections, doPhysicsSprings, objects, dt,
       doCollisionCheck);
 
   updateConnectors();
@@ -759,9 +737,9 @@ void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 
 //##################################################################################################
 //##################################################################################################
-void WorldManager::addConnector(Connector *spring, QList< Connector * > *list)
+void WorldManager::addConnector(Connector *spring, QList< Connector * > &list)
 {
-  list->push_back(spring);
+  list.push_back(spring);
 
   vtkLineSource *line = spring->getLine();
   vtkActor *actor = spring->getActor();

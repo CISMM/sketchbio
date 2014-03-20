@@ -118,7 +118,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
     else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
     {
         q_vec_type pos1, pos2 = {0, 1, 0};
-        project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
+        project->getHand(SketchBioHandId::RIGHT).getPosition(pos1);
         q_vec_add(pos2,pos1,pos2);
         double stiffness;
         stiffness = ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
@@ -138,7 +138,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
     else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
     {
         q_vec_type pos1, pos2 = {0, 1, 0};
-        project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
+        project->getHand(SketchBioHandId::RIGHT).getPosition(pos1);
         q_vec_add(pos2,pos1,pos2);
         Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.3,10);
         project->addConnector(conn);
@@ -167,90 +167,84 @@ static inline void processFrameForSide(SketchProject* project,
                                 bool& atEnd1,
                                 bool grabbedSpring,
                                 q_vec_type trackerPos,
-                                SketchObject* trackerObj,
 								SketchObject* closestObj,
                                 int side)
 {
-    WorldManager* world = project->getWorldManager();
-    if ( ! grabbedSpring )
-    {
-        // if we haven't grabbed a spring, display which spring is grabbable
-        Connector* closest;
-        bool newAtEnd1;
-        closest = world->getClosestConnector(trackerPos,&springDist,&newAtEnd1);
-        if (closest != spring || (newAtEnd1 != atEnd1))
-        {
-            project->setOutlineSpring(side,closest,newAtEnd1);
-            spring = closest;
-            atEnd1 = newAtEnd1;
-        }
-        if (springDist < SPRING_DISTANCE_THRESHOLD)
-        {
-            if (!project->isOutlineVisible(side))
-            {
-                project->setOutlineVisible(side,true);
-            }
-        }
-        else if (project->isOutlineVisible(side))
-        {
-            project->setOutlineVisible(side,false);
-        }
-    }
-    else
-    {
-        // if we have grabbed a spring, move that spring's end
-        double objectDist = 0;
-        SketchObject* closestObject = closestObj;
-		//closestObject = world->getClosestObject(trackerObj,objectDist);
-        if (objectDist > DISTANCE_THRESHOLD)
-        {
-            closestObject = NULL;
-            project->setOutlineSpring(side,spring,atEnd1);
-        }
-        else
-        {
-            project->setOutlineObject(side,closestObject);
-        }
-        if (atEnd1)
-        {
-            if (closestObject != spring->getObject1())
-                spring->setObject1(closestObject);
-            spring->setEnd1WorldPosition(trackerPos);
-        }
-        else
-        {
-            if (closestObject != spring->getObject2())
-                spring->setObject2(closestObject);
-            spring->setEnd2WorldPosition(trackerPos);
-        }
-    }
+//    WorldManager* world = project->getWorldManager();
+//    if ( ! grabbedSpring )
+//    {
+//        // if we haven't grabbed a spring, display which spring is grabbable
+//        Connector* closest;
+//        bool newAtEnd1;
+//        closest = world->getClosestConnector(trackerPos,&springDist,&newAtEnd1);
+//        if (closest != spring || (newAtEnd1 != atEnd1))
+//        {
+//            project->setOutlineSpring(side,closest,newAtEnd1);
+//            spring = closest;
+//            atEnd1 = newAtEnd1;
+//        }
+//        if (springDist < SPRING_DISTANCE_THRESHOLD)
+//        {
+//            if (!project->isOutlineVisible(side))
+//            {
+//                project->setOutlineVisible(side,true);
+//            }
+//        }
+//        else if (project->isOutlineVisible(side))
+//        {
+//            project->setOutlineVisible(side,false);
+//        }
+//    }
+//    else
+//    {
+//        // if we have grabbed a spring, move that spring's end
+//        double objectDist = 0;
+//        SketchObject* closestObject = closestObj;
+//		//closestObject = world->getClosestObject(trackerObj,objectDist);
+//        if (objectDist > DISTANCE_THRESHOLD)
+//        {
+//            closestObject = NULL;
+//            project->setOutlineSpring(side,spring,atEnd1);
+//        }
+//        else
+//        {
+//            project->setOutlineObject(side,closestObject);
+//        }
+//        if (atEnd1)
+//        {
+//            if (closestObject != spring->getObject1())
+//                spring->setObject1(closestObject);
+//            spring->setEnd1WorldPosition(trackerPos);
+//        }
+//        else
+//        {
+//            if (closestObject != spring->getObject2())
+//                spring->setObject2(closestObject);
+//            spring->setEnd2WorldPosition(trackerPos);
+//        }
+//    }
 }
 
 void SpringEditingMode::doUpdatesForFrame()
 {
 	ObjectGrabMode::doUpdatesForFrame();
     // if we are grabbing the world, update the world position for the frame
-    if (grabbedWorld == LEFT_GRABBED_WORLD)
-        grabWorldWithLeft();
-    else if (grabbedWorld == RIGHT_GRABBED_WORLD)
-        grabWorldWithRight();
 
     WorldManager* world = project->getWorldManager();
-    SketchObject* leftHand = project->getLeftHandObject();
-    SketchObject* rightHand = project->getRightHandObject();
+//    SketchObject* leftHand = project->getLeftHandObject();
+//    SketchObject* rightHand = project->getRightHandObject();
 
     if ( world->getNumberOfConnectors() > 0 )
     {
         // get the tracker positions
         q_vec_type leftTrackerPos, rightTrackerPos;
-        TransformManager* transformMgr = project->getTransformManager();
-        transformMgr->getLeftTrackerPosInWorldCoords(leftTrackerPos);
-        transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
+        project->getHand(SketchBioHandId::LEFT).getPosition(leftTrackerPos);
+        project->getHand(SketchBioHandId::RIGHT).getPosition(rightTrackerPos);
 
         processFrameForSide(project,lSpring,lSpringDist,lAtEnd1,leftGrabbedSpring,
-                            leftTrackerPos,leftHand,lObj,LEFT_SIDE_OUTLINE);
+                            leftTrackerPos,lObj,LEFT_SIDE_OUTLINE);
         processFrameForSide(project,rSpring,rSpringDist,rAtEnd1,rightGrabbedSpring,
-                            rightTrackerPos,rightHand,rObj,RIGHT_SIDE_OUTLINE);
+                            rightTrackerPos,rObj,RIGHT_SIDE_OUTLINE);
     }
     else
     {

@@ -55,10 +55,6 @@ public:
     void scaleWithLeftFixed();
     // scales based on the change in distance between trackers with the right assumed fixed
     void scaleWithRightFixed();
-    // does a the 'grab world with left' changes for the current frame
-    void grabWorldWithLeft();
-    // does a the 'grab world with right' changes for the current frame
-    void grabWorldWithRight();
     // adds a xml save undo point to the project with the last saved point as its previous
     // state to go back to and the current project state as its state to redo to after the
     // undo

@@ -36,6 +36,7 @@ class StructureReplicator;
 class TransformEquals;
 #include "physicsstrategyfactory.h"
 class UndoState;
+#include "hand.h"
 
 // constants to use with the setOutlineXXX and isOutlineVisible functions
 // for the value of the side variable
@@ -53,6 +54,9 @@ class UndoState;
 class SketchProject
 {
 public:
+
+  enum OutlineType { OUTLINE_CONNECTORS, OUTLINE_OBJECTS};
+
     SketchProject(vtkRenderer* r, const QString& projDir);
     ~SketchProject();
     // setters
@@ -60,10 +64,6 @@ public:
     // note, the folder will get deleted and replaced with the contents of the
     // current project folder.
     bool setProjectDir(const QString& dir);
-    // sets the left hand position/orientation from vrpn
-    void setLeftHandPos(q_xyz_quat_type* loc);
-    // sets the right hand position/orientation from vrpn
-    void setRightHandPos(q_xyz_quat_type* loc);
     // sets the viewpoint
     void setViewpoint(vtkMatrix4x4* worldToRoom, vtkMatrix4x4* roomToEyes);
     // sets the collision mode
@@ -119,8 +119,7 @@ public:
     const WorldManager* getWorldManager() const;
     WorldManager* getWorldManager();
     // get objects representing trackers ('hands')
-    SketchObject* getLeftHandObject();
-    SketchObject* getRightHandObject();
+    SketchBio::Hand &getHand(SketchBioHandId::Type side);
     // get replicas
     const QList< StructureReplicator* >* getReplicas() const;
     // get transform equals objects (or more things added later, not sure)
@@ -153,12 +152,7 @@ public:
     // tell if the outlines for a particular side are visible
     bool isOutlineVisible(int outlineIdx);
 
-    // causes the given object to be connected to one of the tracker objects with springs to allow
-    // the user to manipulate its position and orientation.
-    // the first parameter is the object to attach
-    // the second parameter should be true if the object should be attached to the left tracker
-    //          and false if the object should be attached to the right tracker
-    void grabObject(SketchObject *objectToGrab, bool grabWithLeft);
+    void setOutlineType(OutlineType type);
 
     // adding things functions
     // for models
@@ -199,10 +193,11 @@ private:
     static TrackerObject* addTracker(vtkRenderer* r);
     static void makeTrackerShadow(TrackerObject* hand, vtkActor* shadowActor,
                                   vtkLinearTransform* roomToWorldTransform);
+    void updateOutlines(SketchBioHandId::Type side);
 
     // fields
     vtkSmartPointer< vtkRenderer > renderer;
-	QTime time;
+    QTime time;
     // managers -- these are owned by the project, raw pointers may be passed to other places, but
     //              will be invalid once the project is deleted
     QScopedPointer< ModelManager > models;
@@ -222,9 +217,8 @@ private:
     QList< UndoState* > undoStack, redoStack;
 
     // other ui stuff
-    TrackerObject* leftHand, * rightHand; // the objects for the left and right hand trackers
-    // the left and right trackers' shadows
-    vtkSmartPointer< vtkActor > leftShadowActor, rightShadowActor;
+    // the objects that represent the user's hands
+    SketchBio::Hand hand[2];
     // outline actors are added to the renderer when the object is close enough to
     // interact with.  The outline mappers are updated whenever the closest object
     // changes (unless another one is currently grabbed). Note: left is 0, right is 1
@@ -237,6 +231,7 @@ private:
     bool isDoingAnimation; // true if the animation is happenning
     bool showingShadows; // true if shadows are currently being shown
     double timeInAnimation; // the animation time starting at 0
+    OutlineType outlineType;
     double viewTime;
 
 	// TODO - temporary until we get better closest obj detection
@@ -285,6 +280,10 @@ inline const WorldManager* SketchProject::getWorldManager() const
 inline WorldManager* SketchProject::getWorldManager()
 {
     return world.data();
+}
+
+inline SketchBio::Hand &SketchProject::getHand(SketchBioHandId::Type side) {
+  return hand[side];
 }
 
 inline const QList< StructureReplicator* >* SketchProject::getReplicas() const

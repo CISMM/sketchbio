@@ -94,13 +94,13 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
             {
                 if (grp == NULL)
                     return;
-                SketchObject *rHand = project->getRightHandObject();
-                SketchObject *obj = WorldManager::getClosestObject(
-                            *grp->getSubObjects(),rHand,rDist);
+//                SketchObject *rHand = project->getRightHandObject();
+//                SketchObject *obj = WorldManager::getClosestObject(
+//                            *grp->getSubObjects(),rHand,rDist);
                 if (rDist < DISTANCE_THRESHOLD)
                 {
-                    grp->removeObject(obj);
-                    world->addObject(obj);
+//                    grp->removeObject(obj);
+//                    world->addObject(obj);
                 }
             }
             else
@@ -148,7 +148,7 @@ void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
         if (elem)
         {
             q_vec_type rpos;
-            project->getTransformManager()->getRightTrackerPosInWorldCoords(rpos);
+            project->getHand(SketchBioHandId::RIGHT).getPosition(rpos);
             if (ProjectToXML::objectFromClipboardXML(project,elem,rpos) ==
                     ProjectToXML::XML_TO_DATA_FAILURE)
             {
@@ -189,15 +189,15 @@ void GroupEditingMode::doUpdatesForFrame()
         ObjectGroup *rGrp = dynamic_cast< ObjectGroup * >(rObj);
         if (lObj == rObj && lGrp != NULL)
         {
-            SketchObject *obj = WorldManager::getClosestObject(
-                        *rGrp->getSubObjects(),
-                        project->getRightHandObject(),rDist);
-            if (rDist < DISTANCE_THRESHOLD)
-            {
-                emit newDirectionsString("Release to remove object from group");
-                givenNewDirections = true;
-                project->setOutlineObject(RIGHT_SIDE_OUTLINE,obj);
-            }
+//            SketchObject *obj = WorldManager::getClosestObject(
+//                        *rGrp->getSubObjects(),
+//                        project->getRightHandObject(),rDist);
+//            if (rDist < DISTANCE_THRESHOLD)
+//            {
+//                emit newDirectionsString("Release to remove object from group");
+//                givenNewDirections = true;
+//                project->setOutlineObject(RIGHT_SIDE_OUTLINE,obj);
+//            }
         }
         else if (lObj != rObj)
         {

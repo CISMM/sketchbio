@@ -29,6 +29,8 @@ connector.cpp
 connector.h
 springconnection.cpp
 springconnection.h
+hand.cpp
+hand.h
 sketchproject.cpp
 sketchproject.h
 physicsutilities.cpp

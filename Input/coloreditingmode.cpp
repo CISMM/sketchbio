@@ -230,7 +230,7 @@ void ColorEditingMode::doUpdatesForFrame() {
 			// get the tracker positions
 			q_vec_type rightTrackerPos;
 			TransformManager* transformMgr = project->getTransformManager();
-			transformMgr->getRightTrackerPosInWorldCoords(rightTrackerPos);
+            transformMgr->getTrackerPosInWorldCoords(rightTrackerPos,SketchBioHandId::RIGHT);
 
 			Connector* closest;
 			bool newAtEnd1;
