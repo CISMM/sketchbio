@@ -241,7 +241,7 @@ private:
 	Connector *leftNearestSpring, *rightNearestSpring;
 	double leftSpringDist, rightSpringDist;
 
-public:
+/*public:
 	inline SketchObject* getNearest(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? leftNearest : rightNearest; }
 	inline void setNearest(int hand, SketchObject *o) { if (hand == LEFT_SIDE_OUTLINE) { leftNearest = o; } else { rightNearest = o; }}
 	inline double getDistance(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? ldist : rdist; }
@@ -251,7 +251,7 @@ public:
 	inline double getSpringDistance(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? leftSpringDist : rightSpringDist; }
 	inline void setSpringDistance(int hand, double dist) { if (hand == LEFT_SIDE_OUTLINE) { leftSpringDist = dist; } else { rightSpringDist = dist; }}
 
-};
+*/};
 
 inline const ModelManager* SketchProject::getModelManager() const {
     return models.data();
