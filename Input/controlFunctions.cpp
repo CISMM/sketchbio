@@ -20,6 +20,8 @@
 #include <transformmanager.h>
 #include <worldmanager.h>
 
+static const double DEFAULT_SPRING_STIFFNESS = 1.0;
+
 static inline void addXMLUndoState(SketchProject *project)
 {
 	UndoState *last = project->getLastUndoState();
@@ -77,8 +79,14 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			SketchObject* nearestObj = project->getNearest(hand);
-			double nearestObjDist = project->getDistance(hand);
+            
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            
+            
+            
+			SketchObject* nearestObj = handObj.getNearestObject();
+			double nearestObjDist = handObj.getNearestObjectDistance();
 
 			SketchObject* nearestObjParent = nearestObj->getParent();
 
@@ -116,7 +124,6 @@ namespace ControlFunctions
 		return;
 	}
 
-	// !!! getXXXTrackerPosInWorldCoords() & getXXXTrackerOrientInWorldCoords() are not generalized !!!
 	void addCamera(SketchProject *project, int hand, bool wasPressed)
 	{
 		if (wasPressed)
@@ -128,10 +135,10 @@ namespace ControlFunctions
 			TransformManager *transforms = project->getTransformManager();
 			q_vec_type pos;
 			q_type orient;
-      SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
                                                              SketchBioHandId::RIGHT);
-      handObj.getPosition(pos);
-      handObj.getOrientation(orient);
+            handObj.getPosition(pos);
+            handObj.getOrientation(orient);
 			project->addCamera(pos,orient);
 			addXMLUndoState(project);
 			//emit newDirectionsString(" ");
@@ -173,6 +180,7 @@ namespace ControlFunctions
 
 	// ===== BEGIN GROUP EDITING FUNCTIONS =====
 
+    // !! INCOMPLETE !! //
 	void toggleGroupMembership(SketchProject *project, int hand, bool wasPressed)
 	{
 		if (wasPressed)
@@ -183,12 +191,16 @@ namespace ControlFunctions
 		else // button released
 		{
 			WorldManager *world = project->getWorldManager();
+            
+            SketchBio::Hand& leftHandObj = project->getHand(SketchBioHandId::LEFT);
 
-			SketchObject* leftNearestObj = project->getNearest(0);
-			double leftNearestObjDist = project->getDistance(0);
+			SketchObject* leftNearestObj = leftHandObj.getNearestObject();
+			double leftNearestObjDist = leftHandObj.getNearestObjectDistance();
+            
+            SketchBio::Hand& rightHandObj = project->getHand(SketchBioHandId::RIGHT);
 
-			SketchObject* rightNearestObj = project->getNearest(1);
-			double rightNearestObjDist = project->getDistance(1);
+			SketchObject* rightNearestObj = rightHandObj.getNearestObject();
+			double rightNearestObjDist = rightHandObj.getNearestObjectDistance();
 
 			if (leftNearestObjDist < DISTANCE_THRESHOLD && rightNearestObjDist < DISTANCE_THRESHOLD)
 			{
@@ -236,8 +248,11 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			SketchObject* nearestObj = project->getNearest(hand);
-			double nearestObjDist = project->getDistance(hand);
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            
+			SketchObject* nearestObj = handObj.getNearestObject();
+			double nearestObjDist = handObj.getNearestObjectDistance();
 
 			if (nearestObjDist < DISTANCE_THRESHOLD)
 			{
@@ -255,7 +270,6 @@ namespace ControlFunctions
 		return;
 	}
 
-	// !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
 	void pasteObject(SketchProject *project, int hand, bool wasPressed)
 	{
 		if (wasPressed)
@@ -309,11 +323,15 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			SketchObject* nearestObj = project->getNearest(hand);
-			double nearestObjDist = project->getDistance(hand);
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            
+			SketchObject* nearestObj = handObj.getNearestObject();
+			double nearestObjDist = handObj.getNearestObjectDistance();
 
-			Connector* nearestSpring = project->getNearestSpring(hand);
-			double nearestSpringDist = project->getSpringDistance(hand);
+            Connector* nearestSpring = handObj.getNearestConnector(NULL);
+            double nearestSpringDist = handObj.getNearestConnectorDistance();
+            
 
 			if (nearestObjDist < DISTANCE_THRESHOLD && !nearestObj->getArrayToColorBy().isEmpty())
 			{
@@ -396,8 +414,11 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			SketchObject* nearestObj = project->getNearest(hand);
-			double nearestObjDist = project->getDistance(hand);
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            
+			SketchObject* nearestObj = handObj.getNearestObject();
+			double nearestObjDist = handObj.getNearestObjectDistance();
 
 			if (nearestObjDist < DISTANCE_THRESHOLD) {
 				QString arr(nearestObj->getArrayToColorBy());
@@ -430,8 +451,12 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			SketchObject* nearestObj = project->getNearest(hand);
-			double nearestObjDist = project->getDistance(hand);
+            
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            
+			SketchObject* nearestObj = handObj.getNearestObject();
+			double nearestObjDist = handObj.getNearestObjectDistance();
 
 			if (nearestObjDist < DISTANCE_THRESHOLD)
 			{
@@ -469,11 +494,21 @@ namespace ControlFunctions
 
 	// ===== BEGIN SPRING EDITING FUNCTIONS =====
 
-	// !! INCOMPLETE !! - Needs a "hand-oriented" state mechanism
 	void grabSpringOrWorld(SketchProject *project, int hand, bool wasPressed)
 	{
-	/*	if (wasPressed)
+        SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                    SketchBioHandId::RIGHT);
+
+        double nearestSpringDist = handObj.getNearestConnectorDistance();
+        
+		if (wasPressed)
 		{
+            if(nearestSpringDist < SPRING_DISTANCE_THRESHOLD)
+                handObj.grabNearestConnector();
+            else
+                handObj.grabWorld();
+            
+            /*
 			Connector* nearestSpring = project->getNearestSpring(hand);
 			double nearestSpringDist = project->getSpringDistance(hand);
 
@@ -492,10 +527,12 @@ namespace ControlFunctions
 					leftGrabbedSpring = true;
 				else if (grabbedWorld == WORLD_NOT_GRABBED)
 					grabbedWorld = LEFT_GRABBED_WORLD;
-			}
+			}*/
 		}
 		else // button released
 		{
+            handObj.releaseGrabbed();
+            /*
 			Connector* nearestSpring = project->getNearestSpring(hand);
 			double nearestSpringDist = project->getSpringDistance(hand);
 
@@ -524,9 +561,9 @@ namespace ControlFunctions
 					project->setOutlineSpring(LEFT_SIDE_OUTLINE,nearestSpring,lAtEnd1);
 					addXMLUndoState(project);
 				}
-			}
+			}*/
 		}
-	*/	return;
+		return;
 	}
 
 	void deleteSpring(SketchProject *project, int hand, bool wasPressed)
@@ -537,28 +574,37 @@ namespace ControlFunctions
 		}
 		else // button released
 		{
-			Connector* thisHandNearestSpring = project->getNearestSpring(hand);
-			double thisHandNearestSpringDist = project->getSpringDistance(hand);
+            
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            
+			Connector* thisHandNearestSpring = handObj.getNearestConnector(NULL);
+			double thisHandNearestSpringDist = handObj.getNearestConnectorDistance();
+            
+            SketchBio::Hand& otherHandObj = project->getHand((hand == 1) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
 
-			Connector* otherHandNearestSpring = project->getNearestSpring((hand + 1) % 2);
+			Connector* otherHandNearestSpring = otherHandObj.getNearestConnector(NULL);
 
 			if (thisHandNearestSpringDist < SPRING_DISTANCE_THRESHOLD)
 			{
-				project->getWorldManager()->removeSpring(thisHandNearestSpring);
 				if (thisHandNearestSpring == otherHandNearestSpring)
 				{
-					otherHandNearestSpring = NULL;
+					otherHandObj.clearNearestConnector();
 				}
-				thisHandNearestSpring = NULL;
+                handObj.clearNearestConnector();
+				project->getWorldManager()->removeSpring(thisHandNearestSpring);
 			}
 			//emit newDirectionsString(" ");
 		}
 		return;
 	}
 
-	// !! INCOMPLETE !!
+    // !! INCOMPLETE !! //
 	void snapSpringToTerminus(SketchProject *project, int hand, bool wasPressed)
 	{
+
+        
 	/*	if (wasPressed)
 		{
 			Connector* nearestSpring = project->getNearestSpring(hand);
@@ -580,40 +626,38 @@ namespace ControlFunctions
 	*/	return;
 	}
 
-	// !! INCOMPLETE !!
-	// ...also...
-	// !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
-	void createSpring(SketchProject *project, int hand, bool wasPressed)
+    
+    void createSpring(SketchProject *project, int hand, bool wasPressed)
 	{
-	/*	if (wasPressed)
+		if (wasPressed)
 		{
 			//emit newDirectionsString("Release at location of new spring.");
 		}
 		else // button released
 		{
 			q_vec_type pos1, pos2 = {0, 1, 0};
-			project->getTransformManager()->getRightTrackerPosInWorldCoords(pos1);
+            SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                        SketchBioHandId::RIGHT);
+            handObj.getPosition(pos1);
+            
 			q_vec_add(pos2,pos1,pos2);
-			double stiffness;
-			stiffness = ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
 			SpringConnection* spring = SpringConnection::makeSpring(
 						NULL,
 						NULL,
 						pos1,
 						pos2,
 						true,
-						stiffness,
+						DEFAULT_SPRING_STIFFNESS,
 						0,
 						true);
 			project->addConnector(spring);
 			addXMLUndoState(project);
 			//emit newDirectionsString(" ");
 		}
-	*/	return;
+		return;
 	}
-
-	// !!! getXXXTrackerPosInWorldCoords() is not generalized !!!
-	void createTransparentConnector(SketchProject *project, int hand, bool wasPressed)
+	
+    void createTransparentConnector(SketchProject *project, int hand, bool wasPressed)
 	{
 		if (wasPressed)
 		{
@@ -622,7 +666,7 @@ namespace ControlFunctions
 		else // button released
 		{
 			q_vec_type pos1, pos2 = {0, 1, 0};
-      project->getHand((hand ==0) ? SketchBioHandId::LEFT :
+            project->getHand((hand ==0) ? SketchBioHandId::LEFT :
                                     SketchBioHandId::RIGHT).getPosition(pos1);
 			q_vec_add(pos2,pos1,pos2);
 			Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.3,10);
@@ -644,6 +688,39 @@ namespace ControlFunctions
 			project->getTransformManager()->setRoomEyeOrientation(0, 0);
 		}
 	}
+    
+    void grabObjectOrWorld(SketchProject *project, int hand, bool wasPressed)
+    {
+        
+        if (project->isShowingAnimation()) // ignore grabbing during an animation preview
+        {
+            return;
+        }
+        
+        SketchBio::Hand& handObj = project->getHand((hand == 0) ? SketchBioHandId::LEFT :
+                                                    SketchBioHandId::RIGHT);
+        
+        if (wasPressed)
+		{
+            
+            double nearestObjDist = handObj.getNearestObjectDistance();
+            
+            if (handObj.getNearestObjectDistance() > DISTANCE_THRESHOLD)
+            {
+                handObj.grabWorld();
+            }
+            else
+            {
+                handObj.grabNearestObject();
+            }
+		}
+		else // button released
+		{
+            handObj.releaseGrabbed();
+            addXMLUndoState(project);
+		}
+		return;
+    }
 
 	// ===== END UTILITY FUNCTIONS =====
 }
