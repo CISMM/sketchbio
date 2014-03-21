@@ -32,8 +32,16 @@ GroupEditingMode::~GroupEditingMode()
 
 void GroupEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
-	ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
-	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+	//ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
+	if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 0, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 1, true);
+    }
+	else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
 		ControlFunctions::toggleGroupMembership(project, 1, true);
     }
@@ -65,8 +73,16 @@ void GroupEditingMode::buttonPressed(int vrpn_ButtonNum)
 
 void GroupEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
-	ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
-	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+	//ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
+	if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 0, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 1, true);
+    }
+	else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
 		ControlFunctions::toggleGroupMembership(project, 1, false);
     }

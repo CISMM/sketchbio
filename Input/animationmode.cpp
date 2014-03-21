@@ -24,8 +24,18 @@ AnimationMode::~AnimationMode()
 
 void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 {
-	ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
-	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+    
+    
+	//ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 0, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 1, true);
+    }
+	else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
 		ControlFunctions::keyframeAll(project, 1, true); 
     }
@@ -74,8 +84,16 @@ void AnimationMode::buttonPressed(int vrpn_ButtonNum)
 
 void AnimationMode::buttonReleased(int vrpn_ButtonNum)
 {
-	ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
-	if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
+	//ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
+	if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 0, false);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 1, false);
+    }
+	else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
     {
 		ControlFunctions::keyframeAll(project, 1, false); 
     }

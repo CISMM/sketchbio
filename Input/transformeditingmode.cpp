@@ -18,6 +18,9 @@
 
 #include "TransformInputDialog.h"
 
+// initial port to controlFunctions (i.e. "generalized input")
+#include <controlFunctions.h>
+
 inline int transform_equals_add_button_idx() {
     return BUTTON_RIGHT(TWO_BUTTON_IDX);
 }
@@ -49,8 +52,16 @@ TransformEditingMode::~TransformEditingMode()
 
 void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
-    ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
-    if (vrpn_ButtonNum == delete_object_button())
+    //ObjectGrabMode::buttonPressed(vrpn_ButtonNum);
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 0, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 1, true);
+    }
+	else if (vrpn_ButtonNum == delete_object_button())
     {
         operationState = DELETE_OBJECT_PENDING;
         emit newDirectionsString("Move to the object you want to delete and"
@@ -126,8 +137,16 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
 
 void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
-    ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
-    if (vrpn_ButtonNum == replicate_object_button()
+    //ObjectGrabMode::buttonReleased(vrpn_ButtonNum);
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 0, true);
+    }
+    else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
+    {
+        ControlFunctions::grabObjectOrWorld(project, 1, true);
+    }
+	else if (vrpn_ButtonNum == replicate_object_button()
             && operationState == REPLICATE_OBJECT_PENDING )
     {
         objectsSelected.clear();
