@@ -58,6 +58,8 @@ class Hand
   // Clears state for mode changes to avoid interference between modes'
   // operations
   void clearState();
+  void clearNearestObject();
+  void clearNearestConnector();
 
  private:
   class HandImpl;

@@ -298,6 +298,8 @@ class Hand::HandImpl
   // Clears state for mode changes to avoid interference between modes'
   // operations
   void clearState();
+  void clearNearestObject();
+  void clearNearestConnector();
 
  private:
   enum GrabType {
@@ -382,7 +384,9 @@ double Hand::HandImpl::getNearestObjectDistance() { return objectDistance; }
 
 Connector* Hand::HandImpl::getNearestConnector(bool* atEnd1)
 {
-  *atEnd1 = isClosestToEnd1;
+    if (atEnd1!=NULL){
+        *atEnd1 = isClosestToEnd1;
+    }
   return nearestConnector;
 }
 
@@ -503,6 +507,23 @@ void Hand::HandImpl::selectParentObjectOfCurrent()
 }
 
 void Hand::HandImpl::clearState() { releaseGrabbed(); }
+    
+void Hand::HandImpl::clearNearestObject() {
+  if (grabType == OBJECT_GRABBED) {
+    releaseGrabbed();
+  }
+  nearestObject = NULL;
+  objectDistance = std::numeric_limits<double>::max();
+}
+    
+void Hand::HandImpl::clearNearestConnector() {
+  if (grabType == CONNECTOR_GRABBED) {
+    releaseGrabbed();
+  }
+  nearestConnector = NULL;
+  isClosestToEnd1 = false;
+  connectorDistance = std::numeric_limits<double>::max();
+}
 
 // ###########################################################################
 // ###########################################################################
@@ -560,5 +581,7 @@ void Hand::selectParentObjectOfCurrent()
   impl->selectParentObjectOfCurrent();
 }
 void Hand::clearState() { impl->clearState(); }
+void Hand::clearNearestObject() { impl->clearNearestObject(); }
+void Hand::clearNearestConnector() { impl->clearNearestConnector(); }
 
 }  // end namespace
