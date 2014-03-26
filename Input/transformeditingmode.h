@@ -32,8 +32,6 @@ class TransformEditingMode : public ObjectGrabMode
  private:
   int operationState;
   QVector< SketchObject * > objectsSelected;
-  QVector< double > positionsSelected;  // have to put in coords... can't have a
-                                        // vector of arrays
 };
 
 #endif  // OBJECTEDITINGMODE_H
