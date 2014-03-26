@@ -384,9 +384,9 @@ double Hand::HandImpl::getNearestObjectDistance() { return objectDistance; }
 
 Connector* Hand::HandImpl::getNearestConnector(bool* atEnd1)
 {
-    if (atEnd1!=NULL){
-        *atEnd1 = isClosestToEnd1;
-    }
+  if (atEnd1 != NULL) {
+    *atEnd1 = isClosestToEnd1;
+  }
   return nearestConnector;
 }
 
@@ -439,7 +439,7 @@ void Hand::HandImpl::updateGrabbed()
 
 void Hand::HandImpl::grabNearestObject()
 {
-  if (grabType == NOTHING_GRABBED) {
+  if (grabType == NOTHING_GRABBED && nearestObject != NULL) {
     grabType = OBJECT_GRABBED;
     pitchfork.impale(nearestObject);
   }
@@ -447,7 +447,7 @@ void Hand::HandImpl::grabNearestObject()
 
 void Hand::HandImpl::grabNearestConnector()
 {
-  if (grabType == NOTHING_GRABBED) {
+  if (grabType == NOTHING_GRABBED && nearestConnector != NULL) {
     grabType = CONNECTOR_GRABBED;
     q_vec_type nullVec = Q_NULL_VECTOR;
     if (isClosestToEnd1) {
@@ -491,38 +491,44 @@ void Hand::HandImpl::releaseGrabbed()
 
 void Hand::HandImpl::selectSubObjectOfCurrent()
 {
-  QList< SketchObject* >* subObjects = nearestObject->getSubObjects();
-  if (subObjects != NULL) {
-    nearestObject =
-        WorldManager::getClosestObject(*subObjects, &tracker, objectDistance);
+  if (nearestObject != NULL) {
+    QList< SketchObject* >* subObjects = nearestObject->getSubObjects();
+    if (subObjects != NULL) {
+      nearestObject =
+          WorldManager::getClosestObject(*subObjects, &tracker, objectDistance);
+    }
   }
 }
 
 void Hand::HandImpl::selectParentObjectOfCurrent()
 {
-  SketchObject* parent = nearestObject->getParent();
-  if (parent != NULL) {
-    nearestObject = parent;
+  if (nearestObject != NULL) {
+    SketchObject* parent = nearestObject->getParent();
+    if (parent != NULL) {
+      nearestObject = parent;
+    }
   }
 }
 
 void Hand::HandImpl::clearState() { releaseGrabbed(); }
-    
-void Hand::HandImpl::clearNearestObject() {
+
+void Hand::HandImpl::clearNearestObject()
+{
   if (grabType == OBJECT_GRABBED) {
     releaseGrabbed();
   }
   nearestObject = NULL;
-  objectDistance = std::numeric_limits<double>::max();
+  objectDistance = std::numeric_limits< double >::max();
 }
-    
-void Hand::HandImpl::clearNearestConnector() {
+
+void Hand::HandImpl::clearNearestConnector()
+{
   if (grabType == CONNECTOR_GRABBED) {
     releaseGrabbed();
   }
   nearestConnector = NULL;
   isClosestToEnd1 = false;
-  connectorDistance = std::numeric_limits<double>::max();
+  connectorDistance = std::numeric_limits< double >::max();
 }
 
 // ###########################################################################

@@ -13,8 +13,6 @@ namespace ControlFunctions
 
 	// GROUP EDITING functions:
 	void toggleGroupMembership(SketchProject*, int, bool); // !! INCOMPLETE !!
-	void copyObject(SketchProject*, int, bool);
-	void pasteObject(SketchProject*, int, bool);
 
 	// COLOR EDITING functions:
 	void changeObjectColor(SketchProject*, int, bool);
@@ -23,15 +21,21 @@ namespace ControlFunctions
 	void toggleShowInvisibleObjects(SketchProject*, int, bool);
 
 	// SPRING EDITING functions:
-	void grabSpringOrWorld(SketchProject*, int, bool);
 	void deleteSpring(SketchProject*, int, bool);
 	void snapSpringToTerminus(SketchProject*, int, bool); // !! INCOMPLETE !!
 	void createSpring(SketchProject*, int, bool); // !! INCOMPLETE !!
 	void createTransparentConnector(SketchProject*, int, bool);
 
+  // GRAB functions:
+  void grabObjectOrWorld(SketchProject*, int, bool);
+  void grabSpringOrWorld(SketchProject*, int, bool);
+  void selectParentOfCurrent(SketchProject*, int, bool);
+  void selectChildOfCurrent(SketchProject*, int, bool);
+
 	// UTILITY functions:
-	void resetViewPoint(SketchProject*, int, bool);
-    void grabObjectOrWorld(SketchProject*, int, bool);
+  void resetViewPoint(SketchProject*, int, bool);
+  void copyObject(SketchProject*, int, bool);
+  void pasteObject(SketchProject*, int, bool);
 }
 
 #endif // CONTROLFUNCTIONS_H

@@ -8,260 +8,98 @@
 #include <worldmanager.h>
 #include <sketchproject.h>
 
-SpringEditingMode::SpringEditingMode(SketchProject* proj, const bool* buttonState,
-                                     const double* analogState) :
-    ObjectGrabMode(proj,buttonState,analogState),
-    grabbedWorld(WORLD_NOT_GRABBED),
-    lSpring(NULL),
-    rSpring(NULL),
-    lSpringDist(std::numeric_limits<double>::max()),
-    rSpringDist(std::numeric_limits<double>::max()),
-    lAtEnd1(true),
-    rAtEnd1(true),
-    leftGrabbedSpring(false),
-    rightGrabbedSpring(false),
-	snapMode(false)
+#include "controlFunctions.h"
+
+SpringEditingMode::SpringEditingMode(SketchProject* proj,
+                                     const bool* buttonState,
+                                     const double* analogState)
+    : ObjectGrabMode(proj, buttonState, analogState), snapMode(false)
 {
 }
 
-SpringEditingMode::~SpringEditingMode()
-{
-}
+SpringEditingMode::~SpringEditingMode() {}
 
 void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
-    // see if we should grab a spring or the world with each hand
-    if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
-    {
-        if (rSpringDist < SPRING_DISTANCE_THRESHOLD)
-            rightGrabbedSpring = true;
-        else if (grabbedWorld == WORLD_NOT_GRABBED)
-            grabbedWorld = RIGHT_GRABBED_WORLD;
+  // see if we should grab a spring or the world with each hand
+  if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
+    ControlFunctions::grabSpringOrWorld(project, 1, true);
+  } else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX)) {
+    ControlFunctions::grabSpringOrWorld(project, 0, true);
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX)) {
+    ControlFunctions::deleteSpring(project, 1, true);
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
+    // TODO incomplete control function
+    ControlFunctions::snapSpringToTerminus(project, 1, true);
+    snapMode = true;
+    emit newDirectionsString(
+        "Move to a spring and choose which terminus to snap to.");
+    bool rAtEnd1;
+    double rSpringDist =
+        project->getHand(SketchBioHandId::RIGHT).getNearestConnectorDistance();
+    Connector* rSpring =
+        project->getHand(SketchBioHandId::RIGHT).getNearestConnector(&rAtEnd1);
+    if (rSpringDist < SPRING_DISTANCE_THRESHOLD) {
+      double value = analogStatus[ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
+      bool snap_to_n = (value < 0.5) ? true : false;
+      rSpring->snapToTerminus(rAtEnd1, snap_to_n);
     }
-    else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
-    {
-        if (lSpringDist < SPRING_DISTANCE_THRESHOLD)
-            leftGrabbedSpring = true;
-        else if (grabbedWorld == WORLD_NOT_GRABBED)
-            grabbedWorld = LEFT_GRABBED_WORLD;
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
-    {
-        emit newDirectionsString("Move to a spring and release to delete the spring.");
-    }
-	else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
-    {
-		snapMode = true;
-        emit newDirectionsString("Move to a spring and choose which terminus to snap to.");
-		if (rSpringDist < SPRING_DISTANCE_THRESHOLD) {
-			double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
-			bool snap_to_n = (value < 0.5) ? true : false;
-			rSpring->snapToTerminus(rAtEnd1, snap_to_n);
-		}
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
-    {
-        emit newDirectionsString("Release at location of new spring.");
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
-    {
-        emit newDirectionsString("Release to create a transparent connector at the current location.");
-    }
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
+    ControlFunctions::createSpring(project, 1, true);
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
+    ControlFunctions::createTransparentConnector(project, 1, true);
+  } else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX)) {
+    ControlFunctions::resetViewPoint(project, 0, true);
+  }
 }
 
 void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
-    if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX))
-    {
-        if (grabbedWorld == RIGHT_GRABBED_WORLD)
-        {
-            grabbedWorld = WORLD_NOT_GRABBED;
-        }
-        else if (rightGrabbedSpring)
-        {
-            rightGrabbedSpring = false;
-            project->setOutlineSpring(RIGHT_SIDE_OUTLINE,rSpring,rAtEnd1);
-            addXMLUndoState();
-        }
-    }
-    else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
-    {
-        if (grabbedWorld == LEFT_GRABBED_WORLD)
-        {
-            grabbedWorld = WORLD_NOT_GRABBED;
-        }
-        else if (leftGrabbedSpring)
-        {
-            leftGrabbedSpring = false;
-            project->setOutlineSpring(LEFT_SIDE_OUTLINE,lSpring,lAtEnd1);
-            addXMLUndoState();
-        }
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX))
-    {
-        if (rSpringDist < SPRING_DISTANCE_THRESHOLD)
-        {
-            project->getWorldManager()->removeSpring(rSpring);
-            if (rSpring == lSpring)
-            {
-                lSpring = NULL;
-            }
-            rSpring = NULL;
-        }
-		emit newDirectionsString(" ");
-    }
-	else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX))
-    {
-        snapMode = false;
-		emit newDirectionsString(" ");
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX))
-    {
-        q_vec_type pos1, pos2 = {0, 1, 0};
-        project->getHand(SketchBioHandId::RIGHT).getPosition(pos1);
-        q_vec_add(pos2,pos1,pos2);
-        double stiffness;
-        stiffness = ( 1 - analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)]);
-        SpringConnection* spring = SpringConnection::makeSpring(
-                    NULL,
-                    NULL,
-                    pos1,
-                    pos2,
-                    true,
-                    stiffness,
-                    0,
-                    true);
-        project->addConnector(spring);
-        addXMLUndoState();
-        emit newDirectionsString(" ");
-    }
-    else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX))
-    {
-        q_vec_type pos1, pos2 = {0, 1, 0};
-        project->getHand(SketchBioHandId::RIGHT).getPosition(pos1);
-        q_vec_add(pos2,pos1,pos2);
-        Connector* conn = new Connector(NULL,NULL,pos1,pos2,0.3,10);
-        project->addConnector(conn);
-        addXMLUndoState();
-        emit newDirectionsString(" ");
-    }
-	else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX))
-    {
-        resetViewPoint();
-    }
+  if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
+    ControlFunctions::grabSpringOrWorld(project, 1, false);
+  } else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX)) {
+    ControlFunctions::grabSpringOrWorld(project, 0, false);
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX)) {
+    ControlFunctions::deleteSpring(project, 1, false);
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
+    // TODO incomplete control function
+    ControlFunctions::snapSpringToTerminus(project, 1, false);
+    snapMode = false;
+    emit newDirectionsString(" ");
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
+    ControlFunctions::createSpring(project, 1, false);
+  } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
+    ControlFunctions::createTransparentConnector(project, 1, false);
+  } else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX)) {
+    ControlFunctions::resetViewPoint(project, 0, false);
+  }
 }
 
 void SpringEditingMode::analogsUpdated()
 {
-	ObjectGrabMode::analogsUpdated();
-	if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
-        double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
-		bool snap_to_n = (value < 0.5) ? true : false;
-        rSpring->snapToTerminus(rAtEnd1, snap_to_n);
-    }
-}
-
-static inline void processFrameForSide(SketchProject* project,
-                                Connector* & spring, // reference to pointer
-                                double& springDist,
-                                bool& atEnd1,
-                                bool grabbedSpring,
-                                q_vec_type trackerPos,
-								SketchObject* closestObj,
-                                int side)
-{
-//    WorldManager* world = project->getWorldManager();
-//    if ( ! grabbedSpring )
-//    {
-//        // if we haven't grabbed a spring, display which spring is grabbable
-//        Connector* closest;
-//        bool newAtEnd1;
-//        closest = world->getClosestConnector(trackerPos,&springDist,&newAtEnd1);
-//        if (closest != spring || (newAtEnd1 != atEnd1))
-//        {
-//            project->setOutlineSpring(side,closest,newAtEnd1);
-//            spring = closest;
-//            atEnd1 = newAtEnd1;
-//        }
-//        if (springDist < SPRING_DISTANCE_THRESHOLD)
-//        {
-//            if (!project->isOutlineVisible(side))
-//            {
-//                project->setOutlineVisible(side,true);
-//            }
-//        }
-//        else if (project->isOutlineVisible(side))
-//        {
-//            project->setOutlineVisible(side,false);
-//        }
-//    }
-//    else
-//    {
-//        // if we have grabbed a spring, move that spring's end
-//        double objectDist = 0;
-//        SketchObject* closestObject = closestObj;
-//		//closestObject = world->getClosestObject(trackerObj,objectDist);
-//        if (objectDist > DISTANCE_THRESHOLD)
-//        {
-//            closestObject = NULL;
-//            project->setOutlineSpring(side,spring,atEnd1);
-//        }
-//        else
-//        {
-//            project->setOutlineObject(side,closestObject);
-//        }
-//        if (atEnd1)
-//        {
-//            if (closestObject != spring->getObject1())
-//                spring->setObject1(closestObject);
-//            spring->setEnd1WorldPosition(trackerPos);
-//        }
-//        else
-//        {
-//            if (closestObject != spring->getObject2())
-//                spring->setObject2(closestObject);
-//            spring->setEnd2WorldPosition(trackerPos);
-//        }
-//    }
+  ObjectGrabMode::analogsUpdated();
+  bool rAtEnd1;
+  double rSpringDist =
+      project->getHand(SketchBioHandId::RIGHT).getNearestConnectorDistance();
+  Connector* rSpring =
+      project->getHand(SketchBioHandId::RIGHT).getNearestConnector(&rAtEnd1);
+  if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
+    double value = analogStatus[ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
+    bool snap_to_n = (value < 0.5) ? true : false;
+    rSpring->snapToTerminus(rAtEnd1, snap_to_n);
+  }
 }
 
 void SpringEditingMode::doUpdatesForFrame()
 {
-	ObjectGrabMode::doUpdatesForFrame();
-    // if we are grabbing the world, update the world position for the frame
 
-    WorldManager* world = project->getWorldManager();
-//    SketchObject* leftHand = project->getLeftHandObject();
-//    SketchObject* rightHand = project->getRightHandObject();
+  project->setOutlineType(SketchProject::OUTLINE_CONNECTORS);
 
-    if ( world->getNumberOfConnectors() > 0 )
-    {
-        // get the tracker positions
-        q_vec_type leftTrackerPos, rightTrackerPos;
-        project->getHand(SketchBioHandId::LEFT).getPosition(leftTrackerPos);
-        project->getHand(SketchBioHandId::RIGHT).getPosition(rightTrackerPos);
-
-        processFrameForSide(project,lSpring,lSpringDist,lAtEnd1,leftGrabbedSpring,
-                            leftTrackerPos,lObj,LEFT_SIDE_OUTLINE);
-        processFrameForSide(project,rSpring,rSpringDist,rAtEnd1,rightGrabbedSpring,
-                            rightTrackerPos,rObj,RIGHT_SIDE_OUTLINE);
-    }
-    else
-    {
-        if (project->isOutlineVisible(LEFT_SIDE_OUTLINE))
-            project->setOutlineVisible(LEFT_SIDE_OUTLINE,false);
-        if (project->isOutlineVisible(RIGHT_SIDE_OUTLINE))
-            project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
-    }
-	useLeftJoystickToRotateViewPoint();
+  useLeftJoystickToRotateViewPoint();
 }
 
 void SpringEditingMode::clearStatus()
 {
-	ObjectGrabMode::clearStatus();
-    grabbedWorld = WORLD_NOT_GRABBED;
-    lSpring = rSpring = NULL;
-    lSpringDist = rSpringDist = std::numeric_limits<double>::max();
-    lAtEnd1 = rAtEnd1 = true;
-    leftGrabbedSpring = rightGrabbedSpring = false;
+  ObjectGrabMode::clearStatus();
+  snapMode = false;
 }

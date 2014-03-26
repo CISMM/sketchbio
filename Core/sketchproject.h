@@ -234,24 +234,7 @@ private:
     OutlineType outlineType;
     double viewTime;
 
-	// TODO - temporary until we get better closest obj detection
-	SketchObject *leftNearest, *rightNearest;
-	double ldist, rdist;
-
-	Connector *leftNearestSpring, *rightNearestSpring;
-	double leftSpringDist, rightSpringDist;
-
-/*public:
-	inline SketchObject* getNearest(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? leftNearest : rightNearest; }
-	inline void setNearest(int hand, SketchObject *o) { if (hand == LEFT_SIDE_OUTLINE) { leftNearest = o; } else { rightNearest = o; }}
-	inline double getDistance(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? ldist : rdist; }
-	inline void setDistance(int hand, double dist) { if (hand == LEFT_SIDE_OUTLINE) { ldist = dist; } else { rdist = dist; }}
-	inline Connector* getNearestSpring(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? leftNearestSpring : rightNearestSpring; }
-	inline void setNearestSpring(int hand, Connector *o) { if (hand == LEFT_SIDE_OUTLINE) { leftNearestSpring = o; } else { rightNearestSpring = o; }}
-	inline double getSpringDistance(int hand) { return (hand == LEFT_SIDE_OUTLINE) ? leftSpringDist : rightSpringDist; }
-	inline void setSpringDistance(int hand, double dist) { if (hand == LEFT_SIDE_OUTLINE) { leftSpringDist = dist; } else { rightSpringDist = dist; }}
-
-*/};
+};
 
 inline const ModelManager* SketchProject::getModelManager() const {
     return models.data();
