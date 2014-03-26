@@ -4,7 +4,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/Export
 )
 
-QT4_WRAP_CPP(SketchBioInputMoc
+SET(SketchBioInputQtHeaders
 vrpnserver.h
 hydrainputmanager.h
 hydrainputmode.h
@@ -14,8 +14,10 @@ groupeditingmode.h
 transformeditingmode.h
 springeditingmode.h
 animationmode.h
+transformeditoperationstate.h
 TransformInputDialog.h
 )
+QT4_WRAP_CPP(SketchBioInputMoc ${SketchBioInputQtHeaders})
 SOURCE_GROUP("Generated" FILES ${SketchBioInputMoc})
 
 SET(SketchBioInputSrcs
@@ -33,6 +35,7 @@ controlFunctions.cpp
 controlFunctions.h
 savedxmlundostate.cpp
 savedxmlundostate.h
+${SketchBioInputQtHeaders}
 ${SketchBioInputMoc}
 )
 ADD_LIBRARY(SketchBioInput ${SketchBioInputSrcs})

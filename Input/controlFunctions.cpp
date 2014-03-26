@@ -8,6 +8,9 @@
 
 #include <vtkXMLUtilities.h>
 #include <vtkXMLDataElement.h>
+#include <vtkPolyDataAlgorithm.h>
+#include <vtkTransform.h>
+#include <vtkSmartPointer.h>
 
 #include <sketchioconstants.h>
 #include <sketchobject.h>
@@ -19,6 +22,9 @@
 #include <springconnection.h>
 #include <transformmanager.h>
 #include <worldmanager.h>
+
+#include "TransformInputDialog.h"
+#include "transformeditoperationstate.h"
 
 static const double DEFAULT_SPRING_STIFFNESS = 1.0;
 
@@ -40,6 +46,35 @@ static inline void addXMLUndoState(SketchProject *project)
   }
   project->addUndoState(newXMLState);
 }
+
+void TransformEditOperationState::setObjectTransform(double x, double y, double z, double rX, double rY, double rZ) {
+  assert(objs.size() == 2);
+  vtkSmartPointer< vtkTransform > transform =
+      vtkSmartPointer< vtkTransform >::New();
+  transform->Identity();
+  transform->Concatenate(objs[0]->getLocalTransform());
+  transform->RotateY(rY);
+  transform->RotateX(rX);
+  transform->RotateZ(rZ);
+  transform->Translate(x, y, z);
+  q_vec_type pos;
+  q_type orient;
+  SketchObject::getPositionAndOrientationFromTransform(transform, pos, orient);
+  if (objs[1]->getParent() != NULL) {
+    SketchObject::setParentRelativePositionForAbsolutePosition(
+        objs[1], objs[1]->getParent(), pos, orient);
+  } else {
+    objs[1]->setPosAndOrient(pos, orient);
+  }
+  cancelOperation();
+}
+
+void TransformEditOperationState::cancelOperation() {
+    proj->setOperationState(NULL);
+    deleteLater();
+}
+
+
 
 namespace ControlFunctions
 {
@@ -605,6 +640,150 @@ void selectChildOfCurrent(SketchProject *project, int hand, bool wasPressed)
 }
 
 // ===== END GRAB FUNCTIONS =====
+  
+// ===== BEGIN TRANSFORM EDITING FUNCTIONS =====
+  
+void deleteObject(SketchProject *project, int hand, bool wasPressed)
+{
+  if (wasPressed){
+    /*emit newDirectionsString(
+                           "Move to the object you want to delete and"
+                           " release the button.\nWarning: this is a"
+                           " permanent delete!");*/
+  } else
+  {
+    SketchBio::Hand &handObj = project->getHand(
+                                                (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+    double hDist = handObj.getNearestObjectDistance();
+    if ( hDist < DISTANCE_THRESHOLD ) { // object is selected
+      SketchObject* obj = handObj.getNearestObject();
+      handObj.clearNearestObject();
+      project->getWorldManager()->deleteObject(obj);
+      project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+    }
+    addXMLUndoState(project);
+    //        emit newDirectionsString(" ");
+  }
+}
+ 
+  
+static const int REPLICATION_OPERATION_ID = 0;
+void replicateObject(SketchProject *project, int hand, bool wasPressed)
+  {
+    if (wasPressed){
+      if (project->getOperationState() != NULL) { return; }
+//      if (project->getOperationUsingState() != SketchProject::NO_OPERATION_USING_STATE) { return; }
+      SketchBio::Hand &handObj = project->getHand(
+                                                  (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+      double hDist = handObj.getNearestObjectDistance();
+      SketchObject* obj = handObj.getNearestObject();
+     
+      if ( hDist < DISTANCE_THRESHOLD ) { // object is selected
+        q_vec_type pos;
+        double bb[6];
+        obj->getPosition(pos);
+        obj->getOrientedBoundingBoxes()->GetOutput()->GetBounds(bb);
+        double difference;
+        difference = bb[3] - bb[2];
+        pos[Q_Y] += difference;
+        SketchObject *nObj = obj->getCopy();
+        nObj->setPosition(pos);
+        project->addObject(nObj);
+        int nCopies = 1;
+        project->addReplication(obj,nObj,nCopies);
+//        project->addObjectToObjectsSelected(obj);
+//        project->addObjectToObjectsSelected(nObj);
+//        project->setOperationUsingState(REPLICATION_OPERATION_ID);
+        /*emit newDirectionsString("Pull the trigger to set the number
+        of replicas to add,\nthen release the button.");*/
+      }
+      
+    } else
+    {
+//      if (project->getOperationUsingState() != REPLICATION_OPERATION_ID) { return; }
+//      project->clearObjectsSelected();
+//      project->setOperationUsingState(SketchProject::NO_OPERATION_USING_STATE);
+      addXMLUndoState(project);
+      //emit newDirectionsString(" ");
+    }
+  }
+static const int SET_TRANSFORMS_ID = 1;
+void setTransforms(SketchProject *project, int hand, bool wasPressed)
+  {
+    if (wasPressed){
+        if (project->getOperationState() == NULL) {
+//      if (project->getOperationUsingState() == SketchProject::NO_OPERATION_USING_STATE) {
+            project->setOperationState(new TransformEditOperationState(project));
+//        project->setOperationUsingState(SET_TRANSFORMS_ID);
+        /*emit newDirectionsString(
+                                 "Select the object to use as the base of the\n"
+                                 "coordinate system and release the button.");*/
+      } else if (dynamic_cast<TransformEditOperationState*>(project->getOperationState())) {
+        /*emit newDirectionsString(
+                                 "Select the object to define the transformation\n"
+                                 "to and release the button.");*/
+      }
+    } else // released
+    {
+      // TODO add control function
+        TransformEditOperationState* state = dynamic_cast<TransformEditOperationState*>(project->getOperationState());
+      if (state != NULL)
+      {
+        const QVector<SketchObject*>& objectsSelected = state->getObjs();
+        
+        SketchBio::Hand &handObj = project->getHand(
+                                                    (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+        double hDist = handObj.getNearestObjectDistance();
+        SketchObject* obj = handObj.getNearestObject();
+        
+        if (objectsSelected.empty())
+        {
+          
+           if (hDist < DISTANCE_THRESHOLD)
+           {
+              state->addObject(obj);
+//              project->addObjectToObjectsSelected(obj);
+                 /*emit newDirectionsString("Press to select the object
+                 to define relative\n"
+                "to the selected object.");*/
+           }
+           else
+              {
+                /*emit newDirectionsString(" ");*/
+//                project->setOperationUsingState(SketchProject::NO_OPERATION_USING_STATE);
+              }
+          }
+          else
+          {
+            if (hDist < DISTANCE_THRESHOLD)
+            {
+                state->addObject(obj);
+//              project->addObjectToObjectsSelected(obj);
+              vtkSmartPointer< vtkTransform > transform = vtkSmartPointer< vtkTransform >::New();
+              transform->Identity();
+              transform->PreMultiply();
+              transform->Concatenate(objectsSelected[1]->getLocalTransform());
+              transform->Concatenate(objectsSelected[0]->getInverseLocalTransform());
+              transform->Update();
+              TransformInputDialog *dialog = new TransformInputDialog("Set Transformation from First to Second");
+              dialog->setTranslation(transform->GetPosition());
+              dialog->setRotation(transform->GetOrientation());
+              QObject::connect(dialog,SIGNAL(transformAquired(double,double,double,double,double,double)),
+                        state,SLOT(setObjectTransform(double,double,double,double,double,double)));
+              QObject::connect(dialog,SIGNAL(rejected()),state,SLOT(cancelOperation()));
+              dialog->exec();
+              delete dialog;
+            }
+//            project->clearObjectsSelected();
+            //emit newDirectionsString(" ");
+//            project->setOperationUsingState(SketchProject::NO_OPERATION_USING_STATE);
+          }
+       }
+
+    }
+  }
+  
+// ===== END TRANSFORM EDITING FUNCTIONS =====
 
 // ===== BEGIN UTILITY FUNCTIONS =====
 

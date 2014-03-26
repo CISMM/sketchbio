@@ -31,6 +31,12 @@ namespace ControlFunctions
   void grabSpringOrWorld(SketchProject*, int, bool);
   void selectParentOfCurrent(SketchProject*, int, bool);
   void selectChildOfCurrent(SketchProject*, int, bool);
+  
+  // TRANSFORM functions:
+  void deleteObject(SketchProject*, int, bool);
+  void replicateObject(SketchProject*, int, bool);
+  void setTransforms(SketchProject*, int, bool);
+  
 
 	// UTILITY functions:
   void resetViewPoint(SketchProject*, int, bool);
