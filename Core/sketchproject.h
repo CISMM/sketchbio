@@ -43,6 +43,13 @@ class UndoState;
 #define LEFT_SIDE_OUTLINE 0
 #define RIGHT_SIDE_OUTLINE 1
 
+class OperationState {
+public:
+    OperationState() {}
+    virtual ~OperationState() {}
+    virtual void doFrameUpdates() {}
+};
+
 /*
  *
  * This class encapsulates all the data about what the user has done.  This allows these objects to be
@@ -233,6 +240,21 @@ private:
     double timeInAnimation; // the animation time starting at 0
     OutlineType outlineType;
     double viewTime;
+    // State from transform editing mode
+    OperationState *opState;
+//    int operationUsingState;
+//    QVector< SketchObject * > objectsSelectedInState;
+   public:
+    OperationState *getOperationState() { return opState; }
+    void setOperationState(OperationState *state) { opState = state; }
+  
+//  static const int NO_OPERATION_USING_STATE = -1;
+  
+//  int getOperationUsingState() { return operationUsingState; }
+//  void setOperationUsingState(int newOperation) { operationUsingState = newOperation; }
+//  void addObjectToObjectsSelected(SketchObject *obj) { objectsSelectedInState.append(obj); }
+//  void clearObjectsSelected() { objectsSelectedInState.clear(); }
+//  const QVector<SketchObject*>& getObjectsSelected() const { return objectsSelectedInState; }
 
 };
 
