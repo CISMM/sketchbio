@@ -38,8 +38,7 @@ TransformEditingMode::TransformEditingMode(SketchProject *proj, const bool *b,
                                            const double *a)
     : ObjectGrabMode(proj, b, a),
       operationState(NO_OPERATION),
-      objectsSelected(),
-      positionsSelected()
+      objectsSelected()
 {
 }
 
@@ -52,12 +51,15 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
   } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
     ControlFunctions::grabObjectOrWorld(project, 1, true);
   } else if (vrpn_ButtonNum == delete_object_button()) {
-    operationState = DELETE_OBJECT_PENDING;
+    ControlFunctions::deleteObject(project, 1, true);
+    
+    /*operationState = DELETE_OBJECT_PENDING;
     emit newDirectionsString(
         "Move to the object you want to delete and"
         " release the button.\nWarning: this is a"
-        " permanent delete!");
+        " permanent delete!");*/
   } else if (vrpn_ButtonNum == replicate_object_button()) {
+    ControlFunctions::replicateObject(project, 1, true);
     // TODO add control function
     //        SketchObject *obj = rObj;
     //        if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
@@ -80,7 +82,9 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
     // of replicas to add,\nthen release the button.");
     //        }
   } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
-    if (operationState == NO_OPERATION) {
+    ControlFunctions::setTransforms(project, 1, true);
+    
+    /*if (operationState == NO_OPERATION) {
       operationState = SET_TRANFORM_PENDING;
       emit newDirectionsString(
           "Select the object to use as the base of the\n"
@@ -89,7 +93,7 @@ void TransformEditingMode::buttonPressed(int vrpn_ButtonNum)
       emit newDirectionsString(
           "Select the object to define the transformation\n"
           "to and release the button.");
-    }
+    }*/
   } else if (vrpn_ButtonNum == transform_equals_add_button_idx()) {
     // TODO add control function
     //        SketchObject *obj = NULL;
@@ -131,14 +135,16 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
     ControlFunctions::grabObjectOrWorld(project, 0, false);
   } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
     ControlFunctions::grabObjectOrWorld(project, 1, false);
-  } else if (vrpn_ButtonNum == replicate_object_button() &&
-             operationState == REPLICATE_OBJECT_PENDING) {
-    objectsSelected.clear();
+  } else if (vrpn_ButtonNum == replicate_object_button()) {
+    ControlFunctions::replicateObject(project, 1, false);
+    
+    /*objectsSelected.clear();
     operationState = NO_OPERATION;
     addXMLUndoState();
-    emit newDirectionsString(" ");
-  } else if (vrpn_ButtonNum == delete_object_button() &&
-             operationState == DELETE_OBJECT_PENDING) {
+    emit newDirectionsString(" ");*/
+  } else if (vrpn_ButtonNum == delete_object_button()) {
+    ControlFunctions::deleteObject(project, 1, false);
+    
     // TODO add control function
     //        if ( rDist < DISTANCE_THRESHOLD ) { // object is selected
     //            project->getWorldManager()->deleteObject(rObj);
@@ -148,6 +154,7 @@ void TransformEditingMode::buttonReleased(int vrpn_ButtonNum)
     //        addXMLUndoState();
     //        emit newDirectionsString(" ");
   } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
+    ControlFunctions::setTransforms(project, 1, false);
     // TODO add control function
     //        if (operationState == SET_TRANFORM_PENDING)
     //        {
@@ -248,7 +255,6 @@ void TransformEditingMode::clearStatus()
 {
   ObjectGrabMode::clearStatus();
   objectsSelected.clear();
-  positionsSelected.clear();
   operationState = NO_OPERATION;
 }
 
