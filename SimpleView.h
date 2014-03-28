@@ -19,6 +19,8 @@ class QActionGroup;
 class SketchObject;
 class SketchProject;
 
+class ProjectToXML;
+
 class vrpnServer;
 class HydraInputManager;
 
@@ -91,6 +93,13 @@ public slots:
   // Save the current project
   void saveProjectAs();
   void saveProject();
+
+  // Save a grouped object from clipboard, so it can be
+  // loaded into any other project
+  void saveCopiedObject();
+
+  // Load object that was saved with saveCopiedObject()
+  void loadObject();
 
   // Collision modes (for testing)
   void oldCollisionMode();

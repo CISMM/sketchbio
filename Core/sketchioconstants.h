@@ -61,6 +61,9 @@
 // the name of the project's save file in the project directory
 #define PROJECT_XML_FILENAME "project.xml"
 
+// the name of a structure's save file
+#define STRUCTURE_XML_FILENAME "structure.xml"
+
 // default mass and moment of inertia
 #define DEFAULT_INVERSE_MASS 1.0
 #define DEFAULT_INVERSE_MOMENT (1.0/25000)
