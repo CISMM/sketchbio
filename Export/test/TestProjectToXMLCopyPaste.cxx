@@ -26,18 +26,22 @@
 #include "test/TestCoreHelpers.h"
 #include "CompareBeforeAndAfter.h"
 #include "MakeTestProject.h"
+#include "SimpleView.h"
 
 #define TEST_DIR "test/test1"
+#define SAVE_DIR "test/test1/structure.zip"
 
 int testSavePastedItem();
 int testPastedItemIsTheSame();
 int testPastedGroupIsTheSame();
+int testSaveAndLoadStructure();
 
 int main(int argc, char *argv[])
 {
     return    testSavePastedItem()
             + testPastedItemIsTheSame()
-            + testPastedGroupIsTheSame();
+            + testPastedGroupIsTheSame()
+			+ testSaveAndLoadStructure();
 }
 
 int testSavePastedItem()
@@ -161,4 +165,34 @@ int testPastedGroupIsTheSame()
 
     CompareBeforeAndAfter::compareObjects(obj.data(),pasted,retVal,true,true);
     return retVal;
+}
+
+int testSaveAndLoadStructure() {
+	int retVal = 0;
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchProject > proj1(
+                new SketchProject(r1,TEST_DIR));
+
+    SketchObject *obj = MakeTestProject::addObjectToProject(proj1.data());
+    vtkSmartPointer< vtkXMLDataElement > copy =
+            vtkSmartPointer< vtkXMLDataElement >::Take(
+                ProjectToXML::objectToClipboardXML(obj)
+                );
+	ProjectToXML::saveObjectFromClipboardXML(copy, proj1.data(), TEST_DIR);
+	q_vec_type pos;
+	obj->getPosition(pos);
+	proj1->getWorldManager()->removeObject(obj);
+
+	ProjectToXML::loadObjectFromSavedXML(proj1.data(),SAVE_DIR);
+	const QList< SketchObject * > *list = proj1->getWorldManager()->getObjects();
+    if (list->size() != 1)
+    {
+        cout << "Wrong number of objects in result." << endl;
+    }
+    SketchObject *loadedObj = list->at(0);
+    loadedObj->setPosition(pos);
+	
+	CompareBeforeAndAfter::compareObjects(obj,loadedObj,retVal,true,true);
+	return retVal;
 }

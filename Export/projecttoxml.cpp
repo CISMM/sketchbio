@@ -6,10 +6,15 @@ using std::strcmp;
 
 #include <vtkMatrix4x4.h>
 #include <vtkXMLDataElement.h>
+#include <vtkXMLUtilities.h>
 
 #include <QScopedPointer>
 #include <QDebug>
 #include <QFile>
+#include <QDir>
+
+#include <quazip/JlCompress.h>
+#include <zlib.h>
 
 #include <sketchioconstants.h>
 #include <transformmanager.h>
@@ -1087,6 +1092,146 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
     return XML_TO_DATA_FAILURE;
   }
   return XML_TO_DATA_SUCCESS;
+}
+
+ProjectToXML::XML_Read_Status ProjectToXML::modelNamesFromClipboardXML(
+	QList< const char* > &list, SketchProject *proj, 
+	vtkXMLDataElement *elem)
+{
+	vtkXMLDataElement* models = 
+		elem->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
+	if (models == NULL) {
+		return XML_TO_DATA_FAILURE;
+	}
+	for (int i = 0; i < models->GetNumberOfNestedElements(); i++) {
+	  vtkXMLDataElement* model = models->GetNestedElement(i);
+	  if (model == NULL) {
+		  return XML_TO_DATA_FAILURE;
+	  }
+	  int numConformations;
+	  model->GetScalarAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,
+                                numConformations);
+	  int conformations = 0;
+	  for (int i = 0; i < numConformations; i++) {
+		vtkXMLDataElement* conf = model->FindNestedElementWithNameAndAttribute(
+			MODEL_CONFORMATION_ELEMENT_NAME, MODEL_CONFORMATION_NUMBER_ATTR_NAME,
+			QString::number(i).toStdString().c_str());
+		if (conf == NULL) {
+			return XML_TO_DATA_FAILURE;
+		}
+		for (int i = 0; i < conf->GetNumberOfNestedElements(); i++) {
+		  vtkXMLDataElement* child = conf->GetNestedElement(i);
+		  if (child == NULL) {
+			  return XML_TO_DATA_FAILURE;
+		  }
+		  if (QString(child->GetName()) == 
+				QString(MODEL_RESOLUTION_ELEMENT_NAME)) {
+			const char* filename = 
+			  child->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+			if (filename == 0) {
+				return XML_TO_DATA_FAILURE;
+			}
+			list.append(filename);
+		  }
+		}
+	  }
+	}
+	if(list.isEmpty()) {
+		std::cout << "Unable to find VTK file names in XML" << std::endl;
+	}
+	return XML_TO_DATA_SUCCESS;
+}
+
+void ProjectToXML::saveObjectFromClipboardXML(vtkXMLDataElement *elem, SketchProject *proj, 
+												QString dirPath) {
+	QDir dir(dirPath);
+	dir.mkdir("structure");
+	QDir save_dir(dir.absoluteFilePath("structure"));
+	QStringList allFiles;
+	// save XML from clipboard into the directory
+    QString file = save_dir.absoluteFilePath(STRUCTURE_XML_FILENAME);
+	QList< const char* > modelFileNames;
+	if (elem) {
+		vtkIndent indent(0);
+		vtkXMLUtilities::WriteElementToFile(elem,file.toStdString().c_str(),&indent);
+		if (modelNamesFromClipboardXML(modelFileNames,proj,elem) 
+			== XML_TO_DATA_FAILURE) {
+			std::cout << "Failed to read model XML." << std::endl;		
+		}
+		allFiles.append(file);
+	}
+	else {
+		std::cout << "Failed to read object." << std::endl;
+	}
+	
+	// save VTK files for models
+	if (!modelFileNames.isEmpty()) {
+		for (QListIterator< const char* > it(modelFileNames); it.hasNext();) {
+			const char* srcfilename = it.next();
+			const char* basename = strrchr(srcfilename, '/') + 1;
+			QString destfilename = save_dir.absoluteFilePath(basename);
+			QFile srcfile(srcfilename);
+			if (srcfile.exists()) 
+			{
+			   if(!srcfile.copy(destfilename)) {
+				  std::cout << "Failed to copy VTK file (may already exist)." << std::endl;
+			   }
+			   else {
+				  allFiles.append(destfilename);
+			   }
+			}
+			else {
+				std::cout << "Could not find the needed VTK file." << std::endl;
+			}
+		}
+	}
+	else {
+		std::cout << "Read no VTK filenames from modelFileName list" << std::endl;
+	}
+
+	// zip up the XML and VTK files together
+	if(!JlCompress::compressDir(dir.absoluteFilePath("structure.zip"),
+									save_dir.absolutePath(),true)) {
+		std::cout << "Failed to zip XML and VTK files" << std::endl;
+	}
+	for (QStringListIterator it(allFiles); it.hasNext();) {
+		QFile f(it.next());
+		if(!f.remove()) {
+			std::cout << "Failed to remove file" << std::endl;
+		}
+	}
+	if(!dir.rmdir(save_dir.absolutePath())) {
+		std::cout << "Failed to remove copied structure directory" << std::endl;
+	}
+}
+
+void ProjectToXML::loadObjectFromSavedXML(SketchProject*proj, QString zipPath) {
+	QDir dir(proj->getProjectDir());
+	QStringList allFiles = JlCompress::extractDir(zipPath, proj->getProjectDir());
+	
+	QString xml_file = dir.absoluteFilePath(STRUCTURE_XML_FILENAME);
+    QFile xml_f(xml_file);
+    if (xml_f.exists())
+    {
+        vtkSmartPointer< vtkXMLDataElement > elem =
+                vtkSmartPointer< vtkXMLDataElement >::Take(
+                    vtkXMLUtilities::ReadElementFromFile(xml_file.toStdString().c_str())
+                    );
+		if(!xml_f.remove()) {
+			std::cout << "Failed to remove XML file after loading" << std::endl;
+		}
+		q_vec_type pos;
+		proj->getLeftHandObject()->getPosition(pos);
+		if (objectFromClipboardXML(proj,elem,pos)
+			 == XML_TO_DATA_FAILURE)
+        {
+            std::cout << "Read xml correctly, but reading object failed."
+                        << std::endl;
+		}
+    }
+	else {
+		std::cout << "Could not find structure XML file in this directory" << std::endl;
+	}
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(

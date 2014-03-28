@@ -45,6 +45,14 @@ public:
     static XML_Read_Status objectFromClipboardXML(SketchProject *proj,
                                                   vtkXMLDataElement *elem,
                                                   double *newPos);
+	// retrieves names of VTK files for models needed to save structures
+	static XML_Read_Status modelNamesFromClipboardXML(QList< const char* > &list, SketchProject *proj,
+													  vtkXMLDataElement *elem);
+
+	static void saveObjectFromClipboardXML(vtkXMLDataElement *elem, SketchProject *proj, 
+											QString dirPath);
+
+	static void loadObjectFromSavedXML(SketchProject*proj, QString zipPath);
 
 private: // no other code should call these (this is the reason for making this a class)
     static vtkXMLDataElement *modelManagerToXML(const ModelManager *models, const QString &dir,

@@ -27,3 +27,5 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory
 ADD_LIBRARY(SketchBioExport ${SketchBioExportSrcs})
 
 ADD_SUBDIRECTORY( test )
+
+TARGET_LINK_LIBRARIES( SketchBioExport ${QUAZIP_LIBRARIES})
