@@ -240,22 +240,12 @@ private:
     double timeInAnimation; // the animation time starting at 0
     OutlineType outlineType;
     double viewTime;
-    // State from transform editing mode
+    // State from user operations that require persistent state
     OperationState *opState;
-//    int operationUsingState;
-//    QVector< SketchObject * > objectsSelectedInState;
    public:
     OperationState *getOperationState() { return opState; }
     void setOperationState(OperationState *state) { opState = state; }
   
-//  static const int NO_OPERATION_USING_STATE = -1;
-  
-//  int getOperationUsingState() { return operationUsingState; }
-//  void setOperationUsingState(int newOperation) { operationUsingState = newOperation; }
-//  void addObjectToObjectsSelected(SketchObject *obj) { objectsSelectedInState.append(obj); }
-//  void clearObjectsSelected() { objectsSelectedInState.clear(); }
-//  const QVector<SketchObject*>& getObjectsSelected() const { return objectsSelectedInState; }
-
 };
 
 inline const ModelManager* SketchProject::getModelManager() const {
