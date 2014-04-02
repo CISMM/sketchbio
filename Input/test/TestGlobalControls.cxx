@@ -54,7 +54,8 @@ inline int testPositionOfObject(SketchProject *project, q_vec_type expected)
     obj->getPosition(actual);
     if (!q_vec_equals(expected,actual))
     {
-        std::cout << "Wrong position after undo." << std::endl;
+        std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+              "  Wrong position after undo." << std::endl;
         return 1;
     }
     return 0;

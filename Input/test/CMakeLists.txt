@@ -25,3 +25,4 @@ macro( make_input_test name source )
 endmacro( make_input_test )
 
 make_input_test( GlobalControls TestGlobalControls.cxx )
+make_input_test( ColorFunctions TestColorFunctions.cxx )
