@@ -223,6 +223,16 @@ const QString &SketchModel::getSource(int conformation) const
     return conformations[conformation].src;
 }
 
+int SketchModel::getConformationNumber(QString source) const
+{
+	for(int i = 0; i < getNumberOfConformations(); i++) {
+		if (conformations[i].src == source) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 double SketchModel::getInverseMass() const
 {
     return invMass;
