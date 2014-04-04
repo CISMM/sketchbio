@@ -35,3 +35,5 @@ COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_BINARY_DIR}/scripts/ExportVTK)
 
 ADD_SUBDIRECTORY(test)
+
+TARGET_LINK_LIBRARIES( SketchBioSubprocess ${QUAZIP_LIBRARIES} )
