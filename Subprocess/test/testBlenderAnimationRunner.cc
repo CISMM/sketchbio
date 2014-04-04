@@ -26,17 +26,17 @@
 class TestBlender : public Test
 {
 public:
-    TestBlender(SketchProject *proj);
+    TestBlender(SketchBio::Project *proj);
     virtual ~TestBlender() {}
     virtual void setUp();
     virtual SubprocessRunner *getRunner() { return runner; }
     virtual int testResults();
 private:
-    SketchProject *project;
+    SketchBio::Project *project;
     SubprocessRunner *runner;
 };
 
-TestBlender::TestBlender(SketchProject *proj) :
+TestBlender::TestBlender(SketchBio::Project *proj) :
     project(proj)
 {
 }
@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
 
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj(
-                new SketchProject(r,"projects/animation"));
+    QScopedPointer< SketchBio::Project > proj(
+                new SketchBio::Project(r,"projects/animation"));
 
     QDir d(proj->getProjectDir());
     QDir d2(d.absoluteFilePath("anim"));

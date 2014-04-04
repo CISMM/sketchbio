@@ -19,11 +19,12 @@
 #include <sketchmodel.h>
 #include <sketchproject.h>
 
+#include <test/TestCoreHelpers.h>
+
 #define PROJECT_DIR "projdir"
 
 
 int testFileRefreshBug(const QDir &projectDir);
-int testFileRefreshBug2(const QDir &projectDir);
 
 int cleanProjectDir(QDir &projectDir);
 
@@ -61,15 +62,6 @@ int main(int argc, char *argv[])
         std::cout << "Exception: " << c << std::endl;
         retVal++;
     }
-    try
-    {
-        retVal += testFileRefreshBug2(projDir);
-    }
-    catch (const char *c) // known to throw this in case it tests for
-    {
-        std::cout << "Exception: " << c << std::endl;
-        retVal++;
-    }
 
     return retVal;
 }
@@ -79,14 +71,14 @@ int main(int argc, char *argv[])
  * This function tests for recurrence of the bug that when files are
  * dynamically added to the project directory during execution, the
  * project code sometimes fails to find them.  Solve by using QFile::exists()
- * instead of other methods.  (Tests the addModelFromFile code path)
+ * instead of other methods.  (Tests the getFileInProjDir code path)
  */
 int testFileRefreshBug(const QDir &projectDir)
 {
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer<SketchProject> proj(
-                new SketchProject(renderer,projectDir.absolutePath()));
+    QScopedPointer<SketchBio::Project> proj(
+                new SketchBio::Project(renderer,projectDir.absolutePath()));
     SketchModel *model = NULL;
 
     vtkSmartPointer< vtkSphereSource > sphere1 =
@@ -95,8 +87,8 @@ int testFileRefreshBug(const QDir &projectDir)
     sphere1->Update();
     QString file1 = ModelUtilities::createFileFromVTKSource(sphere1,"model1",
                                                             projectDir.absolutePath());
-    model = proj->addModelFromFile(file1,file1,1,1);
-    if (model == NULL)
+    QString newFName;
+    if (!proj->getFileInProjDir(file1,newFName))
     {
         std::cout << "Failed to create first model.";
         return 1;
@@ -108,53 +100,9 @@ int testFileRefreshBug(const QDir &projectDir)
     sphere2->Update();
     QString file2 = ModelUtilities::createFileFromVTKSource(sphere2,"model2",
                                                             projectDir.absolutePath());
-    model = proj->addModelFromFile(file2,file2,1,1);
-    if (model == NULL)
+    if (!proj->getFileInProjDir(file2,newFName))
     {
         std::cout << "Failed to create second model.";
-        return 1;
-    }
-    QFile(file1).remove();
-    QFile(file2).remove();
-    return 0;
-}
-/*
- * This function tests for recurrence of the bug that when files are
- * dynamically added to the project directory during execution, the
- * project code sometimes fails to find them.  Solve by using QFile::exists()
- * instead of other methods.  (Tests the addObject code path)
- */
-int testFileRefreshBug2(const QDir &projectDir)
-{
-    vtkSmartPointer< vtkRenderer > renderer =
-            vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer<SketchProject> proj(
-                new SketchProject(renderer,projectDir.absolutePath()));
-    SketchObject *object = NULL;
-
-    vtkSmartPointer< vtkSphereSource > sphere1 =
-            vtkSmartPointer< vtkSphereSource >::New();
-    sphere1->SetRadius(4);
-    sphere1->Update();
-    QString file1 = ModelUtilities::createFileFromVTKSource(sphere1,"object1",
-                                                            projectDir.absolutePath());
-    object = proj->addObject(file1,file1);
-    if (object == NULL)
-    {
-        std::cout << "Failed to create first object.";
-        return 1;
-    }
-    vtkSmartPointer< vtkSphereSource > sphere2 =
-            vtkSmartPointer< vtkSphereSource >::New();
-    sphere2->SetRadius(10);
-    sphere2->SetCenter(50,50,-30);
-    sphere2->Update();
-    QString file2 = ModelUtilities::createFileFromVTKSource(sphere2,"object2",
-                                                            projectDir.absolutePath());
-    object = proj->addObject(file2,file2);
-    if (object == NULL)
-    {
-        std::cout << "Failed to create second object.";
         return 1;
     }
     QFile(file1).remove();

@@ -34,7 +34,7 @@ inline int delete_object_button() { return BUTTON_RIGHT(FOUR_BUTTON_IDX); }
 #define SET_TRANFORM_PENDING 3
 #define ADD_TRANSFORM_EQUALS_PENDING 4
 
-TransformEditingMode::TransformEditingMode(SketchProject *proj, const bool *b,
+TransformEditingMode::TransformEditingMode(SketchBio::Project *proj, const bool *b,
                                            const double *a)
     : ObjectGrabMode(proj, b, a),
       operationState(NO_OPERATION),
@@ -247,7 +247,7 @@ void TransformEditingMode::analogsUpdated()
   if (operationState == REPLICATE_OBJECT_PENDING) {
     double value = analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)];
     int nCopies = min(floor(pow(2.0, value / .125)), 64);
-    project->getReplicas()->back()->setNumShown(nCopies);
+    project->getCrystalByExamples().back()->setNumShown(nCopies);
   }
 }
 

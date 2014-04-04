@@ -148,6 +148,8 @@ SketchObject *ModelInstance::getCopy()
     getPosition(pos);
     getOrientation(orient);
     nObj->setPosAndOrient(pos,orient);
+    nObj->setIsVisible(isVisible());
+    nObj->setActive(isActive());
     return nObj;
 }
 

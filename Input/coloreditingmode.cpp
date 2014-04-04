@@ -8,11 +8,12 @@
 #include <transformmanager.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
+#include <hand.h>
 
 // initial port to controlFunctions (i.e. "generalized input")
 #include <controlFunctions.h>
 
-ColorEditingMode::ColorEditingMode(SketchProject* proj, const bool* const b,
+ColorEditingMode::ColorEditingMode(SketchBio::Project* proj, const bool* const b,
                                    const double* const a)
     : ObjectGrabMode(proj, b, a)
 {
@@ -61,9 +62,9 @@ void ColorEditingMode::doUpdatesForFrame()
   ObjectGrabMode::doUpdatesForFrame();
   SketchBio::Hand& rhand = project->getHand(SketchBioHandId::RIGHT);
   if (rhand.getNearestObjectDistance() < DISTANCE_THRESHOLD) {
-    project->setOutlineType(SketchProject::OUTLINE_OBJECTS);
+    project->setOutlineType(SketchBio::Project::OUTLINE_OBJECTS);
   } else if (rhand.getNearestConnectorDistance() < SPRING_DISTANCE_THRESHOLD) {
-    project->setOutlineType(SketchProject::OUTLINE_CONNECTORS);
+    project->setOutlineType(SketchBio::Project::OUTLINE_CONNECTORS);
   }
 
   useLeftJoystickToRotateViewPoint();

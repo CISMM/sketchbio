@@ -1,7 +1,9 @@
 #ifndef PROJECTTOFLOROSIM_H
 #define PROJECTTOFLOROSIM_H
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 class QString;
 
 /*
@@ -12,7 +14,7 @@ namespace ProjectToFlorosim
     /*
      * Writes the current state of the given project to a Florosim xml file.
      */
-    bool writeProjectToFlorosim(SketchProject* project, const QString& filename);
+    bool writeProjectToFlorosim(SketchBio::Project* project, const QString& filename);
 }
 
 #endif // PROJECTTOFLOROSIM_H

@@ -16,7 +16,7 @@ class ObjectGrabMode : public HydraInputMode
 {
   Q_OBJECT
  public:
-  ObjectGrabMode(SketchProject *proj, bool const *const b,
+  ObjectGrabMode(SketchBio::Project *proj, bool const *const b,
                  double const *const a);
   virtual ~ObjectGrabMode();
 

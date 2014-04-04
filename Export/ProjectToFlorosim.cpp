@@ -90,7 +90,7 @@ static inline void writeObjToFlorosim(QFile& file, SketchObject* obj)
     file.write("</ImportedGeometry>\n");
 }
 
-bool writeProjectToFlorosim(SketchProject* project, const QString& filename)
+bool writeProjectToFlorosim(SketchBio::Project* project, const QString& filename)
 {
     QFile f(filename);
     if (f.exists())
@@ -107,7 +107,7 @@ bool writeProjectToFlorosim(SketchProject* project, const QString& filename)
         return false;
     }
     f.write(TOP_OF_FLOROSIM_FILE);
-    const QList< SketchObject* >& objs = *project->getWorldManager()->getObjects();
+    const QList< SketchObject* >& objs = *project->getWorldManager().getObjects();
     for (int i = 0; i < objs.size(); i++)
     {
         writeObjToFlorosim(f,objs[i]);

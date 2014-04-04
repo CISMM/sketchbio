@@ -3,7 +3,9 @@
 
 #include "subprocessrunner.h"
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 class QProcess;
 class QFile;
 class QTemporaryFile;
@@ -19,7 +21,7 @@ class BlenderAnimationRunner : public SubprocessRunner
     Q_OBJECT
 public:
     // constructor
-    explicit BlenderAnimationRunner(SketchProject *proj, const QString &aFile,
+    explicit BlenderAnimationRunner(SketchBio::Project *proj, const QString &aFile,
                                     QObject *parent = 0);
     // destructor
     virtual ~BlenderAnimationRunner();

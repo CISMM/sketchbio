@@ -32,6 +32,7 @@
 #include <modelmanager.h>
 #include <sketchobject.h>
 #include <modelinstance.h>
+#include <worldmanager.h>
 #include <sketchproject.h>
 
 #include <projecttoxml.h>
@@ -58,7 +59,7 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
     serverThread(new QThread(this)),
     collisionModeGroup(new QActionGroup(this)),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    project(new SketchProject(renderer.GetPointer(), projDir)),
+    project(new SketchBio::Project(renderer.GetPointer(), projDir)),
     inputManager(new HydraInputManager(project))
 {
     this->ui = new Ui_SimpleView;
@@ -100,29 +101,6 @@ SimpleView::SimpleView(QString projDir, bool load_example) :
         // eventually we will just load the example from a project directory...
         // example of keyframes this time
 
-        SketchModel *model = project->addModelFromFile("PDB:1m1j","./models/1m1j.obj",
-                                                       DEFAULT_INVERSE_MASS,DEFAULT_INVERSE_MOMENT);
-        q_vec_type position = {200,0,0};
-        q_type orientation;
-        q_from_axis_angle(orientation,0,1,0,0);
-        SketchObject *object1 = new ModelInstance(model);
-        object1->setPosAndOrient(position,orientation);
-        object1->addKeyframeForCurrentLocation(0.0);
-
-        q_vec_set(position,-200,0,0);
-        q_from_axis_angle(orientation,0,1,0,Q_PI);
-        object1->setPosAndOrient(position,orientation);
-        object1->addKeyframeForCurrentLocation(10.0);
-
-        q_vec_set(position,200,0,0);
-        q_from_axis_angle(orientation,0,1,0,0);
-        object1->setPosAndOrient(position,orientation);
-        object1->addKeyframeForCurrentLocation(20.0);
-        project->addObject(object1);
-
-        q_vec_set(position,0,100,0);
-        q_from_axis_angle(orientation,1,0,0,0);
-        project->addCamera(position,orientation);
     }
     inputManager->addUndoState();
 
@@ -255,23 +233,23 @@ void SimpleView::slot_frameLoop() {
 }
 
 void SimpleView::oldCollisionMode() {
-    project->setCollisionMode(PhysicsMode::ORIGINAL_COLLISION_RESPONSE);
+    project->getWorldManager().setCollisionMode(PhysicsMode::ORIGINAL_COLLISION_RESPONSE);
 }
 
 void SimpleView::poseModeTry1() {
-    project->setCollisionMode(PhysicsMode::POSE_MODE_TRY_ONE);
+    project->getWorldManager().setCollisionMode(PhysicsMode::POSE_MODE_TRY_ONE);
 }
 
 void SimpleView::binaryCollisionSearch() {
-    project->setCollisionMode(PhysicsMode::BINARY_COLLISION_SEARCH);
+    project->getWorldManager().setCollisionMode(PhysicsMode::BINARY_COLLISION_SEARCH);
 }
 
 void SimpleView::poseModePCA() {
-    project->setCollisionMode(PhysicsMode::POSE_WITH_PCA_COLLISION_RESPONSE);
+    project->getWorldManager().setCollisionMode(PhysicsMode::POSE_WITH_PCA_COLLISION_RESPONSE);
 }
 
 void SimpleView::setWorldSpringsEnabled(bool enabled) {
-    project->setWorldSpringsEnabled(enabled);
+    project->getWorldManager().setPhysicsSpringsOn(enabled);
     updateStatusText();
 }
 
@@ -280,22 +258,12 @@ void SimpleView::toggleWorldSpringsEnabled() {
 }
 
 void SimpleView::setCollisionTestsOn(bool on) {
-    project->setCollisionTestsOn(on);
+    project->getWorldManager().setCollisionCheckOn(on);
     updateStatusText();
 }
 
 void SimpleView::toggleWorldCollisionTestsOn() {
     this->ui->actionCollision_Tests_On->trigger();
-}
-
-SketchObject *SimpleView::addObject(QString name)
-{
-    return project->addObject(name,name);
-}
-
-bool SimpleView::addObjects(QVector<QString> names)
-{
-    return project->addObjects(names);
 }
 
 void SimpleView::setTextMapperString(QString str) {
@@ -342,7 +310,20 @@ void SimpleView::openOBJFile()
     // Open the file for reading.
     if (fn.length() > 0) {
 	printf("Loading %s\n", fn.toStdString().c_str());
-	addObject(fn);
+    ModelManager &m = project->getModelManager();
+    SketchModel *model;
+    if (m.hasModel(fn)) {
+        model = m.getModel(fn);
+    } else {
+        QString newFileName;
+        project->getFileInProjDir(fn,newFileName);
+        model = new SketchModel(DEFAULT_INVERSE_MASS,DEFAULT_INVERSE_MOMENT);
+        model->addConformation(fn,newFileName);
+        m.addModel(model);
+    }
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    project->getWorldManager().addObject(model,pos,orient);
     }
 }
 
@@ -434,7 +415,7 @@ void SimpleView::openVTKFile()
             printf("Loading %s\n", fn.toStdString().c_str());
             m->addConformation(fn,fn);
         }
-        SketchModel* model = project->addModel(m);
+        SketchModel* model = project->getModelManager().addModel(m);
         if (model != m)
         {
             delete m;
@@ -442,7 +423,7 @@ void SimpleView::openVTKFile()
         }
         const q_vec_type origin = Q_NULL_VECTOR;
         const q_type idquat = Q_ID_QUAT;
-        project->addObject(model,origin,idquat);
+        project->getWorldManager().addObject(model,origin,idquat);
     }
 }
 
@@ -482,7 +463,7 @@ void SimpleView::saveProjectAs()
 
 void SimpleView::saveProject() {
     QString path = project->getProjectDir();
-    project->getTransformManager()->setRoomEyeOrientation(0,0);
+    project->getTransformManager().setRoomEyeOrientation(0,0);
     assert(path.length() > 0);
     QDir dir(path);
     assert(dir.exists());
@@ -514,11 +495,13 @@ void SimpleView::loadProject() {
     delete project;
     // create new one
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
-    project = new SketchProject(renderer,dirPath);
+    project = new SketchBio::Project(renderer,dirPath);
     inputManager->setProject(project);
     inputManager->addUndoState();
-    project->setCollisionTestsOn(this->ui->actionCollision_Tests_On->isChecked());
-    project->setWorldSpringsEnabled(this->ui->actionWorld_Springs_On->isChecked());
+    project->getWorldManager().setCollisionCheckOn(
+                this->ui->actionCollision_Tests_On->isChecked());
+    project->getWorldManager().setPhysicsSpringsOn(
+                this->ui->actionWorld_Springs_On->isChecked());
     this->ui->actionPose_Mode_1->setChecked(true);
     // load project into new one
     QDir dir(project->getProjectDir());
@@ -539,20 +522,20 @@ void SimpleView::loadProject() {
 void SimpleView::createCameraForViewpoint()
 {
     project->addCameraObjectFromCameraPosition(
-                project->getTransformManager()->getGlobalCamera());
+                project->getTransformManager().getGlobalCamera());
 }
 
 void SimpleView::setCameraToViewpoint()
 {
-    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >* cams =
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > > &cams =
             project->getCameras();
-    if (cams->empty())
+    if (cams.empty())
     {
         return;
     }
-    SketchObject *obj = cams->begin().key();
+    SketchObject *obj = cams.begin().key();
     project->setCameraToVTKCameraPosition(
-                obj,project->getTransformManager()->getGlobalCamera());
+                obj,project->getTransformManager().getGlobalCamera());
 }
 
 void SimpleView::simplifyObjectByName(const QString name)
@@ -602,12 +585,12 @@ void SimpleView::importPDBId()
     if (ok && ok2 && !text.isEmpty()) {
 
         QString source = ModelUtilities::createSourceNameFor(text,toDelete);
-        if (project->getModelManager()->hasModel(source))
+        if (project->getModelManager().hasModel(source))
         {
-            SketchModel *model = project->getModelManager()->getModel(source);
+            SketchModel *model = project->getModelManager().getModel(source);
             q_vec_type pos = Q_NULL_VECTOR;
             q_type orient = Q_ID_QUAT;
-            project->addObject(model,pos,orient);
+            project->getWorldManager().addObject(model,pos,orient);
         }
         else
         {
@@ -649,12 +632,12 @@ void SimpleView::openPDBFile()
     {
         return;
     }
-    if (project->getModelManager()->hasModel(fn))
+    if (project->getModelManager().hasModel(fn))
     {
-        SketchModel *model = project->getModelManager()->getModel(fn);
+        SketchModel *model = project->getModelManager().getModel(fn);
         q_vec_type pos = Q_NULL_VECTOR;
         q_type orient = Q_ID_QUAT;
-        project->addObject(model,pos,orient);
+        project->getWorldManager().addObject(model,pos,orient);
     }
     else
     {
@@ -673,7 +656,7 @@ void SimpleView::openPDBFile()
 }
 
 void SimpleView::exportBlenderAnimation() {
-    if (project->getCameras()->empty())
+    if (project->getCameras().empty())
     {
         QMessageBox::StandardButton reply = QMessageBox::warning(
                     NULL, "Warning: No cameras defined",
@@ -682,7 +665,7 @@ void SimpleView::exportBlenderAnimation() {
                     QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes)
         {
-            vtkCamera *cam = project->getTransformManager()->getGlobalCamera();
+            vtkCamera *cam = project->getTransformManager().getGlobalCamera();
             project->addCameraObjectFromCameraPosition(cam);
         }
         else

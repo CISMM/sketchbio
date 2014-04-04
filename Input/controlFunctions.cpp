@@ -22,13 +22,14 @@
 #include <springconnection.h>
 #include <transformmanager.h>
 #include <worldmanager.h>
+#include <hand.h>
 
 #include "TransformInputDialog.h"
 #include "transformeditoperationstate.h"
 
 static const double DEFAULT_SPRING_STIFFNESS = 1.0;
 
-static inline void addXMLUndoState(SketchProject *project)
+static inline void addXMLUndoState(SketchBio::Project *project)
 {
   UndoState *last = project->getLastUndoState();
   SavedXMLUndoState *lastXMLState = dynamic_cast< SavedXMLUndoState * >(last);
@@ -80,7 +81,7 @@ namespace ControlFunctions
 {
 // ===== BEGIN ANIMATION FUNCTIONS =====
 
-void keyframeAll(SketchProject *project, int hand, bool wasPressed)
+void keyframeAll(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Release to keyframe all objects.");
@@ -88,18 +89,18 @@ void keyframeAll(SketchProject *project, int hand, bool wasPressed)
   {
     double time = project->getViewTime();
     QListIterator< SketchObject * > itr =
-        project->getWorldManager()->getObjectIterator();
+        project->getWorldManager().getObjectIterator();
     while (itr.hasNext()) {
       itr.next()->addKeyframeForCurrentLocation(time);
     }
-    project->getWorldManager()->setAnimationTime(time);
+    project->getWorldManager().setAnimationTime(time);
     // emit newDirectionsString(" ");
     addXMLUndoState(project);
   }
   return;
 }
 
-void toggleKeyframeObject(SketchProject *project, int hand, bool wasPressed)
+void toggleKeyframeObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Move to an object and release to add or remove
@@ -128,7 +129,7 @@ void toggleKeyframeObject(SketchProject *project, int hand, bool wasPressed)
       // the keyframe... principle of least astonishment.
       // using this instead of setAnimationTime since it doesn't update
       // positions
-      project->getWorldManager()->setKeyframeOutlinesForTime(time);
+      project->getWorldManager().setKeyframeOutlinesForTime(time);
       addXMLUndoState(project);
       // emit newDirectionsString(" ");
     } else if (nearestObjParent != NULL) {
@@ -143,13 +144,12 @@ void toggleKeyframeObject(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void addCamera(SketchProject *project, int hand, bool wasPressed)
+void addCamera(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Release the button to add a camera.");
   } else  // button released
   {
-    TransformManager *transforms = project->getTransformManager();
     q_vec_type pos;
     q_type orient;
     SketchBio::Hand &handObj = project->getHand(
@@ -163,7 +163,7 @@ void addCamera(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void showAnimationPreview(SketchProject *project, int hand, bool wasPressed)
+void showAnimationPreview(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     if (project->isShowingAnimation()) {
@@ -190,7 +190,7 @@ void showAnimationPreview(SketchProject *project, int hand, bool wasPressed)
 // ===== BEGIN GROUP EDITING FUNCTIONS =====
 
 // !! INCOMPLETE !! //
-void toggleGroupMembership(SketchProject *project, int hand, bool wasPressed)
+void toggleGroupMembership(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Select the group with the left hand\n"
@@ -198,7 +198,7 @@ void toggleGroupMembership(SketchProject *project, int hand, bool wasPressed)
     //hand");
   } else  // button released
   {
-    WorldManager *world = project->getWorldManager();
+    WorldManager &world = project->getWorldManager();
 
     SketchBio::Hand &leftHandObj = project->getHand(SketchBioHandId::LEFT);
 
@@ -231,11 +231,11 @@ void toggleGroupMembership(SketchProject *project, int hand, bool wasPressed)
         if (grp == NULL || (grp != NULL && dynamic_cast< ObjectGroup * >(
                                                rightNearestObj) != NULL)) {
           grp = new ObjectGroup();
-          world->removeObject(leftNearestObj);
+          world.removeObject(leftNearestObj);
           grp->addObject(leftNearestObj);
-          world->addObject(grp);
+          world.addObject(grp);
         }
-        world->removeObject(rightNearestObj);
+        world.removeObject(rightNearestObj);
         grp->addObject(rightNearestObj);
       }
       addXMLUndoState(project);
@@ -245,7 +245,7 @@ void toggleGroupMembership(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void copyObject(SketchProject *project, int hand, bool wasPressed)
+void copyObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Select an object and release the button to
@@ -272,7 +272,7 @@ void copyObject(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void pasteObject(SketchProject *project, int hand, bool wasPressed)
+void pasteObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Release the button to paste");
@@ -307,7 +307,7 @@ void pasteObject(SketchProject *project, int hand, bool wasPressed)
 
 // ===== BEGIN COLOR EDITING FUNCTIONS =====
 
-void changeObjectColor(SketchProject *project, int hand, bool wasPressed)
+void changeObjectColor(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Move to the object and release to change\n"
@@ -392,7 +392,7 @@ void changeObjectColor(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void changeObjectColorVariable(SketchProject *project, int hand,
+void changeObjectColorVariable(SketchBio::Project *project, int hand,
                                bool wasPressed)
 {
   if (wasPressed) {
@@ -423,7 +423,7 @@ void changeObjectColorVariable(SketchProject *project, int hand,
   return;
 }
 
-void toggleObjectVisibility(SketchProject *project, int hand, bool wasPressed)
+void toggleObjectVisibility(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Move to an object and release to toggle "
@@ -441,7 +441,7 @@ void toggleObjectVisibility(SketchProject *project, int hand, bool wasPressed)
       // toggle object visible
       // TODO - shawn, make easier to use so that only one call is needed
       SketchObject::setIsVisibleRecursive(nearestObj, !nearestObj->isVisible());
-      project->getWorldManager()->changedVisibility(nearestObj);
+      project->getWorldManager().changedVisibility(nearestObj);
       addXMLUndoState(project);
     }
     // emit newDirectionsString(" ");
@@ -449,7 +449,7 @@ void toggleObjectVisibility(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void toggleShowInvisibleObjects(SketchProject *project, int hand,
+void toggleShowInvisibleObjects(SketchBio::Project *project, int hand,
                                 bool wasPressed)
 {
   if (wasPressed) {
@@ -458,11 +458,11 @@ void toggleShowInvisibleObjects(SketchProject *project, int hand,
   } else  // button released
   {
     // toggle invisible objects shown
-    WorldManager *world = project->getWorldManager();
-    if (world->isShowingInvisible())
-      world->hideInvisibleObjects();
+    WorldManager &world = project->getWorldManager();
+    if (world.isShowingInvisible())
+      world.hideInvisibleObjects();
     else
-      world->showInvisibleObjects();
+      world.showInvisibleObjects();
     // emit newDirectionsString(" ");
   }
   return;
@@ -472,7 +472,7 @@ void toggleShowInvisibleObjects(SketchProject *project, int hand,
 
 // ===== BEGIN SPRING EDITING FUNCTIONS =====
 
-void deleteSpring(SketchProject *project, int hand, bool wasPressed)
+void deleteSpring(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Move to a spring and release to delete the
@@ -496,7 +496,7 @@ void deleteSpring(SketchProject *project, int hand, bool wasPressed)
         otherHandObj.clearNearestConnector();
       }
       handObj.clearNearestConnector();
-      project->getWorldManager()->removeSpring(thisHandNearestSpring);
+      project->getWorldManager().removeSpring(thisHandNearestSpring);
     }
     // emit newDirectionsString(" ");
   }
@@ -504,7 +504,7 @@ void deleteSpring(SketchProject *project, int hand, bool wasPressed)
 }
 
 // !! INCOMPLETE !! //
-void snapSpringToTerminus(SketchProject *project, int hand, bool wasPressed)
+void snapSpringToTerminus(SketchBio::Project *project, int hand, bool wasPressed)
 {
 
   /*	if (wasPressed)
@@ -528,7 +528,7 @@ void snapSpringToTerminus(SketchProject *project, int hand, bool wasPressed)
 	*/ return;
 }
 
-void createSpring(SketchProject *project, int hand, bool wasPressed)
+void createSpring(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed) {
     // emit newDirectionsString("Release at location of new spring.");
@@ -542,14 +542,14 @@ void createSpring(SketchProject *project, int hand, bool wasPressed)
     q_vec_add(pos2, pos1, pos2);
     SpringConnection *spring = SpringConnection::makeSpring(
         NULL, NULL, pos1, pos2, true, DEFAULT_SPRING_STIFFNESS, 0, true);
-    project->addConnector(spring);
+    project->getWorldManager().addConnector(spring);
     addXMLUndoState(project);
     // emit newDirectionsString(" ");
   }
   return;
 }
 
-void createTransparentConnector(SketchProject *project, int hand,
+void createTransparentConnector(SketchBio::Project *project, int hand,
                                 bool wasPressed)
 {
   if (wasPressed) {
@@ -562,7 +562,7 @@ void createTransparentConnector(SketchProject *project, int hand,
                                  : SketchBioHandId::RIGHT).getPosition(pos1);
     q_vec_add(pos2, pos1, pos2);
     Connector *conn = new Connector(NULL, NULL, pos1, pos2, 0.3, 10);
-    project->addConnector(conn);
+    project->getWorldManager().addConnector(conn);
     addXMLUndoState(project);
     // emit newDirectionsString(" ");
   }
@@ -572,7 +572,7 @@ void createTransparentConnector(SketchProject *project, int hand,
 // ===== END SPRING EDITING FUNCTIONS =====
 
 // ===== BEGIN GRAB FUNCTIONS =====
-void grabObjectOrWorld(SketchProject *project, int hand, bool wasPressed)
+void grabObjectOrWorld(SketchBio::Project *project, int hand, bool wasPressed)
 {
 
   if (project->isShowingAnimation())  // ignore grabbing during an animation
@@ -600,7 +600,7 @@ void grabObjectOrWorld(SketchProject *project, int hand, bool wasPressed)
   }
   return;
 }
-void grabSpringOrWorld(SketchProject *project, int hand, bool wasPressed)
+void grabSpringOrWorld(SketchBio::Project *project, int hand, bool wasPressed)
 {
   SketchBio::Hand &handObj = project->getHand(
       (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
@@ -620,7 +620,7 @@ void grabSpringOrWorld(SketchProject *project, int hand, bool wasPressed)
   return;
 }
 
-void selectParentOfCurrent(SketchProject *project, int hand, bool wasPressed)
+void selectParentOfCurrent(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (!wasPressed) {
     SketchBio::Hand &handObj = project->getHand(
@@ -628,7 +628,7 @@ void selectParentOfCurrent(SketchProject *project, int hand, bool wasPressed)
     handObj.selectParentObjectOfCurrent();
   }
 }
-void selectChildOfCurrent(SketchProject *project, int hand, bool wasPressed)
+void selectChildOfCurrent(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (!wasPressed) {
     SketchBio::Hand &handObj = project->getHand(
@@ -643,7 +643,7 @@ void selectChildOfCurrent(SketchProject *project, int hand, bool wasPressed)
   
 // ===== BEGIN TRANSFORM EDITING FUNCTIONS =====
   
-void deleteObject(SketchProject *project, int hand, bool wasPressed)
+void deleteObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (wasPressed){
     /*emit newDirectionsString(
@@ -652,14 +652,14 @@ void deleteObject(SketchProject *project, int hand, bool wasPressed)
                            " permanent delete!");*/
   } else
   {
-    SketchBio::Hand &handObj = project->getHand(
-                                                (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+      SketchBioHandId::Type h = (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT;
+    SketchBio::Hand &handObj = project->getHand(h);
     double hDist = handObj.getNearestObjectDistance();
     if ( hDist < DISTANCE_THRESHOLD ) { // object is selected
       SketchObject* obj = handObj.getNearestObject();
       handObj.clearNearestObject();
-      project->getWorldManager()->deleteObject(obj);
-      project->setOutlineVisible(RIGHT_SIDE_OUTLINE,false);
+      project->getWorldManager().deleteObject(obj);
+      project->setOutlineVisible(h,false);
     }
     addXMLUndoState(project);
     //        emit newDirectionsString(" ");
@@ -668,11 +668,11 @@ void deleteObject(SketchProject *project, int hand, bool wasPressed)
  
   
 static const int REPLICATION_OPERATION_ID = 0;
-void replicateObject(SketchProject *project, int hand, bool wasPressed)
+void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
   {
     if (wasPressed){
       if (project->getOperationState() != NULL) { return; }
-//      if (project->getOperationUsingState() != SketchProject::NO_OPERATION_USING_STATE) { return; }
+//      if (project->getOperationUsingState() != SketchBio::Project::NO_OPERATION_USING_STATE) { return; }
       SketchBio::Hand &handObj = project->getHand(
                                                   (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
       double hDist = handObj.getNearestObjectDistance();
@@ -688,7 +688,7 @@ void replicateObject(SketchProject *project, int hand, bool wasPressed)
         pos[Q_Y] += difference;
         SketchObject *nObj = obj->getCopy();
         nObj->setPosition(pos);
-        project->addObject(nObj);
+        project->getWorldManager().addObject(nObj);
         int nCopies = 1;
         project->addReplication(obj,nObj,nCopies);
 //        project->addObjectToObjectsSelected(obj);
@@ -702,17 +702,17 @@ void replicateObject(SketchProject *project, int hand, bool wasPressed)
     {
 //      if (project->getOperationUsingState() != REPLICATION_OPERATION_ID) { return; }
 //      project->clearObjectsSelected();
-//      project->setOperationUsingState(SketchProject::NO_OPERATION_USING_STATE);
+//      project->setOperationUsingState(SketchBio::Project::NO_OPERATION_USING_STATE);
       addXMLUndoState(project);
       //emit newDirectionsString(" ");
     }
   }
 static const int SET_TRANSFORMS_ID = 1;
-void setTransforms(SketchProject *project, int hand, bool wasPressed)
+void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
   {
     if (wasPressed){
         if (project->getOperationState() == NULL) {
-//      if (project->getOperationUsingState() == SketchProject::NO_OPERATION_USING_STATE) {
+//      if (project->getOperationUsingState() == SketchBio::Project::NO_OPERATION_USING_STATE) {
             project->setOperationState(new TransformEditOperationState(project));
 //        project->setOperationUsingState(SET_TRANSFORMS_ID);
         /*emit newDirectionsString(
@@ -750,7 +750,7 @@ void setTransforms(SketchProject *project, int hand, bool wasPressed)
            else
               {
                 /*emit newDirectionsString(" ");*/
-//                project->setOperationUsingState(SketchProject::NO_OPERATION_USING_STATE);
+//                project->setOperationUsingState(SketchBio::Project::NO_OPERATION_USING_STATE);
               }
           }
           else
@@ -776,7 +776,7 @@ void setTransforms(SketchProject *project, int hand, bool wasPressed)
             }
 //            project->clearObjectsSelected();
             //emit newDirectionsString(" ");
-//            project->setOperationUsingState(SketchProject::NO_OPERATION_USING_STATE);
+//            project->setOperationUsingState(SketchBio::Project::NO_OPERATION_USING_STATE);
           }
        }
 
@@ -787,11 +787,11 @@ void setTransforms(SketchProject *project, int hand, bool wasPressed)
 
 // ===== BEGIN UTILITY FUNCTIONS =====
 
-void resetViewPoint(SketchProject *project, int hand, bool wasPressed)
+void resetViewPoint(SketchBio::Project *project, int hand, bool wasPressed)
 {
   if (!wasPressed)  // button released
   {
-    project->getTransformManager()->setRoomEyeOrientation(0, 0);
+    project->getTransformManager().setRoomEyeOrientation(0, 0);
   }
 }
 

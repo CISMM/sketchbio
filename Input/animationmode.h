@@ -9,7 +9,7 @@ class AnimationMode : public ObjectGrabMode
 {
     Q_OBJECT
 public:
-    AnimationMode(SketchProject *proj, const bool *const b, const double *const a);
+    AnimationMode(SketchBio::Project *proj, const bool *const b, const double *const a);
     virtual ~AnimationMode();
 
     virtual void buttonPressed(int vrpn_ButtonNum);

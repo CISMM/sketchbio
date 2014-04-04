@@ -10,7 +10,7 @@
 class SavedXMLUndoState : public UndoState
 {
 public:
-    SavedXMLUndoState( SketchProject &proj,
+    SavedXMLUndoState( SketchBio::Project &proj,
                        QSharedPointer< std::string > previous);
     virtual void undo();
     virtual void redo();

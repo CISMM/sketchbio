@@ -17,7 +17,9 @@ class QActionGroup;
 #include <QString>
 
 class SketchObject;
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 
 class vrpnServer;
 class HydraInputManager;
@@ -39,10 +41,6 @@ public:
   // Constructor/Destructor
   SimpleView(QString projDir, bool load_example = false);
   virtual ~SimpleView();
-
-  // Add an object (or objects) to be displayed.
-  SketchObject *addObject(QString name);
-  bool addObjects(QVector<QString> names);
 
   // Simplify an external object based on the root file name.
   void simplifyObjectByName(const QString name);
@@ -143,7 +141,7 @@ private:
   vtkSmartPointer<vtkActor2D> statusTextActor;
   vtkSmartPointer<vtkTextMapper> timeTextMapper;
   vtkSmartPointer<vtkActor2D> timeTextActor;
-  SketchProject *project;
+  SketchBio::Project *project;
   HydraInputManager *inputManager;
 };
 

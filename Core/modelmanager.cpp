@@ -150,6 +150,11 @@ SketchModel *ModelManager::addConformation(SketchModel *model,
     {
         return models[modelSourceToIdx.value(newSource)];
     }
+    int idx = models.indexOf(model);
+//    qDebug () << __LINE__ << "Index of model to add to: " << idx;
+    if (idx == -1) {
+        model = addModel(model);
+    }
     model->addConformation(newSource,newFilename);
     modelSourceToIdx.insert(newSource,models.indexOf(model));
     return model;
@@ -198,6 +203,7 @@ QVectorIterator<SketchModel *> ModelManager::getModelIterator() const {
 
 bool ModelManager::hasModel(const QString &source) const
 {
+//    qDebug() << source << ": " << modelSourceToIdx.value(source);
     return modelSourceToIdx.contains(source);
 }
 

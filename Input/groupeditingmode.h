@@ -7,7 +7,7 @@ class GroupEditingMode : public ObjectGrabMode
 {
     Q_OBJECT
 public:
-    GroupEditingMode(SketchProject *proj, bool const * const b,
+    GroupEditingMode(SketchBio::Project *proj, bool const * const b,
                      double const * const a);
     ~GroupEditingMode();
     

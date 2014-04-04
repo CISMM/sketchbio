@@ -5,7 +5,9 @@
 class QFile;
 class QString;
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 class SketchModel;
 class ModelManager;
 class SketchObject;
@@ -23,7 +25,7 @@ class ProjectToBlenderAnimation
 {
 public:
     // returns true for success, false for failure
-    static bool writeProjectBlenderFile(QFile& file, SketchProject* proj,
+    static bool writeProjectBlenderFile(QFile& file, SketchBio::Project* proj,
                                         const QString& modulePath);
     // converts time in seconds to a blender frame number (what Blender puts keyframes on)
     // using the frame rate.  The default for frame rate is Blender's default frame rate.
@@ -43,16 +45,16 @@ private:
     // stores the index of each object in the myObjects list in the objectIdxs QHash
     static bool writeCreateObjects(QFile& file,
                                    QHash< SketchObject*, int >& objectIdxs,
-                                   SketchProject* proj);
+                                   SketchBio::Project* proj);
     // Writes code to create the cylinders in Blender for each Connector
     // stores the indices into the myConnectors list in the conectorIdxs QHash
     static bool writeCreateCylinders(QFile& file,
                                      QHash< Connector*, int>& connectorIdxs,
-                                     SketchProject* proj);
+                                     SketchBio::Project* proj);
     // Writes a keyframe for each object at each frame with its position at that time from SketchBio
     static bool writeKeyframes(QFile& file, QHash< SketchObject*, int >& objectIdxs,
                                QHash< Connector*, int >& connectorIdxs,
-                               SketchProject* proj,
+                               SketchBio::Project* proj,
                                unsigned frameRate = BLENDER_RENDERER_FRAMERATE);
 };
 

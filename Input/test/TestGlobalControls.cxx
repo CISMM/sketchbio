@@ -12,6 +12,7 @@
 
 #include <sketchioconstants.h>
 #include <sketchtests.h>
+#include <modelmanager.h>
 #include <sketchobject.h>
 #include <modelinstance.h>
 #include <objectgroup.h>
@@ -47,9 +48,9 @@ inline void clickButton(HydraInputManager *mgr, int buttonNum)
     mgr->setButtonState(buttonNum,false);
 }
 
-inline int testPositionOfObject(SketchProject *project, q_vec_type expected)
+inline int testPositionOfObject(SketchBio::Project *project, q_vec_type expected)
 {
-    SketchObject *obj = project->getWorldManager()->getObjects()->at(0);
+    SketchObject *obj = project->getWorldManager().getObjects()->at(0);
     q_vec_type actual;
     obj->getPosition(actual);
     if (!q_vec_equals(expected,actual))
@@ -60,9 +61,9 @@ inline int testPositionOfObject(SketchProject *project, q_vec_type expected)
     return 0;
 }
 
-inline void createState(HydraInputManager *manager,SketchProject *project, int num)
+inline void createState(HydraInputManager *manager,SketchBio::Project *project, int num)
 {
-    SketchObject *obj = project->getWorldManager()->getObjects()->at(0);
+    SketchObject *obj = project->getWorldManager().getObjects()->at(0);
     q_vec_type pos = {num, 0.0, 0.0};
     obj->setPosition(pos);
     manager->getActiveMode()->addXMLUndoState();
@@ -78,17 +79,17 @@ int testUndoRedo()
     int errors = 0;
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > project(
-                new SketchProject(renderer,QDir::currentPath()));
+    QScopedPointer< SketchBio::Project > project(
+                new SketchBio::Project(renderer,QDir::currentPath()));
     QScopedPointer< HydraInputManager > manager(
                 new HydraInputManager(project.data()));
     // As long as we don't have the vrpn server running, this should be fine
     // and we should be able to test things as if vrpn devices were not initialized
     SketchModel *model = TestCoreHelpers::getCubeModel();
-    project->addModel(model);
+    project->getModelManager().addModel(model);
     q_vec_type pos = Q_NULL_VECTOR;
     q_type orient = Q_ID_QUAT;
-    project->addObject(model,pos,orient);
+    project->getWorldManager().addObject(model,pos,orient);
     manager->getActiveMode()->addXMLUndoState();
     createState(manager.data(),project.data(),1);
     createState(manager.data(),project.data(),2);
@@ -123,7 +124,7 @@ int testUndoRedo()
     return errors;
 }
 
-inline void createMultiLevelGroup(SketchProject *proj,SketchModel *model)
+inline void createMultiLevelGroup(SketchBio::Project *proj,SketchModel *model)
 {
     SketchObject *obj[4];
     ObjectGroup *grpL1 = new ObjectGroup();
@@ -138,9 +139,9 @@ inline void createMultiLevelGroup(SketchProject *proj,SketchModel *model)
     grpL1->addObject(obj[2]);
     grpL1->addObject(obj[3]);
     StructureReplicator *rep = proj->addReplication(obj[1],obj[0],3);
-    proj->getWorldManager()->removeObject(rep->getReplicaGroup());
+    proj->getWorldManager().removeObject(rep->getReplicaGroup());
     grp->addObject(rep->getReplicaGroup());
-    proj->addObject(grp);
+    proj->getWorldManager().addObject(grp);
 }
 
 // This test is testing the recurrance of Bug841, a segfault in undo/redo when
@@ -151,14 +152,14 @@ int testMultilevelGroupUndo()
     int errors = 0;
     vtkSmartPointer< vtkRenderer > renderer =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > project(
-                new SketchProject(renderer,QDir::currentPath()));
+    QScopedPointer< SketchBio::Project > project(
+                new SketchBio::Project(renderer,QDir::currentPath()));
     QScopedPointer< HydraInputManager > manager(
                 new HydraInputManager(project.data()));
     // As long as we don't have the vrpn server running, this should be fine
     // and we should be able to test things as if vrpn devices were not initialized
     SketchModel *model = TestCoreHelpers::getCubeModel();
-    project->addModel(model);
+    project->getModelManager().addModel(model);
     // create a group with a replica group as a subgroup
     createMultiLevelGroup(project.data(),model);
     // create some undo states

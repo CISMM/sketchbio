@@ -14,7 +14,7 @@
 
 #include "subprocessutils.h"
 
-BlenderAnimationRunner::BlenderAnimationRunner(SketchProject *proj, const QString &aFile,
+BlenderAnimationRunner::BlenderAnimationRunner(SketchBio::Project *proj, const QString &aFile,
                                                QObject *parent) :
     SubprocessRunner(parent),
     blender(NULL),

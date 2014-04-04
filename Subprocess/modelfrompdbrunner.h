@@ -3,7 +3,9 @@
 
 #include <subprocessrunner.h>
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 class SketchModel;
 
 // This is a subprocess runner to load a pdb file into a model object and
@@ -17,14 +19,14 @@ public:
     // proj - the project
     // pdb - the 4 character pdb id
     // toDelete - chain identifiers to delete before surfacing
-    ModelFromPDBRunner(SketchProject *proj, const QString &pdb,
+    ModelFromPDBRunner(SketchBio::Project *proj, const QString &pdb,
                        const QString &toDelete, bool shouldExportBiologicalUnit,
                        QObject *parent = 0);
     // proj - the project
     // filename - the pdb file
     // modelFilePre - the prefix to use for the model files in the project dir
     // toDeltee - chain identifiers to delete before surfacing
-    ModelFromPDBRunner(SketchProject *proj, const QString &filename,
+    ModelFromPDBRunner(SketchBio::Project *proj, const QString &filename,
                        const QString &modelFilePre, const QString &toDelete,
                        bool shouldExportBiologicalUnit,
                        QObject *parent = 0);
@@ -42,7 +44,7 @@ private:
     // PDB id, and the chain identifiers of chains to delete before surfacing
     QString pdbId, chainsToDelete, modelFilePrefix;
     // project to add model to
-    SketchProject *project;
+    SketchBio::Project *project;
     // The model (once it is created, keep a reference to it)
     SketchModel *model;
     // The conformation within the model (-1 before the model is created)

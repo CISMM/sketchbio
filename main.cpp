@@ -23,18 +23,14 @@ int main( int argc, char** argv )
   // Start with default values.
   bool  do_example = false;
   QVector<QString> object_names;
-  int i = 0, real_params = 0;
+  int i = 0;
   for (i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-show_example")) {
     do_example = true;
     } else if (argv[i][0] == '-' || !strcmp(argv[i], "-h")) {
     Usage(argv[0]);
     exit(0);
-    } else switch (++real_params) {
-      case 1:
-      case 2:
-      default:
-	object_names.push_back(argv[i]);
+    } else {
     }
   }
   if (object_names.size() > 0) {
@@ -47,7 +43,6 @@ int main( int argc, char** argv )
   if (projDir.length() != 0) {
 
     SimpleView mySimpleView(projDir,do_example);
-    mySimpleView.addObjects(object_names);
     mySimpleView.setWindowTitle("SketchBio");
     mySimpleView.show();
  

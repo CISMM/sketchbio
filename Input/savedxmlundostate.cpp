@@ -11,7 +11,7 @@
 
 #include <projecttoxml.h>
 
-SavedXMLUndoState::SavedXMLUndoState(SketchProject &proj,
+SavedXMLUndoState::SavedXMLUndoState(SketchBio::Project &proj,
                                      QSharedPointer<std::string> previous)
     :
       UndoState(proj),
@@ -28,7 +28,7 @@ SavedXMLUndoState::SavedXMLUndoState(SketchProject &proj,
 }
 
 inline void restoreToSavePoint(QSharedPointer< std::string > &savePt,
-                               SketchProject &project)
+                               SketchBio::Project &project)
 {
     if (savePt)
     {
@@ -40,7 +40,7 @@ inline void restoreToSavePoint(QSharedPointer< std::string > &savePt,
             return;
         project.clearProject();
         ProjectToXML::xmlToProject(&project,xml);
-        project.getWorldManager()->setKeyframeOutlinesForTime(project.getViewTime());
+        project.getWorldManager().setKeyframeOutlinesForTime(project.getViewTime());
     }
 }
 

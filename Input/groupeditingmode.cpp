@@ -20,7 +20,7 @@
 // initial port to controlFunctions (i.e. "generalized input")
 #include <controlFunctions.h>
 
-GroupEditingMode::GroupEditingMode(SketchProject *proj, bool const *const b,
+GroupEditingMode::GroupEditingMode(SketchBio::Project *proj, bool const *const b,
                                    double const *const a)
     : ObjectGrabMode(proj, b, a)
 {

@@ -7,10 +7,11 @@
 #include <transformmanager.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
+#include <hand.h>
 
 #include "controlFunctions.h"
 
-SpringEditingMode::SpringEditingMode(SketchProject* proj,
+SpringEditingMode::SpringEditingMode(SketchBio::Project* proj,
                                      const bool* buttonState,
                                      const double* analogState)
     : ObjectGrabMode(proj, buttonState, analogState), snapMode(false)
@@ -93,7 +94,7 @@ void SpringEditingMode::analogsUpdated()
 void SpringEditingMode::doUpdatesForFrame()
 {
 
-  project->setOutlineType(SketchProject::OUTLINE_CONNECTORS);
+  project->setOutlineType(SketchBio::Project::OUTLINE_CONNECTORS);
 
   useLeftJoystickToRotateViewPoint();
 }

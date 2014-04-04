@@ -3,7 +3,9 @@
 
 #include <QObject>
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 
 /*
  * This class is the base for the strategy pattern for input modes.  Classes implementing
@@ -22,10 +24,10 @@ public:
     // b and a will be stored in buttonStatus and analogStatus.  They
     // will be externally updated and kept current, so there is no need
     // to reimplement this functionality in subclasses of HydraInputMode
-    HydraInputMode(SketchProject *proj, bool const * const b, double const * const a);
+    HydraInputMode(SketchBio::Project *proj, bool const * const b, double const * const a);
     virtual ~HydraInputMode();
     // sets this mode to operate on a new project
-    void setProject(SketchProject *proj);
+    void setProject(SketchBio::Project *proj);
     // Called anytime a button is pressed
     virtual void buttonPressed(int vrpn_ButtonNum) = 0;
     // Called anytime a button is released
@@ -69,7 +71,7 @@ protected:
     // fields
     bool const * const isButtonDown;
     double const * const analogStatus;
-    SketchProject *project;
+    SketchBio::Project *project;
 
 	//for rotation of the view
 	double x_degrees;

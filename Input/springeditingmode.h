@@ -9,7 +9,7 @@ class SpringEditingMode : public ObjectGrabMode
 {
   Q_OBJECT
  public:
-  SpringEditingMode(SketchProject *proj, bool const *buttonState,
+  SpringEditingMode(SketchBio::Project *proj, bool const *buttonState,
                     double const *analogState);
   virtual ~SpringEditingMode();
   // Called anytime a button is pressed

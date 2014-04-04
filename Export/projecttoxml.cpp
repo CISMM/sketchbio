@@ -121,7 +121,7 @@ inline void setPreciseVectorAttribute(vtkXMLDataElement* elem,
   elem->SetAttribute(attrName, data.trimmed().toStdString().c_str());
 }
 
-vtkXMLDataElement* ProjectToXML::projectToXML(const SketchProject* project)
+vtkXMLDataElement* ProjectToXML::projectToXML(const SketchBio::Project* project)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(ROOT_ELEMENT_NAME);
@@ -140,7 +140,7 @@ vtkXMLDataElement* ProjectToXML::projectToXML(const SketchProject* project)
   child.TakeReference(
       objectListToXML(project->getWorldManager(), modelIds, objectIds));
   element->AddNestedElement(child);
-  child.TakeReference(replicatorListToXML(project->getReplicas(), objectIds));
+  child.TakeReference(replicatorListToXML(project->getCrystalByExamples(), objectIds));
   element->AddNestedElement(child);
   child.TakeReference(springListToXML(project->getWorldManager(), objectIds));
   element->AddNestedElement(child);
@@ -176,16 +176,16 @@ vtkXMLDataElement* ProjectToXML::objectToClipboardXML(
 }
 
 vtkXMLDataElement* ProjectToXML::modelManagerToXML(
-    const ModelManager* models, const QString& dir,
+    const ModelManager &models, const QString& dir,
     QHash< const SketchModel*, QString >& modelIds)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(MODEL_MANAGER_ELEMENT_NAME);
-  modelIds.reserve(models->getNumberOfModels());
+  modelIds.reserve(models.getNumberOfModels());
 
   int id = 0;
 
-  QVectorIterator< SketchModel* > it = models->getModelIterator();
+  QVectorIterator< SketchModel* > it = models.getModelIterator();
   while (it.hasNext()) {
     const SketchModel* model = it.next();
     QString idStr = QString("M%1").arg(id);
@@ -392,7 +392,7 @@ inline vtkXMLDataElement* matrixToXML(const char* elementName,
 }
 
 vtkXMLDataElement* ProjectToXML::transformManagerToXML(
-    const TransformManager* transforms)
+    const TransformManager &transforms)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(TRANSFORM_MANAGER_ELEMENT_NAME);
@@ -400,21 +400,21 @@ vtkXMLDataElement* ProjectToXML::transformManagerToXML(
   vtkSmartPointer< vtkXMLDataElement > child =
       vtkSmartPointer< vtkXMLDataElement >::Take(
           matrixToXML(TRANSFORM_WORLD_TO_ROOM_ELEMENT_NAME,
-                      transforms->getWorldToRoomMatrix()));
+                      transforms.getWorldToRoomMatrix()));
   element->AddNestedElement(child);
   child.TakeReference(matrixToXML(TRANSFORM_ROOM_TO_EYE_ELEMENT_NAME,
-                                  transforms->getRoomToEyeMatrix()));
+                                  transforms.getRoomToEyeMatrix()));
   element->AddNestedElement(child);
 
   return element;
 }
 
 vtkXMLDataElement* ProjectToXML::objectListToXML(
-    const WorldManager* world,
+    const WorldManager &world,
     const QHash< const SketchModel*, QString >& modelIds,
     QHash< const SketchObject*, QString >& objectIds)
 {
-  return objectListToXML(world->getObjects(), modelIds, objectIds);
+  return objectListToXML(world.getObjects(), modelIds, objectIds);
 }
 
 vtkXMLDataElement* ProjectToXML::objectListToXML(
@@ -580,12 +580,12 @@ vtkXMLDataElement* ProjectToXML::objectToXML(
 }
 
 vtkXMLDataElement* ProjectToXML::replicatorListToXML(
-    const QList< StructureReplicator* >* replicaList,
+    const QList< StructureReplicator* > &replicaList,
     QHash< const SketchObject*, QString >& objectIds)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(REPLICATOR_LIST_ELEMENT_NAME);
-  for (QListIterator< StructureReplicator* > it(*replicaList); it.hasNext();) {
+  for (QListIterator< StructureReplicator* > it(replicaList); it.hasNext();) {
     StructureReplicator* rep = it.next();
     vtkSmartPointer< vtkXMLDataElement > repElement =
         vtkSmartPointer< vtkXMLDataElement >::New();
@@ -621,12 +621,12 @@ vtkXMLDataElement* ProjectToXML::replicatorListToXML(
 }
 
 vtkXMLDataElement* ProjectToXML::springListToXML(
-    const WorldManager* world,
+    const WorldManager &world,
     const QHash< const SketchObject*, QString >& objectIds)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(CONNECTOR_LIST_ELEMENT_NAME);
-  for (QListIterator< Connector* > it = world->getSpringsIterator();
+  for (QListIterator< Connector* > it = world.getSpringsIterator();
        it.hasNext();) {
     const Connector* conn = it.next();
     vtkSmartPointer< vtkXMLDataElement > child =
@@ -719,14 +719,14 @@ vtkXMLDataElement* ProjectToXML::springToXML(
 }
 
 vtkXMLDataElement* ProjectToXML::transformOpListToXML(
-    const QVector< QSharedPointer< TransformEquals > >* ops,
+    const QVector< QSharedPointer< TransformEquals > > &ops,
     const QHash< const SketchObject*, QString >& objectIds)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(TRANSFORM_OP_LIST_ELEMENT_NAME);
 
-  for (int i = 0; i < ops->size(); i++) {
-    QSharedPointer< TransformEquals > op(ops->at(i));
+  for (int i = 0; i < ops.size(); i++) {
+    QSharedPointer< TransformEquals > op(ops.at(i));
     if (!op) continue;
     vtkSmartPointer< vtkXMLDataElement > child =
         vtkSmartPointer< vtkXMLDataElement >::New();
@@ -962,7 +962,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::convertToCurrentVersion(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
-    SketchProject* proj, vtkXMLDataElement* elem)
+    SketchBio::Project* proj, vtkXMLDataElement* elem)
 {
   if (elem == NULL) {
     return XML_TO_DATA_FAILURE;
@@ -1032,7 +1032,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
-    SketchProject* proj, vtkXMLDataElement* elem, double* newPos)
+    SketchBio::Project* proj, vtkXMLDataElement* elem, double* newPos)
 {
   if (QString(elem->GetName()) == QString(ROOT_ELEMENT_NAME)) {
     if (convertToCurrent(elem) == XML_TO_DATA_FAILURE) {
@@ -1064,7 +1064,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
         double bb[6];
         q_vec_type center, pos, dir;
         ColorMapType::Type cmap = objList[i]->getColorMapType();
-        proj->addObject(objList[i]);
+        proj->getWorldManager().addObject(objList[i]);
         objList[i]->getBoundingBox(bb);
         center[0] = (bb[1] + bb[0]) * 0.5;
         center[1] = (bb[3] + bb[2]) * 0.5;
@@ -1090,7 +1090,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchModel* >& modelIds)
 {
   if (QString(elem->GetName()) != QString(MODEL_MANAGER_ELEMENT_NAME)) {
@@ -1108,7 +1108,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchModel* >& modelIds)
 {
   if (QString(elem->GetName()) != QString(MODEL_ELEMENT_NAME)) {
@@ -1189,7 +1189,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
 
   if (model.data() != NULL && conformations == numConformations) {
     if (model.data() != proj->getCameraModel()) {
-      SketchModel* myModel = proj->addModel(model.data());
+      SketchModel* myModel = proj->getModelManager().addModel(model.data());
       if (myModel != model.data()) {
         model.reset(myModel);
       }
@@ -1212,7 +1212,7 @@ inline void matrixFromDoubleArray(vtkMatrix4x4* mat, double* data)
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransforms(
-    SketchProject* proj, vtkXMLDataElement* elem)
+    SketchBio::Project* proj, vtkXMLDataElement* elem)
 {
   if (QString(elem->GetName()) != TRANSFORM_MANAGER_ELEMENT_NAME) {
     return XML_TO_DATA_FAILURE;
@@ -1244,7 +1244,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransforms(
   vtkSmartPointer< vtkMatrix4x4 > reMat =
       vtkSmartPointer< vtkMatrix4x4 >::New();
   matrixFromDoubleArray(reMat, roomEye);
-  proj->setViewpoint(rwMat, reMat);
+  proj->getTransformManager().setWorldToRoomMatrix(rwMat);
+  proj->getTransformManager().setRoomToEyeMatrix(reMat);
   return XML_TO_DATA_SUCCESS;
 }
 
@@ -1542,7 +1543,7 @@ SketchObject* ProjectToXML::readObject(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchModel* >& modelIds,
     QHash< QString, SketchObject* >& objectIds)
 {
@@ -1557,7 +1558,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(
   }
   for (int i = 0; i < objects.size(); i++) {
     ColorMapType::Type cmap = objects[i]->getColorMapType();
-    proj->addObject(objects[i]);
+    proj->getWorldManager().addObject(objects[i]);
     if (objects[i]->numInstances() == 1) {
       objects[i]->setColorMapType(cmap);
     }
@@ -1566,7 +1567,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchObject* >& objectIds)
 {
   if (QString(elem->GetName()) != QString(REPLICATOR_LIST_ELEMENT_NAME)) {
@@ -1623,7 +1624,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(
         return XML_TO_DATA_FAILURE;
       }
       StructureReplicator* rep = new StructureReplicator(
-          first, second, proj->getWorldManager(), grp, repList);
+          first, second, &proj->getWorldManager(), grp, repList);
       proj->addReplication(rep);
     }
   }
@@ -1631,7 +1632,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToReplicatorList(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpringList(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchObject* >& objectIds)
 {
   if (QString(elem->GetName()) != QString(CONNECTOR_LIST_ELEMENT_NAME)) {
@@ -1649,7 +1650,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpringList(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchObject* >& objectIds)
 {
   if (QString(elem->GetName()) != QString(CONNECTOR_ELEMENT_NAME)) {
@@ -1739,7 +1740,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
                            radius);
     }
     conn->setColorMapType(cmap);
-    proj->addConnector(conn);
+    proj->getWorldManager().addConnector(conn);
   } else if (objCount == 2) {
     if (hasK) {
       conn = SpringConnection::makeSpring(objectIds.value(obj1Id),
@@ -1750,7 +1751,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
                            o1Pos, o2Pos, alpha, radius);
     }
     conn->setColorMapType(cmap);
-    proj->addConnector(conn);
+    proj->getWorldManager().addConnector(conn);
   } else {
     return XML_TO_DATA_FAILURE;
   }
@@ -1758,7 +1759,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransformOpList(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchObject* >& objectIds)
 {
   for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
@@ -1774,7 +1775,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransformOpList(
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransformOp(
-    SketchProject* proj, vtkXMLDataElement* elem,
+    SketchBio::Project* proj, vtkXMLDataElement* elem,
     QHash< QString, SketchObject* >& objectIds)
 {
   if (elem->GetNumberOfNestedElements() == 0) {

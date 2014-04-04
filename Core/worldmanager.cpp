@@ -108,6 +108,9 @@ SketchObject *WorldManager::addObject(SketchObject *object)
     insertActors(object);
   }
   object->addObserver(this);
+  foreach(WorldObserver *w, observers) {
+      w->objectAdded(object);
+  }
   return object;
 }
 
@@ -134,6 +137,9 @@ void WorldManager::removeObject(SketchObject *object)
     if (objects.contains(r) && grp != NULL) {
       grp->removeObject(object);
     }
+  }
+  foreach(WorldObserver *w, observers) {
+      w->objectRemoved(object);
   }
 }
 //##################################################################################################
@@ -725,6 +731,9 @@ void WorldManager::subobjectAdded(SketchObject *parent, SketchObject *child)
   if (child->isVisible() || isShowingInvisible()) {
     insertActors(child);
   }
+  foreach(WorldObserver *w, observers) {
+      w->objectAdded(child);
+  }
 }
 
 //##################################################################################################
@@ -733,6 +742,23 @@ void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 {
   removeActors(child);
   removeShadows(child);
+  foreach(WorldObserver *w, observers) {
+      w->objectRemoved(child);
+  }
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::addObserver(WorldObserver *w)
+{
+    observers.append(w);
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::removeObserver(WorldObserver *w)
+{
+    observers.removeOne(w);
 }
 
 //##################################################################################################

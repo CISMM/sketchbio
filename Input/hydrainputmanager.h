@@ -11,7 +11,9 @@
 #include <QSharedPointer>
 
 #include "sketchioconstants.h"
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 
 class HydraInputMode;
 
@@ -19,9 +21,9 @@ class HydraInputManager : public QObject
 {
     Q_OBJECT
 public:
-    HydraInputManager(SketchProject *proj);
+    HydraInputManager(SketchBio::Project *proj);
     virtual ~HydraInputManager();
-    void setProject(SketchProject *proj);
+    void setProject(SketchBio::Project *proj);
     void handleCurrentInput();
     void updateTrackerObjectConnections();
     QString getModeName();
@@ -59,7 +61,7 @@ private:
     static void VRPN_CALLBACK handle_button(void *userdata, const vrpn_BUTTONCB b);
     static void VRPN_CALLBACK handle_analogs(void *userdata, const vrpn_ANALOGCB a);
 
-    SketchProject *project;
+    SketchBio::Project *project;
     vrpn_Tracker_Remote tracker;
     vrpn_Button_Remote buttons;
     vrpn_Analog_Remote analogRemote;

@@ -24,43 +24,43 @@ using std::endl;
 namespace CompareBeforeAndAfter
 {
 
-void compareNumbers(SketchProject* proj1, SketchProject* proj2, int& retVal)
+void compareNumbers(SketchBio::Project* proj1, SketchBio::Project* proj2, int& retVal)
 {
     // make sure both have camera models created (easier than making sure neither has it)
     proj1->getCameraModel();
     proj2->getCameraModel();
-    if (proj2->getModelManager()->getNumberOfModels()
-            != proj1->getModelManager()->getNumberOfModels())
+    if (proj2->getModelManager().getNumberOfModels()
+            != proj1->getModelManager().getNumberOfModels())
     {
         retVal++;
         PRINT_ERROR("Number of models different");
     }
-    if (proj2->getWorldManager()->getNumberOfObjects()
-            != proj1->getWorldManager()->getNumberOfObjects())
+    if (proj2->getWorldManager().getNumberOfObjects()
+            != proj1->getWorldManager().getNumberOfObjects())
     {
         retVal++;
         PRINT_ERROR("Number of objects is different");
     }
-    if (proj1->getWorldManager()->getNumberOfConnectors()
-            != proj2->getWorldManager()->getNumberOfConnectors())
+    if (proj1->getWorldManager().getNumberOfConnectors()
+            != proj2->getWorldManager().getNumberOfConnectors())
     {
         retVal++;
         PRINT_ERROR("Number of springs is different");
     }
-    if (proj1->getNumberOfReplications()
-            != proj2->getNumberOfReplications())
+    if (proj1->getNumberOfCrystalByExamples()
+            != proj2->getNumberOfCrystalByExamples())
     {
         retVal++;
         PRINT_ERROR("Number of replications is different");
     }
-    if (proj1->getTransformOps()->size()
-            != proj2->getTransformOps()->size())
+    if (proj1->getNumberOfTransformOps()
+            != proj2->getNumberOfTransformOps())
     {
         retVal++;
         PRINT_ERROR("Number of transform ops is different");
     }
-    if (proj1->getCameras()->size()
-            != proj2->getCameras()->size() )
+    if (proj1->getCameras().size()
+            != proj2->getCameras().size() )
     {
         retVal++;
         PRINT_ERROR("Number of cameras is different");
@@ -87,7 +87,13 @@ void compareModels(const SketchModel* m1, const SketchModel* m2, int& numDiffere
                 != m2->getFileNameFor(i,ModelResolution::FULL_RESOLUTION))
         {
             numDifferences++;
-            if (printDiffs) PRINT_ERROR("Conformation " << i << " filenames are different.");
+            if (printDiffs) {
+                PRINT_ERROR("Conformation " << i << " filenames are different.");
+                std::cout << m1->getFileNameFor(
+                                 i,ModelResolution::FULL_RESOLUTION).toStdString() << std::endl;
+                std::cout << m2->getFileNameFor(
+                                 i,ModelResolution::FULL_RESOLUTION).toStdString() << std::endl;
+            }
         }
         if (m1->getFileNameFor(i,ModelResolution::SIMPLIFIED_FULL_RESOLUTION)
                 != m2->getFileNameFor(i,ModelResolution::SIMPLIFIED_FULL_RESOLUTION))
@@ -126,6 +132,32 @@ void compareModels(const SketchModel* m1, const SketchModel* m2, int& numDiffere
     }
 }
 
+static inline double computeEpsilonModifier(const SketchObject *o)
+{
+    double epsilon_modifier = 1;
+    const SketchObject* p = o->getParent();
+    // if this is the case, it is probably a replica, so give a higher tolerance
+    if (o->isLocalTransformPrecomputed() && p != NULL)
+    {
+        double d = (4.0 * p->getSubObjects()->size());
+        epsilon_modifier *= d;
+    }
+    while (p != NULL)
+    {
+        epsilon_modifier *= 8;
+        p = p->getParent();
+    }
+    return epsilon_modifier;
+}
+
+static inline double computeVectorEpsilon(const q_vec_type v)
+{
+    double vector_epsilon = max(max(Q_ABS(v[0]*Q_EPSILON),
+                   Q_ABS(v[1]*Q_EPSILON)),
+            Q_ABS(v[2]*Q_EPSILON));
+    return vector_epsilon;
+}
+
 void compareObjects(const SketchObject* o1, const SketchObject* o2,
                     int& numDifferences, bool printDiffs, bool compareKeyframes)
 {
@@ -148,26 +180,12 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
         if (printDiffs) PRINT_ERROR("Different numbers of objects contained in groups!");
         return;
     }
-    double epsilon_modifier = 1;
-    const SketchObject* p = o1->getParent();
-    // if this is the case, it is probably a replica, so give a higher tolerance
-    if (o1->isLocalTransformPrecomputed() && p != NULL)
-    {
-        double d = (4.0 * p->getSubObjects()->size());
-        epsilon_modifier *= d;
-    }
-    while (p != NULL)
-    {
-        epsilon_modifier *= 8;
-        p = p->getParent();
-    }
+    double epsilon_modifier = computeEpsilonModifier(o1);
     q_vec_type pos1, pos2;
     q_type orient1, orient2;
     o1->getPosition(pos1);
     // we have to take the maximum dimension into account for the epsilon value too...
-    double vector_epsilon = max(max(Q_ABS(pos1[0]*Q_EPSILON),
-                   Q_ABS(pos1[1]*Q_EPSILON)),
-            Q_ABS(pos1[2]*Q_EPSILON));
+    double vector_epsilon = computeVectorEpsilon(pos1);
     o1->getOrientation(orient1);
     o2->getPosition(pos2);
     o2->getOrientation(orient2);
@@ -409,19 +427,19 @@ void compareObjectLists(const QList< SketchObject* >& list1,
 
 }
 
-void compareCameras(SketchProject* proj1, SketchProject* proj2, int& retVal)
+void compareCameras(SketchBio::Project* proj1, SketchBio::Project* proj2, int& retVal)
 {
-    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >* cameras1 =
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > > &cameras1 =
             proj1->getCameras();
-    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >* cameras2 =
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > > &cameras2 =
             proj2->getCameras();
-    for (QHashIterator< SketchObject*, vtkSmartPointer< vtkCamera > > it (*cameras1);
+    for (QHashIterator< SketchObject*, vtkSmartPointer< vtkCamera > > it (cameras1);
          it.hasNext(); )
     {
         SketchObject* obj1 = it.next().key();
         bool match = false;
         for (QHashIterator< SketchObject*, vtkSmartPointer< vtkCamera > >
-             it2(*cameras2); it2.hasNext(); )
+             it2(cameras2); it2.hasNext(); )
         {
             SketchObject* obj2 = it2.next().key();
             int numDiffs = 0;
@@ -529,10 +547,10 @@ void compareTransformOpLists(const QVector<QSharedPointer<TransformEquals> >& li
     }
 }
 
-void compareWorldObjects(SketchProject* proj1, SketchProject* proj2, int& retVal)
+void compareWorldObjects(SketchBio::Project* proj1, SketchBio::Project* proj2, int& retVal)
 {
-    compareObjectLists(*proj1->getWorldManager()->getObjects(),
-                       *proj2->getWorldManager()->getObjects(),
+    compareObjectLists(*proj1->getWorldManager().getObjects(),
+                       *proj2->getWorldManager().getObjects(),
                        retVal,true,true);
 }
 
@@ -625,7 +643,8 @@ void compareConnectors(const Connector* c1, const Connector* c2,
         {
             c1->getObject1ConnectionPosition(pos1);
             c2->getObject2ConnectionPosition(pos2);
-            if (!q_vec_equals(pos1,pos2))
+            double vectorEpsilon = computeVectorEpsilon(pos1);
+            if (!q_vec_equals(pos1,pos2,vectorEpsilon))
             {
                 mydiffs++;
                 if (printDiffs) PRINT_ERROR("Object connection positions don't match");
@@ -641,7 +660,8 @@ void compareConnectors(const Connector* c1, const Connector* c2,
             {
                 c1->getObject2ConnectionPosition(pos1);
                 c2->getObject1ConnectionPosition(pos2);
-                if (!q_vec_equals(pos1,pos2))
+                double vectorEpsilon = computeVectorEpsilon(pos1);
+                if (!q_vec_equals(pos1,pos2,vectorEpsilon))
                 {
                     mydiffs++;
                     if (printDiffs) PRINT_ERROR("Object connection positions don't match");
@@ -653,7 +673,8 @@ void compareConnectors(const Connector* c1, const Connector* c2,
     { // the first objects match
         c1->getObject1ConnectionPosition(pos1);
         c2->getObject1ConnectionPosition(pos2);
-        if (!q_vec_equals(pos1,pos2))
+        double vectorEpsilon = computeVectorEpsilon(pos1);
+        if (!q_vec_equals(pos1,pos2,vectorEpsilon))
         {
             mydiffs++;
             if (printDiffs) PRINT_ERROR("Object connection positions don't match");
@@ -669,7 +690,8 @@ void compareConnectors(const Connector* c1, const Connector* c2,
         { // if the second objects match
             c1->getObject2ConnectionPosition(pos1);
             c2->getObject2ConnectionPosition(pos2);
-            if (!q_vec_equals(pos1,pos2))
+            double vectorEpsilon = computeVectorEpsilon(pos1);
+            if (!q_vec_equals(pos1,pos2,vectorEpsilon))
             {
                 mydiffs++;
                 if (printDiffs) PRINT_ERROR("Object connection positions don't match");
@@ -752,7 +774,7 @@ void compareConnectorLists(const QList< Connector* >& list1,
             if (!used.data()[i])
             {
                 int diffs = 0;
-                compareConnectors(n1,n2,diffs,false);
+                compareConnectors(n1,n2,diffs,true);
                 if (diffs == 0)
                 {
                     used.data()[i] = true;
@@ -769,16 +791,16 @@ void compareConnectorLists(const QList< Connector* >& list1,
     }
 }
 
-void compareProjects(SketchProject* proj1, SketchProject* proj2, int& differences)
+void compareProjects(SketchBio::Project* proj1, SketchBio::Project* proj2, int& differences)
 {
     compareNumbers(proj1,proj2,differences);
     compareWorldObjects(proj1,proj2,differences);
-    compareConnectorLists(proj1->getWorldManager()->getSprings(),
-                       proj2->getWorldManager()->getSprings(),differences,true);
+    compareConnectorLists(proj1->getWorldManager().getSprings(),
+                       proj2->getWorldManager().getSprings(),differences,true);
     compareCameras(proj1,proj2,differences);
-    compareReplicationLists(*proj1->getReplicas(),*proj2->getReplicas(),
+    compareReplicationLists(proj1->getCrystalByExamples(),proj2->getCrystalByExamples(),
                             differences,true);
-    compareTransformOpLists(*proj1->getTransformOps(),*proj2->getTransformOps(),
+    compareTransformOpLists(proj1->getTransformOps(),proj2->getTransformOps(),
                             differences,true);
 }
 

@@ -29,13 +29,13 @@ using std::endl;
 
 #define PRINT_OUT_XML_TESTNUM -1
 
-int saveLoadAndTest(SketchProject *proj, int testNum, bool writeToFile = false)
+int saveLoadAndTest(SketchBio::Project *proj, int testNum, bool writeToFile = false)
 {
     int retVal = 0;
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj2(
-                new SketchProject(r,proj->getProjectDir()));
+    QScopedPointer< SketchBio::Project > proj2(
+                new SketchBio::Project(r,proj->getProjectDir()));
 
     vtkSmartPointer< vtkXMLDataElement > root =
             vtkSmartPointer< vtkXMLDataElement >::Take(
@@ -87,8 +87,8 @@ int testSave1()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     MakeTestProject::addObjectToProject(proj1.data(),0);
     MakeTestProject::addObjectToProject(proj1.data(),1);
@@ -101,8 +101,8 @@ int testSave2()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     MakeTestProject::addObjectToProject(proj1.data());
     MakeTestProject::addObjectToProject(proj1.data());
@@ -115,8 +115,8 @@ int testSave3()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     StructureReplicator *rep =
             MakeTestProject::addReplicationToProject(proj1.data(),12);
@@ -130,8 +130,8 @@ int testSave4()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     StructureReplicator *rep =
             MakeTestProject::addReplicationToProject(proj1.data(),12);
@@ -154,8 +154,8 @@ int testSave5()
 {
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > project(
-                new SketchProject(r,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > project(
+                new SketchBio::Project(r,SAVE_TEST_DIR));
 
     StructureReplicator *rep =
             MakeTestProject::addReplicationToProject(project.data(),12);
@@ -171,8 +171,8 @@ int testSave6()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     SketchObject *o1 = MakeTestProject::addObjectToProject(proj1.data());
     SketchObject *o2 = MakeTestProject::addObjectToProject(proj1.data());
@@ -193,8 +193,8 @@ int testSave7()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     MakeTestProject::addTransformEqualsToProject(proj1.data(),2);
     MakeTestProject::addObjectToProject(proj1.data());
@@ -206,8 +206,8 @@ int testSave8()
 {
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,SAVE_TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,SAVE_TEST_DIR));
 
     MakeTestProject::addObjectToProject(proj1.data());
     MakeTestProject::addObjectToProject(proj1.data());
@@ -223,10 +223,10 @@ int testSave9()
 	//reads a version 0 save file to see if it can convert up correctly
     vtkSmartPointer< vtkRenderer > r =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > project(
-                new SketchProject(r,LOAD_ONLY_TEST_DIR));
+    QScopedPointer< SketchBio::Project > project(
+                new SketchBio::Project(r,LOAD_ONLY_TEST_DIR));
 
-    QDir dir = project->getProjectDir();
+    QDir dir(project->getProjectDir());
     QString file = dir.absoluteFilePath(PROJECT_XML_FILENAME);
 
     vtkSmartPointer< vtkXMLDataElement > root =
