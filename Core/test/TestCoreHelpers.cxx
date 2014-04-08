@@ -2,17 +2,17 @@
 
 #include <iostream>
 
-#include <quat.h>
-
 #include <QString>
 
 #include <vtkSphereSource.h>
 #include <vtkCubeSource.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+#include <vtkMatrix4x4.h>
 
 #include <sketchtests.h>
 #include <sketchioconstants.h>
+#include <transformmanager.h>
 #include <modelutilities.h>
 #include <sketchmodel.h>
 #include <keyframe.h>
@@ -60,7 +60,24 @@ SketchModel *getSphereModel()
     model->addConformation(fileName,fileName);
     return model;
 }
+//#########################################################################
+//#########################################################################
+void setTrackerWorldPosition(TransformManager &t, SketchBioHandId::Type side,
+                             const q_vec_type pos)
+{
+    vtkSmartPointer< vtkMatrix4x4 > identity =
+            vtkSmartPointer< vtkMatrix4x4 >::New();
+    identity->Identity();
+    t.setTrackerToRoomMatrix(identity);
+    t.setWorldToRoomMatrix(identity);
+    q_xyz_quat_type location;
+    q_vec_copy(location.xyz,pos);
+    q_make(location.quat,1,0,0,0);
+    t.setHandTransform(&location,side);
+}
 
+//#########################################################################
+//#########################################################################
 #define PRINT_ERROR(M) std::cout << M << std::endl
 #define ObjectTestNewMacro(TYPE) static ObjectTest* New(void*) { return new TYPE; }
 #define ObjectTestNameMacro(NAME) virtual const char* getTestName() { return NAME; }

@@ -9,8 +9,7 @@
 static inline void q_xyz_quat_copy(q_xyz_quat_struct *dest,
                                    const q_xyz_quat_struct *src)
 {
-  q_copy(dest->quat, src->quat);
-  q_vec_copy(dest->xyz, src->xyz);
+    *dest = *src;
 }
 
 TransformManager::TransformManager()
@@ -70,6 +69,15 @@ void TransformManager::setWorldToRoomMatrix(vtkMatrix4x4 *matrix)
 {
   worldToRoom->Identity();
   worldToRoom->SetMatrix(matrix);
+}
+
+void TransformManager::setTrackerToRoomMatrix(vtkMatrix4x4 *matrix)
+{
+    vtkSmartPointer< vtkMatrix4x4 > inverse =
+            vtkSmartPointer< vtkMatrix4x4 >::New();
+    vtkMatrix4x4::Invert(matrix,inverse);
+    roomToTrackerBase->Identity();
+    roomToTrackerBase->SetMatrix(inverse);
 }
 
 const vtkMatrix4x4 *TransformManager::getRoomToEyeMatrix() const
