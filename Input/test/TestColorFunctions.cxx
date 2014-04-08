@@ -94,7 +94,10 @@ int testChangeObjectColor()
   }
   
   //case where nearest object distant less than threshold, but connector isnt
-  Connector *c = proj.getWorldManager().addSpring(NULL, NULL, vector, vector, true, 2, 3, 4);
+  q_vec_type pos1 = {0,0,0};
+  q_vec_type pos2 = {3,0,0};
+  Connector *c = new Connector(NULL,NULL,pos1,pos2);
+  proj.getWorldManager().addConnector(c);
   q_vec_set(vector,10,10,10);
   obj->setPosition(vector);
   
