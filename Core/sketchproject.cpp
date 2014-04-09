@@ -308,18 +308,6 @@ class Project::ProjectImpl : public WorldObserver
         const;
     // the project directory
     QString getProjectDir() const;
-    // ##################################################################
-    // Outline functions:
-    // update the object used for the outlines
-    void setOutlineObject(int outlineIdx, SketchObject* obj);
-    // update the spring used for the outlines
-    void setOutlineSpring(int outlineIdx, Connector* conn, bool end1Large);
-    // show/hide the outlines of objects
-    void setOutlineVisible(int outlineIdx, bool visible);
-    // tell if the outlines for a particular side are visible
-    bool isOutlineVisible(int outlineIdx);
-    // set if outlining springs or objects
-    void setOutlineType(OutlineType type);
     // ###################################################################
     // Frame update functions:
     // functions to update things every frame
@@ -438,39 +426,6 @@ class Project::ProjectImpl : public WorldObserver
     // other ui stuff
     // the objects that represent the user's hands
     Hand hand[2];
-    // data needed to outline things
-    struct OutlineData
-    {
-        // the mapper
-        vtkSmartPointer< vtkPolyDataMapper > mapper;
-        // the actor
-        vtkSmartPointer< vtkActor > actor;
-        // the object outlined
-        SketchObject* obj;
-        // the connector outlined
-        Connector* conn;
-        // the large end of the connector
-        bool atEnd1;
-        // the type of outline shown
-        Project::OutlineType outlineType;
-        // is this outline visible?
-        bool isShown;
-        OutlineData()
-            : mapper(vtkSmartPointer< vtkPolyDataMapper >::New()),
-              actor(vtkSmartPointer< vtkActor >::New()),
-              obj(NULL),
-              conn(NULL),
-              atEnd1(false),
-              outlineType(OUTLINE_OBJECTS),
-              isShown(false)
-        {
-            actor->SetMapper(mapper);
-            actor->GetProperty()->SetLighting(false);
-            actor->GetProperty()->SetColor(
-                OUTLINES_COLOR_VAL, OUTLINES_COLOR_VAL, OUTLINES_COLOR_VAL);
-        }
-    };
-    OutlineData outlines[2];
 
     vtkSmartPointer< vtkPlaneSource > shadowFloorSource;
     vtkSmartPointer< vtkActor > shadowFloorActor, floorLinesActor;
@@ -497,7 +452,6 @@ Project::ProjectImpl::ProjectImpl(vtkRenderer* r, const QString& projDir)
       projectDirName(projDir),
       undoStack(),
       redoStack(),
-      outlines(),
       shadowFloorSource(vtkSmartPointer< vtkPlaneSource >::New()),
       shadowFloorActor(vtkSmartPointer< vtkActor >::New()),
       floorLinesActor(vtkSmartPointer< vtkActor >::New()),
@@ -508,10 +462,10 @@ Project::ProjectImpl::ProjectImpl(vtkRenderer* r, const QString& projDir)
       opState(NULL)
 {
     world.addObserver(this);
-    hand[SketchBioHandId::LEFT].init(&transforms, &world,
-                                     SketchBioHandId::LEFT);
+    hand[SketchBioHandId::LEFT].init(&transforms, &world, SketchBioHandId::LEFT,
+                                     renderer);
     hand[SketchBioHandId::RIGHT].init(&transforms, &world,
-                                      SketchBioHandId::RIGHT);
+                                      SketchBioHandId::RIGHT, renderer);
     renderer->AddActor(hand[SketchBioHandId::LEFT].getHandActor());
     renderer->AddActor(hand[SketchBioHandId::RIGHT].getHandActor());
     QDir dir(projectDirName);
@@ -595,148 +549,14 @@ const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >&
 }
 QString Project::ProjectImpl::getProjectDir() const { return projectDirName; }
 //########################################################################
-// Outline functions
-void Project::ProjectImpl::setOutlineObject(int outlineIdx, SketchObject* obj)
-{
-    if (obj == outlines[outlineIdx].obj) {
-        return;
-    }
-    vtkPolyDataMapper* mapper = outlines[outlineIdx].mapper;
-    vtkActor* actor = outlines[outlineIdx].actor;
-    mapper->SetInputConnection(
-        obj->getOrientedBoundingBoxes()->GetOutputPort());
-    mapper->Update();
-    outlines[outlineIdx].obj = obj;
-    // TODO - fix this hack color stuff
-    if (obj->getParent() != NULL) {
-        actor->GetProperty()->SetColor(1, 0, 0);
-    } else {
-        actor->GetProperty()->SetColor(OUTLINES_COLOR_VAL, OUTLINES_COLOR_VAL,
-                                       OUTLINES_COLOR_VAL);
-    }
-}
-
-void Project::ProjectImpl::setOutlineSpring(int outlineIdx, Connector* conn,
-                                            bool end1Large)
-{
-    if (conn == outlines[outlineIdx].conn &&
-        end1Large == outlines[outlineIdx].atEnd1) {
-        return;
-    }
-    vtkPolyDataMapper* mapper = outlines[outlineIdx].mapper;
-    vtkActor* actor = outlines[outlineIdx].actor;
-    outlines[outlineIdx].conn = conn;
-    outlines[outlineIdx].atEnd1 = end1Large;
-    q_vec_type end1, end2, midpoint, direction;
-    conn->getEnd1WorldPosition(end1);
-    conn->getEnd2WorldPosition(end2);
-    q_vec_add(midpoint, end1, end2);
-    q_vec_scale(midpoint, .5, midpoint);
-    q_vec_subtract(direction, end2, end1);
-    double length = q_vec_magnitude(direction);
-    if (!end1Large) {
-        q_vec_invert(direction, direction);
-    }
-    vtkSmartPointer< vtkConeSource > cone =
-        vtkSmartPointer< vtkConeSource >::New();
-    cone->SetCenter(midpoint);
-    cone->SetDirection(direction);
-    cone->SetHeight(length);
-    cone->SetRadius(50);
-    cone->SetResolution(4);
-    cone->Update();
-
-    vtkSmartPointer< vtkExtractEdges > edges =
-        vtkSmartPointer< vtkExtractEdges >::New();
-    edges->SetInputConnection(cone->GetOutputPort());
-    edges->Update();
-
-    mapper->SetInputConnection(edges->GetOutputPort());
-    mapper->Update();
-
-    actor->GetProperty()->SetColor(OUTLINES_COLOR_VAL, OUTLINES_COLOR_VAL,
-                                   OUTLINES_COLOR_VAL);
-}
-
-void Project::ProjectImpl::setOutlineVisible(int outlineIdx, bool visible)
-{
-    if (outlines[outlineIdx].isShown == visible) {
-        return;
-    }
-    vtkActor* actor = outlines[outlineIdx].actor;
-    if (visible) {
-        renderer->AddActor(actor);
-    } else {
-        renderer->RemoveActor(actor);
-    }
-    outlines[outlineIdx].isShown = visible;
-}
-
-bool Project::ProjectImpl::isOutlineVisible(int outlineIdx)
-{
-    return outlines[outlineIdx].isShown;
-}
-
-void Project::ProjectImpl::setOutlineType(OutlineType type)
-{
-    outlines[0].outlineType = type;
-    updateOutlines(SketchBioHandId::LEFT);
-    outlines[1].outlineType = type;
-    updateOutlines(SketchBioHandId::RIGHT);
-    if (type == OUTLINE_OBJECTS) {
-        outlines[0].conn = NULL;
-        outlines[1].conn = NULL;
-    } else {
-        assert(type == OUTLINE_CONNECTORS);
-        outlines[0].obj = NULL;
-        outlines[1].obj = NULL;
-    }
-}
-
-void Project::ProjectImpl::updateOutlines(SketchBioHandId::Type side)
-{
-    bool outlinesShowing = isOutlineVisible(side);
-    bool shouldOutlinesShow;
-    double dist;
-    switch (outlines[side].outlineType) {
-        case OUTLINE_OBJECTS:
-            dist = hand[side].getNearestObjectDistance();
-            shouldOutlinesShow = dist < DISTANCE_THRESHOLD;
-            break;
-        case OUTLINE_CONNECTORS:
-            dist = hand[side].getNearestConnectorDistance();
-            shouldOutlinesShow = dist < SPRING_DISTANCE_THRESHOLD;
-            break;
-    }
-    // don't show outlines during animation
-    if (isShowingAnimation()) {
-        shouldOutlinesShow = false;
-    }
-    if (shouldOutlinesShow != outlinesShowing) {
-        setOutlineVisible(side, shouldOutlinesShow);
-    }
-}
-//########################################################################
 // Frame update functions
 void Project::ProjectImpl::updateTrackerPositions()
 {
     for (int i = 0; i < 2; ++i) {
         hand[i].updatePositionAndOrientation();
         hand[i].updateGrabbed();
+        // this function call takes care of updating the outlines
         hand[i].computeNearestObjectAndConnector();
-        SketchObject* nearest = hand[i].getNearestObject();
-        bool atEnd1;
-        Connector* connector = hand[i].getNearestConnector(&atEnd1);
-        if (outlines[i].obj != nearest &&
-            outlines[i].outlineType == OUTLINE_OBJECTS) {
-            setOutlineObject(i, nearest);
-        }
-        if (((outlines[i].conn != connector) ||
-             (outlines[i].atEnd1 != atEnd1)) &&
-            outlines[i].outlineType == OUTLINE_CONNECTORS) {
-            setOutlineSpring(i, connector, atEnd1);
-        }
-        updateOutlines(i ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
     }
 }
 void Project::ProjectImpl::timestep(double dt)
@@ -779,11 +599,8 @@ void Project::ProjectImpl::startAnimation()
     timeInAnimation = 0.0;
     renderer->RemoveActor(hand[SketchBioHandId::LEFT].getHandActor());
     renderer->RemoveActor(hand[SketchBioHandId::RIGHT].getHandActor());
-    for (int i = 0; i < 2; i++) {
-        if (outlines[i].isShown) {
-            renderer->RemoveViewProp(outlines[i].actor);
-        }
-    }
+    hand[SketchBioHandId::LEFT].setShowingSelectionOutline(false);
+    hand[SketchBioHandId::RIGHT].setShowingSelectionOutline(false);
     hand[SketchBioHandId::LEFT].clearState();
     hand[SketchBioHandId::RIGHT].clearState();
     world.hideInvisibleObjects();
@@ -801,6 +618,8 @@ void Project::ProjectImpl::stopAnimation()
     isDoingAnimation = false;
     renderer->AddActor(hand[SketchBioHandId::LEFT].getHandActor());
     renderer->AddActor(hand[SketchBioHandId::RIGHT].getHandActor());
+    hand[SketchBioHandId::LEFT].setShowingSelectionOutline(true);
+    hand[SketchBioHandId::RIGHT].setShowingSelectionOutline(true);
     // distances and outlines actors will refresh themselves
     // handed springs and world grab should refresh themselves too
     world.showInvisibleObjects();
@@ -891,8 +710,6 @@ void Project::ProjectImpl::clearProject()
     replicas.clear();
     world.clearObjects();
     world.clearConnectors();
-    setOutlineVisible(SketchBioHandId::LEFT, false);
-    setOutlineVisible(SketchBioHandId::RIGHT, false);
     hand[SketchBioHandId::LEFT].clearState();
     hand[SketchBioHandId::RIGHT].clearState();
 }
@@ -1108,26 +925,6 @@ const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >&
     return impl->getCameras();
 }
 QString Project::getProjectDir() const { return impl->getProjectDir(); }
-//########################################################################
-// Outline functions
-void Project::setOutlineObject(SketchBioHandId::Type side, SketchObject* obj)
-{
-    impl->setOutlineObject(side, obj);
-}
-void Project::setOutlineSpring(SketchBioHandId::Type side, Connector* conn,
-                               bool end1Large)
-{
-    impl->setOutlineSpring(side, conn, end1Large);
-}
-void Project::setOutlineVisible(SketchBioHandId::Type side, bool visible)
-{
-    impl->setOutlineVisible(side, visible);
-}
-bool Project::isOutlineVisible(SketchBioHandId::Type side)
-{
-    return impl->isOutlineVisible(side);
-}
-void Project::setOutlineType(OutlineType type) { impl->setOutlineType(type); }
 //########################################################################
 // Frame update functions
 void Project::updateTrackerPositions() { impl->updateTrackerPositions(); }

@@ -58,7 +58,6 @@ class Project
 {
 public:
 
-    enum OutlineType { OUTLINE_CONNECTORS, OUTLINE_OBJECTS};
 
     Project(vtkRenderer* r, const QString& projDir);
     ~Project();
@@ -88,18 +87,6 @@ public:
     const QHash< SketchObject*, vtkSmartPointer< vtkCamera > > &getCameras() const;
     // the project directory
     QString getProjectDir() const;
-    // ##################################################################
-    // Outline functions:
-    // update the object used for the outlines
-    void setOutlineObject(SketchBioHandId::Type side, SketchObject* obj);
-    // update the spring used for the outlines
-    void setOutlineSpring(SketchBioHandId::Type side, Connector* conn, bool end1Large);
-    // show/hide the outlines of objects
-    void setOutlineVisible(SketchBioHandId::Type side, bool visible);
-    // tell if the outlines for a particular side are visible
-    bool isOutlineVisible(SketchBioHandId::Type side);
-    // set if outlining springs or objects
-    void setOutlineType(OutlineType type);
     // ###################################################################
     // Frame update functions:
     // functions to update things every frame

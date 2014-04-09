@@ -659,7 +659,6 @@ void deleteObject(SketchBio::Project *project, int hand, bool wasPressed)
       SketchObject* obj = handObj.getNearestObject();
       handObj.clearNearestObject();
       project->getWorldManager().deleteObject(obj);
-      project->setOutlineVisible(h,false);
     }
     addXMLUndoState(project);
     //        emit newDirectionsString(" ");

@@ -13,8 +13,8 @@
 // initial port to controlFunctions (i.e. "generalized input")
 #include <controlFunctions.h>
 
-ColorEditingMode::ColorEditingMode(SketchBio::Project* proj, const bool* const b,
-                                   const double* const a)
+ColorEditingMode::ColorEditingMode(SketchBio::Project* proj,
+                                   const bool* const b, const double* const a)
     : ObjectGrabMode(proj, b, a)
 {
 }
@@ -23,51 +23,52 @@ ColorEditingMode::~ColorEditingMode() {}
 
 void ColorEditingMode::buttonPressed(int vrpn_ButtonNum)
 {
-  if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX)) {
-    ControlFunctions::grabObjectOrWorld(project, 0, true);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
-    ControlFunctions::grabObjectOrWorld(project, 1, true);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX)) {
-    ControlFunctions::changeObjectColor(project, 1, true);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
-    ControlFunctions::changeObjectColorVariable(project, 1, true);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
-    ControlFunctions::toggleObjectVisibility(project, 1, true);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
-    ControlFunctions::toggleShowInvisibleObjects(project, 1, true);
-  }
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX)) {
+        ControlFunctions::grabObjectOrWorld(project, 0, true);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
+        ControlFunctions::grabObjectOrWorld(project, 1, true);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX)) {
+        ControlFunctions::changeObjectColor(project, 1, true);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
+        ControlFunctions::changeObjectColorVariable(project, 1, true);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
+        ControlFunctions::toggleObjectVisibility(project, 1, true);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
+        ControlFunctions::toggleShowInvisibleObjects(project, 1, true);
+    }
 }
 
 void ColorEditingMode::buttonReleased(int vrpn_ButtonNum)
 {
-  if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX)) {
-    ControlFunctions::grabObjectOrWorld(project, 0, false);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
-    ControlFunctions::grabObjectOrWorld(project, 1, false);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX)) {
-    ControlFunctions::changeObjectColor(project, 1, false);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
-    ControlFunctions::changeObjectColorVariable(project, 1, false);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
-    ControlFunctions::toggleObjectVisibility(project, 1, false);
-  } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
-    ControlFunctions::toggleShowInvisibleObjects(project, 1, false);
-  } else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX)) {
-    ControlFunctions::resetViewPoint(project, 0, false);
-  }
+    if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX)) {
+        ControlFunctions::grabObjectOrWorld(project, 0, false);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(BUMPER_BUTTON_IDX)) {
+        ControlFunctions::grabObjectOrWorld(project, 1, false);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(ONE_BUTTON_IDX)) {
+        ControlFunctions::changeObjectColor(project, 1, false);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
+        ControlFunctions::changeObjectColorVariable(project, 1, false);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
+        ControlFunctions::toggleObjectVisibility(project, 1, false);
+    } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
+        ControlFunctions::toggleShowInvisibleObjects(project, 1, false);
+    } else if (vrpn_ButtonNum == BUTTON_LEFT(THUMBSTICK_CLICK_IDX)) {
+        ControlFunctions::resetViewPoint(project, 0, false);
+    }
 }
 
 void ColorEditingMode::doUpdatesForFrame()
 {
-  ObjectGrabMode::doUpdatesForFrame();
-  SketchBio::Hand& rhand = project->getHand(SketchBioHandId::RIGHT);
-  if (rhand.getNearestObjectDistance() < DISTANCE_THRESHOLD) {
-    project->setOutlineType(SketchBio::Project::OUTLINE_OBJECTS);
-  } else if (rhand.getNearestConnectorDistance() < SPRING_DISTANCE_THRESHOLD) {
-    project->setOutlineType(SketchBio::Project::OUTLINE_CONNECTORS);
-  }
+    ObjectGrabMode::doUpdatesForFrame();
+    SketchBio::Hand& rhand = project->getHand(SketchBioHandId::RIGHT);
+    if (rhand.getNearestObjectDistance() < DISTANCE_THRESHOLD) {
+        rhand.setSelectionType(SketchBio::OutlineType::OBJECTS);
+    } else if (rhand.getNearestConnectorDistance() <
+               SPRING_DISTANCE_THRESHOLD) {
+        rhand.setSelectionType(SketchBio::OutlineType::CONNECTORS);
+    }
 
-  useLeftJoystickToRotateViewPoint();
+    useLeftJoystickToRotateViewPoint();
 }
 
 void ColorEditingMode::analogsUpdated() { ObjectGrabMode::analogsUpdated(); }
