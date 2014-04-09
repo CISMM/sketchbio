@@ -25,8 +25,6 @@ int main(int argc, char *argv[])
   return errors;
 }
 
-//also test nearest connector in the case that object is too far away
-//test when both connector and object are there
 int testChangeObjectColor()
 {
   vtkSmartPointer< vtkRenderer > renderer =
@@ -175,21 +173,142 @@ int testChangeObjectColor()
     return 1;
   }
   
-  
   return 0;
 }
 
 int testChangeObjectColorVariable()
 {
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchProject proj(renderer,".");
+  SketchModel *model = TestCoreHelpers::getCubeModel();
+  proj.getModelManager()->addModel(model);
+  q_vec_type vector = Q_NULL_VECTOR;
+  q_type orient = Q_ID_QUAT;
+  SketchObject *obj = proj.getWorldManager()->addObject(model, vector, orient);
+  proj.updateTrackerPositions();
+  
+  
+  //given that we know it cycles through modelNum, chainPosition and charge
+  QString arr1(obj->getArrayToColorBy());
+  ControlFunctions::changeObjectColorVariable(&proj, 1, false);
+  QString arr2(obj->getArrayToColorBy());
+  
+  if (arr1 == arr2) {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Color variable didn't change properly." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::changeObjectColorVariable(&proj, 1, false);
+  QString arr3(obj->getArrayToColorBy());
+  if (arr1 == arr3 || arr2==arr3) {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Color variable didn't change properly." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::changeObjectColorVariable(&proj, 1, false);
+  QString arrFinal(obj->getArrayToColorBy());
+  if (arr1 != arrFinal) {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Color variable did not cycle through all 3 strings." << std::endl;
+    return 1;
+  }
+  
+  //move obj outside of distance threshold
+  q_vec_set(vector,10,10,10);
+  obj->setPosition(vector);
+  
+  SketchBio::Hand &handObj = proj.getHand(SketchBioHandId::RIGHT);
+  handObj.computeNearestObjectAndConnector();
+  double nearestObjDist = handObj.getNearestObjectDistance();
+  
+  if (nearestObjDist<DISTANCE_THRESHOLD){
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object needs to be moved outside threshold for this test." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::changeObjectColorVariable(&proj, 1, false);
+  QString afterMove(obj->getArrayToColorBy());
+  
+  if (arrFinal!=afterMove){
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object outside of threshold but still affected." << std::endl;
+    return 1;
+  }
   return 0;
 }
 
 int testToggleObjectVisibility()
 {
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchProject proj(renderer,".");
+  SketchModel *model = TestCoreHelpers::getCubeModel();
+  proj.getModelManager()->addModel(model);
+  q_vec_type vector = Q_NULL_VECTOR;
+  q_type orient = Q_ID_QUAT;
+  SketchObject *obj = proj.getWorldManager()->addObject(model, vector, orient);
+  proj.updateTrackerPositions();
+  
+  bool visibility = obj->isVisible();
+  ControlFunctions::toggleObjectVisibility(&proj, 1, false);
+  bool vis2 = obj->isVisible();
+  
+  if (visibility == vis2){
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Visibility of object did not change" << std::endl;
+    return 1;
+  }
+  
+  //move obj outside of distance threshold
+  q_vec_set(vector,10,10,10);
+  obj->setPosition(vector);
+  
+  SketchBio::Hand &handObj = proj.getHand(SketchBioHandId::RIGHT);
+  handObj.computeNearestObjectAndConnector();
+  double nearestObjDist = handObj.getNearestObjectDistance();
+  
+  if (nearestObjDist<DISTANCE_THRESHOLD){
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object needs to be moved outside threshold for this test." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::toggleObjectVisibility(&proj, 1, false);
+  
+  bool visFinal = obj->isVisible();
+  
+  if (vis2!=visFinal){
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Visibility changed when it shouldn't have." << std::endl;
+    return 1;
+  }
+  
   return 0;
 }
 
 int testToggleShowInvisibleObjects()
 {
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchProject proj(renderer,".");
+  
+  WorldManager *world = proj.getWorldManager();
+  
+  bool vis = world->isShowingInvisible();
+  
+  ControlFunctions::toggleShowInvisibleObjects(&proj, 1, false);
+  
+  bool vis2 = world->isShowingInvisible();
+  
+  if (vis==vis2) {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    " Show invisible objects didn't toggle" << std::endl;
+    return 1;
+  }
+  
   return 0;
 }
