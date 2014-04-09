@@ -294,20 +294,20 @@ int testToggleObjectVisibility()
   return 0;
 }
 
+//note: this tests the control function but assumes that worldmanager functions are correct
 int testToggleShowInvisibleObjects()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
   SketchBio::Project proj(renderer,".");
   
-  WorldManager world = proj.getWorldManager();
-  
-  bool vis = world.isShowingInvisible();
+  bool vis = proj.getWorldManager().isShowingInvisible();
   
   ControlFunctions::toggleShowInvisibleObjects(&proj, 1, false);
   
-  bool vis2 = world.isShowingInvisible();
+  bool vis2 = proj.getWorldManager().isShowingInvisible();
   
+  //isShowingInvisible should toggle
   if (vis==vis2) {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     " Show invisible objects didn't toggle" << std::endl;

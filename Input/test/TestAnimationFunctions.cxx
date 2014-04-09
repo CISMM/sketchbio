@@ -80,7 +80,9 @@ int testAddCamera()
   int camLength = cams.count();
   ControlFunctions::addCamera(&proj, 1, false);
   
-  int camLengthAfterAdd = cams.count();
+  //need to do this?
+  const QHash< SketchObject* , vtkSmartPointer< vtkCamera > > cams2 = proj.getCameras();
+  int camLengthAfterAdd = cams2.count();
   
   //make sure the length of cams increased by exactly 1 after adding a camera
   if ((camLengthAfterAdd-camLength)!=1){
