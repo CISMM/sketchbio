@@ -30,16 +30,16 @@ int testKeyframeAll()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   SketchModel *model = TestCoreHelpers::getCubeModel();
-  proj.getModelManager()->addModel(model);
+  proj.getModelManager().addModel(model);
   q_vec_type vector = Q_NULL_VECTOR;
   q_type orient = Q_ID_QUAT;
   
   //adds a few objects
   for (int i = 0; i < 5; i++){
     //can you add multiple objects using the same model??? ask shawn!!
-    proj.getWorldManager()->addObject(model, vector, orient);
+    proj.getWorldManager().addObject(model, vector, orient);
   }
   
   proj.updateTrackerPositions();
@@ -47,7 +47,7 @@ int testKeyframeAll()
   ControlFunctions::keyframeAll(&proj, 1, false);
   
   QListIterator< SketchObject * > itr =
-    proj.getWorldManager()->getObjectIterator();
+    proj.getWorldManager().getObjectIterator();
   
   //make sure after calling keyframeAll that all objects have keyframes
   while (itr.hasNext()) {
@@ -71,16 +71,16 @@ int testAddCamera()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   
   ControlFunctions::addCamera(&proj, 1, false);
   
-  const QHash< SketchObject* , vtkSmartPointer< vtkCamera > >* cams = proj.getCameras();
+  const QHash< SketchObject* , vtkSmartPointer< vtkCamera > > cams = proj.getCameras();
   
-  int camLength = cams->count();
+  int camLength = cams.count();
   ControlFunctions::addCamera(&proj, 1, false);
   
-  int camLengthAfterAdd = cams->count();
+  int camLengthAfterAdd = cams.count();
   
   //make sure the length of cams increased by exactly 1 after adding a camera
   if ((camLengthAfterAdd-camLength)!=1){
@@ -96,7 +96,7 @@ int testShowAnimationPreview()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   
   bool isShowingAnim = proj.isShowingAnimation();
   ControlFunctions::showAnimationPreview(&proj, 1, false);

@@ -184,12 +184,12 @@ int testChangeObjectColorVariable()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   SketchModel *model = TestCoreHelpers::getCubeModel();
-  proj.getModelManager()->addModel(model);
+  proj.getModelManager().addModel(model);
   q_vec_type vector = Q_NULL_VECTOR;
   q_type orient = Q_ID_QUAT;
-  SketchObject *obj = proj.getWorldManager()->addObject(model, vector, orient);
+  SketchObject *obj = proj.getWorldManager().addObject(model, vector, orient);
   proj.updateTrackerPositions();
   
   
@@ -249,12 +249,12 @@ int testToggleObjectVisibility()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   SketchModel *model = TestCoreHelpers::getCubeModel();
-  proj.getModelManager()->addModel(model);
+  proj.getModelManager().addModel(model);
   q_vec_type vector = Q_NULL_VECTOR;
   q_type orient = Q_ID_QUAT;
-  SketchObject *obj = proj.getWorldManager()->addObject(model, vector, orient);
+  SketchObject *obj = proj.getWorldManager().addObject(model, vector, orient);
   proj.updateTrackerPositions();
   
   bool visibility = obj->isVisible();
@@ -298,15 +298,15 @@ int testToggleShowInvisibleObjects()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   
-  WorldManager *world = proj.getWorldManager();
+  WorldManager world = proj.getWorldManager();
   
-  bool vis = world->isShowingInvisible();
+  bool vis = world.isShowingInvisible();
   
   ControlFunctions::toggleShowInvisibleObjects(&proj, 1, false);
   
-  bool vis2 = world->isShowingInvisible();
+  bool vis2 = world.isShowingInvisible();
   
   if (vis==vis2) {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<

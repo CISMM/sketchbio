@@ -6,6 +6,7 @@
 #include <springconnection.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
+#include <hand.h>
 #include <controlFunctions.h>
 
 #include <test/TestCoreHelpers.h>
@@ -27,19 +28,19 @@ int testDeleteObject()
 {
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   SketchModel *model = TestCoreHelpers::getCubeModel();
-  proj.getModelManager()->addModel(model);
+  proj.getModelManager().addModel(model);
   q_vec_type vector = Q_NULL_VECTOR;
   q_type orient = Q_ID_QUAT;
   
   //this obj is inside distance threshold
-  proj.getWorldManager()->addObject(model, vector, orient);
+  proj.getWorldManager().addObject(model, vector, orient);
   
   q_vec_set(vector,10,10,10);
   
   //this obj is outside distance threshold
-  proj.getWorldManager()->addObject(model, vector, orient);
+  proj.getWorldManager().addObject(model, vector, orient);
   proj.updateTrackerPositions();
   
   SketchBio::Hand &handObj = proj.getHand(SketchBioHandId::RIGHT);
