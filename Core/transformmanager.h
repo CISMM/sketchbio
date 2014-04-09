@@ -60,6 +60,12 @@ class TransformManager
   void setWorldToRoomMatrix(vtkMatrix4x4 *matrix);
 
   /*
+   * Sets the transformation between the tracker coordinates and the room
+   * coordinates
+   */
+  void setTrackerToRoomMatrix(vtkMatrix4x4 *matrix);
+
+  /*
    * Gets the transformation between room and eye
    */
   const vtkMatrix4x4 *getRoomToEyeMatrix() const;

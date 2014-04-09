@@ -740,7 +740,7 @@ void SketchObject::computeSplines()
 			//Make sure we choose the shortest path instead of rotating around the long way
 			if (yaw_spline->GetNumberOfPoints() > 0) {
 				for (int i = 0; i < 3; i++) {
-					while (abs(euler[i] - last_or[i]) > pi) {
+          while (fabs(euler[i] - last_or[i]) > pi) {
 						if (euler[i] - last_or[i] > pi) {
 							euler[i] -= 2*pi;
 						}
@@ -818,7 +818,7 @@ void SketchObject::computeSplines()
 						pitch_spline->AddPoint(next, euler[1]);
 						roll_spline->AddPoint(next, euler[2]);
 					}
-					else {
+					else if (it.hasNext()) {
 						double next_time = it.peekNext().key();
 						Keyframe frame = keyframes->value(next_time);
 						if (frame.getLevel() == 0) {

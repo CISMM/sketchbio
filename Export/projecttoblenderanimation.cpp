@@ -64,7 +64,7 @@ unsigned ProjectToBlenderAnimation::timeToBlenderFrameNum(double time, unsigned 
     return floor(time * frameRate + 0.5);
 }
 
-bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchProject *proj,
+bool ProjectToBlenderAnimation::writeProjectBlenderFile(QFile &file, SketchBio::Project *proj,
                                                         const QString &modulePath)
 {
     // python imports... math and bpy
@@ -168,7 +168,7 @@ static inline void computeBlenderCoords(q_vec_type pos, q_type orient, SketchObj
 static inline void writeCreateObject(
         QFile &file, QHash< ModelColorMapKey, int> &modelIdxs,
         QHash<SketchObject *, int> &objectIdxs, int &objectsLen,
-        SketchProject *proj, SketchObject *obj)
+        SketchBio::Project *proj, SketchObject *obj)
 {
     if (obj->numInstances() != 1)
     {
@@ -255,16 +255,16 @@ static inline void writeCreateObject(
 
 bool ProjectToBlenderAnimation::writeCreateObjects(
         QFile &file,
-        QHash<SketchObject *, int> &objectIdxs, SketchProject *proj)
+        QHash<SketchObject *, int> &objectIdxs, SketchBio::Project *proj)
 {
     QHash< ModelColorMapKey, int > modelIdxs;
     proj->goToAnimationTime(0.0);
-	WorldManager *world = proj->getWorldManager();
+    WorldManager &world = proj->getWorldManager();
     file.write("\n\n");
     file.write("# Duplicate objects so we have on for each object in SketchBio, plus a template for each type.\n");
     int objectsLen = 0;
     QScopedPointer<char,QScopedPointerArrayDeleter<char> > buf(new char[4096]);
-    QListIterator<SketchObject *> it = world->getObjectIterator();
+    QListIterator<SketchObject *> it = world.getObjectIterator();
     while (it.hasNext())
     {
         writeCreateObject(file,modelIdxs, objectIdxs, objectsLen, proj, it.next());
@@ -275,15 +275,15 @@ bool ProjectToBlenderAnimation::writeCreateObjects(
 
 bool ProjectToBlenderAnimation::writeCreateCylinders(
         QFile& file, QHash< Connector*, int>& connectorIdxs,
-        SketchProject* proj)
+        SketchBio::Project* proj)
 {
-    WorldManager* world = proj->getWorldManager();
+    WorldManager& world = proj->getWorldManager();
     file.write("\n\n");
     file.write("# Creates cylinders for all the connectors in SketchBio with nonzero alpha\n");
     file.write("myConnectors = list()\n");
     int cylindersLen = 0;
     QScopedPointer< char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
-    QListIterator< Connector* > it = world->getSpringsIterator();
+    QListIterator< Connector* > it = world.getSpringsIterator();
     while (it.hasNext())
     {
         Connector* c = it.next();
@@ -315,7 +315,7 @@ bool ProjectToBlenderAnimation::writeCreateCylinders(
 bool ProjectToBlenderAnimation::writeKeyframes(
         QFile& file, QHash< SketchObject*, int >& objectIdxs,
         QHash< Connector*, int >& connectorIdxs,
-        SketchProject* proj, unsigned frameRate)
+        SketchBio::Project* proj, unsigned frameRate)
 {
     QScopedPointer<char, QScopedPointerArrayDeleter<char> > buf(new char[4096]);
     unsigned frame = 0;

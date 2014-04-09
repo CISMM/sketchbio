@@ -10,7 +10,7 @@
 
 #include "savedxmlundostate.h"
 
-HydraInputMode::HydraInputMode(SketchProject *proj, const bool *const b, const double *const a) :
+HydraInputMode::HydraInputMode(SketchBio::Project *proj, const bool *const b, const double *const a) :
     isButtonDown(b),
     analogStatus(a),
     project(proj),
@@ -23,7 +23,7 @@ HydraInputMode::~HydraInputMode()
 {
 }
 
-void HydraInputMode::setProject(SketchProject *proj)
+void HydraInputMode::setProject(SketchBio::Project *proj)
 {
     project = proj;
     this->clearStatus();
@@ -41,14 +41,14 @@ void HydraInputMode::useLeftJoystickToRotateViewPoint()
     if (std::abs(analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)]) > .3) {
 		y_degrees += analogStatus[ANALOG_LEFT(LEFT_RIGHT_ANALOG_IDX)];
     }
-    project->getTransformManager()->setRoomEyeOrientation(x_degrees, y_degrees);
+    project->getTransformManager().setRoomEyeOrientation(x_degrees, y_degrees);
 }
 
 void HydraInputMode::resetViewPoint()
 {
 	x_degrees = 0;
 	y_degrees = 0;
-	project->getTransformManager()->setRoomEyeOrientation(x_degrees, y_degrees);
+    project->getTransformManager().setRoomEyeOrientation(x_degrees, y_degrees);
 }
 
 void HydraInputMode::useRightJoystickToChangeViewTime()
@@ -88,10 +88,10 @@ void HydraInputMode::scaleWithLeftFixed()
     {
         return;
     }
-    TransformManager *transforms = project->getTransformManager();
-    double dist = transforms->getOldWorldDistanceBetweenHands();
-    double delta = transforms->getWorldDistanceBetweenHands() / dist;
-    transforms->scaleWithTrackerFixed(delta,SketchBioHandId::LEFT);
+    TransformManager &transforms = project->getTransformManager();
+    double dist = transforms.getOldWorldDistanceBetweenHands();
+    double delta = transforms.getWorldDistanceBetweenHands() / dist;
+    transforms.scaleWithTrackerFixed(delta,SketchBioHandId::LEFT);
 }
 
 void HydraInputMode::scaleWithRightFixed()
@@ -100,10 +100,10 @@ void HydraInputMode::scaleWithRightFixed()
     {
         return;
     }
-    TransformManager *transforms = project->getTransformManager();
-    double dist = transforms->getOldWorldDistanceBetweenHands();
-    double delta = transforms->getWorldDistanceBetweenHands() / dist;
-    transforms->scaleWithTrackerFixed(delta,SketchBioHandId::RIGHT);
+    TransformManager &transforms = project->getTransformManager();
+    double dist = transforms.getOldWorldDistanceBetweenHands();
+    double delta = transforms.getWorldDistanceBetweenHands() / dist;
+    transforms.scaleWithTrackerFixed(delta,SketchBioHandId::RIGHT);
 }
 
 void HydraInputMode::addXMLUndoState()

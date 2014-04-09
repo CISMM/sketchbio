@@ -10,7 +10,7 @@
 
 #include "controlFunctions.h"
 
-ObjectGrabMode::ObjectGrabMode(SketchProject *proj, const bool *const b,
+ObjectGrabMode::ObjectGrabMode(SketchBio::Project *proj, const bool *const b,
                                const double *const a)
     : HydraInputMode(proj, b, a), bumpLevels(true)
 {
@@ -24,7 +24,7 @@ void ObjectGrabMode::buttonReleased(int vrpn_ButtonNum) {}
 
 void ObjectGrabMode::doUpdatesForFrame()
 {
-  project->setOutlineType(SketchProject::OUTLINE_OBJECTS);
+  project->setOutlineType(SketchBio::Project::OUTLINE_OBJECTS);
 }
 
 void ObjectGrabMode::clearStatus() { bumpLevels = true; }

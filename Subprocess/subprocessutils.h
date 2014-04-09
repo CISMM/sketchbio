@@ -3,7 +3,9 @@
 
 class QString;
 class SubprocessRunner;
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 
 namespace SubprocessUtils
 {
@@ -54,7 +56,7 @@ SubprocessRunner *makePyMolOBJFor(const QString &pdbID, const QString &saveDir);
  *
  * For detailed usage information, see subprocessrunner.h
  */
-SubprocessRunner *createAnimationFor(SketchProject *proj, const QString &animationFile);
+SubprocessRunner *createAnimationFor(SketchBio::Project *proj, const QString &animationFile);
 
 /*
  * This method returns a valid SubprocessRunner to run Blender to decimate an
@@ -93,7 +95,7 @@ SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles);
  * For detailed usage information, see subprocessrunner.h
  */
 SubprocessRunner *loadFromPDBId(
-        SketchProject *proj, const QString &pdb,
+        SketchBio::Project *proj, const QString &pdb,
         const QString &chainsToDelete, bool exportWholeBiologicalUnit);
 /*
  * This method returns a valid SubprocessRunner to run various subprocesses to
@@ -106,7 +108,7 @@ SubprocessRunner *loadFromPDBId(
  * For detailed usage information, see subprocessrunner.h
  */
 SubprocessRunner *loadFromPDBFile(
-        SketchProject *proj, const QString &pdbfilename,
+        SketchBio::Project *proj, const QString &pdbfilename,
         const QString &chainsToDelete, bool exportWholeBiologicalUnit);
 }
 

@@ -9,7 +9,7 @@ class ColorEditingMode : public ObjectGrabMode
 {
   Q_OBJECT
  public:
-  ColorEditingMode(SketchProject *proj, bool const *const b,
+  ColorEditingMode(SketchBio::Project *proj, bool const *const b,
                    double const *const a);
   virtual ~ColorEditingMode();
   virtual void buttonPressed(int vrpn_ButtonNum);

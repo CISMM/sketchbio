@@ -6,6 +6,7 @@
 #include <springconnection.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
+#include <hand.h>
 #include <controlFunctions.h>
 
 #include <test/TestCoreHelpers.h>
@@ -29,12 +30,12 @@ int testChangeObjectColor()
 {
   vtkSmartPointer< vtkRenderer > renderer =
     vtkSmartPointer< vtkRenderer >::New();
-  SketchProject proj(renderer,".");
+  SketchBio::Project proj(renderer,".");
   SketchModel *model = TestCoreHelpers::getCubeModel();
-  proj.getModelManager()->addModel(model);
+  proj.getModelManager().addModel(model);
   q_vec_type vector = Q_NULL_VECTOR;
   q_type orient = Q_ID_QUAT;
-  SketchObject *obj = proj.getWorldManager()->addObject(model, vector, orient);
+  SketchObject *obj = proj.getWorldManager().addObject(model, vector, orient);
   proj.updateTrackerPositions();
   
   //given that we know there are 7 different colors
@@ -91,7 +92,10 @@ int testChangeObjectColor()
   }
   
   //case where nearest object distant less than threshold, but connector isnt
-  Connector *c = proj.getWorldManager()->addSpring(NULL, NULL, vector, vector, true, 2, 3, 4);
+  q_vec_type pos1 = {0,0,0};
+  q_vec_type pos2 = {3,0,0};
+  Connector *c = new Connector(NULL,NULL,pos1,pos2);
+  proj.getWorldManager().addConnector(c);
   q_vec_set(vector,10,10,10);
   obj->setPosition(vector);
   
@@ -106,7 +110,7 @@ int testChangeObjectColor()
     "  Object needs to be moved further away for test to work" << std::endl;
     return 1;
   }
-  if (proj.getWorldManager()->getNumberOfConnectors() == 0) {
+  if (proj.getWorldManager().getNumberOfConnectors() == 0) {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "  Connector not added to world." << std::endl;
     return 1;

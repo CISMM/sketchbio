@@ -30,6 +30,13 @@ class PhysicsStrategy;
 #include "objectchangeobserver.h"
 #include "physicsstrategyfactory.h"
 
+class WorldObserver {
+public:
+    virtual ~WorldObserver() {}
+    virtual void objectAdded(SketchObject *) {}
+    virtual void objectRemoved(SketchObject *) {}
+};
+
 /*
  * This class contains the data that is in the modeled "world", all the objects and
  * springs.  It also contains code to step the "physics" of the simulation and run
@@ -401,6 +408,18 @@ public:
      *
      *******************************************************************/
     virtual void subobjectRemoved(SketchObject *parent, SketchObject *child);
+    /*******************************************************************
+     *
+     * Adds an observer to the world manager
+     *
+     *******************************************************************/
+    void addObserver(WorldObserver *w);
+    /*******************************************************************
+     *
+     * Removes an observer to the world manager
+     *
+     *******************************************************************/
+    void removeObserver(WorldObserver *w);
 private:
     /*******************************************************************
      *
@@ -459,6 +478,7 @@ private:
     PhysicsMode::Type collisionResponseMode;
 
 	double lastGroupUpdate;
+    QList< WorldObserver* > observers;
 };
 
 inline SpringConnection* WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,

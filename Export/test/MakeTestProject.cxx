@@ -23,21 +23,26 @@
 namespace MakeTestProject
 {
 
-void setUpProject(SketchProject *proj)
+void setUpProject(SketchBio::Project *proj)
 {
-    if (proj->getModelManager()->hasModel(MODEL_SOURCE))
+    if (proj->getModelManager().hasModel(MODEL_SOURCE))
         return;
     using std::sqrt;
     QString filename = "models/1m1j.obj";
+    QString newFile;
+    proj->getFileInProjDir(filename,newFile);
 
-    SketchModel *m1 = proj->addModelFromFile(MODEL_SOURCE,filename,
-                                             3*sqrt(12.0),4*sqrt(13.0));
+    SketchModel *m1 = new SketchModel(3*sqrt(12.0),4*sqrt(13.0));
+    m1->addConformation(MODEL_SOURCE,newFile);
+    proj->getModelManager().addModel(m1);
     SketchModel *m2 = TestCoreHelpers::getCubeModel();
-    SketchModel *m3 = proj->addModelFromFile(
-                m2->getSource(0),
-                m2->getFileNameFor(0,ModelResolution::FULL_RESOLUTION),
-                m2->getInverseMass(),m2->getInverseMomentOfInertia());
-    proj->getModelManager()->addConformation(
+    SketchModel *m3 = new SketchModel(m2->getInverseMass(),
+                                      m2->getInverseMomentOfInertia());
+    proj->getFileInProjDir(m2->getFileNameFor(0,ModelResolution::FULL_RESOLUTION),
+                           newFile);
+    m3->addConformation(m2->getSource(0),newFile);
+    proj->getModelManager().addModel(m3);
+    proj->getModelManager().addConformation(
                 m3,MODEL_WITH_MULTIPLE_CONFORMATIONS_SOURCE,
                 m1->getFileNameFor(0,ModelResolution::FULL_RESOLUTION));
     delete m2;
@@ -57,7 +62,7 @@ inline void setObjectPosAndOrient(SketchObject *obj, int num)
     obj->setPosAndOrient(pos1,orient1);
 }
 
-inline SketchObject *makeObject(SketchProject *proj, int num,
+inline SketchObject *makeObject(SketchBio::Project *proj, int num,
                                 int conformation = 0)
 {
     if (conformation < 0 || conformation > 1)
@@ -65,7 +70,7 @@ inline SketchObject *makeObject(SketchProject *proj, int num,
         conformation = 1;
     }
     setUpProject(proj);
-    SketchModel *m1 = proj->getModelManager()->getModel(
+    SketchModel *m1 = proj->getModelManager().getModel(
                 MODEL_WITH_MULTIPLE_CONFORMATIONS_SOURCE);
     SketchObject *obj = new ModelInstance(m1,conformation);
     setObjectPosAndOrient(obj,num);
@@ -73,16 +78,16 @@ inline SketchObject *makeObject(SketchProject *proj, int num,
     return obj;
 }
 
-SketchObject *addObjectToProject(SketchProject *proj, int conformation)
+SketchObject *addObjectToProject(SketchBio::Project *proj, int conformation)
 {
-    int num = proj->getWorldManager()->getNumberOfObjects();
-    SketchObject *obj = proj->addObject(makeObject(proj,num,conformation));
+    int num = proj->getWorldManager().getNumberOfObjects();
+    SketchObject *obj = proj->getWorldManager().addObject(makeObject(proj,num,conformation));
     return obj;
 }
 
-SketchObject *addCameraToProject(SketchProject *proj)
+SketchObject *addCameraToProject(SketchBio::Project *proj)
 {
-    int num = proj->getWorldManager()->getNumberOfObjects();
+    int num = proj->getWorldManager().getNumberOfObjects();
     q_vec_type pos1 = {3.14 - num,
                        1.59 * (num % 2 ? 1 : -1),
                        2.65 / (num + 1)}; // pi
@@ -92,7 +97,7 @@ SketchObject *addCameraToProject(SketchProject *proj)
     return proj->addCamera(pos1,orient1);
 }
 
-SketchObject *addGroupToProject(SketchProject *proj, int numItemsInGroup)
+SketchObject *addGroupToProject(SketchBio::Project *proj, int numItemsInGroup)
 {
     if (numItemsInGroup < 1)
     {
@@ -103,22 +108,22 @@ SketchObject *addGroupToProject(SketchProject *proj, int numItemsInGroup)
     {
         group->addObject(makeObject(proj,i));
     }
-    int num = proj->getWorldManager()->getNumberOfObjects();
+    int num = proj->getWorldManager().getNumberOfObjects();
     setObjectPosAndOrient(group,num);
-    proj->addObject(group);
+    proj->getWorldManager().addObject(group);
     return group;
 }
 
-StructureReplicator * addReplicationToProject(SketchProject *proj, int numReplicas)
+StructureReplicator * addReplicationToProject(SketchBio::Project *proj, int numReplicas)
 {
     SketchObject *o1 = addObjectToProject(proj);
     SketchObject *o2 = addObjectToProject(proj);
     return proj->addReplication(o1,o2,numReplicas);
 }
 
-void addSpringToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2)
+void addSpringToProject(SketchBio::Project *proj, SketchObject *o1, SketchObject *o2)
 {
-    int num = proj->getWorldManager()->getNumberOfConnectors();
+    int num = proj->getWorldManager().getNumberOfConnectors();
     q_vec_type p1, p2;
     q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
     q_vec_scale(p1,sqrt(6.0) + num,p1);
@@ -128,13 +133,13 @@ void addSpringToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2)
     }
     q_vec_set(p2,2.23,-6.06,7.97); // sqrt(5)
     q_vec_scale(p2,sqrt(7.0) + num,p2);
-    proj->addSpring(o1,o2,1.41*sqrt(8.0),4.21*sqrt(10.0),
-                     3.56*sqrt(11.0),p1,p2); // sqrt(2)
+    proj->getWorldManager().addSpring(o1,o2,p1,p2,1.41*sqrt(8.0),4.21*sqrt(10.0),
+                     3.56*sqrt(11.0)); // sqrt(2)
 }
 
-void addConnectorToProject(SketchProject *proj, SketchObject *o1, SketchObject *o2)
+void addConnectorToProject(SketchBio::Project *proj, SketchObject *o1, SketchObject *o2)
 {
-    int num = proj->getWorldManager()->getNumberOfConnectors();
+    int num = proj->getWorldManager().getNumberOfConnectors();
     q_vec_type p1, p2;
     q_vec_set(p1,1.73,2.05,0.80); // sqrt(3)
     q_vec_scale(p1,sqrt(6.0) + num,p1);
@@ -145,10 +150,10 @@ void addConnectorToProject(SketchProject *proj, SketchObject *o1, SketchObject *
     q_vec_set(p2,2.23,-6.06,7.97); // sqrt(5)
     q_vec_scale(p2,sqrt(7.0) + num,p2);
     Connector* conn = new Connector(o1,o2,p1,p2,0.67 / num,2.45 * num);
-    proj->addConnector(conn);
+    proj->getWorldManager().addConnector(conn);
 }
 
-void addTransformEqualsToProject(SketchProject *proj, int numPairs)
+void addTransformEqualsToProject(SketchBio::Project *proj, int numPairs)
 {
     if (numPairs < 1)
     {

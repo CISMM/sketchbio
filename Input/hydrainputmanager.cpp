@@ -39,7 +39,7 @@ inline int redo_button_idx() {
 #define ADD_TRANSFORM_EQUALS_PENDING    4
 
 
-HydraInputManager::HydraInputManager(SketchProject *proj) :
+HydraInputManager::HydraInputManager(SketchBio::Project *proj) :
     project(proj),
     tracker(VRPN_ONE_EURO_FILTER_DEVICE_STRING),
     buttons(VRPN_RAZER_HYDRA_DEVICE_STRING),
@@ -106,7 +106,7 @@ QString HydraInputManager::getModeName()
     }
 }
 
-void HydraInputManager::setProject(SketchProject *proj) {
+void HydraInputManager::setProject(SketchBio::Project *proj) {
     project = proj;
     for (int i = 0; i < modeList.size(); i++)
         modeList[i]->setProject(proj);
@@ -132,12 +132,12 @@ void HydraInputManager::handleCurrentInput() {
     // update the main camera
     // this has to be last since updateTrackerPositions performs
     // grab world
-    project->getTransformManager()->updateCameraForFrame();
+    project->getTransformManager().updateCameraForFrame();
 }
 
 
 void HydraInputManager::setHandPos(q_xyz_quat_type *newPos, SketchBioHandId::Type side) {
-  project->getTransformManager()->setHandTransform(newPos,side);
+  project->getTransformManager().setHandTransform(newPos,side);
 }
 
 

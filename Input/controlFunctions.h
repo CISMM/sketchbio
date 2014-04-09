@@ -1,47 +1,49 @@
 #ifndef CONTROLFUNCTIONS_H
 #define CONTROLFUNCTIONS_H
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 
 namespace ControlFunctions
 {
 	// ANIMATION functions:
-	void keyframeAll(SketchProject*, int, bool);
-	void toggleKeyframeObject(SketchProject*, int, bool);
-	void addCamera(SketchProject*, int, bool);
-	void showAnimationPreview(SketchProject*, int, bool);
+    void keyframeAll(SketchBio::Project*, int, bool);
+    void toggleKeyframeObject(SketchBio::Project*, int, bool);
+    void addCamera(SketchBio::Project*, int, bool);
+    void showAnimationPreview(SketchBio::Project*, int, bool);
 
 	// GROUP EDITING functions:
-	void toggleGroupMembership(SketchProject*, int, bool); // !! INCOMPLETE !!
+    void toggleGroupMembership(SketchBio::Project*, int, bool); // !! INCOMPLETE !!
 
 	// COLOR EDITING functions:
-	void changeObjectColor(SketchProject*, int, bool);
-	void changeObjectColorVariable(SketchProject*, int, bool);
-	void toggleObjectVisibility(SketchProject*, int, bool);
-	void toggleShowInvisibleObjects(SketchProject*, int, bool);
+    void changeObjectColor(SketchBio::Project*, int, bool);
+    void changeObjectColorVariable(SketchBio::Project*, int, bool);
+    void toggleObjectVisibility(SketchBio::Project*, int, bool);
+    void toggleShowInvisibleObjects(SketchBio::Project*, int, bool);
 
 	// SPRING EDITING functions:
-	void deleteSpring(SketchProject*, int, bool);
-	void snapSpringToTerminus(SketchProject*, int, bool); // !! INCOMPLETE !!
-	void createSpring(SketchProject*, int, bool); // !! INCOMPLETE !!
-	void createTransparentConnector(SketchProject*, int, bool);
+    void deleteSpring(SketchBio::Project*, int, bool);
+    void snapSpringToTerminus(SketchBio::Project*, int, bool); // !! INCOMPLETE !!
+    void createSpring(SketchBio::Project*, int, bool); // !! INCOMPLETE !!
+    void createTransparentConnector(SketchBio::Project*, int, bool);
 
   // GRAB functions:
-  void grabObjectOrWorld(SketchProject*, int, bool);
-  void grabSpringOrWorld(SketchProject*, int, bool);
-  void selectParentOfCurrent(SketchProject*, int, bool);
-  void selectChildOfCurrent(SketchProject*, int, bool);
+  void grabObjectOrWorld(SketchBio::Project*, int, bool);
+  void grabSpringOrWorld(SketchBio::Project*, int, bool);
+  void selectParentOfCurrent(SketchBio::Project*, int, bool);
+  void selectChildOfCurrent(SketchBio::Project*, int, bool);
   
   // TRANSFORM functions:
-  void deleteObject(SketchProject*, int, bool);
-  void replicateObject(SketchProject*, int, bool);
-  void setTransforms(SketchProject*, int, bool);
+  void deleteObject(SketchBio::Project*, int, bool);
+  void replicateObject(SketchBio::Project*, int, bool);
+  void setTransforms(SketchBio::Project*, int, bool);
   
 
 	// UTILITY functions:
-  void resetViewPoint(SketchProject*, int, bool);
-  void copyObject(SketchProject*, int, bool);
-  void pasteObject(SketchProject*, int, bool);
+  void resetViewPoint(SketchBio::Project*, int, bool);
+  void copyObject(SketchBio::Project*, int, bool);
+  void pasteObject(SketchBio::Project*, int, bool);
 }
 
 #endif // CONTROLFUNCTIONS_H

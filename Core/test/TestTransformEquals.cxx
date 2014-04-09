@@ -12,7 +12,9 @@
 #include <groupidgenerator.h>
 #include <modelutilities.h>
 #include <sketchmodel.h>
+#include <modelmanager.h>
 #include <modelinstance.h>
+#include <worldmanager.h>
 #include <transformequals.h>
 #include <sketchproject.h>
 
@@ -351,21 +353,21 @@ int test4() {
 int testVTKSegfault()
 {
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    QScopedPointer<SketchProject> project(
-                new SketchProject(renderer,"test/testModels/replicatorTest"));
+    QScopedPointer<SketchBio::Project> project(
+                new SketchBio::Project(renderer,"test/testModels/replicatorTest"));
 
     SketchModel *m = TestCoreHelpers::getCubeModel();
-    project->addModel(m);
+    project->getModelManager().addModel(m);
 
-    SketchObject *o1 = project->addObject(new ModelInstance(m));
-    SketchObject *o2 = project->addObject(new ModelInstance(m));
-    SketchObject *o3 = project->addObject(new ModelInstance(m));
-    SketchObject *o4 = project->addObject(new ModelInstance(m));
+    SketchObject *o1 = project->getWorldManager().addObject(new ModelInstance(m));
+    SketchObject *o2 = project->getWorldManager().addObject(new ModelInstance(m));
+    SketchObject *o3 = project->getWorldManager().addObject(new ModelInstance(m));
+    SketchObject *o4 = project->getWorldManager().addObject(new ModelInstance(m));
 
     project->addReplication(o1,o2,5);
     QWeakPointer<TransformEquals> equals = project->addTransformEquals(o1,o2);
     QSharedPointer<TransformEquals> eq = equals.toStrongRef();
-    project->setCollisionTestsOn(false);
+    project->getWorldManager().setCollisionCheckOn(false);
     q_vec_type p1 = {2, 0, -1}, p2 = {3, -2, 4}, tv1;
 
     QTime time = QTime::currentTime();

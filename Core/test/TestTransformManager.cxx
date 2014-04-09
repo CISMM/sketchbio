@@ -3,7 +3,9 @@
 #include <iostream>
 #include <transformmanager.h>
 #include <sketchioconstants.h>
+#include <sketchtests.h>
 
+#include <test/TestCoreHelpers.h>
 
 /*
  * This method tests the get/setLeftTrackerPosition and methods
@@ -326,6 +328,29 @@ int testRotateAboutRightTracker() {
     return failures;
 }
 
+int testSetTrackerPosition()
+{
+    TransformManager mgr = TransformManager();
+    q_vec_type pos = {3, Q_PI, 4.23748293748372};
+    TestCoreHelpers::setTrackerWorldPosition(mgr,SketchBioHandId::LEFT,pos);
+    q_vec_type result;
+    mgr.getTrackerPosInWorldCoords(result,SketchBioHandId::LEFT);
+    if (! q_vec_equals(pos,result) ) {
+        std::cout << "Left hand set position failed." << std::endl;
+        return 1;
+    }
+    pos[0] = 3.48943548946;
+    pos[1] = 5.9941314894;
+    pos[2] = -6.549451684;
+    TestCoreHelpers::setTrackerWorldPosition(mgr,SketchBioHandId::RIGHT,pos);
+    mgr.getTrackerPosInWorldCoords(result,SketchBioHandId::RIGHT);
+    if (! q_vec_equals(pos,result) ) {
+        std::cout << "Right hand set position failed." << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     int test = 0;
     if (argc > 1) {
@@ -349,6 +374,8 @@ int main(int argc, char *argv[]) {
         status += testRightTrackerPosition();
         break;
     default:
+        std::cout << "Testing tracker position setting for other tests" << std::endl;
+        status += testSetTrackerPosition();
         break;
     }
     return status;

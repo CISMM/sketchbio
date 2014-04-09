@@ -1,8 +1,13 @@
 #ifndef TESTCOREHELPERS_H
 #define TESTCOREHELPERS_H
 
+#include <quat.h>
+
+#include <sketchioconstants.h>
+
 class SketchModel;
 class SketchObject;
+class TransformManager;
 
 namespace TestCoreHelpers
 {
@@ -14,6 +19,10 @@ SketchModel *getCubeModel();
 // Creates a SketchModel that is just a vtkSphereSource... raduis of 4,
 // some tests need to know the size of the model
 SketchModel *getSphereModel();
+//#########################################################################
+// Allows specifying the world position of the tracker for testing
+void setTrackerWorldPosition(TransformManager &t, SketchBioHandId::Type side,
+                             const q_vec_type pos);
 //#########################################################################
 // tests if the behavioral methods of a SketchObject are working.  This includes
 // get/set methods.  Assumes a newly constructed SketchObject with no modifications

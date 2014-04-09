@@ -39,7 +39,7 @@ public:
 protected:
     SubprocessRunner *runner;
     vtkSmartPointer< vtkRenderer > renderer;
-    SketchProject *proj;
+    SketchBio::Project *proj;
 };
 
 class TestModelFromPDBID : public TestModelFromPDB
@@ -68,7 +68,7 @@ TestModelFromPDB::TestModelFromPDB() :
     Test(),
     runner(NULL),
     renderer(vtkSmartPointer< vtkRenderer >::New()),
-    proj(new SketchProject(renderer.GetPointer(),QDir::currentPath()))
+    proj(new SketchBio::Project(renderer.GetPointer(),QDir::currentPath()))
 {
 }
 
@@ -111,7 +111,7 @@ QString TestModelFromPDBFile::getSource()
 
 int TestModelFromPDB::testResults()
 {
-    SketchModel *model = proj->getModelManager()->getModel(getSource());
+    SketchModel *model = proj->getModelManager().getModel(getSource());
     if (model == NULL)
         return 1;
     std::vector< ModelResolution::ResolutionType > resolution;

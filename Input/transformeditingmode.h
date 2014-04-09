@@ -10,7 +10,7 @@ class TransformEditingMode : public ObjectGrabMode
 {
   Q_OBJECT
  public:
-  TransformEditingMode(SketchProject *proj, const bool *b, const double *a);
+  TransformEditingMode(SketchBio::Project *proj, const bool *b, const double *a);
   virtual ~TransformEditingMode();
   // Called anytime a button is pressed
   virtual void buttonPressed(int vrpn_ButtonNum);

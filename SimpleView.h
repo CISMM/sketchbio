@@ -17,7 +17,11 @@ class QActionGroup;
 #include <QString>
 
 class SketchObject;
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
+
+class ProjectToXML;
 
 class vrpnServer;
 class HydraInputManager;
@@ -39,10 +43,6 @@ public:
   // Constructor/Destructor
   SimpleView(QString projDir, bool load_example = false);
   virtual ~SimpleView();
-
-  // Add an object (or objects) to be displayed.
-  SketchObject *addObject(QString name);
-  bool addObjects(QVector<QString> names);
 
   // Simplify an external object based on the root file name.
   void simplifyObjectByName(const QString name);
@@ -91,6 +91,13 @@ public slots:
   // Save the current project
   void saveProjectAs();
   void saveProject();
+
+  // Save a grouped object from clipboard, so it can be
+  // loaded into any other project
+  void saveCopiedObject();
+
+  // Load object that was saved with saveCopiedObject()
+  void loadObject();
 
   // Collision modes (for testing)
   void oldCollisionMode();
@@ -143,7 +150,7 @@ private:
   vtkSmartPointer<vtkActor2D> statusTextActor;
   vtkSmartPointer<vtkTextMapper> timeTextMapper;
   vtkSmartPointer<vtkActor2D> timeTextActor;
-  SketchProject *project;
+  SketchBio::Project *project;
   HydraInputManager *inputManager;
 };
 

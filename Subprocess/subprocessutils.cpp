@@ -149,7 +149,7 @@ SubprocessRunner *makePyMolOBJFor(const QString &pdbID, const QString &saveDir)
     return maker;
 }
 
-SubprocessRunner *createAnimationFor(SketchProject *proj, const QString &animationFile)
+SubprocessRunner *createAnimationFor(SketchBio::Project *proj, const QString &animationFile)
 {
     if (!animationFile.endsWith(".avi", Qt::CaseInsensitive))
     {
@@ -196,7 +196,7 @@ SubprocessRunner *simplifyObjFile(const QString &objFile, int triangles)
 }
 
 SubprocessRunner *loadFromPDBId(
-        SketchProject *proj, const QString &pdb,
+        SketchBio::Project *proj, const QString &pdb,
         const QString &chainsToDelete, bool exportWholeBiologicalUnit)
 {
     ModelFromPDBRunner *runner = new ModelFromPDBRunner(
@@ -210,7 +210,7 @@ SubprocessRunner *loadFromPDBId(
 }
 
 SubprocessRunner *loadFromPDBFile(
-        SketchProject *proj, const QString &pdbfilename,
+        SketchBio::Project *proj, const QString &pdbfilename,
         const QString &chainsToDelete, bool exportWholeBiologicalUnit)
 {
     QString prefix = pdbfilename.mid(pdbfilename.lastIndexOf("/")+1);

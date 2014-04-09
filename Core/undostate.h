@@ -1,7 +1,9 @@
 #ifndef UNDOSTATE_H
 #define UNDOSTATE_H
 
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 
 /*
  * This class is an abstract class that represents a state change of the project.
@@ -10,13 +12,13 @@ class SketchProject;
 class UndoState
 {
 public:
-    UndoState( SketchProject &proj );
+    UndoState( SketchBio::Project &proj );
     virtual ~UndoState();
     virtual void undo() = 0;
     virtual void redo() = 0;
-    SketchProject const &getProject() const;
+    SketchBio::Project const &getProject() const;
 protected:
-    SketchProject &project;
+    SketchBio::Project &project;
 };
 
 #endif // UNDOSTATE_H

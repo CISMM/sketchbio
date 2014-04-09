@@ -6,7 +6,9 @@
 
 class SketchModel;
 class SketchObject;
-class SketchProject;
+namespace SketchBio {
+class Project;
+}
 class TransformEquals;
 class StructureReplicator;
 class Connector;
@@ -14,7 +16,7 @@ class Connector;
 namespace CompareBeforeAndAfter
 {
 
-void compareNumbers(SketchProject* proj1, SketchProject* proj2, int& retVal);
+void compareNumbers(SketchBio::Project* proj1, SketchBio::Project* proj2, int& retVal);
 
 void compareModels(const SketchModel* m1, const SketchModel* m2, int& numDifferences,
                    bool printDiffs);
@@ -26,7 +28,7 @@ void compareObjectLists(const QList< SketchObject* >& list1,
                         const QList< SketchObject* >& list2,
                         int& retVal, bool printDiffs, bool compareKeyframes);
 
-void compareCameras(SketchProject* proj1, SketchProject* proj2, int& retVal);
+void compareCameras(SketchBio::Project* proj1, SketchBio::Project* proj2, int& retVal);
 
 void compareTransformOps(QSharedPointer< TransformEquals > t1,
                          QSharedPointer< TransformEquals > t2,
@@ -36,7 +38,7 @@ void compareTransformOpLists(const QVector< QSharedPointer< TransformEquals > >&
                              const QVector< QSharedPointer< TransformEquals > >& list2,
                              int& retVal, bool printDiffs);
 
-void compareWorldObjects(SketchProject* proj1, SketchProject* proj2, int& retVal);
+void compareWorldObjects(SketchBio::Project* proj1, SketchBio::Project* proj2, int& retVal);
 
 void compareReplications(const StructureReplicator* rep1,
                          const StructureReplicator* rep2,
@@ -53,7 +55,7 @@ void compareConnectorLists(const QList< Connector* >& list1,
                         const QList< Connector* >& list2,
                         int& retVal, bool printDiffs);
 
-void compareProjects(SketchProject* proj1, SketchProject* proj2,
+void compareProjects(SketchBio::Project* proj1, SketchBio::Project* proj2,
                      int& differences);
 }
 

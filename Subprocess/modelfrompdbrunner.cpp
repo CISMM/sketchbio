@@ -17,15 +17,17 @@
 
 #include <sketchioconstants.h>
 #include <sketchmodel.h>
+#include <modelmanager.h>
 #include <modelutilities.h>
 #include <sketchobject.h>
 #include <springconnection.h>
+#include <worldmanager.h>
 #include <sketchproject.h>
 
 #include "subprocessutils.h"
 
 ModelFromPDBRunner::ModelFromPDBRunner(
-        SketchProject *proj, const QString &pdb,
+        SketchBio::Project *proj, const QString &pdb,
         const QString &toDelete, bool shouldExportBiologicalUnit,
         QObject *parent) :
     SubprocessRunner(parent),
@@ -42,7 +44,7 @@ ModelFromPDBRunner::ModelFromPDBRunner(
 {
 }
 
-ModelFromPDBRunner::ModelFromPDBRunner(SketchProject *proj, const QString &filename,
+ModelFromPDBRunner::ModelFromPDBRunner(SketchBio::Project *proj, const QString &filename,
                                        const QString &modelFilePre,
                                        const QString &toDelete,
                                        bool shouldExportBiologicalUnit, QObject *parent) :
@@ -112,8 +114,15 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
         {
         case 0:
             //ModelUtilities::vtkConvertAsciiToBinary(filename);
-            model = project->addModelFromFile(sourceName,
-                        filename, DEFAULT_INVERSE_MASS, DEFAULT_INVERSE_MOMENT);
+        {
+            QString newFileName;
+            if (project->getFileInProjDir(filename,newFileName))
+            {
+                model =  project->getModelManager().makeModel(sourceName,newFileName,
+                                                              DEFAULT_INVERSE_MASS,
+                                                              DEFAULT_INVERSE_MOMENT);
+            }
+        }
 			if (model == NULL)
 			{
 				qDebug() << "Failed to generate model!";
@@ -163,7 +172,7 @@ void ModelFromPDBRunner::stepFinished(bool succeeded)
         {
             q_vec_type pos = Q_NULL_VECTOR;
             q_type orient = Q_ID_QUAT;
-            project->addObject(model,pos,orient);
+            project->getWorldManager().addObject(model,pos,orient);
         }
             vtkSmartPointer< vtkPolyDataAlgorithm > source =
                     model->getVTKSource(conformation);

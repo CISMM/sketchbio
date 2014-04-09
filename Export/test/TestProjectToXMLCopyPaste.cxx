@@ -15,7 +15,7 @@
 #include <vtkRenderer.h>
 #include <vtkXMLDataElement.h>
 
-#include <sketchmodel.h>
+#include <modelmanager.h>
 #include <modelinstance.h>
 #include <objectgroup.h>
 #include <worldmanager.h>
@@ -26,18 +26,22 @@
 #include "test/TestCoreHelpers.h"
 #include "CompareBeforeAndAfter.h"
 #include "MakeTestProject.h"
+#include "SimpleView.h"
 
 #define TEST_DIR "test/test1"
+#define SAVE_DIR "test/test1/structure.zip"
 
 int testSavePastedItem();
 int testPastedItemIsTheSame();
 int testPastedGroupIsTheSame();
+int testSaveAndLoadStructure();
 
 int main(int argc, char *argv[])
 {
     return    testSavePastedItem()
             + testPastedItemIsTheSame()
-            + testPastedGroupIsTheSame();
+            + testPastedGroupIsTheSame()
+			+ testSaveAndLoadStructure();
 }
 
 int testSavePastedItem()
@@ -45,8 +49,8 @@ int testSavePastedItem()
     int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,TEST_DIR));
 
     SketchObject *obj = MakeTestProject::addObjectToProject(proj1.data());
 
@@ -74,11 +78,11 @@ int testPastedItemIsTheSame()
     int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,TEST_DIR));
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,TEST_DIR));
 
     SketchModel *m1 = TestCoreHelpers::getCubeModel();
-    proj1->addModel(m1);
+    proj1->getModelManager().addModel(m1);
 
     q_vec_type pos1 = {3.14,1.59,2.65}; // pi
     q_vec_scale(pos1,sqrt(Q_PI),pos1);
@@ -93,7 +97,7 @@ int testPastedItemIsTheSame()
                 );
     ProjectToXML::objectFromClipboardXML(proj1.data(),copy,pos1);
 
-    const QList< SketchObject * > *list = proj1->getWorldManager()->getObjects();
+    const QList< SketchObject * > *list = proj1->getWorldManager().getObjects();
     if (list->size() != 1)
     {
         cout << "Wrong number of objects in result." << endl;
@@ -109,21 +113,16 @@ int testPastedGroupIsTheSame()
     int retVal = 0;
     vtkSmartPointer< vtkRenderer > r1 =
             vtkSmartPointer< vtkRenderer >::New();
-    QScopedPointer< SketchProject > proj1(
-                new SketchProject(r1,TEST_DIR));
-
-    SketchModel *m1 = TestCoreHelpers::getCubeModel();
-    SketchModel *m2 = TestCoreHelpers::getSphereModel();
-    proj1->addModel(m1);
-    proj1->addModel(m2);
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,TEST_DIR));
 
     // This ensures that a wide variety of things will be tested including
     // copy/paste of color maps, keyframes, ...
     SketchObject *obj1 = MakeTestProject::addObjectToProject(proj1.data());
     MakeTestProject::addKeyframesToObject(obj1,4);
     SketchObject *obj2 = MakeTestProject::addCameraToProject(proj1.data());
-    proj1->getWorldManager()->removeObject(obj1);
-    proj1->getWorldManager()->removeObject(obj2);
+    proj1->getWorldManager().removeObject(obj1);
+    proj1->getWorldManager().removeObject(obj2);
     SketchObject *obj3 = obj1->getCopy();
     SketchObject *obj4 = obj2->getCopy();
 
@@ -151,7 +150,7 @@ int testPastedGroupIsTheSame()
                 );
     ProjectToXML::objectFromClipboardXML(proj1.data(),copy,pos1);
 
-    const QList< SketchObject * > *list = proj1->getWorldManager()->getObjects();
+    const QList< SketchObject * > *list = proj1->getWorldManager().getObjects();
     if (list->size() != 1)
     {
         cout << "Wrong number of objects in result." << endl;
@@ -161,4 +160,34 @@ int testPastedGroupIsTheSame()
 
     CompareBeforeAndAfter::compareObjects(obj.data(),pasted,retVal,true,true);
     return retVal;
+}
+
+int testSaveAndLoadStructure() {
+	int retVal = 0;
+    vtkSmartPointer< vtkRenderer > r1 =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchBio::Project > proj1(
+                new SketchBio::Project(r1,TEST_DIR));
+
+    SketchObject *obj = MakeTestProject::addObjectToProject(proj1.data());
+    vtkSmartPointer< vtkXMLDataElement > copy =
+            vtkSmartPointer< vtkXMLDataElement >::Take(
+                ProjectToXML::objectToClipboardXML(obj)
+                );
+	ProjectToXML::saveObjectFromClipboardXML(copy, proj1.data(), TEST_DIR);
+	q_vec_type pos;
+	obj->getPosition(pos);
+    proj1->getWorldManager().removeObject(obj);
+
+    ProjectToXML::loadObjectFromSavedXML(proj1.data(),SAVE_DIR,pos);
+    const QList< SketchObject * > *list = proj1->getWorldManager().getObjects();
+    if (list->size() != 1)
+    {
+        cout << "Wrong number of objects in result." << endl;
+    }
+    SketchObject *loadedObj = list->at(0);
+//    loadedObj->setPosition(pos);
+	
+	CompareBeforeAndAfter::compareObjects(obj,loadedObj,retVal,true,true);
+	return retVal;
 }

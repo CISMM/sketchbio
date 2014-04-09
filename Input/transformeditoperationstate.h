@@ -7,10 +7,10 @@
 class SketchObject;
 #include <sketchproject.h>
 
-class TransformEditOperationState : public QObject, public OperationState {
+class TransformEditOperationState : public QObject, public SketchBio::OperationState {
     Q_OBJECT;
 public:
-    TransformEditOperationState(SketchProject* p) : OperationState(), proj(p) {}
+    TransformEditOperationState(SketchBio::Project* p) : OperationState(), proj(p) {}
     virtual ~TransformEditOperationState() {}
     void addObject(SketchObject* obj) {
         objs.append(obj);
@@ -25,7 +25,7 @@ public slots:
 
 private:
     QVector<SketchObject*> objs;
-    SketchProject *proj;
+    SketchBio::Project *proj;
 };
 
 #endif // TRANSFORMEDITOPERATIONSTATE_H

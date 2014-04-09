@@ -5,7 +5,7 @@
 
 #include "sketchproject.h"
 
-UndoState::UndoState(SketchProject &proj)
+UndoState::UndoState(SketchBio::Project &proj)
     :
       project(proj)
 {
@@ -15,7 +15,7 @@ UndoState::~UndoState()
 {
 }
 
-SketchProject const &UndoState::getProject() const
+SketchBio::Project const &UndoState::getProject() const
 {
     return project;
 }

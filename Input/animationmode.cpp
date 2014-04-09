@@ -13,7 +13,7 @@
 // initial port to controlFunctions (i.e. "generalized input")
 #include <controlFunctions.h>
 
-AnimationMode::AnimationMode(SketchProject *proj, const bool * const b, const double * const a) :
+AnimationMode::AnimationMode(SketchBio::Project *proj, const bool * const b, const double * const a) :
     ObjectGrabMode(proj,b,a)
 {
 }
