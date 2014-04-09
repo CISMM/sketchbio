@@ -983,14 +983,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
     if (models == NULL) {
       return XML_TO_DATA_FAILURE;
     }
-	printf("\nMADE IT HERE\n");
-	fflush(stdout);
+//	printf("\nMADE IT HERE\n");
+//	fflush(stdout);
     QHash< QPair<QString, int>, QPair<SketchModel*,int> > modelIds;
     if (xmlToModelManager(proj, models, modelIds) == XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
-	printf("\nMADE IT PAST MODEL MANAGER\n");
-	fflush(stdout);
+//	printf("\nMADE IT PAST MODEL MANAGER\n");
+//	fflush(stdout);
     vtkXMLDataElement* view =
         elem->FindNestedElementWithName(TRANSFORM_MANAGER_ELEMENT_NAME);
     if (view == NULL) {
@@ -999,8 +999,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
     if (xmlToTransforms(proj, view) == XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
-	printf("\nMADE IT PAST TRANSFORMS\n");
-	fflush(stdout);
+//	printf("\nMADE IT PAST TRANSFORMS\n");
+//	fflush(stdout);
     QHash< QString, SketchObject* > objectIds;
     vtkXMLDataElement* objs =
         elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
@@ -1011,8 +1011,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
         XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
-	printf("\nMADE IT PAST OBJECT LIST\n");
-	fflush(stdout);
+//	printf("\nMADE IT PAST OBJECT LIST\n");
+//	fflush(stdout);
     vtkXMLDataElement* reps =
         elem->FindNestedElementWithName(REPLICATOR_LIST_ELEMENT_NAME);
     if (reps == NULL) {
