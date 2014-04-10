@@ -6,8 +6,6 @@
 #include <quat.h>
  
 #include <vtkSmartPointer.h>
-class vtkActor2D;
-class vtkTextMapper;
 class vtkRenderer;
 
 #include <QMainWindow>
@@ -107,9 +105,7 @@ public slots:
 
   // Physics settings
   void setWorldSpringsEnabled(bool enabled);
-  void toggleWorldSpringsEnabled();
   void setCollisionTestsOn(bool on);
-  void toggleWorldCollisionTestsOn();
 
   // Load a project
   void loadProject();
@@ -118,9 +114,6 @@ public slots:
   virtual void slotExit();
   void slot_frameLoop();
 
-  void setTextMapperString(QString str);
-  void updateStatusText();
-  void updateViewTime(double time);
   void goToViewTime();
 
   void createCameraForViewpoint();
@@ -130,12 +123,16 @@ protected:
  
 protected slots:
   void addUndoStateIfSuccess(bool success);
+private slots:
+  void updateStatusText();
  
 private:
 
   // Methods
   void runSubprocessAndFreezeGUI(SubprocessRunner *runner,
                                  bool needsUndoState = false);
+
+  class GUIStateHelper;
 
   // Fields
   Ui_SimpleView *ui;
@@ -144,14 +141,9 @@ private:
   QThread *serverThread;
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
-  vtkSmartPointer<vtkTextMapper> directionsTextMapper;
-  vtkSmartPointer<vtkActor2D> directionsTextActor;
-  vtkSmartPointer<vtkTextMapper> statusTextMapper;
-  vtkSmartPointer<vtkActor2D> statusTextActor;
-  vtkSmartPointer<vtkTextMapper> timeTextMapper;
-  vtkSmartPointer<vtkActor2D> timeTextActor;
   SketchBio::Project *project;
   HydraInputManager *inputManager;
+  GUIStateHelper *stateHelper;
 };
 
 

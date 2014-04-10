@@ -35,30 +35,41 @@ class StructureReplicator;
 class TransformEquals;
 class UndoState;
 
-namespace SketchBio {
+namespace SketchBio
+{
 // forward declare here so it matches with actual definition namespace
 class Hand;
 
-class OperationState {
-public:
+class OperationState
+{
+   public:
     OperationState() {}
     virtual ~OperationState() {}
     virtual void doFrameUpdates() {}
 };
 
+class ProjectObserver
+{
+   public:
+    virtual ~ProjectObserver() {}
+    virtual void newDirections(const QString &string) {}
+    virtual void viewTimeChanged(double newTime) {}
+};
+
 /*
  *
- * This class encapsulates all the data about what the user has done.  This allows these objects to be
- * swapped out at runtime so that projects can be saved and loaded.  Also, all data that is saved as part
- * of the project state must be in this class.  Each project has a directory where it copies all model
+ * This class encapsulates all the data about what the user has done.  This
+ *allows these objects to be
+ * swapped out at runtime so that projects can be saved and loaded.  Also, all
+ *data that is saved as part
+ * of the project state must be in this class.  Each project has a directory
+ *where it copies all model
  * files that are added to it.
  *
  */
 class Project
 {
-public:
-
-
+   public:
     Project(vtkRenderer* r, const QString& projDir);
     ~Project();
     // #################################################################
@@ -78,13 +89,14 @@ public:
     // the hand, knows position of the trackers and how to grab things
     Hand& getHand(SketchBioHandId::Type side);
     // the list of crystal-by-example structures
-    const QList< StructureReplicator *> &getCrystalByExamples() const;
+    const QList< StructureReplicator* >& getCrystalByExamples() const;
     int getNumberOfCrystalByExamples() const;
     // the list of transform operations (lock transforms for now)
-    const QVector< QSharedPointer< TransformEquals > > &getTransformOps() const;
+    const QVector< QSharedPointer< TransformEquals > >& getTransformOps() const;
     int getNumberOfTransformOps() const;
     // the hash of camera objects and their corresponding vtkCamera objects
-    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > > &getCameras() const;
+    const QHash< SketchObject*, vtkSmartPointer< vtkCamera > >& getCameras()
+        const;
     // the project directory
     QString getProjectDir() const;
     // ###################################################################
@@ -124,8 +136,8 @@ public:
     // ###################################################################
     // User operation state functions:
     // get and set operation state for user operations with persistent state
-    OperationState *getOperationState();
-    void setOperationState(OperationState *state);
+    OperationState* getOperationState();
+    void setOperationState(OperationState* state);
     // ###################################################################
     // clears everything that the user has done in the project in preparation
     // for loading in an undo state
@@ -138,7 +150,8 @@ public:
     bool setProjectDir(const QString& dir);
     // gets the file in the project directory that matches the given file
     // this will copy the file to the project directory if it can, and if
-    // that fails will return the file as-is if it is outside the project directory
+    // that fails will return the file as-is if it is outside the project
+    // directory
     // the new filename is returned in the newName parameter and the bool return
     // value indicates that the project directory now contains the given file
     bool getFileInProjDir(const QString& filename, QString& newName);
@@ -151,29 +164,39 @@ public:
     void setShadowsOff();
     // ###################################################################
     // Camera functions:
-    SketchModel *getCameraModel();
+    SketchModel* getCameraModel();
     SketchObject* addCamera(const q_vec_type pos, const q_type orient);
-    // Given the vtk camera position, creates a camera object that has that position
+    // Given the vtk camera position, creates a camera object that has that
+    // position
     // and view
     SketchObject* addCameraObjectFromCameraPosition(vtkCamera* cam);
     void setCameraToVTKCameraPosition(SketchObject* cam, vtkCamera* vcam);
     // ###################################################################
     // Adding things functions
     // for structure replication chains
-    StructureReplicator* addReplication(SketchObject* o1, SketchObject* o2, int numCopies);
+    StructureReplicator* addReplication(SketchObject* o1, SketchObject* o2,
+                                        int numCopies);
     void addReplication(StructureReplicator* rep);
     // for transform equals
-    QWeakPointer<TransformEquals> addTransformEquals(SketchObject* o1, SketchObject* o2);
+    QWeakPointer< TransformEquals > addTransformEquals(SketchObject* o1,
+                                                       SketchObject* o2);
+    // ###################################################################
+    // ProjectObserver
+    // these allow external notification of the directions that operations
+    // will send as alerts
+    void setDirections(const QString& directions);
+    void addProjectObserver(ProjectObserver* p);
+    void removeProjectObserver(ProjectObserver* p);
 
-public:
+   public:
     // sets up the vtkCamera object to the position and orientation of the given
     // SketchObject.  Should only pass cameras for the SketchObject...
     static void setUpVtkCamera(SketchObject* cam, vtkCamera* vCam);
-private:
-    class ProjectImpl;
-    ProjectImpl *impl;
-};
 
+   private:
+    class ProjectImpl;
+    ProjectImpl* impl;
+};
 }
 
-#endif // SKETCHPROJECT_H
+#endif  // SKETCHPROJECT_H

@@ -4,6 +4,7 @@
 #include <QSettings>
 
 #include <sketchproject.h>
+#include <worldmanager.h>
 #include <transformmanager.h>
 #include <sketchtests.h>
 
@@ -72,15 +73,6 @@ HydraInputManager::HydraInputManager(SketchBio::Project *proj) :
     tracker.register_change_handler((void *) this, handle_tracker_pos_quat);
     buttons.register_change_handler((void *) this, handle_button);
     analogRemote.register_change_handler((void *) this, handle_analogs);
-
-    for (int i = 0; i < modeList.size(); i++)
-    {
-        connect(this->modeList[i].data(), SIGNAL(newDirectionsString(QString)),
-                this, SLOT(setNewDirectionsString(QString)));
-        connect(this->modeList[i].data(), SIGNAL(viewTimeChanged(double)),
-                this, SLOT(newViewTime(double)));
-    }
-
 }
 
 HydraInputManager::~HydraInputManager()
@@ -145,16 +137,18 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
     if (buttonPressed) {
         // events on press
         if (buttonNum == spring_disable_button_idx()) {
-            emit toggleWorldSpringsEnabled();
+            project->getWorldManager().setPhysicsSpringsOn(
+                        project->getWorldManager().areSpringsEnabled());
         } else if (buttonNum == collision_disable_button_idx()) {
-            emit toggleWorldCollisionsEnabled();
+            project->getWorldManager().setCollisionCheckOn(
+                        project->getWorldManager().isCollisionTestingOn());
         } else if (buttonNum == change_modes_button_idx()) {
             activeMode->clearStatus();
             modeIndex = (modeIndex + 1 ) % modeList.size();
             activeMode = modeList[modeIndex];
             activeMode->clearStatus();
-            emit changedModes(getModeName());
-            emit newDirectionsString(" ");
+            emit changedModes();
+            project->setDirections(" ");
         } else if (buttonNum == undo_button_idx()) {
             project->applyUndo();
             activeMode->clearStatus();
@@ -185,14 +179,6 @@ HydraInputMode *HydraInputManager::getActiveMode()
 void HydraInputManager::addUndoState()
 {
     activeMode->addXMLUndoState();
-}
-
-void HydraInputManager::setNewDirectionsString(QString str) {
-    emit newDirectionsString(str);
-}
-
-void HydraInputManager::newViewTime(double time) {
-    emit viewTimeChanged(time);
 }
 
 //####################################################################################

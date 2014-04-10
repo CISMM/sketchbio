@@ -389,6 +389,11 @@ class Project::ProjectImpl : public WorldObserver
     // for transform equals
     QWeakPointer< TransformEquals > addTransformEquals(SketchObject* o1,
                                                        SketchObject* o2);
+    // ###################################################################
+    // ProjectObserver
+    void setDirections(const QString &directions);
+    void addProjectObserver(ProjectObserver *d);
+    void removeProjectObserver(ProjectObserver *d);
 
    public:
     // ###################################################################
@@ -436,6 +441,8 @@ class Project::ProjectImpl : public WorldObserver
     double viewTime;
     // State from user operations that require persistent state
     OperationState* opState;
+
+    QList<ProjectObserver*> observers;
 };
 
 //########################################################################
@@ -459,7 +466,8 @@ Project::ProjectImpl::ProjectImpl(vtkRenderer* r, const QString& projDir)
       showingShadows(true),
       timeInAnimation(0.0),
       viewTime(0.0),
-      opState(NULL)
+      opState(NULL),
+      observers()
 {
     world.addObserver(this);
     hand[SketchBioHandId::LEFT].init(&transforms, &world, SketchBioHandId::LEFT,
@@ -641,6 +649,11 @@ double Project::ProjectImpl::getViewTime() const { return viewTime; }
 
 void Project::ProjectImpl::setViewTime(double time)
 {
+    if (viewTime != time) {
+        foreach (ProjectObserver *d, observers) {
+            d->viewTimeChanged(time);
+        }
+    }
     viewTime = time;
     if (!isDoingAnimation) world.setAnimationTime(time);
 }
@@ -866,6 +879,22 @@ void Project::ProjectImpl::objectRemoved(SketchObject* o)
 }
 
 //########################################################################
+// ProjectObserver
+void Project::ProjectImpl::setDirections(const QString &directions) {
+    foreach (ProjectObserver *obs, observers) {
+        obs->newDirections(directions);
+    }
+}
+void Project::ProjectImpl::addProjectObserver(ProjectObserver *d)
+{
+    observers.append(d);
+}
+void Project::ProjectImpl::removeProjectObserver(ProjectObserver *d)
+{
+    observers.removeOne(d);
+}
+
+//########################################################################
 //########################################################################
 // Project class - forward to ProjectImpl
 //########################################################################
@@ -1006,6 +1035,21 @@ QWeakPointer< TransformEquals > Project::addTransformEquals(SketchObject* o1,
                                                             SketchObject* o2)
 {
     return impl->addTransformEquals(o1, o2);
+}
+
+//########################################################################
+// ProjectObserver
+void Project::setDirections(const QString &directions)
+{
+    impl->setDirections(directions);
+}
+void Project::addProjectObserver(ProjectObserver *d)
+{
+    impl->addProjectObserver(d);
+}
+void Project::removeProjectObserver(ProjectObserver *d)
+{
+    impl->removeProjectObserver(d);
 }
 //########################################################################
 // Static functions

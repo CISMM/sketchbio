@@ -30,22 +30,40 @@ class PhysicsStrategy;
 #include "objectchangeobserver.h"
 #include "physicsstrategyfactory.h"
 
-class WorldObserver {
-public:
+class WorldObserver
+{
+   public:
     virtual ~WorldObserver() {}
+    // will be called on the observer when an object is added.  The parameter
+    // is the new object
     virtual void objectAdded(SketchObject *) {}
+    // will be called on the observer when an object is removed, but before
+    // the object is deleted (if delete object called).  The parameter is
+    // the object that was removed.  Note that if called as part of
+    // deleteObject, the pointer may not be valid after objectRemoved returns
+    // and deleteObject finishes
     virtual void objectRemoved(SketchObject *) {}
+    // will be called on the observer when the physics springs active state
+    // changes.  The parameter will be true if the springs are active
+    // after the change
+    virtual void springActivationChanged() {}
+    // will be called on the observer when the collision detection active
+    // state changes.  The parameter will be true if the collision detection
+    // is on after the change
+    virtual void collisionDetectionActivationChanged() {}
 };
 
 /*
- * This class contains the data that is in the modeled "world", all the objects and
- * springs.  It also contains code to step the "physics" of the simulation and run
+ * This class contains the data that is in the modeled "world", all the objects
+ * and
+ * springs.  It also contains code to step the "physics" of the simulation and
+ * run
  * collision tests.
  */
 
 class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
 {
-public:
+   public:
     explicit WorldManager(vtkRenderer *r);
     virtual ~WorldManager();
 
@@ -69,7 +87,8 @@ public:
      * orient  - the orientation of the object when it is added
      *
      *******************************************************************/
-    SketchObject *addObject(SketchModel *model,const q_vec_type pos, const q_type orient);
+    SketchObject *addObject(SketchModel *model, const q_vec_type pos,
+                            const q_type orient);
     /*******************************************************************
      * Adds a the given object to the world and returns it.
      *
@@ -101,14 +120,15 @@ public:
      *******************************************************************/
     void deleteObject(SketchObject *object);
 
-	/*******************************************************************
-     *
-     * Takes an object and either removes it from its group or adds it to
-     * one if necessary based on the animation time. Also does the same
-	 * for its subobjects recursively.
-     *
-     *******************************************************************/
-	void updateGroupStatus(SketchObject *object, double t, double lastGroupUpdate);
+    /*******************************************************************
+ *
+ * Takes an object and either removes it from its group or adds it to
+ * one if necessary based on the animation time. Also does the same
+     * for its subobjects recursively.
+ *
+ *******************************************************************/
+    void updateGroupStatus(SketchObject *object, double t,
+                           double lastGroupUpdate);
 
     /*******************************************************************
      *
@@ -124,7 +144,7 @@ public:
      * WorldManager
      *
      *******************************************************************/
-    QListIterator<SketchObject *> getObjectIterator() const;
+    QListIterator< SketchObject * > getObjectIterator() const;
 
     /*******************************************************************
      *
@@ -132,7 +152,7 @@ public:
      * WorldManager
      *
      *******************************************************************/
-    const QList<SketchObject *> *getObjects() const;
+    const QList< SketchObject * > *getObjects() const;
 
     /*******************************************************************
      *
@@ -154,7 +174,7 @@ public:
      * spring - the spring to add
      *
      *******************************************************************/
-    Connector* addConnector(Connector* spring);
+    Connector *addConnector(Connector *spring);
 
     /*******************************************************************
      *
@@ -165,13 +185,19 @@ public:
      * spring - the spring to add
      *
      *******************************************************************/
-    inline void addUISpring(Connector* spring) { addConnector(spring,uiSprings); }
+    inline void addUISpring(Connector *spring)
+    {
+        addConnector(spring, uiSprings);
+    }
     /*******************************************************************
      *
      * Gets the list of connectors (springs) for the left hand
      *
      *******************************************************************/
-    inline const QList< Connector* > *getUISprings() const { return &uiSprings; }
+    inline const QList< Connector * > *getUISprings() const
+    {
+        return &uiSprings;
+    }
     /*******************************************************************
      *
      * Removes the connector from the user interface connectors
@@ -195,15 +221,19 @@ public:
      * o2 - the second object to connect
      * pos1 - the position where the spring connects to the first model
      * pos2 - the position where the spring connects to the second model
-     * worldRelativePos - true if the above positions are relative to the world coordinate space,
-     *                  - false if they are relative to the model coordiante space
+     * worldRelativePos - true if the above positions are relative to the world
+     *coordinate space,
+     *                  - false if they are relative to the model coordiante
+     *space
      * k - the stiffness of the spring
      * minLen - the minimum rest length of the spring
      * maxLen - the maximum rest length of the spring
      *
      *******************************************************************/
-    SpringConnection* addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                       const q_vec_type pos2, bool worldRelativePos, double k, double minLen, double maxLen);
+    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2,
+                                const q_vec_type pos1, const q_vec_type pos2,
+                                bool worldRelativePos, double k, double minLen,
+                                double maxLen);
 
     /*******************************************************************
      *
@@ -215,14 +245,17 @@ public:
      * o2 - the second object to connect
      * pos1 - the position where the spring connects to the first model
      * pos2 - the position where the spring connects to the second model
-     * worldRelativePos - true if the above positions are relative to the world coordinate space,
-     *                  - false if they are relative to the model coordiante space
+     * worldRelativePos - true if the above positions are relative to the world
+     *coordinate space,
+     *                  - false if they are relative to the model coordiante
+     *space
      * k - the stiffness of the spring
      * len - the length of the spring
      *
      *******************************************************************/
-    SpringConnection* addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                                       const q_vec_type pos2, bool worldRelativePos, double k, double len);
+    SpringConnection *addSpring(SketchObject *o1, SketchObject *o2,
+                                const q_vec_type pos1, const q_vec_type pos2,
+                                bool worldRelativePos, double k, double len);
 
     /*******************************************************************
      *
@@ -232,7 +265,7 @@ public:
      * freed
      *
      *******************************************************************/
-    void removeSpring(Connector* spring);
+    void removeSpring(Connector *spring);
 
     /*******************************************************************
      *
@@ -246,13 +279,13 @@ public:
      * Returns a const reference to the list of springs
      *
      *******************************************************************/
-    const QList< Connector* >& getSprings() const;
+    const QList< Connector * > &getSprings() const;
     /*******************************************************************
      *
      * Returns an iterator over all the springs in the list
      *
      *******************************************************************/
-    QListIterator< Connector* > getSpringsIterator() const;
+    QListIterator< Connector * > getSpringsIterator() const;
     /*******************************************************************
      *
      * Sets the collision response mode
@@ -316,7 +349,7 @@ public:
      * is externally modified
      *
      *******************************************************************/
-    void changedVisibility(SketchObject* obj);
+    void changedVisibility(SketchObject *obj);
     /*******************************************************************
      *
      * Returns true if invisible objects are being shown
@@ -345,11 +378,23 @@ public:
     void setPhysicsSpringsOn(bool on);
     /*******************************************************************
      *
+     * Returns true if the non-user related spring forces are enabled
+     *
+     *******************************************************************/
+    bool areSpringsEnabled();
+    /*******************************************************************
+     *
      * Turns on or off the collision tests (when off, objects can pass
      * through each other)
      *
      *******************************************************************/
     void setCollisionCheckOn(bool on);
+    /*******************************************************************
+     *
+     * Returns true if the collision testing is on
+     *
+     *******************************************************************/
+    bool isCollisionTestingOn();
     /*******************************************************************
      *
      * Returns the closest object to the given object, and the distance
@@ -360,7 +405,7 @@ public:
      *              when the function exits
      *
      *******************************************************************/
-    SketchObject *getClosestObject(SketchObject *subj,double &distOut);
+    SketchObject *getClosestObject(SketchObject *subj, double &distOut);
     /*******************************************************************
      *
      * Returns the closest object in the list to the subject object.  This
@@ -372,8 +417,8 @@ public:
      *              when the function exits
      *
      *******************************************************************/
-    static SketchObject *getClosestObject(QList<SketchObject *> &objects,
-                                          SketchObject *subj,double &distOut);
+    static SketchObject *getClosestObject(QList< SketchObject * > &objects,
+                                          SketchObject *subj, double &distOut);
     /*******************************************************************
      *
      * Returns the closest spring to the given point, and the 'distance'
@@ -384,7 +429,8 @@ public:
      * than to End2.
      *
      *******************************************************************/
-    Connector* getClosestConnector(q_vec_type point, double *distOut, bool *closerToEnd1);
+    Connector *getClosestConnector(q_vec_type point, double *distOut,
+                                   bool *closerToEnd1);
     /*******************************************************************
      *
      * This method set the plane used to compute the shadows of objects
@@ -420,14 +466,15 @@ public:
      *
      *******************************************************************/
     void removeObserver(WorldObserver *w);
-private:
+
+   private:
     /*******************************************************************
      *
      * This method adds the spring to the given list and performs the
      * other steps necessary for the connector to be shown onscreen
      *
      *******************************************************************/
-    void addConnector(Connector* spring, QList< Connector* > &list);
+    void addConnector(Connector *spring, QList< Connector * > &list);
 
     /*******************************************************************
      *
@@ -460,13 +507,13 @@ private:
 
     typedef QPair< vtkSmartPointer< vtkProjectToPlane >,
                    vtkSmartPointer< vtkActor > > ShadowPair;
-    typedef QPair< vtkSmartPointer< vtkLineSource>,
+    typedef QPair< vtkSmartPointer< vtkLineSource >,
                    vtkSmartPointer< vtkActor > > ConnectorPair;
 
-    QList< SketchObject* > objects;
-    QHash< SketchObject*, ShadowPair > shadows;
-    QHash< Connector* , ConnectorPair > lines;
-    QList< Connector* > connections, uiSprings;
+    QList< SketchObject * > objects;
+    QHash< SketchObject *, ShadowPair > shadows;
+    QHash< Connector *, ConnectorPair > lines;
+    QList< Connector * > connections, uiSprings;
     QVector< QSharedPointer< PhysicsStrategy > > strategies;
 
     vtkSmartPointer< vtkRenderer > renderer;
@@ -477,29 +524,31 @@ private:
     bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;
     PhysicsMode::Type collisionResponseMode;
 
-	double lastGroupUpdate;
-    QList< WorldObserver* > observers;
+    double lastGroupUpdate;
+    QList< WorldObserver * > observers;
 };
 
-inline SpringConnection* WorldManager::addSpring(SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
-                               const q_vec_type pos2, bool worldRelativePos, double k, double len) {
-    return addSpring(o1,o2,pos1,pos2,worldRelativePos,k,len,len);
+inline SpringConnection *WorldManager::addSpring(
+    SketchObject *o1, SketchObject *o2, const q_vec_type pos1,
+    const q_vec_type pos2, bool worldRelativePos, double k, double len)
+{
+    return addSpring(o1, o2, pos1, pos2, worldRelativePos, k, len, len);
 }
 
-inline const QList<SketchObject *> *WorldManager::getObjects() const
+inline const QList< SketchObject * > *WorldManager::getObjects() const
 {
     return &objects;
 }
 
-inline const QList< Connector *> &WorldManager::getSprings() const
+inline const QList< Connector * > &WorldManager::getSprings() const
 {
     return connections;
 }
 
-inline SketchObject *WorldManager::getClosestObject(SketchObject *subj, double &distOut)
+inline SketchObject *WorldManager::getClosestObject(SketchObject *subj,
+                                                    double &distOut)
 {
-    return getClosestObject(objects,subj,distOut);
+    return getClosestObject(objects, subj, distOut);
 }
 
-
-#endif // WORLDMANAGER_H
+#endif  // WORLDMANAGER_H
