@@ -1257,7 +1257,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(
       }
     }
   }
-  printf("\nMADE IT PAST MODELS\n");
+//  printf("\nMADE IT PAST MODELS\n");
 fflush(stdout);
   return XML_TO_DATA_SUCCESS;
 }
