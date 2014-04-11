@@ -71,6 +71,7 @@ void TransformEditOperationState::setObjectTransform(double x, double y,
     } else {
         objs[1]->setPosAndOrient(pos, orient);
     }
+    // clears operation state and calls deleteLater
     cancelOperation();
 }
 
@@ -87,7 +88,7 @@ namespace ControlFunctions
 void keyframeAll(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Release to keyframe all objects.");
+        project->setDirections("Release to keyframe all objects.");
     } else  // button released
     {
         double time = project->getViewTime();
@@ -97,7 +98,7 @@ void keyframeAll(SketchBio::Project *project, int hand, bool wasPressed)
             itr.next()->addKeyframeForCurrentLocation(time);
         }
         project->getWorldManager().setAnimationTime(time);
-        // emit newDirectionsString(" ");
+        project->clearDirections();
         addXMLUndoState(project);
     }
     return;
@@ -107,9 +108,9 @@ void toggleKeyframeObject(SketchBio::Project *project, int hand,
                           bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Move to an object and release to add or
-        // remove
-        // a keyframe\nfor the current location and time.");
+        project->setDirections(
+            "Move to an object and release to add or remove a keyframe\nfor "
+            "the current location and time.");
     } else  // button released
     {
 
@@ -136,14 +137,14 @@ void toggleKeyframeObject(SketchBio::Project *project, int hand,
             // positions
             project->getWorldManager().setKeyframeOutlinesForTime(time);
             addXMLUndoState(project);
-            // emit newDirectionsString(" ");
+            project->clearDirections();
         } else if (nearestObjParent != NULL) {
-            // emit newDirectionsString("Cannot keyframe objects in a group
-            // individually,\n"
-            //						 "keyframe the group and
-            // it will save the state of all of them.");
+            project->setDirections(
+                "Cannot keyframe objects in a group individually,\n"
+                "keyframe the group and it will save the state of all of "
+                "them.");
         } else {
-            // emit newDirectionsString(" ");
+            project->clearDirections();
         }
     }
     return;
@@ -152,7 +153,8 @@ void toggleKeyframeObject(SketchBio::Project *project, int hand,
 void addCamera(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Release the button to add a camera.");
+        project->setDirections(
+            "Release to add a camera at the current location.");
     } else  // button released
     {
         q_vec_type pos;
@@ -163,7 +165,7 @@ void addCamera(SketchBio::Project *project, int hand, bool wasPressed)
         handObj.getOrientation(orient);
         project->addCamera(pos, orient);
         addXMLUndoState(project);
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -173,21 +175,18 @@ void showAnimationPreview(SketchBio::Project *project, int hand,
 {
     if (wasPressed) {
         if (project->isShowingAnimation()) {
-            // emit newDirectionsString("Release to stop the animation
-            // preview.");
+            project->setDirections("Release to stop the animation preview.");
         } else {
-            // emit newDirectionsString("Release to preview the animation.");
+            project->setDirections("Release to preview the animation.");
         }
-    } else  // button released
-    {
+    } else {  // button released
         if (project->isShowingAnimation()) {
             project->stopAnimation();
-            // emit newDirectionsString(" ");
         } else {
             // play sample animation
             project->startAnimation();
-            // emit newDirectionsString(" ");
         }
+        project->clearDirections();
     }
     return;
 }
@@ -201,12 +200,10 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
                            bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Select the group with the left hand\n"
-        //						 "and the object to add/remove
-        //with the right
-        // hand");
-    } else  // button released
-    {
+        project->setDirections(
+            "Select the group with the left hand\n"
+            "and the object to add/remove with the right hand");
+    } else {  // button released
         WorldManager &world = project->getWorldManager();
 
         SketchBio::Hand &leftHandObj = project->getHand(SketchBioHandId::LEFT);
@@ -252,7 +249,7 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
             }
             addXMLUndoState(project);
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -260,8 +257,8 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
 void copyObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Select an object and release the button to
-        // copy");
+        project->setDirections(
+            "Select an object and release the button to copy");
     } else  // button released
     {
         SketchBio::Hand &handObj = project->getHand(
@@ -279,7 +276,7 @@ void copyObject(SketchBio::Project *project, int hand, bool wasPressed)
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(ss.str().c_str());
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -287,7 +284,7 @@ void copyObject(SketchBio::Project *project, int hand, bool wasPressed)
 void pasteObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Release the button to paste");
+        project->setDirections("Release the button to paste");
     } else  // button released
     {
         std::stringstream ss;
@@ -311,7 +308,7 @@ void pasteObject(SketchBio::Project *project, int hand, bool wasPressed)
         } else {
             std::cout << "Failed to read object." << std::endl;
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -323,8 +320,9 @@ void pasteObject(SketchBio::Project *project, int hand, bool wasPressed)
 void changeObjectColor(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Move to the object and release to change\n"
-        //                     " the color map of the object");
+        project->setDirections(
+            "Move to the object and release to change\n"
+            " the color map of the object");
     } else  // button released
     {
         SketchBio::Hand &handObj = project->getHand(
@@ -400,7 +398,7 @@ void changeObjectColor(SketchBio::Project *project, int hand, bool wasPressed)
             nearestSpring->setColorMapType(cmap);
             addXMLUndoState(project);
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -409,8 +407,9 @@ void changeObjectColorVariable(SketchBio::Project *project, int hand,
                                bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Move to the object and release to change\n"
-        //                " the variable the object is colored by.");
+        project->setDirections(
+            "Move to the object and release to change\n"
+            " the variable the object is colored by.");
     } else  // button released
     {
         SketchBio::Hand &handObj = project->getHand(
@@ -431,7 +430,7 @@ void changeObjectColorVariable(SketchBio::Project *project, int hand,
             nearestObj->setArrayToColorBy(arr);
             addXMLUndoState(project);
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -440,8 +439,9 @@ void toggleObjectVisibility(SketchBio::Project *project, int hand,
                             bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Move to an object and release to toggle "
-        //                "object visibility.");
+        project->setDirections(
+            "Move to an object and release to toggle "
+            "object visibility.");
     } else  // button released
     {
 
@@ -459,7 +459,7 @@ void toggleObjectVisibility(SketchBio::Project *project, int hand,
             project->getWorldManager().changedVisibility(nearestObj);
             addXMLUndoState(project);
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -468,9 +468,8 @@ void toggleShowInvisibleObjects(SketchBio::Project *project, int hand,
                                 bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Release to toggle whether invisible objects
-        // are
-        // shown.");
+        project->setDirections(
+            "Release to toggle whether invisible objects are shown.");
     } else  // button released
     {
         // toggle invisible objects shown
@@ -479,7 +478,7 @@ void toggleShowInvisibleObjects(SketchBio::Project *project, int hand,
             world.hideInvisibleObjects();
         else
             world.showInvisibleObjects();
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -491,8 +490,8 @@ void toggleShowInvisibleObjects(SketchBio::Project *project, int hand,
 void deleteSpring(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Move to a spring and release to delete the
-        // spring.");
+        project->setDirections(
+            "Move to a spring and release to delete the spring.");
     } else  // button released
     {
 
@@ -516,7 +515,7 @@ void deleteSpring(SketchBio::Project *project, int hand, bool wasPressed)
             handObj.clearNearestConnector();
             project->getWorldManager().removeSpring(thisHandNearestSpring);
         }
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -550,7 +549,7 @@ void snapSpringToTerminus(SketchBio::Project *project, int hand,
 void createSpring(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Release at location of new spring.");
+        project->setDirections("Release at location of new spring.");
     } else  // button released
     {
         q_vec_type pos1, pos2 = {0, 1, 0};
@@ -563,7 +562,7 @@ void createSpring(SketchBio::Project *project, int hand, bool wasPressed)
             NULL, NULL, pos1, pos2, true, DEFAULT_SPRING_STIFFNESS, 0, true);
         project->getWorldManager().addConnector(spring);
         addXMLUndoState(project);
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -572,9 +571,9 @@ void createTransparentConnector(SketchBio::Project *project, int hand,
                                 bool wasPressed)
 {
     if (wasPressed) {
-        // emit newDirectionsString("Release to create a transparent connector
-        // at
-        // the current location.");
+        project->setDirections(
+            "Release to create a transparent connector "
+            "at the current location.");
     } else  // button released
     {
         q_vec_type pos1, pos2 = {0, 1, 0};
@@ -585,7 +584,7 @@ void createTransparentConnector(SketchBio::Project *project, int hand,
         Connector *conn = new Connector(NULL, NULL, pos1, pos2, 0.3, 10);
         project->getWorldManager().addConnector(conn);
         addXMLUndoState(project);
-        // emit newDirectionsString(" ");
+        project->clearDirections();
     }
     return;
 }
@@ -609,7 +608,7 @@ void grabObjectOrWorld(SketchBio::Project *project, int hand, bool wasPressed)
 
         double nearestObjDist = handObj.getNearestObjectDistance();
 
-        if (handObj.getNearestObjectDistance() > DISTANCE_THRESHOLD) {
+        if (nearestObjDist > DISTANCE_THRESHOLD) {
             handObj.grabWorld();
         } else {
             handObj.grabNearestObject();
@@ -684,19 +683,16 @@ void deleteObject(SketchBio::Project *project, int hand, bool wasPressed)
             project->getWorldManager().deleteObject(obj);
         }
         addXMLUndoState(project);
-        project->setDirections(" ");
+        project->clearDirections();
     }
 }
 
-static const int REPLICATION_OPERATION_ID = 0;
 void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
         if (project->getOperationState() != NULL) {
             return;
         }
-        //      if (project->getOperationUsingState() !=
-        // SketchBio::Project::NO_OPERATION_USING_STATE) { return; }
         SketchBio::Hand &handObj = project->getHand(
             (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
         double hDist = handObj.getNearestObjectDistance();
@@ -715,43 +711,29 @@ void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
             project->getWorldManager().addObject(nObj);
             int nCopies = 1;
             project->addReplication(obj, nObj, nCopies);
-            //        project->addObjectToObjectsSelected(obj);
-            //        project->addObjectToObjectsSelected(nObj);
-            //        project->setOperationUsingState(REPLICATION_OPERATION_ID);
             /*emit newDirectionsString("Pull the trigger to set the number
             of replicas to add,\nthen release the button.");*/
         }
 
     } else {
-        //      if (project->getOperationUsingState() !=
-        // REPLICATION_OPERATION_ID) { return; }
-        //      project->clearObjectsSelected();
-        //      project->setOperationUsingState(SketchBio::Project::NO_OPERATION_USING_STATE);
         addXMLUndoState(project);
         // emit newDirectionsString(" ");
     }
 }
-static const int SET_TRANSFORMS_ID = 1;
 void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
         if (project->getOperationState() == NULL) {
-            //      if (project->getOperationUsingState() ==
-            // SketchBio::Project::NO_OPERATION_USING_STATE) {
             project->setOperationState(
                 new TransformEditOperationState(project));
-            //        project->setOperationUsingState(SET_TRANSFORMS_ID);
-            /*emit newDirectionsString(
-                                     "Select the object to use as the base of
-               the\n"
-                                     "coordinate system and release the
-               button.");*/
+            project->setDirections(
+                "Select the object to use as the base of the\n"
+                "coordinate system and release the button.");
         } else if (dynamic_cast< TransformEditOperationState * >(
                        project->getOperationState())) {
-            /*emit newDirectionsString(
-                                     "Select the object to define the
-               transformation\n"
-                                     "to and release the button.");*/
+            project->setDirections(
+                "Select the object to define the transformation\n"
+                "to and release the button.");
         }
     } else  // released
     {
@@ -771,18 +753,15 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
 
                 if (hDist < DISTANCE_THRESHOLD) {
                     state->addObject(obj);
-                    //              project->addObjectToObjectsSelected(obj);
-                    /*emit newDirectionsString("Press to select the object
-                    to define relative\n"
-                   "to the selected object.");*/
+                    project->setDirections(
+                        "Press to select the object to define relative\n"
+                        "to the selected object.");
                 } else {
-                    /*emit newDirectionsString(" ");*/
-                    //                project->setOperationUsingState(SketchBio::Project::NO_OPERATION_USING_STATE);
+                    project->clearDirections();
                 }
             } else {
                 if (hDist < DISTANCE_THRESHOLD) {
                     state->addObject(obj);
-                    //              project->addObjectToObjectsSelected(obj);
                     vtkSmartPointer< vtkTransform > transform =
                         vtkSmartPointer< vtkTransform >::New();
                     transform->Identity();
@@ -808,9 +787,7 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
                     dialog->exec();
                     delete dialog;
                 }
-                //            project->clearObjectsSelected();
-                // emit newDirectionsString(" ");
-                //            project->setOperationUsingState(SketchBio::Project::NO_OPERATION_USING_STATE);
+                project->clearDirections();
             }
         }
     }

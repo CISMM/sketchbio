@@ -1043,6 +1043,10 @@ void Project::setDirections(const QString &directions)
 {
     impl->setDirections(directions);
 }
+void Project::clearDirections()
+{
+    impl->setDirections("");
+}
 void Project::addProjectObserver(ProjectObserver *d)
 {
     impl->addProjectObserver(d);
