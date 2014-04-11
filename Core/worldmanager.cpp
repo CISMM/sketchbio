@@ -35,6 +35,23 @@ using std::endl;
 #define SHADOW_COLOR 0.1, 0.1, 0.1
 #define HALFPLANE_COLOR 0.9, 0.3, 0.3
 
+void addObserverRecursive(SketchObject *obj, ObjectChangeObserver *obs) {
+    obj->addObserver(obs);
+    if (obj->getSubObjects() != NULL) {
+        foreach (SketchObject * subObj, *obj->getSubObjects()) {
+            addObserverRecursive(subObj,obs);
+        }
+    }
+}
+void removeObserverRecursive(SketchObject *obj, ObjectChangeObserver *obs) {
+    obj->removeObserver(obs);
+    if (obj->getSubObjects() != NULL) {
+        foreach (SketchObject * subObj, *obj->getSubObjects()) {
+            removeObserverRecursive(subObj,obs);
+        }
+    }
+}
+
 //##################################################################################################
 //##################################################################################################
 WorldManager::WorldManager(vtkRenderer *r)
@@ -108,7 +125,7 @@ SketchObject *WorldManager::addObject(SketchObject *object)
     if (object->isVisible() || showInvisible) {
         insertActors(object);
     }
-    object->addObserver(this);
+    addObserverRecursive(object,this);
     foreach(WorldObserver * w, observers) { w->objectAdded(object); }
     return object;
 }
@@ -124,7 +141,7 @@ void WorldManager::removeObject(SketchObject *object)
         removeActors(object);
         removeShadows(object);
         objects.removeAt(index);
-        object->removeObserver(this);
+        removeObserverRecursive(object,this);
     } else if (object->getParent() != NULL) {
         // TODO - add test for this case where an object in a group is
         // removed/deleted
@@ -767,6 +784,7 @@ void WorldManager::subobjectAdded(SketchObject *parent, SketchObject *child)
     if (child->isVisible() || isShowingInvisible()) {
         insertActors(child);
     }
+    addObserverRecursive(child,this);
     foreach(WorldObserver * w, observers) { w->objectAdded(child); }
 }
 
@@ -776,7 +794,15 @@ void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 {
     removeActors(child);
     removeShadows(child);
+    removeObserverRecursive(child,this);
     foreach(WorldObserver * w, observers) { w->objectRemoved(child); }
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::objectVisibilityChanged(SketchObject *obj)
+{
+    changedVisibility(obj);
 }
 
 //##################################################################################################

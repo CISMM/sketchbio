@@ -453,10 +453,8 @@ void toggleObjectVisibility(SketchBio::Project *project, int hand,
 
         if (nearestObjDist < DISTANCE_THRESHOLD) {
             // toggle object visible
-            // TODO - shawn, make easier to use so that only one call is needed
             SketchObject::setIsVisibleRecursive(nearestObj,
                                                 !nearestObj->isVisible());
-            project->getWorldManager().changedVisibility(nearestObj);
             addXMLUndoState(project);
         }
         project->clearDirections();

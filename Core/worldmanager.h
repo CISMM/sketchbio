@@ -456,6 +456,12 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
     virtual void subobjectRemoved(SketchObject *parent, SketchObject *child);
     /*******************************************************************
      *
+     * Called whenever the visibility of an object changes
+     *
+     *******************************************************************/
+    virtual void objectVisibilityChanged(SketchObject *obj);
+    /*******************************************************************
+     *
      * Adds an observer to the world manager
      *
      *******************************************************************/
