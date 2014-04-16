@@ -158,11 +158,9 @@ int testSelectionBug()
   q_vec_type v1 = {400, -30, 50};
   o1->setPosition(v1);
   world->addObject(group);
-  QScopedPointer< SketchObject > subject(new ModelInstance(model.data()));
-  subject->setPosition(v1);
   double dist;
   int errors = 0;
-  SketchObject *closest = world->getClosestObject(subject.data(), dist);
+  SketchObject *closest = world->getClosestObject(v1, dist);
   if (closest != group || dist > 0) {
     errors++;
     cout << "Group with one object treated wrong in selection test." << endl;
@@ -179,38 +177,33 @@ int testSelection()
   SketchObject *o1, *o2, *o3, *o4;
   createObjects(world.data(), model.data(), o1, o2, o3, o4);
   q_vec_type v1 = {0, 0, 0};
-  QScopedPointer< SketchObject > subject(new ModelInstance(model.data()));
-  subject->setPosition(v1);
   double dist;
   int errors = 0;
-  SketchObject *closest = world->getClosestObject(subject.data(), dist);
+  SketchObject *closest = world->getClosestObject(v1, dist);
   if (closest != o1 || dist > 0) {
     errors++;
     cout << "Wrong selection of single object." << endl;
   }
   q_vec_set(v1, 10, 0, 0);
-  subject->setPosition(v1);
-  closest = world->getClosestObject(subject.data(), dist);
+  closest = world->getClosestObject(v1, dist);
   if (closest != o2 || dist > 0) {
     errors++;
     cout << "Wrong selection of group." << endl;
   }
   o1->setPosition(v1);
-  closest = world->getClosestObject(subject.data(), dist);
+  closest = world->getClosestObject(v1, dist);
   if (closest != o1 || dist > 0) {
     errors++;
     cout << "Wrong selection of object when overlapped with group." << endl;
   }
   q_vec_set(v1, 0, 10.5, 0);
-  subject->setPosition(v1);
-  closest = world->getClosestObject(subject.data(), dist);
+  closest = world->getClosestObject(v1, dist);
   if (closest != o3->getParent() || dist > 0) {
     errors++;
     cout << "Wrong selection of group2." << endl;
   }
   q_vec_set(v1, 0, 0, -15);
-  subject->setPosition(v1);
-  closest = world->getClosestObject(subject.data(), dist);
+  closest = world->getClosestObject(v1, dist);
   if (closest != o4->getParent() || dist < 0) {
     errors++;
     cout << "Wrong selection of group3." << endl;

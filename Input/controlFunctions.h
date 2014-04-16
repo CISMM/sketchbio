@@ -14,7 +14,7 @@ namespace ControlFunctions
     void showAnimationPreview(SketchBio::Project*, int, bool);
 
 	// GROUP EDITING functions:
-    void toggleGroupMembership(SketchBio::Project*, int, bool); // !! INCOMPLETE !!
+    void toggleGroupMembership(SketchBio::Project*, int, bool);
 
 	// COLOR EDITING functions:
     void changeObjectColor(SketchBio::Project*, int, bool);

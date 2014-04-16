@@ -477,12 +477,14 @@ void Hand::HandImpl::computeNearestObjectAndConnector()
     if (grabType != OBJECT_GRABBED && grabType != WORLD_GRABBED &&
         worldMgr->getNumberOfObjects() > 0) {
         SketchObject* obj;
+        q_vec_type trackerPos;
+        getPosition(trackerPos);
         if (nearestObject == NULL || nearestObject->getParent() == NULL ||
             objectDistance >= DISTANCE_THRESHOLD) {
-            obj = worldMgr->getClosestObject(&tracker, objectDistance);
+            obj = worldMgr->getClosestObject(trackerPos, objectDistance);
         } else {
             obj = worldMgr->getClosestObject(
-                *nearestObject->getParent()->getSubObjects(), &tracker,
+                *nearestObject->getParent()->getSubObjects(), trackerPos,
                 objectDistance);
         }
         if (obj != nearestObject) {
@@ -590,8 +592,10 @@ void Hand::HandImpl::selectSubObjectOfCurrent()
     if (nearestObject != NULL) {
         QList< SketchObject* >* subObjects = nearestObject->getSubObjects();
         if (subObjects != NULL) {
+            q_vec_type trackerPos;
+            getPosition(trackerPos);
             nearestObject = WorldManager::getClosestObject(
-                *subObjects, &tracker, objectDistance);
+                *subObjects, trackerPos, objectDistance);
             if (OutlineType::OBJECTS == outlineType) {
                 outlineObject(nearestObject);
             }

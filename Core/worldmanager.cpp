@@ -690,7 +690,7 @@ inline double distOutsideAABB(q_vec_type point, double bb[6])
 //##################################################################################################
 //##################################################################################################
 SketchObject *WorldManager::getClosestObject(QList< SketchObject * > &objects,
-                                             SketchObject *subj,
+                                             const q_vec_type pos,
                                              double &distOut)
 {
     SketchObject *closest = NULL;
@@ -700,14 +700,15 @@ SketchObject *WorldManager::getClosestObject(QList< SketchObject * > &objects,
         SketchObject *obj = it.next();
         double bb[6];
         double dist;
-        subj->getPosition(pos1);
+        // get the original position in world space
+        q_vec_copy(pos1,pos);
         if (obj->numInstances() == 1) {
             obj->getWorldSpacePointInModelCoordinates(pos1, pos1);
         }
         obj->getBoundingBox(bb);
         dist = distOutsideAABB(pos1, bb);
         if (dist < 0 && obj->numInstances() != 1) {
-            getClosestObject(*obj->getSubObjects(), subj, dist);
+            getClosestObject(*obj->getSubObjects(), pos, dist);
         }
         if (dist < distance) {
             distance = dist;

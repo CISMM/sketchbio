@@ -195,7 +195,6 @@ void showAnimationPreview(SketchBio::Project *project, int hand,
 
 // ===== BEGIN GROUP EDITING FUNCTIONS =====
 
-// !! INCOMPLETE !! //
 void toggleGroupMembership(SketchBio::Project *project, int hand,
                            bool wasPressed)
 {
@@ -206,46 +205,39 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
     } else {  // button released
         WorldManager &world = project->getWorldManager();
 
-        SketchBio::Hand &leftHandObj = project->getHand(SketchBioHandId::LEFT);
+        SketchBio::Hand &handObj0 = project->getHand(
+                    hand == 1 ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
 
-        SketchObject *leftNearestObj = leftHandObj.getNearestObject();
-        double leftNearestObjDist = leftHandObj.getNearestObjectDistance();
+        SketchObject *nearestObj0 = handObj0.getNearestObject();
+        double nearestObjDist0 = handObj0.getNearestObjectDistance();
 
-        SketchBio::Hand &rightHandObj =
-            project->getHand(SketchBioHandId::RIGHT);
+        SketchBio::Hand &handObj1 =
+            project->getHand(
+                    hand == 1 ? SketchBioHandId::RIGHT : SketchBioHandId::LEFT);
 
-        SketchObject *rightNearestObj = rightHandObj.getNearestObject();
-        double rightNearestObjDist = rightHandObj.getNearestObjectDistance();
+        SketchObject *nearestObj1 = handObj1.getNearestObject();
+        double nearestObjDist1 = handObj1.getNearestObjectDistance();
 
-        if (leftNearestObjDist < DISTANCE_THRESHOLD &&
-            rightNearestObjDist < DISTANCE_THRESHOLD) {
-            ObjectGroup *grp = dynamic_cast< ObjectGroup * >(leftNearestObj);
-            if (leftNearestObj == rightNearestObj) {
-                if (grp == NULL) return;
-                // TODO - fix this operation
-                //					SketchObject *rHand =
-                // project->getRightHandObject();
-                //					SketchObject *obj =
-                // WorldManager::getClosestObject(
-                //								*grp->getSubObjects(),rHand,rightNearestObjDist);
-                //					if (rightNearestObjDist
-                //<
-                // DISTANCE_THRESHOLD)
-                //					{
-                //						grp->removeObject(obj);
-                //						world->addObject(obj);
-                //					}
+        if (nearestObjDist0 < DISTANCE_THRESHOLD &&
+            nearestObjDist1 < DISTANCE_THRESHOLD) {
+            ObjectGroup *grp = dynamic_cast< ObjectGroup * >(nearestObj0);
+            if (nearestObj0 == nearestObj1) {
+                return;
+            } else if (nearestObj0 == nearestObj1->getParent()) {
+                assert(grp != NULL);
+                grp->removeObject(nearestObj1);
+                world.addObject(nearestObj1);
             } else {
                 if (grp == NULL ||
                     (grp != NULL &&
-                     dynamic_cast< ObjectGroup * >(rightNearestObj) != NULL)) {
+                     dynamic_cast< ObjectGroup * >(nearestObj1) != NULL)) {
                     grp = new ObjectGroup();
-                    world.removeObject(leftNearestObj);
-                    grp->addObject(leftNearestObj);
+                    world.removeObject(nearestObj0);
+                    grp->addObject(nearestObj0);
                     world.addObject(grp);
                 }
-                world.removeObject(rightNearestObj);
-                grp->addObject(rightNearestObj);
+                world.removeObject(nearestObj1);
+                grp->addObject(nearestObj1);
             }
             addXMLUndoState(project);
         }

@@ -405,7 +405,7 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *              when the function exits
      *
      *******************************************************************/
-    SketchObject *getClosestObject(SketchObject *subj, double &distOut);
+    SketchObject *getClosestObject(const q_vec_type pos, double &distOut);
     /*******************************************************************
      *
      * Returns the closest object in the list to the subject object.  This
@@ -418,7 +418,7 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *
      *******************************************************************/
     static SketchObject *getClosestObject(QList< SketchObject * > &objects,
-                                          SketchObject *subj, double &distOut);
+                                          const q_vec_type pos, double &distOut);
     /*******************************************************************
      *
      * Returns the closest spring to the given point, and the 'distance'
@@ -551,10 +551,10 @@ inline const QList< Connector * > &WorldManager::getSprings() const
     return connections;
 }
 
-inline SketchObject *WorldManager::getClosestObject(SketchObject *subj,
+inline SketchObject *WorldManager::getClosestObject(const q_vec_type pos,
                                                     double &distOut)
 {
-    return getClosestObject(objects, subj, distOut);
+    return getClosestObject(objects, pos, distOut);
 }
 
 #endif  // WORLDMANAGER_H
