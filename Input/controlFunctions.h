@@ -24,8 +24,9 @@ namespace ControlFunctions
 
 	// SPRING EDITING functions:
     void deleteSpring(SketchBio::Project*, int, bool);
-    void snapSpringToTerminus(SketchBio::Project*, int, bool); // !! INCOMPLETE !!
-    void createSpring(SketchBio::Project*, int, bool); // !! INCOMPLETE !!
+    void snapSpringToTerminus(SketchBio::Project*, int, bool);
+    void setTerminusToSnapSpring(SketchBio::Project*, int, bool);
+    void createSpring(SketchBio::Project*, int, bool);
     void createTransparentConnector(SketchBio::Project*, int, bool);
 
   // GRAB functions:

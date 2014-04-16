@@ -462,10 +462,8 @@ void Hand::HandImpl::computeNearestObjectAndConnector()
         Connector* connector = worldMgr->getClosestConnector(
             pos, &connectorDistance, &isCloseTo1);
         if (OutlineType::CONNECTORS == outlineType) {
-            if (nearestConnector != connector || isCloseTo1 != isClosestToEnd1) {
-                outlineConnector(connector, isCloseTo1);
-            }
             if (connectorDistance < SPRING_DISTANCE_THRESHOLD) {
+                outlineConnector(connector, isCloseTo1);
                 showOutline();
             } else {
                 hideOutline();

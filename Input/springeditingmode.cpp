@@ -32,6 +32,7 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
     } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
         // TODO incomplete control function
         ControlFunctions::snapSpringToTerminus(project, 1, true);
+        /*
         snapMode = true;
         emit newDirectionsString(
             "Move to a spring and choose which terminus to snap to.");
@@ -44,7 +45,7 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
             double value = analogStatus[ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
             bool snap_to_n = (value < 0.5) ? true : false;
             rSpring->snapToTerminus(rAtEnd1, snap_to_n);
-        }
+        }*/
     } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
         ControlFunctions::createSpring(project, 1, true);
     } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
@@ -65,8 +66,10 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
     } else if (vrpn_ButtonNum == BUTTON_RIGHT(TWO_BUTTON_IDX)) {
         // TODO incomplete control function
         ControlFunctions::snapSpringToTerminus(project, 1, false);
+        /*
         snapMode = false;
         emit newDirectionsString(" ");
+        */
     } else if (vrpn_ButtonNum == BUTTON_RIGHT(THREE_BUTTON_IDX)) {
         ControlFunctions::createSpring(project, 1, false);
     } else if (vrpn_ButtonNum == BUTTON_RIGHT(FOUR_BUTTON_IDX)) {
@@ -79,16 +82,8 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
 void SpringEditingMode::analogsUpdated()
 {
     ObjectGrabMode::analogsUpdated();
-    bool rAtEnd1;
-    double rSpringDist =
-        project->getHand(SketchBioHandId::RIGHT).getNearestConnectorDistance();
-    Connector* rSpring =
-        project->getHand(SketchBioHandId::RIGHT).getNearestConnector(&rAtEnd1);
-    if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
-        double value = analogStatus[ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
-        bool snap_to_n = (value < 0.5) ? true : false;
-        rSpring->snapToTerminus(rAtEnd1, snap_to_n);
-    }
+    double value = analogStatus[ANALOG_RIGHT(TRIGGER_ANALOG_IDX)];
+    ControlFunctions::setTerminusToSnapSpring(project,0,value > 0.5);
 }
 
 void SpringEditingMode::doUpdatesForFrame()

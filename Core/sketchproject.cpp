@@ -570,6 +570,9 @@ void Project::ProjectImpl::updateTrackerPositions()
 void Project::ProjectImpl::timestep(double dt)
 {
     if (!isDoingAnimation) {
+        if (opState != NULL) {
+            opState->doFrameUpdates();
+        }
         // handleInput();
         world.stepPhysics(dt);
         q_vec_type point = {0, PLANE_Y, 0}, vector = {0, 1, 0};

@@ -206,14 +206,13 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
         WorldManager &world = project->getWorldManager();
 
         SketchBio::Hand &handObj0 = project->getHand(
-                    hand == 1 ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+            hand == 1 ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
 
         SketchObject *nearestObj0 = handObj0.getNearestObject();
         double nearestObjDist0 = handObj0.getNearestObjectDistance();
 
-        SketchBio::Hand &handObj1 =
-            project->getHand(
-                    hand == 1 ? SketchBioHandId::RIGHT : SketchBioHandId::LEFT);
+        SketchBio::Hand &handObj1 = project->getHand(
+            hand == 1 ? SketchBioHandId::RIGHT : SketchBioHandId::LEFT);
 
         SketchObject *nearestObj1 = handObj1.getNearestObject();
         double nearestObjDist1 = handObj1.getNearestObjectDistance();
@@ -510,30 +509,70 @@ void deleteSpring(SketchBio::Project *project, int hand, bool wasPressed)
     return;
 }
 
-// !! INCOMPLETE !! //
+class SnapModeOperationState : public SketchBio::OperationState
+{
+   public:
+    SnapModeOperationState(Connector *c, bool end1)
+        : conn(c), atEnd1(end1), snapToNTerminus(true)
+    {
+    }
+    virtual void doFrameUpdates()
+    {
+        conn->snapToTerminus(atEnd1, snapToNTerminus);
+    }
+    void setSnapToNTerminus(bool nTerminus) { snapToNTerminus = nTerminus; }
+
+   private:
+    Connector *conn;
+    bool atEnd1;
+    bool snapToNTerminus;
+};
+
 void snapSpringToTerminus(SketchBio::Project *project, int hand,
                           bool wasPressed)
 {
 
-    /*	if (wasPressed)
-		{
-			Connector* nearestSpring = project->getNearestSpring(hand);
-			double nearestSpringDist = project->getSpringDistance(hand);
+    if (wasPressed) {
+        bool atEnd1;
+        SketchBio::Hand &handObj = project->getHand(
+            hand == 0 ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+        Connector *nearestSpring = handObj.getNearestConnector(&atEnd1);
+        double nearestSpringDist = handObj.getNearestConnectorDistance();
+        if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD &&
+            project->getOperationState() == NULL) {
+            project->setOperationState(
+                new SnapModeOperationState(nearestSpring, atEnd1));
+            project->setDirections(
+                "Toggle which terminus the connector is attached to,\n"
+                "then release to finalize.");
+        }
+    } else  // button released
+    {
+        SnapModeOperationState *snap = dynamic_cast< SnapModeOperationState * >(
+            project->getOperationState());
+        if (snap != NULL) {
+            project->setOperationState(NULL);
+            project->clearDirections();
+        }
+    }
+    return;
+}
 
-			snapMode = true;
-			//emit newDirectionsString("Move to a spring and choose which terminus to snap to.");
-			if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD) {
-				double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
-				bool snap_to_n = (value < 0.5) ? true : false;
-				nearestSpring->snapToTerminus(rAtEnd1, snap_to_n);
-			}
-		}
-		else // button released
-		{
-			snapMode = false;
-			//emit newDirectionsString(" ");
-		}
-	*/ return;
+void setTerminusToSnapSpring(SketchBio::Project *project, int, bool wasPressed)
+{
+    SnapModeOperationState *snap =
+        dynamic_cast< SnapModeOperationState * >(project->getOperationState());
+    if (wasPressed) {
+        if (snap != NULL) {
+            snap->setSnapToNTerminus(false);
+        }
+    } else  // button released
+    {
+        if (snap != NULL) {
+            snap->setSnapToNTerminus(true);
+        }
+    }
+    return;
 }
 
 void createSpring(SketchBio::Project *project, int hand, bool wasPressed)
