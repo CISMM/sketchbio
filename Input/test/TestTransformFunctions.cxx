@@ -59,7 +59,6 @@ int testDeleteObject()
   //should delete objNear
   ControlFunctions::deleteObject(&proj, 1, false);
   
-  //!!! ask Shawn if this is necessary... I think it is
   handObj.computeNearestObjectAndConnector();
   
   //get new nearest object distance
@@ -100,8 +99,86 @@ int testDeleteObject()
   return 0;
 }
 
+//so i can test to make sure an object was added, but how do you actually test the replication part?
+//length of replicas in sketchprojects imp gets increased... use this!!!!
+/*
+ const QList< StructureReplicator* >&
+ Project::ProjectImpl::getCrystalByExamples() const
+ {
+ return replicas;
+ }
+ */
 int testReplicateObject()
 {
+  
+  //create object
+  //replicate it
+  //make sure replicaes.size() gets increased by 1 using getNumberOfCrystalByExamples();
+  
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
+  SketchModel *model = TestCoreHelpers::getCubeModel();
+  proj.getModelManager().addModel(model);
+  q_vec_type vector = {10,10,10};
+  q_type orient = Q_ID_QUAT;
+  
+  
+  //this obj is OUTSIDE distance threshold
+  proj.getWorldManager().addObject(model, vector, orient);
+  
+  int initialReplicaSize = proj.getNumberOfCrystalByExamples();
+  
+  SketchBio::Hand &handObj = proj.getHand(SketchBioHandId::RIGHT);
+  handObj.computeNearestObjectAndConnector();
+  double nearestObjDist = handObj.getNearestObjectDistance();
+  
+  //make sure its outside threshold
+  if (nearestObjDist < DISTANCE_THRESHOLD)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object is too close to hand." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::replicateObject(&proj, 1, true);
+  
+  int newReplicaSize = proj.getNumberOfCrystalByExamples();
+  
+  if (newReplicaSize != initialReplicaSize)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Replicas size changed incorrectly." << std::endl;
+    return 1;
+  }
+  
+  q_vec_type vector2 = Q_NULL_VECTOR;
+  
+  proj.getWorldManager().addObject(model, vector2, orient);
+  
+  handObj.computeNearestObjectAndConnector();
+  //this should be the distance to obj at origin
+  nearestObjDist = handObj.getNearestObjectDistance();
+  
+  //make sure its inside threshold
+  if (nearestObjDist > DISTANCE_THRESHOLD)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object is too far from hand." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::replicateObject(&proj, 1, true);
+  
+  newReplicaSize = proj.getNumberOfCrystalByExamples();
+  
+  if (newReplicaSize - initialReplicaSize != 1)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Replicas size did not increase by 1" << std::endl;
+    return 1;
+  }
+  
   return 0;
 }
 
