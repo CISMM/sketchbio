@@ -57,6 +57,8 @@
 // some XML names from projecttoxml.cpp
 #define MODEL_ELEMENT_NAME "model"
 
+static const char * const NO_DIRECTIONS = " ";
+
 class SimpleView::GUIStateHelper : public WorldObserver,
                                    public SketchBio::ProjectObserver
 {
@@ -144,7 +146,11 @@ class SimpleView::GUIStateHelper : public WorldObserver,
     virtual void newDirections(const QString &string)
     {
         assert(project != NULL && ui != NULL);
-        directionsTextMapper->SetInput(string.toStdString().c_str());
+        if (string.length() > 0) {
+            directionsTextMapper->SetInput(string.toStdString().c_str());
+        } else {
+            directionsTextMapper->SetInput(NO_DIRECTIONS);
+        }
     }
     virtual void viewTimeChanged(double newTime)
     {

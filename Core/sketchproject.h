@@ -52,7 +52,11 @@ class ProjectObserver
 {
    public:
     virtual ~ProjectObserver() {}
+    // Called whenever an operation calls setDirections, passing on the
+    // given string.  When clearDirections is called, it is passed the
+    // empty string.
     virtual void newDirections(const QString &string) {}
+    // Called when the view time of the project is changed
     virtual void viewTimeChanged(double newTime) {}
 };
 
@@ -185,6 +189,7 @@ class Project
     // these allow external notification of the directions that operations
     // will send as alerts
     void setDirections(const QString& directions);
+    void clearDirections();
     void addProjectObserver(ProjectObserver* p);
     void removeProjectObserver(ProjectObserver* p);
 

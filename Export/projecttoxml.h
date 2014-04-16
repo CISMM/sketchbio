@@ -124,7 +124,7 @@ class ProjectToXML
   // if there is an error, they will clean up any created objects as they fail
   // this one returns the object or NULL on an error
   static SketchObject *readObject(vtkXMLDataElement *elem,
-                                  QHash< QString, SketchModel * > &modelIds,
+                                  QHash< QPair<QString,int>, QPair<SketchModel*,int> > &modelIds,
                                   QHash< QString, SketchObject * > &objectIds);
   // this one populates the passed in list with the objects it reads and returns
   // an error code
@@ -133,7 +133,7 @@ class ProjectToXML
   // the case
   static XML_Read_Status readObjectList(
       QList< SketchObject * > &list, vtkXMLDataElement *elem,
-      QHash< QString, SketchModel * > &modelIds,
+      QHash< QPair<QString,int>, QPair<SketchModel*,int> > &modelIds,
       QHash< QString, SketchObject * > &objectIds);
   // this reads in the keyframes for each object in a list, and is used after
   // calling readObjectList()
@@ -145,18 +145,18 @@ class ProjectToXML
 
   static XML_Read_Status xmlToModelManager(
       SketchBio::Project *proj, vtkXMLDataElement *elem,
-      QHash< QString, SketchModel * > &modelIds);
+          QHash< QPair<QString, int>, QPair<SketchModel*,int> > &modelIds);
 
   static XML_Read_Status xmlToModel(SketchBio::Project *proj,
                                     vtkXMLDataElement *elem,
-                                    QHash< QString, SketchModel * > &modelIds);
+                                    QHash< QPair<QString,int>, QPair<SketchModel*,int> > &modelIds);
 
   static XML_Read_Status xmlToTransforms(SketchBio::Project *proj,
                                          vtkXMLDataElement *elem);
 
   static XML_Read_Status xmlToObjectList(
       SketchBio::Project *proj, vtkXMLDataElement *elem,
-      QHash< QString, SketchModel * > &modelIds,
+      QHash< QPair<QString,int>, QPair<SketchModel*,int> > &modelIds,
       QHash< QString, SketchObject * > &objectIds);
 
   static XML_Read_Status xmlToReplicatorList(
@@ -262,13 +262,13 @@ private: // no other code should call these (this is the reason for making this 
     // if there is an error, they will clean up any created objects as they fail
     // this one returns the object or NULL on an error
     static SketchObject *readObject(vtkXMLDataElement *elem,
-                                    QHash<QString, SketchModel *> &modelIds,
+                                    QHash< QPair<QString, int>, QPair<SketchModel*,int> > &modelIds,
                                     QHash<QString, SketchObject *> &objectIds);
     // this one populates the passed in list with the objects it reads and returns an error code
     // it assumes an empty list is passed in... and will fail without doing anything if this is not
     // the case
     static XML_Read_Status readObjectList(QList<SketchObject *> &list, vtkXMLDataElement *elem,
-                                           QHash<QString,SketchModel *> &modelIds,
+                                           QHash< QPair<QString, int>, QPair<SketchModel*,int> > &modelIds,
                                            QHash<QString,SketchObject *> &objectIds);
 	// this reads in the keyframes for each object in a list, and is used after calling readObjectList()
 	// so that all potential keyframe parents have already been loaded
@@ -278,15 +278,15 @@ private: // no other code should call these (this is the reason for making this 
     // and XML_TO_DATA_FAILURE for failed
 
     static XML_Read_Status xmlToModelManager(SketchProject *proj, vtkXMLDataElement *elem,
-                                             QHash<QString, SketchModel *> &modelIds);
+                                             QHash< QPair<QString, int>, QPair<SketchModel*,int> > &modelIds);
 
     static XML_Read_Status xmlToModel(SketchProject *proj, vtkXMLDataElement *elem,
-                                      QHash<QString, SketchModel *> &modelIds);
+                                      QHash< QPair<QString, int>, QPair<SketchModel*,int> > &modelIds);
 
     static XML_Read_Status xmlToTransforms(SketchProject *proj, vtkXMLDataElement *elem);
 
     static XML_Read_Status xmlToObjectList(SketchProject *proj, vtkXMLDataElement *elem,
-                                           QHash<QString,SketchModel *> &modelIds,
+                                           QHash< QPair<QString, int>, QPair<SketchModel*,int> > &modelIds,
                                            QHash<QString,SketchObject *> &objectIds);
 
     static XML_Read_Status xmlToReplicatorList(SketchProject *proj, vtkXMLDataElement *elem,

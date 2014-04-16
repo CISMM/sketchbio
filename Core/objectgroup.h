@@ -13,8 +13,9 @@ class vtkAppendPolyData;
  * treated as a single object
  */
 
-class ObjectGroup : public SketchObject {
-public:
+class ObjectGroup : public SketchObject
+{
+   public:
     // constructor
     ObjectGroup();
     // destructor
@@ -29,22 +30,26 @@ public:
     // note: this method gives ObjectGroup ownership until the object is removed
     // so these objects are cleaned up in ObjectGroup's destructor
     void addObject(SketchObject *obj);
-    // when the object is removed it is no longer owned by ObjectGroup, the remover is responsible
+    // when the object is removed it is no longer owned by ObjectGroup, the
+    // remover is responsible
     // for ensuring it is deallocated
     void removeObject(SketchObject *obj);
     // get the list of child objects
-    virtual QList<SketchObject *> *getSubObjects();
-    virtual const QList<SketchObject *> *getSubObjects() const;
+    virtual QList< SketchObject * > *getSubObjects();
+    virtual const QList< SketchObject * > *getSubObjects() const;
     // collision function... have to change declaration
-    virtual bool collide(SketchObject *other, PhysicsStrategy *physics, int pqp_flags);
+    virtual bool collide(SketchObject *other, PhysicsStrategy *physics,
+                         int pqp_flags);
     virtual void getBoundingBox(double bb[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
-    virtual vtkAlgorithm* getOrientedHalfPlaneOutlines();
-    virtual SketchObject* getCopy();
-    virtual SketchObject* deepCopy();
-protected:
+    virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
+    virtual SketchObject *getCopy();
+    virtual SketchObject *deepCopy();
+
+   protected:
     virtual void localTransformUpdated();
-private:
+
+   private:
     QList< SketchObject * > children;
     vtkSmartPointer< vtkAppendPolyData > orientedBBs;
     vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;
