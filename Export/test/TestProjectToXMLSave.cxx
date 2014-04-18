@@ -240,8 +240,6 @@ int testSave9()
     }
     else
     {
-		/*vtkXMLUtilities::FlattenElement(root,cout);
-        cout << endl;*/
         cout << "Reading xml for test 9 failed..." << endl;
         return 1;
     }

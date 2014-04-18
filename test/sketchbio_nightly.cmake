@@ -1,0 +1,79 @@
+set(CTEST_BASE_DIR "/path/to/nightly/dir") # set this path
+set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIR}/src")
+set(CTEST_BINARY_DIRECTORY "${CTEST_BASE_DIR}/build")
+
+set(CTEST_SITE "SITENAME")  # this is input
+set(CTEST_BUILD_CONFIGURATION "Debug")
+set(CTEST_BUILD_NAME "BUILD_NAME") # this is input
+
+# change if necessary
+set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
+
+# fill these in too:
+set(CTEST_VTK_DIR "/playpen/sketchbio/VTK-build")
+set(CTEST_PQP_INCLUDE_DIR "/playpen/sketchbio/pqp/include")
+set(CTEST_PQP_LIBRARY "/playpen/sketchbio/pqp/lib/libPQP.a")
+set(CTEST_QMAKE_EXE  "/usr/bin/qmake")
+set(CTEST_VRPN_INCLUDE_DIR "/playpen/sketchbio/vrpn-install/include")
+set(CTEST_QUATLIB_INCLUDE_DIR "${CTEST_VRPN_INCLUDE_DIR}")
+set(CTEST_QUATLIB_LIBRARY "/playpen/sketchbio/vrpn-install/lib/libquat.a")
+set(CTEST_VRPN_LIBRARY "/playpen/sketchbio/vrpn-install/lib/libvrpn.a")
+set(CTEST_VRPN_SERVER_LIBRARY "/playpen/sketchbio/vrpn-install/lib/libvrpnserver.a")
+
+set(OTHER_BUILD_OPTIONS "")
+
+# toggle to turn on/off valgrind
+set(WITH_MEMCHECK TRUE)
+
+set(CTEST_START_WITH_EMPTY_BINARY_DIRECTORY TRUE)
+ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
+
+find_program(CTEST_GIT_COMMAND NAMES git)
+find_program(CTEST_MEMCHECK_COMMAND NAMES valgrind)
+
+set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE ${CTEST_SOURCE_DIRECTORY}/test/valgrind.supp)
+
+if(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}")
+    set(CTEST_CHECKOUT_COMMAND "${CTEST_GIT_COMMAND} clone swaldon@git.cs.unc.edu:/afs/unc/proj/stm/src/git/sketchbio.git ${CTEST_SOURCE_DIRECTORY}")
+endif()
+
+set(CTEST_UPDATE_COMMAND "${CTEST_GIT_COMMAND}")
+
+set(CTEST_INITIAL_CACHE "
+BUILDNAME:STRING=Ubuntu12.04-gcc
+SITE:STRING=cobalt.cs.unc.edu
+VTK_DIR:PATH=${CTEST_VTK_DIR}
+VRPN_SERVER_LIBRARY:FILEPATH=${CTEST_VRPN_SERVER_LIBRARY}
+VRPN_LIBRARY:FILEPATH=${CTEST_VRPN_LIBRARY}
+VRPN_INCLUDE_DIR:PATH=${CTEST_VRPN_INCLUDE_DIR}
+QUATLIB_INCLUDE_DIR:PATH=${CTEST_QUATLIB_INCLUDE_DIR}
+QUATLIB_LIBRARY:FILEPATH=${CTEST_QUATLIB_LIBRARY}
+QT_QMAKE_EXECUTABLE:FILEPATH=${CTEST_QMAKE_EXE}
+PQP_INCLUDE_DIR:PATH=${CTEST_PQP_INCLUDE_DIR}
+PQP_LIBRARY:FILEPATH=${CTEST_PQP_LIBRARY}
+CMAKE_GENERATOR:INTERNAL=${CTEST_CMAKE_GENERATOR}
+CMAKE_BUILD_TYPE:STRING=${CTEST_BUILD_CONFIGURATION}
+WITH_TESTING:BOOL=ON
+")
+
+set(CTEST_CONFIGURE_COMMAND "${CMAKE_COMMAND}")
+set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${OTHER_BUILD_OPTIONS} ")
+set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${CTEST_SOURCE_DIRECTORY} ")
+
+string(REPLACE "
+" "" CTEST_CONFIGURE_COMMAND ${CTEST_CONFIGURE_COMMAND})
+
+MESSAGE(WARNING ${CTEST_CONFIGURE_COMMAND})
+
+ctest_start("Nightly")
+ctest_update()
+write_file("${CTEST_BINARY_DIRECTORY}/CMakeCache.txt" ${CTEST_INITIAL_CACHE})
+ctest_configure()
+ctest_build()
+ctest_test(EXCLUDE "(Chimera|From)")
+
+if(WITH_MEMCHECK AND CTEST_MEMCHECK_COMMAND)
+    ctest_memcheck()
+endif()
+
+ctest_submit()

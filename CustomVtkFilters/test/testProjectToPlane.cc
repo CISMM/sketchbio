@@ -59,7 +59,7 @@ inline int testIfOnPlane(double *point, double *normal, vtkPolyData *result)
                 myNormal[1] * ( pt[1] - point[1] ) +
                 myNormal[2] * ( pt[2] - point[2] );
 
-        if (abs(testPlaneEquationResult) > 1e-5)
+        if (fabs(testPlaneEquationResult) > 1e-5)
         {
             cout << "Found point not on plane" << endl;
 			cout << "Distance from plane: " << testPlaneEquationResult << endl;

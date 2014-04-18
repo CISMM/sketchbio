@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <limits>
+#include <sstream>
 
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
@@ -24,6 +25,8 @@
 #include <QMessageBox>
 #include <QThread>
 #include <QTimer>
+#include <QApplication>
+#include <QClipboard>
 
 #include <sketchioconstants.h>
 #include <transformmanager.h>
@@ -49,7 +52,8 @@
 #define BOND_SPRING_CONSTANT .5
 // timestep
 #define TIMESTEP (16/1000.0)
-
+// some XML names from projecttoxml.cpp
+#define MODEL_ELEMENT_NAME "model"
 
 // Constructor
 SimpleView::SimpleView(QString projDir, bool load_example) :
@@ -534,6 +538,33 @@ void SimpleView::loadProject() {
         project->setViewTime(0.0);
         updateViewTime(0.0);
     }
+}
+
+void SimpleView::saveCopiedObject() {
+	// ask for directory to save the structure to
+	QString dirPath = QFileDialog::getExistingDirectory(
+          this,tr("Select Save Directory (New or Existing)"),
+          project->getProjectDir());
+    if (dirPath.length() == 0) {
+        return;
+    }
+	std::stringstream ss;
+    QClipboard *clipboard = QApplication::clipboard();
+    ss.str(clipboard->text().toStdString());
+    vtkSmartPointer< vtkXMLDataElement > elem = 
+			vtkSmartPointer< vtkXMLDataElement >::Take(
+            vtkXMLUtilities::ReadElementFromStream(ss));
+	ProjectToXML::saveObjectFromClipboardXML(elem, project, dirPath);
+}
+
+void SimpleView::loadObject() {
+	QString zipPath = QFileDialog::getOpenFileName(
+          this,tr("Select ZIP Archive to Load From"),
+          project->getProjectDir(), tr("ZIP archives(*.zip)"));
+    if (zipPath.length() == 0) {
+        return;
+    }
+	ProjectToXML::loadObjectFromSavedXML(project,zipPath);
 }
 
 void SimpleView::createCameraForViewpoint()

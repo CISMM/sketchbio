@@ -87,6 +87,9 @@ public:
     // PDB file.  If the geometry is only geometry and was not generated from
     // some other source, then this will be the full resolution geometry file
     const QString &getSource(int conformation) const;
+	// Gets the conformation number for a given source filename. Returns -1 if there is
+	// no conformation with the given source
+	int getConformationNumber(QString source) const;
     // Gets the inverse mass of the model (constant across all conformations)
     double getInverseMass() const;
     // Gets the inverse moment of inertial of the model (constant across all conformations)

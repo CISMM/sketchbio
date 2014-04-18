@@ -672,6 +672,9 @@ SketchObject *WorldManager::getClosestObject(QList< SketchObject * > &objects,
     }
     obj->getBoundingBox(bb);
     dist = distOutsideAABB(pos1, bb);
+    if (dist < 0 && obj->numInstances() != 1) {
+      getClosestObject(*obj->getSubObjects(),subj,dist);
+    }
     if (dist < distance) {
       distance = dist;
       closest = obj;

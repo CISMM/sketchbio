@@ -6,10 +6,15 @@ using std::strcmp;
 
 #include <vtkMatrix4x4.h>
 #include <vtkXMLDataElement.h>
+#include <vtkXMLUtilities.h>
 
 #include <QScopedPointer>
 #include <QDebug>
 #include <QFile>
+#include <QDir>
+
+#include <quazip/JlCompress.h>
+#include <zlib.h>
 
 #include <sketchioconstants.h>
 #include <transformmanager.h>
@@ -978,10 +983,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
     if (models == NULL) {
       return XML_TO_DATA_FAILURE;
     }
-    QHash< QString, SketchModel* > modelIds;
+//	printf("\nMADE IT HERE\n");
+//	fflush(stdout);
+    QHash< QPair<QString, int>, QPair<SketchModel*,int> > modelIds;
     if (xmlToModelManager(proj, models, modelIds) == XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
+//	printf("\nMADE IT PAST MODEL MANAGER\n");
+//	fflush(stdout);
     vtkXMLDataElement* view =
         elem->FindNestedElementWithName(TRANSFORM_MANAGER_ELEMENT_NAME);
     if (view == NULL) {
@@ -990,6 +999,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
     if (xmlToTransforms(proj, view) == XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
+//	printf("\nMADE IT PAST TRANSFORMS\n");
+//	fflush(stdout);
     QHash< QString, SketchObject* > objectIds;
     vtkXMLDataElement* objs =
         elem->FindNestedElementWithName(OBJECTLIST_ELEMENT_NAME);
@@ -1000,6 +1011,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
         XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
+//	printf("\nMADE IT PAST OBJECT LIST\n");
+//	fflush(stdout);
     vtkXMLDataElement* reps =
         elem->FindNestedElementWithName(REPLICATOR_LIST_ELEMENT_NAME);
     if (reps == NULL) {
@@ -1045,7 +1058,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
     if (models == NULL) {
       return XML_TO_DATA_FAILURE;
     }
-    QHash< QString, SketchModel* > modelIds;
+    QHash< QPair<QString, int>, QPair<SketchModel*,int> > modelIds;
     if (xmlToModelManager(proj, models, modelIds) == XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
@@ -1089,9 +1102,149 @@ ProjectToXML::XML_Read_Status ProjectToXML::objectFromClipboardXML(
   return XML_TO_DATA_SUCCESS;
 }
 
+ProjectToXML::XML_Read_Status ProjectToXML::modelNamesFromClipboardXML(
+	QList< const char* > &list, SketchProject *proj, 
+	vtkXMLDataElement *elem)
+{
+	vtkXMLDataElement* models = 
+		elem->FindNestedElementWithName(MODEL_MANAGER_ELEMENT_NAME);
+	if (models == NULL) {
+		return XML_TO_DATA_FAILURE;
+	}
+	for (int i = 0; i < models->GetNumberOfNestedElements(); i++) {
+	  vtkXMLDataElement* model = models->GetNestedElement(i);
+	  if (model == NULL) {
+		  return XML_TO_DATA_FAILURE;
+	  }
+	  int numConformations;
+	  model->GetScalarAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,
+                                numConformations);
+	  int conformations = 0;
+	  for (int i = 0; i < numConformations; i++) {
+		vtkXMLDataElement* conf = model->FindNestedElementWithNameAndAttribute(
+			MODEL_CONFORMATION_ELEMENT_NAME, MODEL_CONFORMATION_NUMBER_ATTR_NAME,
+			QString::number(i).toStdString().c_str());
+		if (conf == NULL) {
+			return XML_TO_DATA_FAILURE;
+		}
+		for (int i = 0; i < conf->GetNumberOfNestedElements(); i++) {
+		  vtkXMLDataElement* child = conf->GetNestedElement(i);
+		  if (child == NULL) {
+			  return XML_TO_DATA_FAILURE;
+		  }
+		  if (QString(child->GetName()) == 
+				QString(MODEL_RESOLUTION_ELEMENT_NAME)) {
+			const char* filename = 
+			  child->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+			if (filename == 0) {
+				return XML_TO_DATA_FAILURE;
+			}
+			list.append(filename);
+		  }
+		}
+	  }
+	}
+	if(list.isEmpty()) {
+		std::cout << "Unable to find VTK file names in XML" << std::endl;
+	}
+	return XML_TO_DATA_SUCCESS;
+}
+
+void ProjectToXML::saveObjectFromClipboardXML(vtkXMLDataElement *elem, SketchProject *proj, 
+												QString dirPath) {
+	QDir dir(dirPath);
+	dir.mkdir("structure");
+	QDir save_dir(dir.absoluteFilePath("structure"));
+	QStringList allFiles;
+	// save XML from clipboard into the directory
+    QString file = save_dir.absoluteFilePath(STRUCTURE_XML_FILENAME);
+	QList< const char* > modelFileNames;
+	if (elem) {
+		vtkIndent indent(0);
+		vtkXMLUtilities::WriteElementToFile(elem,file.toStdString().c_str(),&indent);
+		if (modelNamesFromClipboardXML(modelFileNames,proj,elem) 
+			== XML_TO_DATA_FAILURE) {
+			std::cout << "Failed to read model XML." << std::endl;		
+		}
+		allFiles.append(file);
+	}
+	else {
+		std::cout << "Failed to read object." << std::endl;
+	}
+	
+	// save VTK files for models
+	if (!modelFileNames.isEmpty()) {
+		for (QListIterator< const char* > it(modelFileNames); it.hasNext();) {
+			const char* srcfilename = it.next();
+			const char* basename = strrchr(srcfilename, '/') + 1;
+			QString destfilename = save_dir.absoluteFilePath(basename);
+			QFile srcfile(srcfilename);
+			if (srcfile.exists()) 
+			{
+			   if(!srcfile.copy(destfilename)) {
+				  std::cout << "Failed to copy VTK file (may already exist)." << std::endl;
+			   }
+			   else {
+				  allFiles.append(destfilename);
+			   }
+			}
+			else {
+				std::cout << "Could not find the needed VTK file." << std::endl;
+			}
+		}
+	}
+	else {
+		std::cout << "Read no VTK filenames from modelFileName list" << std::endl;
+	}
+
+	// zip up the XML and VTK files together
+	if(!JlCompress::compressDir(dir.absoluteFilePath("structure.zip"),
+									save_dir.absolutePath(),true)) {
+		std::cout << "Failed to zip XML and VTK files" << std::endl;
+	}
+	for (QStringListIterator it(allFiles); it.hasNext();) {
+		QFile f(it.next());
+		if(!f.remove()) {
+			std::cout << "Failed to remove file" << std::endl;
+		}
+	}
+	if(!dir.rmdir(save_dir.absolutePath())) {
+		std::cout << "Failed to remove copied structure directory" << std::endl;
+	}
+}
+
+void ProjectToXML::loadObjectFromSavedXML(SketchProject*proj, QString zipPath) {
+	QDir dir(proj->getProjectDir());
+	QStringList allFiles = JlCompress::extractDir(zipPath, proj->getProjectDir());
+	
+	QString xml_file = dir.absoluteFilePath(STRUCTURE_XML_FILENAME);
+    QFile xml_f(xml_file);
+    if (xml_f.exists())
+    {
+        vtkSmartPointer< vtkXMLDataElement > elem =
+                vtkSmartPointer< vtkXMLDataElement >::Take(
+                    vtkXMLUtilities::ReadElementFromFile(xml_file.toStdString().c_str())
+                    );
+		if(!xml_f.remove()) {
+			std::cout << "Failed to remove XML file after loading" << std::endl;
+		}
+		q_vec_type pos;
+		proj->getLeftHandObject()->getPosition(pos);
+		if (objectFromClipboardXML(proj,elem,pos)
+			 == XML_TO_DATA_FAILURE)
+        {
+            std::cout << "Read xml correctly, but reading object failed."
+                        << std::endl;
+		}
+    }
+	else {
+		std::cout << "Could not find structure XML file in this directory" << std::endl;
+	}
+}
+
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(
     SketchProject* proj, vtkXMLDataElement* elem,
-    QHash< QString, SketchModel* >& modelIds)
+    QHash< QPair<QString, int>, QPair<SketchModel*,int> >& modelIds)
 {
   if (QString(elem->GetName()) != QString(MODEL_MANAGER_ELEMENT_NAME)) {
     return XML_TO_DATA_FAILURE;
@@ -1104,12 +1257,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModelManager(
       }
     }
   }
+//  printf("\nMADE IT PAST MODELS\n");
+fflush(stdout);
   return XML_TO_DATA_SUCCESS;
 }
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
     SketchProject* proj, vtkXMLDataElement* elem,
-    QHash< QString, SketchModel* >& modelIds)
+    QHash< QPair<QString, int>, QPair<SketchModel*,int> >& modelIds)
 {
   if (QString(elem->GetName()) != QString(MODEL_ELEMENT_NAME)) {
     return XML_TO_DATA_FAILURE;
@@ -1135,7 +1290,26 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
     return XML_TO_DATA_FAILURE;
   }
 
+  bool foundModel = false;
   QScopedPointer< SketchModel > model(new SketchModel(invMass, invMoment));
+
+ 
+  for (int i = 0; i < numConformations; i++) {
+     vtkXMLDataElement* conf = elem->FindNestedElementWithNameAndAttribute(
+        MODEL_CONFORMATION_ELEMENT_NAME, MODEL_CONFORMATION_NUMBER_ATTR_NAME,
+        QString::number(i).toStdString().c_str());
+    if (conf == NULL) return XML_TO_DATA_FAILURE;
+    vtkXMLDataElement* src =
+        conf->FindNestedElementWithName(MODEL_SOURCE_ELEMENT_NAME);
+    if (src == NULL) return XML_TO_DATA_FAILURE;
+    const char* srcString = src->GetCharacterData();
+    if (srcString == NULL) return XML_TO_DATA_FAILURE;
+	if(proj->getModelManager()->hasModel(srcString)) {
+		model.reset(proj->getModelManager()->getModel(srcString));
+		foundModel = true;
+		break;
+	}
+  }
 
   int conformations = 0;
   for (int i = 0; i < numConformations; i++) {
@@ -1160,41 +1334,55 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToModel(
         fullRes->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
     if (fileString == NULL) return XML_TO_DATA_FAILURE;
 
-    QString filename;
-    proj->getFileInProjDir(fileString, filename);
-    QString source = srcString;
-    if (source == CAMERA_MODEL_KEY) {
-      model.reset(proj->getCameraModel());
-      break;
-    } else {
-      model->addConformation(source, filename);
-    }
-
-    for (int j = 0; j < conf->GetNumberOfNestedElements(); j++) {
-      vtkXMLDataElement* elt = conf->GetNestedElement(j);
-      if (elt != src && elt != fullRes &&
-          elt->GetName() == QString(MODEL_RESOLUTION_ELEMENT_NAME)) {
-        const char* f = elt->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
-        if (f == NULL) return XML_TO_DATA_FAILURE;
-        const char* r = elt->GetAttribute(ID_ATTRIBUTE_NAME);
-        if (r == NULL) return XML_TO_DATA_FAILURE;
-        ModelResolution::ResolutionType res = getResolutionTypeFromId(r);
-        QString fName;
-        proj->getFileInProjDir(f,fName);
-        model->addSurfaceFileForResolution(
-            model->getNumberOfConformations() - 1, res, fName);
-      }
-    }
+	if(!foundModel || proj->getModelManager()->getModel(srcString) != model.data()) {
+	  QString filename;
+	  proj->getFileInProjDir(fileString, filename);
+	  QString source = srcString;
+	  if (source == CAMERA_MODEL_KEY) {
+		model.reset(proj->getCameraModel());
+		QPair<QString, int>idPair("#" + id,i);
+		  QPair<SketchModel*, int>modelPair(model.data(),
+					model->getNumberOfConformations() - 1);
+		  modelIds.insert(idPair,modelPair);
+		break;
+	  } else {
+		model->addConformation(source, filename);
+	  }    
+	  for (int j = 0; j < conf->GetNumberOfNestedElements(); j++) {
+		vtkXMLDataElement* elt = conf->GetNestedElement(j);
+		if (elt != src && elt != fullRes &&
+			elt->GetName() == QString(MODEL_RESOLUTION_ELEMENT_NAME)) {
+		const char* f = elt->GetAttribute(MODEL_FILENAME_ATTRIBUTE_NAME);
+		if (f == NULL) return XML_TO_DATA_FAILURE;
+		const char* r = elt->GetAttribute(ID_ATTRIBUTE_NAME);
+		if (r == NULL) return XML_TO_DATA_FAILURE;
+		ModelResolution::ResolutionType res = getResolutionTypeFromId(r);
+		QString fName;
+		proj->getFileInProjDir(f,fName);
+		model->addSurfaceFileForResolution(
+			model->getNumberOfConformations() - 1, res, fName);
+		}
+	  }
+	  QPair<QString, int>idPair("#" + id,i);
+	  QPair<SketchModel*, int>modelPair(model.data(),
+				model->getNumberOfConformations() - 1);
+	  modelIds.insert(idPair,modelPair);
+	}
+	else {
+		QPair<QString, int>idPair("#" + id,i);
+	  QPair<SketchModel*, int>modelPair(model.data(),
+				model->getConformationNumber(srcString));
+	  modelIds.insert(idPair,modelPair);
+	}
   }
-
   if (model.data() != NULL && conformations == numConformations) {
-    if (model.data() != proj->getCameraModel()) {
+    if (model.data() != proj->getCameraModel() && !foundModel) {
       SketchModel* myModel = proj->addModel(model.data());
+
       if (myModel != model.data()) {
         model.reset(myModel);
       }
     }
-    modelIds.insert("#" + id, model.data());
     model.take();
     return XML_TO_DATA_SUCCESS;
   } else {
@@ -1250,7 +1438,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToTransforms(
 
 ProjectToXML::XML_Read_Status ProjectToXML::readObjectList(
     QList< SketchObject* >& list, vtkXMLDataElement* elem,
-    QHash< QString, SketchModel* >& modelIds,
+    QHash< QPair<QString, int>, QPair<SketchModel*,int> >& modelIds,
     QHash< QString, SketchObject* >& objectIds)
 {
   if (QString(elem->GetName()) != QString(OBJECTLIST_ELEMENT_NAME)) {
@@ -1435,7 +1623,7 @@ ProjectToXML::XML_Read_Status ProjectToXML::readKeyframe(
 }
 
 SketchObject* ProjectToXML::readObject(
-    vtkXMLDataElement* elem, QHash< QString, SketchModel* >& modelIds,
+    vtkXMLDataElement* elem, QHash< QPair<QString, int>, QPair<SketchModel*,int> >& modelIds,
     QHash< QString, SketchObject* >& objectIds)
 {
   if (QString(elem->GetName()) == QString(OBJECT_ELEMENT_NAME)) {
@@ -1497,7 +1685,10 @@ SketchObject* ProjectToXML::readObject(
     QScopedPointer< SketchObject > object(NULL);
     if (numInstances == 1) {
       // modelInstace
-      object.reset(new ModelInstance(modelIds.value(mId), confNum));
+	  QPair<QString,int>idPair(mId,confNum);
+	  SketchModel* model = modelIds.value(idPair).first;
+	  int modelConfNum = modelIds.value(idPair).second;
+      object.reset(new ModelInstance(model, modelConfNum));
       object->setPosAndOrient(pos, orient);
       if (props->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME)) {
         QString array(props->GetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME));
@@ -1543,7 +1734,7 @@ SketchObject* ProjectToXML::readObject(
 
 ProjectToXML::XML_Read_Status ProjectToXML::xmlToObjectList(
     SketchProject* proj, vtkXMLDataElement* elem,
-    QHash< QString, SketchModel* >& modelIds,
+    QHash< QPair<QString, int>, QPair<SketchModel*,int> >& modelIds,
     QHash< QString, SketchObject* >& objectIds)
 {
   QList< SketchObject* > objects;
