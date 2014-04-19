@@ -17,12 +17,12 @@ class QActionGroup;
 class SketchObject;
 namespace SketchBio {
 class Project;
+class InputManager;
 }
 
 class ProjectToXML;
 
 class vrpnServer;
-class HydraInputManager;
 
 class SubprocessRunner;
  
@@ -142,7 +142,7 @@ private:
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   SketchBio::Project *project;
-  HydraInputManager *inputManager;
+  SketchBio::InputManager *inputManager;
   GUIStateHelper *stateHelper;
 };
 

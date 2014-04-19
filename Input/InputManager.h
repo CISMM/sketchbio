@@ -30,7 +30,8 @@ signals:
     // emitted whenever the mode changes
     void modeChanged();
 
-public slots:
+private slots:
+    void notifyModeChanged();
 
 private:
     // Private Implementation pattern

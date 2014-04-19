@@ -42,7 +42,8 @@
 #include <projecttoxml.h>
 #include <ProjectToFlorosim.h>
 
-#include <hydrainputmanager.h>
+#include <controlFunctions.h>
+#include <InputManager.h>
 #include <vrpnserver.h>
 
 #include <subprocessrunner.h>
@@ -63,7 +64,7 @@ class SimpleView::GUIStateHelper : public WorldObserver,
                                    public SketchBio::ProjectObserver
 {
    public:
-    GUIStateHelper(HydraInputManager &inputMgr)
+    GUIStateHelper(SketchBio::InputManager &inputMgr)
         : project(NULL), inputManager(inputMgr), ui(NULL)
     {
         // test of text stuff
@@ -183,7 +184,7 @@ class SimpleView::GUIStateHelper : public WorldObserver,
     vtkSmartPointer< vtkActor2D > timeTextActor;
 
     SketchBio::Project *project;
-    HydraInputManager &inputManager;
+    SketchBio::InputManager &inputManager;
     Ui_SimpleView *ui;
 };
 
@@ -195,7 +196,7 @@ SimpleView::SimpleView(QString projDir, bool load_example)
       collisionModeGroup(new QActionGroup(this)),
       renderer(vtkSmartPointer< vtkRenderer >::New()),
       project(new SketchBio::Project(renderer.GetPointer(), projDir)),
-      inputManager(new HydraInputManager(project)),
+      inputManager(new SketchBio::InputManager("razer_hydra.xml")),
       stateHelper(new GUIStateHelper(*inputManager))
 {
     this->ui = new Ui_SimpleView;
@@ -237,17 +238,18 @@ SimpleView::SimpleView(QString projDir, bool load_example)
         // eventually we will just load the example from a project directory...
         // example of keyframes this time
     }
-    inputManager->addUndoState();
 
     // VTK/Qt wedded
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(dummyRenderer);
     this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(renderer);
 
+    inputManager->setProject(project);
+    ControlFunctions::addUndoState(project);
     stateHelper->addTextToRenderer(renderer);
 
     // Set up action signals and slots
     connect(this->ui->actionExit, SIGNAL(triggered()), this, SLOT(slotExit()));
-    connect(this->inputManager, SIGNAL(changedModes()), this,
+    connect(this->inputManager, SIGNAL(modeChanged()), this,
             SLOT(updateStatusText()));
     // start timer for frame update
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_frameLoop()));
@@ -538,7 +540,7 @@ void SimpleView::loadProject()
     project = new SketchBio::Project(renderer, dirPath);
     stateHelper->setProject(project);
     inputManager->setProject(project);
-    inputManager->addUndoState();
+    ControlFunctions::addUndoState(project);
     project->getWorldManager().setCollisionCheckOn(
         this->ui->actionCollision_Tests_On->isChecked());
     project->getWorldManager().setPhysicsSpringsOn(
@@ -758,7 +760,7 @@ void SimpleView::exportFlorosim()
 void SimpleView::addUndoStateIfSuccess(bool success)
 {
     if (success) {
-        inputManager->addUndoState();
+        ControlFunctions::addUndoState(project);
     }
 }
 

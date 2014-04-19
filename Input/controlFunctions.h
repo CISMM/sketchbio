@@ -43,6 +43,7 @@ namespace ControlFunctions
 
 	// UTILITY functions:
   void resetViewPoint(SketchBio::Project*, int, bool);
+  void addUndoState(SketchBio::Project *project);
   void copyObject(SketchBio::Project*, int, bool);
   void pasteObject(SketchBio::Project*, int, bool);
 }

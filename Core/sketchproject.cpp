@@ -582,6 +582,7 @@ void Project::ProjectImpl::timestep(double dt)
         q_vec_normalize(vector, vector);
         q_vec_add(point, vector, point);
         world.setShadowPlane(point, vector);
+        transforms.updateCameraForFrame();
         transforms.copyCurrentHandTransformsToOld();
     } else {
         double elapsed_time = time.restart();

@@ -18,7 +18,9 @@
 #include <transformmanager.h>
 #include <sketchproject.h>
 #include <hand.h>
+
 #include <controlFunctions.h>
+#include <signalemitter.h>
 
 namespace SketchBio {
 
@@ -148,7 +150,7 @@ void doNothingButton(SketchBio::Project *, int, bool) {
   std::cout << "Did nothing button" << std::endl;
 }
 void doNothingAnalog(SketchBio::Project *, int, double) {
-  std::cout << "Did nothing analog" << std::endl;
+//  std::cout << "Did nothing analog" << std::endl;
 }
 
 // Passes the button pressed to its control function
@@ -273,7 +275,7 @@ struct Mode {
        SketchBio::OutlineType::Type defaultO = SketchBio::OutlineType::OBJECTS)
       : buttonFunctions(new ButtonControlFunction[numBtns + 1]),
         numButtons(numBtns),
-        analogFunctions(numAnalogs + 1),
+        analogFunctions(),
         name(n),
         defaultOutline(defaultO) {
     for (int i = 0; i < numAnalogs; ++i) {
@@ -350,6 +352,8 @@ class InputManager::InputManagerImpl : public ButtonHandler,
   int modeSwitchButtonNum;
 
   SketchBio::Project *project;
+public:
+  SignalEmitter emitter;
 };
 
 InputManager::InputManagerImpl::InputManagerImpl(
@@ -365,6 +369,7 @@ void InputManager::InputManagerImpl::handleCurrentInput() {
   foreach(const QSharedPointer<vrpn_Tracker_Remote> & ptr, trackerDevices) {
     ptr->mainloop();
   }
+  project->updateTrackerPositions();
 }
 
 const QString &InputManager::InputManagerImpl::getModeName() {
@@ -390,6 +395,7 @@ void InputManager::InputManagerImpl::buttonStateChange(int buttonIndex,
       h = &project->getHand(SketchBioHandId::RIGHT);
       h->clearState();
       h->setSelectionType(modes[currentMode].defaultOutline);
+      emitter.emitSignal();
     }
   } else {
     modes[currentMode].buttonFunctions.data()[buttonIndex]
@@ -443,20 +449,20 @@ void InputManager::InputManagerImpl::parseXML(
   modes.append(Mode(maxButtons, maxAnalogs, "Edit Objects",
                     SketchBio::OutlineType::OBJECTS));
   Mode &editObjects = modes.last();
-  editObjects.buttonFunctions.data()[6]
+  editObjects.buttonFunctions.data()[5]
       .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::LEFT);
-  editObjects.buttonFunctions.data()[14]
-      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::RIGHT);
+  editObjects.buttonFunctions.data()[13]
+      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::RIGHT);
   modes.append(Mode(maxButtons, maxAnalogs, "Edit Springs",
                     SketchBio::OutlineType::CONNECTORS));
   Mode &editSprings = modes.last();
-  editSprings.buttonFunctions.data()[6]
-      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::LEFT);
-  editSprings.buttonFunctions.data()[14]
+  editSprings.buttonFunctions.data()[5]
+      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::LEFT);
+  editSprings.buttonFunctions.data()[13]
       .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::RIGHT);
 
   currentMode = 0;
-  modeSwitchButtonNum = 0;
+  modeSwitchButtonNum = 1;
 }
 
 // ########################################################################
@@ -465,16 +471,25 @@ void InputManager::InputManagerImpl::parseXML(
 // ########################################################################
 // ########################################################################
 InputManager::InputManager(const QString &inputConfigFileName, QObject *parent)
-    : QObject(parent), impl(new InputManagerImpl(inputConfigFileName)) {}
+    : QObject(parent), impl(new InputManagerImpl(inputConfigFileName)) {
+    connect(&impl->emitter, SIGNAL(somethingHappened()),this, SLOT(notifyModeChanged()));
+}
 
-InputManager::~InputManager() { delete impl; }
+InputManager::~InputManager() {
+    delete impl; }
 
-void InputManager::handleCurrentInput() { impl->handleCurrentInput(); }
+void InputManager::handleCurrentInput() {
+    impl->handleCurrentInput(); }
 
-const QString &InputManager::getModeName() { return impl->getModeName(); }
+const QString &InputManager::getModeName() {
+    return impl->getModeName(); }
 
 void InputManager::setProject(SketchBio::Project *proj) {
   impl->setProject(proj);
+}
+
+void InputManager::notifyModeChanged() {
+    emit modeChanged();
 }
 
 }

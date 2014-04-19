@@ -7,6 +7,7 @@ INCLUDE_DIRECTORIES(
 SET(SketchBioInputQtHeaders
 vrpnserver.h
 InputManager.h
+signalemitter.h
 hydrainputmanager.h
 hydrainputmode.h
 objectgrabmode.h
