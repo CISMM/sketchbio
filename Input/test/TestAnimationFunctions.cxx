@@ -2,7 +2,7 @@
 #include <vtkRenderer.h>
 
 #include <hand.h>
-#include <Keyframe.h>
+#include <keyframe.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
 #include <springconnection.h>
