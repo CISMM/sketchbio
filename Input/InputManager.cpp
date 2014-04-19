@@ -14,6 +14,10 @@
 #include <QSharedPointer>
 #include <QProcess>
 
+#include <vtkSmartPointer.h>
+#include <vtkXMLUtilities.h>
+#include <vtkXMLDataElement.h>
+
 #include <sketchioconstants.h>
 #include <transformmanager.h>
 #include <sketchproject.h>
@@ -150,7 +154,7 @@ void doNothingButton(SketchBio::Project *, int, bool) {
   std::cout << "Did nothing button" << std::endl;
 }
 void doNothingAnalog(SketchBio::Project *, int, double) {
-//  std::cout << "Did nothing analog" << std::endl;
+  //  std::cout << "Did nothing analog" << std::endl;
 }
 
 // Passes the button pressed to its control function
@@ -335,6 +339,10 @@ class InputManager::InputManagerImpl : public ButtonHandler,
 
  private:
   void parseXML(const QString &inputConfigFileName);
+  bool readDevices(vtkXMLDataElement *root);
+  bool readInputTransform(vtkXMLDataElement *root);
+  bool readModeSwitchButton(vtkXMLDataElement *root);
+  bool readModes(vtkXMLDataElement *root);
 
  private:
   typedef QPair<QSharedPointer<vrpn_Button_Remote>,
@@ -352,7 +360,8 @@ class InputManager::InputManagerImpl : public ButtonHandler,
   int modeSwitchButtonNum;
 
   SketchBio::Project *project;
-public:
+
+ public:
   SignalEmitter emitter;
 };
 
@@ -411,8 +420,52 @@ void InputManager::InputManagerImpl::analogStateChange(int analogIdx,
       ->callFunction(project, newValue);
 }
 
+static const char CONFIG_XML_ROOT_NAME[] = "SketchBioDeviceConfig";
+static const char CONFIG_XML_VERSION_ATTRIBUTE[] = "fileVersion";
+static const int CONFIG_FILE_READER_MAJOR_VERSION = 0;
+static const int CONFIG_FILE_READER_MINOR_VERSION = 0;
+
+static inline void convertToCurrentConfigFile(vtkXMLDataElement *xmlRoot,
+                                              int minorVersion) {}
+
 void InputManager::InputManagerImpl::parseXML(
     const QString &inputConfigFileName) {
+  vtkSmartPointer<vtkXMLDataElement> root =
+      vtkSmartPointer<vtkXMLDataElement>::Take(
+          vtkXMLUtilities::ReadElementFromFile(
+              inputConfigFileName.toStdString().c_str()));
+  if (root->GetName() != QString(CONFIG_XML_ROOT_NAME)) {
+    std::cout << "Error reading xml, wrong root element" << std::endl;
+    return;
+  }
+  if (root->GetAttribute(CONFIG_XML_VERSION_ATTRIBUTE) == NULL) {
+    std::cout << "Config xml has no file version" << std::endl;
+    return;
+  }
+  QStringList version =
+      QString(root->GetAttribute(CONFIG_XML_VERSION_ATTRIBUTE)).split(".");
+  bool ok1, ok2;
+  int majorVersion = version[0].toInt(&ok1);
+  int minorVersion = version[1].toInt(&ok2);
+  if (!ok1 || !ok2) {
+    std::cout << "Bad file version number" << std::endl;
+    return;
+  }
+  if (majorVersion != CONFIG_FILE_READER_MAJOR_VERSION) {
+    std::cout << "Major file version is different from reader." << std::endl;
+    return;
+  }
+  if (minorVersion > CONFIG_FILE_READER_MINOR_VERSION) {
+    std::cout << "Config file newer than config file reader." << std::endl;
+    return;
+  }
+  if (minorVersion < CONFIG_FILE_READER_MINOR_VERSION) {
+    convertToCurrentConfigFile(root, minorVersion);
+  }
+  if (!readDevices(root)) return;
+  if (!readInputTransform(root)) return;
+  if (!readModeSwitchButton(root)) return;
+  if (!readModes(root)) return;
   // make vrpn server
   // initialize devices
   buttonDevices.append(
@@ -465,6 +518,146 @@ void InputManager::InputManagerImpl::parseXML(
   modeSwitchButtonNum = 1;
 }
 
+static const char CONFIG_FILE_DEVICE_ELEMENT_NAME[] = "device";
+static const char CONFIG_FILE_DEVICE_VRPN_NAME_ATTRIBUTE[] = "name";
+static const char CONFIG_FILE_BUTTON_DEVICE_ELEMENT_NAME[] = "buttons";
+static const char CONFIG_FILE_ANALOG_DEVICE_ELEMENT_NAME[] = "analogs";
+static const char CONFIG_FILE_TRACKER_DEVICE_ELEMENT_NAME[] = "tracker";
+static const char CONFIG_FILE_DEVICE_NUM_INPUTS_ATTRIBUTE[] = "num";
+static const char CONFIG_FILE_DEVICE_TRACKER_CHANNEL_ATTRIBUTE[] = "channel";
+static const char CONFIG_FILE_HAND_ATTRIBUTE[] = "hand";
+static const char CONFIG_FILE_HAND_LEFT[] = "left";
+static const char CONFIG_FILE_HAND_RIGHT[] = "right";
+
+bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
+  int buttonOffset = 0;
+  int analogOffset = 0;
+  int numSubElements = root->GetNumberOfNestedElements();
+  for (int i = 0; i < numSubElements; ++i) {
+    vtkXMLDataElement *deviceElt = root->GetNestedElement(i);
+    if (deviceElt->GetName() == QString(CONFIG_FILE_DEVICE_ELEMENT_NAME)) {
+      if (deviceElt->GetAttribute(CONFIG_FILE_DEVICE_VRPN_NAME_ATTRIBUTE) ==
+          NULL) {
+        std::cout << "Device does not have a vrpn name" << std::endl;
+        return false;
+      }
+      bool hasTrackerRemote = false;
+      vrpn_Tracker_Remote *trackerRemote = NULL;
+      const char *devName =
+          deviceElt->GetAttribute(CONFIG_FILE_DEVICE_VRPN_NAME_ATTRIBUTE);
+      std::string vrpn_full_devName = devName;
+      vrpn_full_devName += "@localhost";
+      int numDeviceSubElements = deviceElt->GetNumberOfNestedElements();
+      for (int j = 0; j < numDeviceSubElements; ++j) {
+        vtkXMLDataElement *subElt = deviceElt->GetNestedElement(j);
+        if (subElt->GetName() ==
+            QString(CONFIG_FILE_BUTTON_DEVICE_ELEMENT_NAME)) {
+          if (subElt->GetAttribute(CONFIG_FILE_DEVICE_NUM_INPUTS_ATTRIBUTE) ==
+              NULL) {
+            std::cout << "No attribute for number of buttons" << std::endl;
+            return false;
+          }
+          int numInputs;
+          if (!subElt->GetScalarAttribute(
+                  CONFIG_FILE_DEVICE_NUM_INPUTS_ATTRIBUTE, numInputs)) {
+            std::cout << "Number of buttons is not an integer" << std::endl;
+            return false;
+          }
+          QSharedPointer<vrpn_Button_Remote> buttonRemote(
+              new vrpn_Button_Remote(vrpn_full_devName.c_str()));
+          QSharedPointer<ButtonDeviceInfo> buttonInfo(
+              new ButtonDeviceInfo(*this, devName, buttonOffset, numInputs));
+          buttonRemote->register_change_handler(
+              reinterpret_cast<void *>(buttonInfo.data()),
+              &handleButtonPressWithDeviceInfo);
+          this->buttonDevices.append(ButtonPair(buttonRemote, buttonInfo));
+          buttonOffset += numInputs;
+        } else if (subElt->GetName() ==
+                   QString(CONFIG_FILE_ANALOG_DEVICE_ELEMENT_NAME)) {
+          if (subElt->GetAttribute(CONFIG_FILE_DEVICE_NUM_INPUTS_ATTRIBUTE) ==
+              NULL) {
+            std::cout << "No attribute for number of analogs" << std::endl;
+            return false;
+          }
+          int numInputs;
+          if (!subElt->GetScalarAttribute(
+                  CONFIG_FILE_DEVICE_NUM_INPUTS_ATTRIBUTE, numInputs)) {
+            std::cout << "Number of analogs is not an integer" << std::endl;
+            return false;
+          }
+          QSharedPointer<vrpn_Analog_Remote> analogRemote(
+              new vrpn_Analog_Remote(vrpn_full_devName.c_str()));
+          QSharedPointer<AnalogDeviceInfo> analogInfo(
+              new AnalogDeviceInfo(*this, devName, analogOffset, numInputs));
+          analogRemote->register_change_handler(
+              reinterpret_cast<void *>(analogInfo.data()),
+              &handleAnalogChangedWithDeviceInfo);
+          this->analogDevices.append(AnalogPair(analogRemote, analogInfo));
+          analogOffset += numInputs;
+        } else if (subElt->GetName() ==
+                   QString(CONFIG_FILE_TRACKER_DEVICE_ELEMENT_NAME)) {
+          if (subElt->GetAttribute(
+                  CONFIG_FILE_DEVICE_TRACKER_CHANNEL_ATTRIBUTE) == NULL) {
+            std::cout << "No attribute for tracker channel" << std::endl;
+            return false;
+          }
+          const char *hand = subElt->GetAttribute(CONFIG_FILE_HAND_ATTRIBUTE);
+          if (hand == NULL) {
+            std::cout << "No attribute for tracker hand" << std::endl;
+            return false;
+          }
+          int channel;
+          if (!subElt->GetScalarAttribute(
+                  CONFIG_FILE_DEVICE_TRACKER_CHANNEL_ATTRIBUTE, channel)) {
+            std::cout << "Tracker channel attribute is not an integer"
+                      << std::endl;
+            return false;
+          }
+          SketchBioHandId::Type side;
+          if (hand == QString(CONFIG_FILE_HAND_LEFT)) {
+            side = SketchBioHandId::LEFT;
+          } else if (hand == QString(CONFIG_FILE_HAND_RIGHT)) {
+            side = SketchBioHandId::RIGHT;
+          } else {
+            std::cout << "Which hand to tie tracker to is spelled wrong"
+                      << std::endl;
+            return false;
+          }
+          if (!hasTrackerRemote) {
+            QSharedPointer<vrpn_Tracker_Remote> tracker(
+                new vrpn_Tracker_Remote(vrpn_full_devName.c_str()));
+            trackerRemote = tracker.data();
+            this->trackerDevices.append(tracker);
+          }
+          assert(trackerRemote != NULL);
+          QSharedPointer<TrackerInfo> info(
+              new TrackerInfo(project, channel, side));
+          trackerRemote->register_change_handler(
+              reinterpret_cast<void *>(info.data()), &handleTrackerData);
+          this->trackerInfos.append(info);
+        } else {
+          std::cout << "Warning: Unknown element in device tag" << std::endl;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+bool InputManager::InputManagerImpl::readInputTransform(
+    vtkXMLDataElement *root) {
+  return true;
+}
+
+bool InputManager::InputManagerImpl::readModeSwitchButton(
+    vtkXMLDataElement *root) {
+  return true;
+}
+
+bool InputManager::InputManagerImpl::readModes(vtkXMLDataElement *root) {
+  return true;
+}
+
 // ########################################################################
 // ########################################################################
 // Input Manager class
@@ -472,24 +665,20 @@ void InputManager::InputManagerImpl::parseXML(
 // ########################################################################
 InputManager::InputManager(const QString &inputConfigFileName, QObject *parent)
     : QObject(parent), impl(new InputManagerImpl(inputConfigFileName)) {
-    connect(&impl->emitter, SIGNAL(somethingHappened()),this, SLOT(notifyModeChanged()));
+  connect(&impl->emitter, SIGNAL(somethingHappened()), this,
+          SLOT(notifyModeChanged()));
 }
 
-InputManager::~InputManager() {
-    delete impl; }
+InputManager::~InputManager() { delete impl; }
 
-void InputManager::handleCurrentInput() {
-    impl->handleCurrentInput(); }
+void InputManager::handleCurrentInput() { impl->handleCurrentInput(); }
 
-const QString &InputManager::getModeName() {
-    return impl->getModeName(); }
+const QString &InputManager::getModeName() { return impl->getModeName(); }
 
 void InputManager::setProject(SketchBio::Project *proj) {
   impl->setProject(proj);
 }
 
-void InputManager::notifyModeChanged() {
-    emit modeChanged();
-}
+void InputManager::notifyModeChanged() { emit modeChanged(); }
 
 }
