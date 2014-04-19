@@ -712,6 +712,10 @@ void Project::ProjectImpl::applyRedo()
 OperationState* Project::ProjectImpl::getOperationState() { return opState; }
 void Project::ProjectImpl::setOperationState(OperationState* newState)
 {
+    assert(opState == NULL || newState == NULL);
+    if (opState != NULL && newState == NULL) {
+        delete opState;
+    }
     opState = newState;
 }
 //########################################################################

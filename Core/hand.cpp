@@ -1,5 +1,7 @@
 #include "hand.h"
 
+#include <limits>
+
 #include <vtkSmartPointer.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkConeSource.h>

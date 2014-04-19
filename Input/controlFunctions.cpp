@@ -78,7 +78,6 @@ void TransformEditOperationState::setObjectTransform(double x, double y,
 void TransformEditOperationState::cancelOperation()
 {
     proj->setOperationState(NULL);
-    deleteLater();
 }
 
 namespace ControlFunctions

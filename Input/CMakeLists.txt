@@ -6,6 +6,7 @@ INCLUDE_DIRECTORIES(
 
 SET(SketchBioInputQtHeaders
 vrpnserver.h
+InputManager.h
 hydrainputmanager.h
 hydrainputmode.h
 objectgrabmode.h
@@ -31,6 +32,7 @@ transformeditingmode.cpp  # h file used by Moc, no need to include here
 springeditingmode.cpp  # h file used by Moc, no need to include here
 animationmode.cpp  # h file used by Moc, no need to include here
 TransformInputDialog.cpp  # h file used by Moc, no need to include here
+InputManager.cpp
 controlFunctions.cpp
 controlFunctions.h
 savedxmlundostate.cpp
