@@ -53,6 +53,7 @@ class ButtonDeviceInfo {
         max(maxButtons) {}
   int getOffset() { return offset; }
   int getMax() { return max; }
+  const QString &getDeviceName() { return deviceName; }
   void handleVrpnInput(int buttonId, bool wasJustPressed) {
     assert(buttonId >= 0 && buttonId < max);
     buttonHandler.buttonStateChange(buttonId + offset, wasJustPressed);
@@ -366,7 +367,8 @@ class InputManager::InputManagerImpl : public ButtonHandler,
 };
 
 InputManager::InputManagerImpl::InputManagerImpl(
-    const QString &inputConfigFileName) {
+    const QString &inputConfigFileName)
+    : currentMode(0), modeSwitchButtonNum(0) {
   parseXML(inputConfigFileName);
 }
 
@@ -382,6 +384,7 @@ void InputManager::InputManagerImpl::handleCurrentInput() {
 }
 
 const QString &InputManager::InputManagerImpl::getModeName() {
+  assert(currentMode >= 0 && currentMode < modes.size());
   return modes[currentMode].name;
 }
 
@@ -468,32 +471,32 @@ void InputManager::InputManagerImpl::parseXML(
   if (!readModes(root)) return;
   // make vrpn server
   // initialize devices
-  buttonDevices.append(
-      ButtonPair(QSharedPointer<vrpn_Button_Remote>(
-                     new vrpn_Button_Remote("razer@localhost")),
-                 QSharedPointer<ButtonDeviceInfo>(
-                     new ButtonDeviceInfo(*this, "razer", 0, 16))));
-  buttonDevices[0].first->register_change_handler(
-      reinterpret_cast<void *>(buttonDevices[0].second.data()),
-      &handleButtonPressWithDeviceInfo);
-  analogDevices.append(
-      AnalogPair(QSharedPointer<vrpn_Analog_Remote>(
-                     new vrpn_Analog_Remote("razer@localhost")),
-                 QSharedPointer<AnalogDeviceInfo>(
-                     new AnalogDeviceInfo(*this, "razer", 0, 6))));
-  analogDevices[0].first->register_change_handler(
-      reinterpret_cast<void *>(analogDevices[0].second.data()),
-      &handleAnalogChangedWithDeviceInfo);
-  trackerDevices.append(QSharedPointer<vrpn_Tracker_Remote>(
-      new vrpn_Tracker_Remote("filteredRazer@localhost")));
-  trackerInfos.append(QSharedPointer<TrackerInfo>(
-      new TrackerInfo(project, 0, SketchBioHandId::LEFT)));
-  trackerInfos.append(QSharedPointer<TrackerInfo>(
-      new TrackerInfo(project, 1, SketchBioHandId::RIGHT)));
-  trackerDevices[0]->register_change_handler(
-      reinterpret_cast<void *>(trackerInfos[0].data()), &handleTrackerData);
-  trackerDevices[0]->register_change_handler(
-      reinterpret_cast<void *>(trackerInfos[1].data()), &handleTrackerData);
+  //  buttonDevices.append(
+  //      ButtonPair(QSharedPointer<vrpn_Button_Remote>(
+  //                     new vrpn_Button_Remote("razer@localhost")),
+  //                 QSharedPointer<ButtonDeviceInfo>(
+  //                     new ButtonDeviceInfo(*this, "razer", 0, 16))));
+  //  buttonDevices[0].first->register_change_handler(
+  //      reinterpret_cast<void *>(buttonDevices[0].second.data()),
+  //      &handleButtonPressWithDeviceInfo);
+  //  analogDevices.append(
+  //      AnalogPair(QSharedPointer<vrpn_Analog_Remote>(
+  //                     new vrpn_Analog_Remote("razer@localhost")),
+  //                 QSharedPointer<AnalogDeviceInfo>(
+  //                     new AnalogDeviceInfo(*this, "razer", 0, 6))));
+  //  analogDevices[0].first->register_change_handler(
+  //      reinterpret_cast<void *>(analogDevices[0].second.data()),
+  //      &handleAnalogChangedWithDeviceInfo);
+  //  trackerDevices.append(QSharedPointer<vrpn_Tracker_Remote>(
+  //      new vrpn_Tracker_Remote("filteredRazer@localhost")));
+  //  trackerInfos.append(QSharedPointer<TrackerInfo>(
+  //      new TrackerInfo(project, 0, SketchBioHandId::LEFT)));
+  //  trackerInfos.append(QSharedPointer<TrackerInfo>(
+  //      new TrackerInfo(project, 1, SketchBioHandId::RIGHT)));
+  //  trackerDevices[0]->register_change_handler(
+  //      reinterpret_cast<void *>(trackerInfos[0].data()), &handleTrackerData);
+  //  trackerDevices[0]->register_change_handler(
+  //      reinterpret_cast<void *>(trackerInfos[1].data()), &handleTrackerData);
   int maxButtons = buttonDevices.last().second->getOffset() +
                    buttonDevices.last().second->getMax();
   int maxAnalogs = analogDevices.last().second->getOffset() +
@@ -514,8 +517,8 @@ void InputManager::InputManagerImpl::parseXML(
   editSprings.buttonFunctions.data()[13]
       .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::RIGHT);
 
-  currentMode = 0;
-  modeSwitchButtonNum = 1;
+  //  currentMode = 0;
+  //  modeSwitchButtonNum = 1;
 }
 
 static const char CONFIG_FILE_DEVICE_ELEMENT_NAME[] = "device";
@@ -528,6 +531,25 @@ static const char CONFIG_FILE_DEVICE_TRACKER_CHANNEL_ATTRIBUTE[] = "channel";
 static const char CONFIG_FILE_HAND_ATTRIBUTE[] = "hand";
 static const char CONFIG_FILE_HAND_LEFT[] = "left";
 static const char CONFIG_FILE_HAND_RIGHT[] = "right";
+
+static const bool getHand(vtkXMLDataElement *elt,
+                          SketchBioHandId::Type &output) {
+  const char *hand = elt->GetAttribute(CONFIG_FILE_HAND_ATTRIBUTE);
+  if (hand == NULL) {
+    std::cout << "No attribute for hand" << std::endl;
+    return false;
+  }
+  if (hand == QString(CONFIG_FILE_HAND_LEFT)) {
+    output = SketchBioHandId::LEFT;
+  } else if (hand == QString(CONFIG_FILE_HAND_RIGHT)) {
+    output = SketchBioHandId::RIGHT;
+  } else {
+    std::cout << "Unknown hand type, check your spelling" << std::endl;
+    return false;
+  }
+  return true;
+
+}
 
 bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
   int buttonOffset = 0;
@@ -563,6 +585,7 @@ bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
             std::cout << "Number of buttons is not an integer" << std::endl;
             return false;
           }
+          //          std::cout << "Adding button device" << std::endl;
           QSharedPointer<vrpn_Button_Remote> buttonRemote(
               new vrpn_Button_Remote(vrpn_full_devName.c_str()));
           QSharedPointer<ButtonDeviceInfo> buttonInfo(
@@ -585,6 +608,7 @@ bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
             std::cout << "Number of analogs is not an integer" << std::endl;
             return false;
           }
+          //          std::cout << "Adding analog device" << std::endl;
           QSharedPointer<vrpn_Analog_Remote> analogRemote(
               new vrpn_Analog_Remote(vrpn_full_devName.c_str()));
           QSharedPointer<AnalogDeviceInfo> analogInfo(
@@ -601,11 +625,6 @@ bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
             std::cout << "No attribute for tracker channel" << std::endl;
             return false;
           }
-          const char *hand = subElt->GetAttribute(CONFIG_FILE_HAND_ATTRIBUTE);
-          if (hand == NULL) {
-            std::cout << "No attribute for tracker hand" << std::endl;
-            return false;
-          }
           int channel;
           if (!subElt->GetScalarAttribute(
                   CONFIG_FILE_DEVICE_TRACKER_CHANNEL_ATTRIBUTE, channel)) {
@@ -614,19 +633,14 @@ bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
             return false;
           }
           SketchBioHandId::Type side;
-          if (hand == QString(CONFIG_FILE_HAND_LEFT)) {
-            side = SketchBioHandId::LEFT;
-          } else if (hand == QString(CONFIG_FILE_HAND_RIGHT)) {
-            side = SketchBioHandId::RIGHT;
-          } else {
-            std::cout << "Which hand to tie tracker to is spelled wrong"
-                      << std::endl;
+          if (!getHand(subElt, side)) {
             return false;
           }
           if (!hasTrackerRemote) {
             QSharedPointer<vrpn_Tracker_Remote> tracker(
                 new vrpn_Tracker_Remote(vrpn_full_devName.c_str()));
             trackerRemote = tracker.data();
+            //            std::cout << "Adding tracker device" << std::endl;
             this->trackerDevices.append(tracker);
           }
           assert(trackerRemote != NULL);
@@ -634,6 +648,7 @@ bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
               new TrackerInfo(project, channel, side));
           trackerRemote->register_change_handler(
               reinterpret_cast<void *>(info.data()), &handleTrackerData);
+          //          std::cout << "Adding tracker hand" << std::endl;
           this->trackerInfos.append(info);
         } else {
           std::cout << "Warning: Unknown element in device tag" << std::endl;
@@ -649,12 +664,123 @@ bool InputManager::InputManagerImpl::readInputTransform(
   return true;
 }
 
-bool InputManager::InputManagerImpl::readModeSwitchButton(
-    vtkXMLDataElement *root) {
+static const char CONFIG_FILE_MODE_SWITCH_BUTTON_ELEMENT[] = "modeSwitchButton";
+static const char CONFIG_FILE_DEVICE_NAME_ATTRIBUTE[] = "deviceName";
+static const char CONFIG_FILE_BUTTON_NUMBER_ATTRIBUTE[] = "buttonNumber";
+
+static inline bool getButtonNumber(
+    vtkXMLDataElement *elt,
+    const QVector<QPair<QSharedPointer<vrpn_Button_Remote>,
+                        QSharedPointer<ButtonDeviceInfo> > > &buttonDevices,
+    int &output) {
+  const char *devName = elt->GetAttribute(CONFIG_FILE_DEVICE_NAME_ATTRIBUTE);
+  if (devName == NULL) {
+    std::cout << "Button device could not be determined" << std::endl;
+    return false;
+  }
+  int buttonNum;
+  if (!elt->GetScalarAttribute(CONFIG_FILE_BUTTON_NUMBER_ATTRIBUTE,
+                               buttonNum)) {
+    std::cout << "Could not find button number" << std::endl;
+    return false;
+  }
+  int max = -1;
+  int offset = -1;
+  for (int i = 0; i < buttonDevices.size(); ++i) {
+    if (buttonDevices[i].second->getDeviceName() == devName) {
+      offset = buttonDevices[i].second->getOffset();
+      max = buttonDevices[i].second->getMax();
+    }
+  }
+  if (offset == -1) {
+    std::cout << "Could not find device: Device " << devName << " unknown"
+              << std::endl;
+    return false;
+  }
+  if (buttonNum >= max) {
+    std::cout << "Specified button is out of range for device" << std::endl;
+    return false;
+  }
+  output = offset + buttonNum;
   return true;
 }
 
+bool InputManager::InputManagerImpl::readModeSwitchButton(
+    vtkXMLDataElement *root) {
+  vtkXMLDataElement *modeSwitchButton =
+      root->FindNestedElementWithName(CONFIG_FILE_MODE_SWITCH_BUTTON_ELEMENT);
+  if (modeSwitchButton == NULL) {
+    std::cout << "Could not find mode switch button" << std::endl;
+    return false;
+  }
+  if (!getButtonNumber(modeSwitchButton, buttonDevices, modeSwitchButtonNum)) {
+    return false;
+  }
+  //  std::cout << "Mode switch button set to " << modeSwitchButtonNum <<
+  // std::endl;
+  return true;
+}
+
+static const char CONFIG_FILE_MODE_ELEMENT_NAME[] = "mode";
+static const char CONFIG_FILE_MODE_NAME_ATTRIBUTE[] = "name";
+static const char CONFIG_FILE_MODE_DEFAULT_SELECTION_ATTRIBUTE[] =
+    "defaultSelection";
+static const char CONFIG_FILE_SELECTION_TYPE_OBJECTS[] = "Objects";
+static const char CONFIG_FILE_SELECTION_TYPE_CONNECTOR[] = "Connectors";
+
+static const char CONFIG_FILE_BUTTON_CTRL_ELEMENT_NAME[] = "button";
+
 bool InputManager::InputManagerImpl::readModes(vtkXMLDataElement *root) {
+  int maxButtons = buttonDevices.last().second->getOffset() +
+                   buttonDevices.last().second->getMax();
+  int maxAnalogs = analogDevices.last().second->getOffset() +
+                   analogDevices.last().second->getMax();
+  int rootNumNestedElements = root->GetNumberOfNestedElements();
+  for (int i = 0; i < rootNumNestedElements; ++i) {
+    vtkXMLDataElement *modeElt = root->GetNestedElement(i);
+    if (modeElt->GetName() == QString(CONFIG_FILE_MODE_ELEMENT_NAME)) {
+      const char *modeName =
+          modeElt->GetAttribute(CONFIG_FILE_MODE_NAME_ATTRIBUTE);
+      if (modeName == NULL) {
+        std::cout << "Mode has no name" << std::endl;
+        return false;
+      }
+      const char *defaultSelection =
+          modeElt->GetAttribute(CONFIG_FILE_MODE_DEFAULT_SELECTION_ATTRIBUTE);
+      SketchBio::OutlineType::Type outlineType;
+      if (defaultSelection == NULL) {
+        std::cout << "Mode has no default selection type" << std::endl;
+        return false;
+      } else if (defaultSelection ==
+                 QString(CONFIG_FILE_SELECTION_TYPE_OBJECTS)) {
+        outlineType = SketchBio::OutlineType::OBJECTS;
+      } else if (defaultSelection ==
+                 QString(CONFIG_FILE_SELECTION_TYPE_CONNECTOR)) {
+        outlineType = SketchBio::OutlineType::CONNECTORS;
+      } else {
+        std::cout << "Mode has unknown selection type" << std::endl;
+        return false;
+      }
+      modes.append(Mode(maxButtons, maxAnalogs, modeName, outlineType));
+      Mode &mode = modes.last();
+      int modeNumNested = modeElt->GetNumberOfNestedElements();
+      for (int j = 0; j < modeNumNested; ++j) {
+          vtkXMLDataElement *controlElt = modeElt->GetNestedElement(j);
+          if (controlElt->GetName() == QString(CONFIG_FILE_BUTTON_CTRL_ELEMENT_NAME)) {
+              int buttonNum;
+              SketchBioHandId::Type side;
+              if (!getButtonNumber(controlElt,buttonDevices,buttonNum)) {
+                  return false;
+              }
+              if (!getHand(controlElt,side)) {
+                  return false;
+              }
+              // TODO read function pointer
+          }
+          // TODO else if analog
+      }
+    }
+  }
   return true;
 }
 
