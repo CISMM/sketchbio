@@ -138,10 +138,10 @@ void HydraInputManager::setButtonState(int buttonNum, bool buttonPressed) {
         // events on press
         if (buttonNum == spring_disable_button_idx()) {
             project->getWorldManager().setPhysicsSpringsOn(
-                        project->getWorldManager().areSpringsEnabled());
+                        !project->getWorldManager().areSpringsEnabled());
         } else if (buttonNum == collision_disable_button_idx()) {
             project->getWorldManager().setCollisionCheckOn(
-                        project->getWorldManager().isCollisionTestingOn());
+                        !project->getWorldManager().isCollisionTestingOn());
         } else if (buttonNum == change_modes_button_idx()) {
             activeMode->clearStatus();
             modeIndex = (modeIndex + 1 ) % modeList.size();

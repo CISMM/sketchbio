@@ -51,9 +51,9 @@ class ButtonDeviceInfo {
         deviceName(devName),
         offset(currentOffset),
         max(maxButtons) {}
-  int getOffset() { return offset; }
-  int getMax() { return max; }
-  const QString &getDeviceName() { return deviceName; }
+  int getOffset() const { return offset; }
+  int getMax() const { return max; }
+  const QString &getDeviceName() const { return deviceName; }
   void handleVrpnInput(int buttonId, bool wasJustPressed) {
     assert(buttonId >= 0 && buttonId < max);
     buttonHandler.buttonStateChange(buttonId + offset, wasJustPressed);
@@ -96,8 +96,9 @@ class AnalogDeviceInfo {
         deviceName(devName),
         offset(currentOffset),
         max(maxAnalogs) {}
-  int getOffset() { return offset; }
-  int getMax() { return max; }
+  const QString &getDeviceName() const { return deviceName; }
+  int getOffset() const { return offset; }
+  int getMax() const { return max; }
   void handleVrpnInput(int analogId, double newValue) {
     assert(analogId >= 0 && analogId < max);
     analogHandler.analogStateChange(analogId + offset, newValue);
@@ -154,6 +155,7 @@ static void VRPN_CALLBACK handleTrackerData(void *userdata,
 void doNothingButton(SketchBio::Project *, int, bool) {
   std::cout << "Did nothing button" << std::endl;
 }
+
 void doNothingAnalog(SketchBio::Project *, int, double) {
   //  std::cout << "Did nothing analog" << std::endl;
 }
@@ -163,7 +165,7 @@ class ButtonControlFunction {
  public:
   ButtonControlFunction()
       : function(&doNothingButton), hand(SketchBioHandId::LEFT) {}
-  void init(void (*f)(SketchBio::Project *, int, bool),
+  void init(ControlFunctions::ButtonControlFunctionPtr f,
             SketchBioHandId::Type h) {
     function = f;
     hand = h;
@@ -177,20 +179,16 @@ class ButtonControlFunction {
   // faithfully copied by memcpy, then you will have to
   // change the Mode class's copy and assignment operators
   // to deal with that
-  void (*function)(SketchBio::Project *, int, bool);
+  ControlFunctions::ButtonControlFunctionPtr function;
   SketchBioHandId::Type hand;
 };
 
 // Abstract class to handle analog control functions
 class AnalogControlFunction {
  public:
-  AnalogControlFunction(SketchBioHandId::Type h = SketchBioHandId::LEFT)
-      : hand(h) {}
+  AnalogControlFunction() {}
   virtual ~AnalogControlFunction() {}
   virtual void callFunction(SketchBio::Project *proj, double newValue) = 0;
-
- protected:
-  SketchBioHandId::Type hand;
 };
 
 // Analog control function to handle threshold values
@@ -201,20 +199,21 @@ class AnalogThresholdControlFunction : public AnalogControlFunction {
     LESS_THAN
   };
 
-  AnalogThresholdControlFunction(SketchBioHandId::Type h)
-      : AnalogControlFunction(h),
+  AnalogThresholdControlFunction()
+      : AnalogControlFunction(),
         oldValue(std::numeric_limits<double>::quiet_NaN()),
         numThresholds(0) {}
   virtual ~AnalogThresholdControlFunction() {}
   // adds a threshold at the given value that will count as pressed
   // if the value of the analog is t (GREATER_THAN/LESS_THAN) the
   // threshold and calling the button control function f
-  void addThreshold(double value, ThresholdType t,
-                    void (*f)(SketchBio::Project *, int, bool)) {
+  void addThreshold(double value, ThresholdType t, SketchBioHandId::Type h,
+                    ControlFunctions::ButtonControlFunctionPtr f) {
     assert(numThresholds < 2);
     threshold[numThresholds] = value;
     type[numThresholds] = t;
     function[numThresholds] = f;
+    hand[numThresholds] = h;
     ++numThresholds;
   }
   virtual void callFunction(SketchBio::Project *proj, double newValue) {
@@ -233,7 +232,7 @@ class AnalogThresholdControlFunction : public AnalogControlFunction {
         // call the function for that threshold (hand is a protected variable in
         // the
         // superclass
-        function[i](proj, hand, pressed);
+        function[i](proj, hand[i], pressed);
       }
     }
     oldValue = newValue;
@@ -243,7 +242,8 @@ class AnalogThresholdControlFunction : public AnalogControlFunction {
   double oldValue;
   double threshold[2];
   ThresholdType type[2];
-  void (*function[2])(SketchBio::Project *, int, bool);
+  SketchBioHandId::Type hand[2];
+  ControlFunctions::ButtonControlFunctionPtr function[2];
   int numThresholds;
 };
 
@@ -253,9 +253,9 @@ class AnalogNormalizeControlFunction : public AnalogControlFunction {
  public:
   AnalogNormalizeControlFunction(double mmin, double mmax,
                                  SketchBioHandId::Type h,
-                                 void (*f)(SketchBio::Project *, int, double) =
+                                 ControlFunctions::AnalogControlFunctionPtr f =
                                      &doNothingAnalog)
-      : AnalogControlFunction(h), min(mmin), max(mmax), function(f) {}
+      : AnalogControlFunction(), min(mmin), max(mmax), function(f), hand(h) {}
   virtual ~AnalogNormalizeControlFunction() {}
   // normalize the value and call the function pointer
   virtual void callFunction(SketchBio::Project *proj, double newValue) {
@@ -266,7 +266,8 @@ class AnalogNormalizeControlFunction : public AnalogControlFunction {
  private:
   double min;
   double max;
-  void (*function)(SketchBio::Project *, int, double);
+  ControlFunctions::AnalogControlFunctionPtr function;
+  SketchBioHandId::Type hand;
 };
 
 // ########################################################################
@@ -497,25 +498,25 @@ void InputManager::InputManagerImpl::parseXML(
   //      reinterpret_cast<void *>(trackerInfos[0].data()), &handleTrackerData);
   //  trackerDevices[0]->register_change_handler(
   //      reinterpret_cast<void *>(trackerInfos[1].data()), &handleTrackerData);
-  int maxButtons = buttonDevices.last().second->getOffset() +
-                   buttonDevices.last().second->getMax();
-  int maxAnalogs = analogDevices.last().second->getOffset() +
-                   analogDevices.last().second->getMax();
+  //  int maxButtons = buttonDevices.last().second->getOffset() +
+  //                   buttonDevices.last().second->getMax();
+  //  int maxAnalogs = analogDevices.last().second->getOffset() +
+  //                   analogDevices.last().second->getMax();
   // initialize mapping for modes
-  modes.append(Mode(maxButtons, maxAnalogs, "Edit Objects",
-                    SketchBio::OutlineType::OBJECTS));
-  Mode &editObjects = modes.last();
-  editObjects.buttonFunctions.data()[5]
-      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::LEFT);
-  editObjects.buttonFunctions.data()[13]
-      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::RIGHT);
-  modes.append(Mode(maxButtons, maxAnalogs, "Edit Springs",
-                    SketchBio::OutlineType::CONNECTORS));
-  Mode &editSprings = modes.last();
-  editSprings.buttonFunctions.data()[5]
-      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::LEFT);
-  editSprings.buttonFunctions.data()[13]
-      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::RIGHT);
+  //  modes.append(Mode(maxButtons, maxAnalogs, "Edit Objects",
+  //                    SketchBio::OutlineType::OBJECTS));
+  //  Mode &editObjects = modes.last();
+  //  editObjects.buttonFunctions.data()[5]
+  //      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::LEFT);
+  //  editObjects.buttonFunctions.data()[13]
+  //      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::RIGHT);
+  //  modes.append(Mode(maxButtons, maxAnalogs, "Edit Springs",
+  //                    SketchBio::OutlineType::CONNECTORS));
+  //  Mode &editSprings = modes.last();
+  //  editSprings.buttonFunctions.data()[5]
+  //      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::LEFT);
+  //  editSprings.buttonFunctions.data()[13]
+  //      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::RIGHT);
 
   //  currentMode = 0;
   //  modeSwitchButtonNum = 1;
@@ -667,6 +668,7 @@ bool InputManager::InputManagerImpl::readInputTransform(
 static const char CONFIG_FILE_MODE_SWITCH_BUTTON_ELEMENT[] = "modeSwitchButton";
 static const char CONFIG_FILE_DEVICE_NAME_ATTRIBUTE[] = "deviceName";
 static const char CONFIG_FILE_BUTTON_NUMBER_ATTRIBUTE[] = "buttonNumber";
+static const char CONFIG_FILE_ANALOG_NUMBER_ATTRIBUTE[] = "analogNumber";
 
 static inline bool getButtonNumber(
     vtkXMLDataElement *elt,
@@ -705,6 +707,44 @@ static inline bool getButtonNumber(
   return true;
 }
 
+static inline bool getAnalogNumber(
+    vtkXMLDataElement *elt,
+    const QVector<QPair<QSharedPointer<vrpn_Analog_Remote>,
+                        QSharedPointer<AnalogDeviceInfo> > > &analogDevices,
+    int &output) {
+  const char *devName = elt->GetAttribute(CONFIG_FILE_DEVICE_NAME_ATTRIBUTE);
+  if (devName == NULL) {
+    std::cout << "Analog device could not be determined" << std::endl;
+    return false;
+  }
+  int analogNum;
+  if (!elt->GetScalarAttribute(CONFIG_FILE_ANALOG_NUMBER_ATTRIBUTE,
+                               analogNum)) {
+    std::cout << "Could not find analog number" << std::endl;
+    return false;
+  }
+  int max = -1;
+  int offset = -1;
+  for (int i = 0; i < analogDevices.size(); ++i) {
+    if (analogDevices[i].second->getDeviceName() == devName) {
+      offset = analogDevices[i].second->getOffset();
+      max = analogDevices[i].second->getMax();
+    }
+  }
+  if (offset == -1) {
+    std::cout << "Could not find device: Device " << devName << " unknown"
+              << std::endl;
+    return false;
+  }
+  if (analogNum >= max) {
+    std::cout << "Specified analog is out of range for device " << devName
+              << std::endl;
+    return false;
+  }
+  output = offset + analogNum;
+  return true;
+}
+
 bool InputManager::InputManagerImpl::readModeSwitchButton(
     vtkXMLDataElement *root) {
   vtkXMLDataElement *modeSwitchButton =
@@ -729,6 +769,264 @@ static const char CONFIG_FILE_SELECTION_TYPE_OBJECTS[] = "Objects";
 static const char CONFIG_FILE_SELECTION_TYPE_CONNECTOR[] = "Connectors";
 
 static const char CONFIG_FILE_BUTTON_CTRL_ELEMENT_NAME[] = "button";
+static const char CONFIG_FILE_ANALOG_CTRL_ELEMENT_NAME[] = "analog";
+static const char CONFIG_FILE_FUNCTION_ATTRIBUTE[] = "function";
+
+static const char CONFIG_FILE_ANALOG_TYPE_ATTRIBUTE[] = "type";
+static const char CONFIG_FILE_ANALOG_TYPE_NORMALIZE[] = "normalize";
+static const char CONFIG_FILE_ANALOG_TYPE_THRESHOLD[] = "threshold";
+
+static const char CONFIG_FILE_ANALOG_INTERVAL_ELEMENT[] = "interval";
+static const char CONFIG_FILE_ANALOG_INTERVAL_MIN_ATTRIBUTE[] = "min";
+static const char CONFIG_FILE_ANALOG_INTERVAL_MAX_ATTRIBUTE[] = "max";
+
+static const char CONFIG_FILE_ANALOG_THRESHOLD_ELEMENT[] = "threshold";
+static const char CONFIG_FILE_ANALOG_THRESHOLD_PRESSED_WHEN_ATTRIBUTE[] =
+    "pressedWhen";
+static const char CONFIG_FILE_ANALOG_THRESHOLD_LESS_THAN[] = "less than";
+static const char CONFIG_FILE_ANALOG_THRESHOLD_GREATER_THAN[] = "greater than";
+static const char CONFIG_FILE_ANALOG_THRESHOLD_VALUE_ATTRIBUTE[] = "value";
+
+// ########################################################################
+// ########################################################################
+// CONTROL FUNCTIONS AS STRINGS
+
+// BUTTONS
+
+//   ANIMATION functions:
+static const char FUNC_NAME_KEYFRAME_ALL[] = "keyframeAll";
+static const char FUNC_NAME_TOGGLE_KEYFRAME_OBJECT[] = "toggleKeyframeObject";
+static const char FUNC_NAME_ADD_CAMERA[] = "addCamera";
+static const char FUNC_NAME_SHOW_ANIMATION_PREVIEW[] = "showAnimationPreview";
+
+//   GROUP EDITING functions:
+static const char FUNC_NAME_TOGGLE_GROUP_MEMBERSHIP[] = "toggleGroupMembership";
+
+//   COLOR EDITING functions:
+static const char FUNC_NAME_CHANGE_OBJECT_COLOR[] = "changeObjectColor";
+static const char FUNC_NAME_CHANGE_OBJECT_COLOR_VARIABLE[] =
+    "changeObjectColorVariable";
+static const char FUNC_NAME_TOGGLE_OBJECT_VISIBILITY[] =
+    "toggleObjectVisibility";
+static const char FUNC_NAME_TOGGLE_SHOW_INVISIBLE_OBJECTS[] =
+    "toggleShowInvisibleObjects";
+
+//   SPRING EDITING functions:
+static const char FUNC_NAME_DELETE_SPRING[] = "deleteConnector";
+static const char FUNC_NAME_SNAP_SPRING_TO_TERMINUS[] =
+    "snapConnectorToTerminus";
+static const char FUNC_NAME_SET_TERMINUS_TO_SNAP_SPRING[] =
+    "setTerminusToSnapSpring";
+static const char FUNC_NAME_CREATE_SPRING[] = "createSpring";
+static const char FUNC_NAME_CREATE_TRANSPARENT_CONENCTOR[] =
+    "createTransparentConnector";
+
+//   GRAB functions:
+static const char FUNC_NAME_GRAB_OBJECT_OR_WORLD[] = "grabObjectOrWorld";
+static const char FUNC_NAME_GRAB_SPRING_OR_WORLD[] = "grabConnectorOrWorld";
+static const char FUNC_NAME_SELECT_PARENT_OF_CURRENT[] =
+    "selectParentOfCurrent";
+static const char FUNC_NAME_SELECT_CHILD_OF_CURRENT[] = "selectChildOfCurrent";
+
+//   TRANSFORM functions:
+static const char FUNC_NAME_DELETE_OBJECT[] = "deleteObject";
+static const char FUNC_NAME_REPLICATE_OBJECT[] = "createCrystalByExample";
+static const char FUNC_NAME_SET_TRANSFORMS[] = "setTransform";
+
+//   UTILITY functions:
+static const char FUNC_NAME_RESET_VIEWPOINT[] = "resetCameraAngle";
+static const char FUNC_NAME_COPY_OBJECT[] = "copyObject";
+static const char FUNC_NAME_PASTE_OBJECT[] = "pasteObject";
+
+// ANALOGS
+
+//   TODO
+
+// ########################################################################
+// ########################################################################
+
+ControlFunctions::ButtonControlFunctionPtr readButtonFunction(
+    const char *funcName) {
+
+  QString funcToAssign(funcName);
+
+  if (funcToAssign == FUNC_NAME_KEYFRAME_ALL) {
+    return &ControlFunctions::keyframeAll;
+  } else if (funcToAssign == FUNC_NAME_TOGGLE_KEYFRAME_OBJECT) {
+    return &ControlFunctions::toggleKeyframeObject;
+  } else if (funcToAssign == FUNC_NAME_ADD_CAMERA) {
+    return &ControlFunctions::addCamera;
+  } else if (funcToAssign == FUNC_NAME_SHOW_ANIMATION_PREVIEW) {
+    return &ControlFunctions::showAnimationPreview;
+  } else if (funcToAssign == FUNC_NAME_TOGGLE_GROUP_MEMBERSHIP) {
+    return &ControlFunctions::toggleGroupMembership;
+  } else if (funcToAssign == FUNC_NAME_CHANGE_OBJECT_COLOR) {
+    return &ControlFunctions::changeObjectColor;
+  } else if (funcToAssign == FUNC_NAME_CHANGE_OBJECT_COLOR_VARIABLE) {
+    return &ControlFunctions::changeObjectColorVariable;
+  } else if (funcToAssign == FUNC_NAME_TOGGLE_OBJECT_VISIBILITY) {
+    return &ControlFunctions::toggleObjectVisibility;
+  } else if (funcToAssign == FUNC_NAME_TOGGLE_SHOW_INVISIBLE_OBJECTS) {
+    return &ControlFunctions::toggleShowInvisibleObjects;
+  } else if (funcToAssign == FUNC_NAME_DELETE_SPRING) {
+    return &ControlFunctions::deleteSpring;
+  } else if (funcToAssign == FUNC_NAME_SNAP_SPRING_TO_TERMINUS) {
+    return &ControlFunctions::snapSpringToTerminus;
+  } else if (funcToAssign == FUNC_NAME_SET_TERMINUS_TO_SNAP_SPRING) {
+    return &ControlFunctions::setTerminusToSnapSpring;
+  } else if (funcToAssign == FUNC_NAME_CREATE_SPRING) {
+    return &ControlFunctions::createSpring;
+  } else if (funcToAssign == FUNC_NAME_CREATE_TRANSPARENT_CONENCTOR) {
+    return &ControlFunctions::createTransparentConnector;
+  } else if (funcToAssign == FUNC_NAME_GRAB_OBJECT_OR_WORLD) {
+    return &ControlFunctions::grabObjectOrWorld;
+  } else if (funcToAssign == FUNC_NAME_GRAB_SPRING_OR_WORLD) {
+    return &ControlFunctions::grabSpringOrWorld;
+  } else if (funcToAssign == FUNC_NAME_SELECT_PARENT_OF_CURRENT) {
+    return &ControlFunctions::selectParentOfCurrent;
+  } else if (funcToAssign == FUNC_NAME_SELECT_CHILD_OF_CURRENT) {
+    return &ControlFunctions::selectChildOfCurrent;
+  } else if (funcToAssign == FUNC_NAME_DELETE_OBJECT) {
+    return &ControlFunctions::deleteObject;
+  } else if (funcToAssign == FUNC_NAME_REPLICATE_OBJECT) {
+    return &ControlFunctions::replicateObject;
+  } else if (funcToAssign == FUNC_NAME_SET_TRANSFORMS) {
+    return &ControlFunctions::setTransforms;
+  } else if (funcToAssign == FUNC_NAME_RESET_VIEWPOINT) {
+    return &ControlFunctions::resetViewPoint;
+  } else if (funcToAssign == FUNC_NAME_COPY_OBJECT) {
+    return &ControlFunctions::copyObject;
+  } else if (funcToAssign == FUNC_NAME_PASTE_OBJECT) {
+    return &ControlFunctions::pasteObject;
+  } else {
+    return NULL;
+  }
+}
+
+ControlFunctions::AnalogControlFunctionPtr readAnalogFunction(
+    const char *funcName) {
+  return NULL;
+}
+
+static inline void readThresholdAnalog(int analogNum, Mode &mode,
+                                       vtkXMLDataElement *controlElt) {
+  QSharedPointer<AnalogControlFunction> control(
+      new AnalogThresholdControlFunction());
+  AnalogThresholdControlFunction *controlT =
+      dynamic_cast<AnalogThresholdControlFunction *>(control.data());
+  int numThresholds = 0;
+  int numSubElts = controlElt->GetNumberOfNestedElements();
+  for (int k = 0; k < numSubElts; ++k) {
+    vtkXMLDataElement *thresholdElt = controlElt->GetNestedElement(k);
+    if (thresholdElt->GetName() !=
+        QString(CONFIG_FILE_ANALOG_THRESHOLD_ELEMENT)) {
+      continue;
+    }
+    const char *pW = thresholdElt->GetAttribute(
+        CONFIG_FILE_ANALOG_THRESHOLD_PRESSED_WHEN_ATTRIBUTE);
+    if (pW == NULL) {
+      std::cout << "Analog assigment: Threshold has no pressed when attribute"
+                << std::endl;
+      continue;
+    }
+    QString pressedWhen(pW);
+    AnalogThresholdControlFunction::ThresholdType t;
+    if (pressedWhen == CONFIG_FILE_ANALOG_THRESHOLD_LESS_THAN) {
+      t = AnalogThresholdControlFunction::LESS_THAN;
+    } else if (pressedWhen == CONFIG_FILE_ANALOG_THRESHOLD_GREATER_THAN) {
+      t = AnalogThresholdControlFunction::GREATER_THAN;
+    } else {
+      std::cout
+          << "Analog assignment: Invalid condition in pressed when attribute"
+          << std::endl;
+      continue;
+    }
+    double value;
+    if (!thresholdElt->GetScalarAttribute(
+            CONFIG_FILE_ANALOG_THRESHOLD_VALUE_ATTRIBUTE, value)) {
+      std::cout << "Analog assignment: Threshold has no value attribute"
+                << std::endl;
+      continue;
+    }
+    SketchBioHandId::Type side;
+    if (!getHand(thresholdElt, side)) {
+      std::cout << "Analog assignment: Threshold has no side attribute"
+                << std::endl;
+      continue;
+    }
+    const char *funcName =
+        thresholdElt->GetAttribute(CONFIG_FILE_FUNCTION_ATTRIBUTE);
+    if (funcName == NULL) {
+      std::cout << "Analog assignment: Threshold has no function attribute"
+                << std::endl;
+      continue;
+    }
+    ControlFunctions::ButtonControlFunctionPtr bF =
+        readButtonFunction(funcName);
+    if (bF == NULL) {
+      std::cout << "Analog assignment: Unknown function in threshold function "
+                   "attribute" << std::endl;
+      continue;
+    }
+    controlT->addThreshold(value, t, side, bF);
+    ++numThresholds;
+  }
+  if (numThresholds > 2) {
+    std::cout << "Analog assignment: Using three thresholds of the same analog "
+                 "is unsupported" << std::endl;
+    return;
+  } else if (numThresholds == 0) {
+    std::cout << "Analog assignment: Skipping analog with no valid thresholds"
+              << std::endl;
+    return;
+  }
+  mode.analogFunctions[analogNum] = control;
+}
+
+static inline void readNormalizeAnalog(int analogNum, Mode &mode,
+                                       vtkXMLDataElement *controlElt) {
+  vtkXMLDataElement *interval = controlElt->FindNestedElementWithName(
+      CONFIG_FILE_ANALOG_INTERVAL_ELEMENT);
+  if (interval == NULL) {
+    std::cout << "Analog assignment: No interval for normalize type analog"
+              << std::endl;
+    return;
+  }
+  int min, max;
+  if (!interval->GetScalarAttribute(CONFIG_FILE_ANALOG_INTERVAL_MIN_ATTRIBUTE,
+                                    min)) {
+    std::cout << "Analog assigment: Interval tag has no min attribute"
+              << std::endl;
+    return;
+  }
+  if (!interval->GetScalarAttribute(CONFIG_FILE_ANALOG_INTERVAL_MAX_ATTRIBUTE,
+                                    max)) {
+    std::cout << "Analog assignment: Interval tag has no max attribute"
+              << std::endl;
+    return;
+  }
+  SketchBioHandId::Type side;
+  if (!getHand(interval, side)) {
+    std::cout << "Analog assignment: Interval tag has no hand attribute"
+              << std::endl;
+    return;
+  }
+  const char *funcName = interval->GetAttribute(CONFIG_FILE_FUNCTION_ATTRIBUTE);
+  if (funcName == NULL) {
+    std::cout << "Analog assignment: Interval tag has no function attribute"
+              << std::endl;
+    return;
+  }
+  ControlFunctions::AnalogControlFunctionPtr func =
+      readAnalogFunction(funcName);
+  if (func == NULL) {
+    std::cout << "Analog assignment: Unknown analog function: " << funcName
+              << std::endl;
+    return;
+  }
+  mode.analogFunctions[analogNum] = QSharedPointer<AnalogControlFunction>(
+      new AnalogNormalizeControlFunction(min, max, side, func));
+}
 
 bool InputManager::InputManagerImpl::readModes(vtkXMLDataElement *root) {
   int maxButtons = buttonDevices.last().second->getOffset() +
@@ -765,19 +1063,63 @@ bool InputManager::InputManagerImpl::readModes(vtkXMLDataElement *root) {
       Mode &mode = modes.last();
       int modeNumNested = modeElt->GetNumberOfNestedElements();
       for (int j = 0; j < modeNumNested; ++j) {
-          vtkXMLDataElement *controlElt = modeElt->GetNestedElement(j);
-          if (controlElt->GetName() == QString(CONFIG_FILE_BUTTON_CTRL_ELEMENT_NAME)) {
-              int buttonNum;
-              SketchBioHandId::Type side;
-              if (!getButtonNumber(controlElt,buttonDevices,buttonNum)) {
-                  return false;
-              }
-              if (!getHand(controlElt,side)) {
-                  return false;
-              }
-              // TODO read function pointer
+        vtkXMLDataElement *controlElt = modeElt->GetNestedElement(j);
+        if (controlElt->GetName() ==
+            QString(CONFIG_FILE_BUTTON_CTRL_ELEMENT_NAME)) {
+          int buttonNum;
+          SketchBioHandId::Type side;
+          if (!getButtonNumber(controlElt, buttonDevices, buttonNum)) {
+            std::cout << "Button assignment: Could not locate device or "
+                         "buttonNumber attribute." << std::endl;
+            continue;
           }
-          // TODO else if analog
+          if (!getHand(controlElt, side)) {
+            std::cout << "Button assignment: Could not locate a hand attribute."
+                      << std::endl;
+            continue;
+          }
+          const char *func =
+              controlElt->GetAttribute(CONFIG_FILE_FUNCTION_ATTRIBUTE);
+          if (func == NULL) {
+            std::cout
+                << "Button assignment: Could not locate a function attribute."
+                << std::endl;
+            continue;
+          }
+          ControlFunctions::ButtonControlFunctionPtr bF =
+              readButtonFunction(func);
+          if (bF == NULL) {
+            std::cout << "Button assignment: Unknown function = " << func
+                      << std::endl;
+            continue;
+          }
+          mode.buttonFunctions.data()[buttonNum].init(bF, side);
+        } else if (controlElt->GetName() ==
+                   QString(CONFIG_FILE_ANALOG_CTRL_ELEMENT_NAME)) {
+          int analogNum;
+          if (!getAnalogNumber(controlElt, analogDevices, analogNum)) {
+            std::cout << "Analog assignment: Could not locate device or "
+                         "buttonNumber attributes." << std::endl;
+            continue;
+          }
+          if (controlElt->GetAttribute(CONFIG_FILE_ANALOG_TYPE_ATTRIBUTE) ==
+              NULL) {
+            std::cout << "Analog assignment: Could not locate type attribute."
+                      << std::endl;
+            continue;
+          }
+          QString type(
+              controlElt->GetAttribute(CONFIG_FILE_ANALOG_TYPE_ATTRIBUTE));
+          if (type == CONFIG_FILE_ANALOG_TYPE_THRESHOLD) {
+            readThresholdAnalog(analogNum, mode, controlElt);
+          } else if (type == CONFIG_FILE_ANALOG_TYPE_NORMALIZE) {
+            readNormalizeAnalog(analogNum, mode, controlElt);
+          } else {
+            std::cout << "Analog assignment: Unknown type attribute value"
+                      << std::endl;
+            continue;
+          }
+        }
       }
     }
   }

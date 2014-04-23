@@ -7,6 +7,9 @@ class Project;
 
 namespace ControlFunctions
 {
+typedef void (*ButtonControlFunctionPtr)(SketchBio::Project*,int,bool);
+typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
+
 	// ANIMATION functions:
     void keyframeAll(SketchBio::Project*, int, bool);
     void toggleKeyframeObject(SketchBio::Project*, int, bool);
