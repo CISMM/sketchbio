@@ -15,6 +15,7 @@
 #include <modelutilities.h>
 #include <sketchmodel.h>
 #include <sketchobject.h>
+#include <objectgroup.h>
 #include <worldmanager.h>
 #include <structurereplicator.h>
 #include <sketchtests.h>
@@ -177,7 +178,29 @@ int test3()
     return errors;
 }
 
+/*
+ * Tests a bug found where deleting the replica group from the world causes a segfault on shutdown.
+ */
+void testDeleteGroupSegfault()
+{
+    vtkSmartPointer< vtkRenderer > renderer =
+            vtkSmartPointer< vtkRenderer >::New();
+    QScopedPointer< SketchModel > model(TestCoreHelpers::getCubeModel());
+    QScopedPointer< WorldManager > world(new WorldManager(renderer));
+    q_vec_type pos = Q_NULL_VECTOR;
+    q_type orient = Q_ID_QUAT;
+    SketchObject *obj1 = world->addObject(model.data(),pos,orient);
+    q_vec_set(pos,0,0,5);
+    q_from_axis_angle(orient,1,0,0,Q_PI/3.0);
+    SketchObject *obj2 = world->addObject(model.data(),pos,orient);
+    QScopedPointer< StructureReplicator > rep(
+                new StructureReplicator(obj1, obj2, world.data()));
+    rep->setNumShown(5);
+    world->deleteObject(rep->getReplicaGroup());
+}
+
 int main()
 {
+    testDeleteGroupSegfault();
     return test1() + test2() + test3();
 }
