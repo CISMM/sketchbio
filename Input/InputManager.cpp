@@ -905,6 +905,7 @@ ControlFunctions::ButtonControlFunctionPtr readButtonFunction(
 
 ControlFunctions::AnalogControlFunctionPtr readAnalogFunction(
     const char *funcName) {
+    // TODO
   return NULL;
 }
 
@@ -1060,10 +1061,12 @@ bool InputManager::InputManagerImpl::readModes(vtkXMLDataElement *root) {
         return false;
       }
       modes.append(Mode(maxButtons, maxAnalogs, modeName, outlineType));
+      std::cout << "Adding mode: " << modeName << std::endl;
       Mode &mode = modes.last();
       int modeNumNested = modeElt->GetNumberOfNestedElements();
       for (int j = 0; j < modeNumNested; ++j) {
         vtkXMLDataElement *controlElt = modeElt->GetNestedElement(j);
+        // if button
         if (controlElt->GetName() ==
             QString(CONFIG_FILE_BUTTON_CTRL_ELEMENT_NAME)) {
           int buttonNum;
@@ -1094,6 +1097,7 @@ bool InputManager::InputManagerImpl::readModes(vtkXMLDataElement *root) {
             continue;
           }
           mode.buttonFunctions.data()[buttonNum].init(bF, side);
+        // else if analog
         } else if (controlElt->GetName() ==
                    QString(CONFIG_FILE_ANALOG_CTRL_ELEMENT_NAME)) {
           int analogNum;
