@@ -212,8 +212,10 @@ static inline void snap(SketchObject* o, double value, q_vec_type dst)
 			vtkDataArray* chain_positions = model_data->GetPointData()->GetArray("chainPosition");
 			vtkVariant position_val(value);
 			vtkIdType terminus_id = chain_positions->LookupValue(position_val);
-			model_data->GetPoint(terminus_id, dst);
-		}
+            if (terminus_id >= 0) { // if -1 returned, terminus does not exist
+                model_data->GetPoint(terminus_id, dst);
+            }
+        }
     }
 }
 
