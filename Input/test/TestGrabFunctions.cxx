@@ -3,7 +3,7 @@
 #include <vtkLinearTransform.h>
 #include <vtkMatrix4x4.h>
 
-#include <QList.h>
+#include <QList>
 
 #include <transformmanager.h>
 #include <modelmanager.h>

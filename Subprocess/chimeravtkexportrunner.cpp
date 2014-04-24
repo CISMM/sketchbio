@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QDebug>
 
+#include <SettingsHelpers.h>
+
 #include "subprocessutils.h"
 
 ChimeraVTKExportRunner::ChimeraVTKExportRunner(
@@ -102,7 +104,7 @@ bool ChimeraVTKExportRunner::isValid()
 void ChimeraVTKExportRunner::start()
 {
     qDebug() << "Starting Chimera";
-    process->start(SubprocessUtils::getSubprocessExecutablePath("chimera"),
+    process->start(SettingsHelpers::getSubprocessExecutablePath("chimera"),
                    QStringList() << "--nogui" << cmdFile->fileName()
                    );
     if (!process->waitForStarted())

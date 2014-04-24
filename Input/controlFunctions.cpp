@@ -29,25 +29,6 @@
 
 static const double DEFAULT_SPRING_STIFFNESS = 1.0;
 
-static inline void addXMLUndoState(SketchBio::Project *project)
-{
-    UndoState *last = project->getLastUndoState();
-    SavedXMLUndoState *lastXMLState = dynamic_cast< SavedXMLUndoState * >(last);
-    SavedXMLUndoState *newXMLState = NULL;
-    if (lastXMLState != NULL) {
-        QSharedPointer< std::string > lastState =
-            lastXMLState->getAfterState().toStrongRef();
-        newXMLState = new SavedXMLUndoState(*project, lastState);
-        if (lastXMLState->getBeforeState().isNull()) {
-            project->popUndoState();
-        }
-    } else {
-        QSharedPointer< std::string > lastStr(NULL);
-        newXMLState = new SavedXMLUndoState(*project, lastStr);
-    }
-    project->addUndoState(newXMLState);
-}
-
 void TransformEditOperationState::setObjectTransform(double x, double y,
                                                      double z, double rX,
                                                      double rY, double rZ)
@@ -78,7 +59,6 @@ void TransformEditOperationState::setObjectTransform(double x, double y,
 void TransformEditOperationState::cancelOperation()
 {
     proj->setOperationState(NULL);
-    deleteLater();
 }
 
 namespace ControlFunctions
@@ -99,7 +79,7 @@ void keyframeAll(SketchBio::Project *project, int hand, bool wasPressed)
         }
         project->getWorldManager().setAnimationTime(time);
         project->clearDirections();
-        addXMLUndoState(project);
+        addUndoState(project);
     }
     return;
 }
@@ -136,7 +116,7 @@ void toggleKeyframeObject(SketchBio::Project *project, int hand,
             // using this instead of setAnimationTime since it doesn't update
             // positions
             project->getWorldManager().setKeyframeOutlinesForTime(time);
-            addXMLUndoState(project);
+            addUndoState(project);
             project->clearDirections();
         } else if (nearestObjParent != NULL) {
             project->setDirections(
@@ -164,7 +144,7 @@ void addCamera(SketchBio::Project *project, int hand, bool wasPressed)
         handObj.getPosition(pos);
         handObj.getOrientation(orient);
         project->addCamera(pos, orient);
-        addXMLUndoState(project);
+        addUndoState(project);
         project->clearDirections();
     }
     return;
@@ -238,7 +218,66 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
                 world.removeObject(nearestObj1);
                 grp->addObject(nearestObj1);
             }
-            addXMLUndoState(project);
+            addUndoState(project);
+        }
+        project->clearDirections();
+    }
+    return;
+}
+
+void copyObject(SketchBio::Project *project, int hand, bool wasPressed)
+{
+    if (wasPressed) {
+        project->setDirections(
+            "Select an object and release the button to copy");
+    } else  // button released
+    {
+        SketchBio::Hand &handObj = project->getHand(
+            (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+
+        SketchObject *nearestObj = handObj.getNearestObject();
+        double nearestObjDist = handObj.getNearestObjectDistance();
+
+        if (nearestObjDist < DISTANCE_THRESHOLD) {
+            vtkSmartPointer< vtkXMLDataElement > elem =
+                vtkSmartPointer< vtkXMLDataElement >::Take(
+                    ProjectToXML::objectToClipboardXML(nearestObj));
+            std::stringstream ss;
+            vtkXMLUtilities::FlattenElement(elem, ss);
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->setText(ss.str().c_str());
+        }
+        project->clearDirections();
+    }
+    return;
+}
+
+void pasteObject(SketchBio::Project *project, int hand, bool wasPressed)
+{
+    if (wasPressed) {
+        project->setDirections("Release the button to paste");
+    } else  // button released
+    {
+        std::stringstream ss;
+        QClipboard *clipboard = QApplication::clipboard();
+        ss.str(clipboard->text().toStdString());
+        vtkSmartPointer< vtkXMLDataElement > elem =
+            vtkSmartPointer< vtkXMLDataElement >::Take(
+                vtkXMLUtilities::ReadElementFromStream(ss));
+        if (elem) {
+            q_vec_type rpos;
+            project->getHand((hand == 0)
+                                 ? SketchBioHandId::LEFT
+                                 : SketchBioHandId::RIGHT).getPosition(rpos);
+            if (ProjectToXML::objectFromClipboardXML(project, elem, rpos) ==
+                ProjectToXML::XML_TO_DATA_FAILURE) {
+                std::cout << "Read xml correctly, but reading object failed."
+                          << std::endl;
+            } else {
+                addUndoState(project);
+            }
+        } else {
+            std::cout << "Failed to read object." << std::endl;
         }
         project->clearDirections();
     }
@@ -297,7 +336,7 @@ void changeObjectColor(SketchBio::Project *project, int hand, bool wasPressed)
                     break;
             }
             nearestObj->setColorMapType(cmap);
-            addXMLUndoState(project);
+            addUndoState(project);
         } else if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD) {
             ColorMapType::Type cmap = nearestSpring->getColorMapType();
             using namespace ColorMapType;
@@ -328,7 +367,7 @@ void changeObjectColor(SketchBio::Project *project, int hand, bool wasPressed)
                     break;
             }
             nearestSpring->setColorMapType(cmap);
-            addXMLUndoState(project);
+            addUndoState(project);
         }
         project->clearDirections();
     }
@@ -360,7 +399,7 @@ void changeObjectColorVariable(SketchBio::Project *project, int hand,
                 arr = QString("modelNum");
             }
             nearestObj->setArrayToColorBy(arr);
-            addXMLUndoState(project);
+            addUndoState(project);
         }
         project->clearDirections();
     }
@@ -387,7 +426,7 @@ void toggleObjectVisibility(SketchBio::Project *project, int hand,
             // toggle object visible
             SketchObject::setIsVisibleRecursive(nearestObj,
                                                 !nearestObj->isVisible());
-            addXMLUndoState(project);
+            addUndoState(project);
         }
         project->clearDirections();
     }
@@ -531,7 +570,7 @@ void createSpring(SketchBio::Project *project, int hand, bool wasPressed)
         SpringConnection *spring = SpringConnection::makeSpring(
             NULL, NULL, pos1, pos2, true, DEFAULT_SPRING_STIFFNESS, 0, true);
         project->getWorldManager().addConnector(spring);
-        addXMLUndoState(project);
+        addUndoState(project);
         project->clearDirections();
     }
     return;
@@ -553,7 +592,7 @@ void createTransparentConnector(SketchBio::Project *project, int hand,
         q_vec_add(pos2, pos1, pos2);
         Connector *conn = new Connector(NULL, NULL, pos1, pos2, 0.3, 10);
         project->getWorldManager().addConnector(conn);
-        addXMLUndoState(project);
+        addUndoState(project);
         project->clearDirections();
     }
     return;
@@ -579,14 +618,16 @@ void grabObjectOrWorld(SketchBio::Project *project, int hand, bool wasPressed)
         double nearestObjDist = handObj.getNearestObjectDistance();
 
         if (nearestObjDist > DISTANCE_THRESHOLD) {
+            std::cout << "I have the whole world in my hands" << std::endl;
             handObj.grabWorld();
         } else {
+            std::cout << "I grabbed an object..." << std::endl;
             handObj.grabNearestObject();
         }
     } else  // button released
     {
         handObj.releaseGrabbed();
-        addXMLUndoState(project);
+        addUndoState(project);
     }
     return;
 }
@@ -652,7 +693,7 @@ void deleteObject(SketchBio::Project *project, int hand, bool wasPressed)
             handObj.clearNearestObject();
             project->getWorldManager().deleteObject(obj);
         }
-        addXMLUndoState(project);
+        addUndoState(project);
         project->clearDirections();
     }
 }
@@ -686,7 +727,7 @@ void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
         }
 
     } else {
-        addXMLUndoState(project);
+        addUndoState(project);
         // emit newDirectionsString(" ");
     }
 }
@@ -888,6 +929,26 @@ void zoom(SketchBio::Project *project, int hand, bool wasPressed)
     {
       return;
     }
-  }
+}
+  
+void addUndoState(SketchBio::Project *project)
+{
+    UndoState *last = project->getLastUndoState();
+    SavedXMLUndoState *lastXMLState = dynamic_cast< SavedXMLUndoState * >(last);
+    SavedXMLUndoState *newXMLState = NULL;
+    if (lastXMLState != NULL) {
+        QSharedPointer< std::string > lastState =
+            lastXMLState->getAfterState().toStrongRef();
+        newXMLState = new SavedXMLUndoState(*project, lastState);
+        if (lastXMLState->getBeforeState().isNull()) {
+            project->popUndoState();
+        }
+    } else {
+        QSharedPointer< std::string > lastStr(NULL);
+        newXMLState = new SavedXMLUndoState(*project, lastStr);
+    }
+    project->addUndoState(newXMLState);
+}
+
 // ===== END UTILITY FUNCTIONS =====
 }

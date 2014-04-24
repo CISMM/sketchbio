@@ -4,3 +4,6 @@
 *.log
 *.pdf
 *.synctex.gz
+*.tex#
+*.dvi
+latex_src.zip

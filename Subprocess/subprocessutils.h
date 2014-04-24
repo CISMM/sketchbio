@@ -11,14 +11,6 @@ namespace SubprocessUtils
 {
 
 /*
- * This method gets (and caches) the executable path for the given executable
- * name.  If the program cannot be found, it opens a dialog to allow the user to
- * choose the executable to use.  This checks most system locations before asking
- * the user.
- */
-QString getSubprocessExecutablePath(const QString &executableName);
-
-/*
  * This method gets the directory to add to the python path so that the ExportVTK
  * module can be imported correctly with 'import ExportVTK'.  As this will vary by
  * operating system, it is getting abstracted out to here.

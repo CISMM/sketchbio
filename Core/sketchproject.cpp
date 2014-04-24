@@ -582,6 +582,7 @@ void Project::ProjectImpl::timestep(double dt)
         q_vec_normalize(vector, vector);
         q_vec_add(point, vector, point);
         world.setShadowPlane(point, vector);
+        transforms.updateCameraForFrame();
         transforms.copyCurrentHandTransformsToOld();
     } else {
         double elapsed_time = time.restart();
@@ -712,6 +713,10 @@ void Project::ProjectImpl::applyRedo()
 OperationState* Project::ProjectImpl::getOperationState() { return opState; }
 void Project::ProjectImpl::setOperationState(OperationState* newState)
 {
+    assert(opState == NULL || newState == NULL);
+    if (opState != NULL && newState == NULL) {
+        delete opState;
+    }
     opState = newState;
 }
 //########################################################################

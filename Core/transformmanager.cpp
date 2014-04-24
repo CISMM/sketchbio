@@ -28,11 +28,6 @@ TransformManager::TransformManager()
   worldEyeTransform->Concatenate(worldToRoom);
   worldEyeTransform->Concatenate(roomToEyes);
   roomToTrackerBase = vtkSmartPointer< vtkTransform >::New();
-  roomToTrackerBase->Translate(0, 0, 0);  // TBD
-  roomToTrackerBase->RotateWXYZ(90.0, 1.0, 0.0, 0.0);
-  roomToTrackerBase->Scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
-                           TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
-                           TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE);
   trackerBaseToRoom = roomToTrackerBase->GetLinearInverse();
   q_type id_q = Q_ID_QUAT;
   q_vec_type null_vec = Q_NULL_VECTOR;

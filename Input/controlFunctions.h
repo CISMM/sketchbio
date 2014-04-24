@@ -7,6 +7,9 @@ class Project;
 
 namespace ControlFunctions
 {
+typedef void (*ButtonControlFunctionPtr)(SketchBio::Project*,int,bool);
+typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
+
 	// ANIMATION functions:
     void keyframeAll(SketchBio::Project*, int, bool);
     void toggleKeyframeObject(SketchBio::Project*, int, bool);
@@ -42,6 +45,9 @@ namespace ControlFunctions
   
 
 	// UTILITY functions:
+
+  void resetViewPoint(SketchBio::Project*, int, bool);
+  void addUndoState(SketchBio::Project *project);
   void copyObject(SketchBio::Project*, int, bool);
   void pasteObject(SketchBio::Project*, int, bool);
   void resetViewPoint(SketchBio::Project*, int, bool);

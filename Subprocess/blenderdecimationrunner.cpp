@@ -5,6 +5,8 @@
 #include <QTemporaryFile>
 #include <QDebug>
 
+#include <SettingsHelpers.h>
+
 #include "subprocessutils.h"
 
 inline void writeBlenderHelpers(QFile &file)
@@ -134,7 +136,7 @@ void BlenderDecimationRunner::start()
 {
     // -P: Run the specified Python script
     // -b: Run in background
-    process->start(SubprocessUtils::getSubprocessExecutablePath("blender"),
+    process->start(SettingsHelpers::getSubprocessExecutablePath("blender"),
                    QStringList() << "-noaudio" << "-b" << "-P" << tempFile->fileName());
     if (!process->waitForStarted()) {
         qDebug() << "Could not run Blender to simplify file";
