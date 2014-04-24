@@ -11,6 +11,7 @@
 #include <quat.h>
 
 #include <QString>
+#include <QFile>
 #include <QSharedPointer>
 #include <QProcess>
 
@@ -22,6 +23,7 @@
 #include <transformmanager.h>
 #include <sketchproject.h>
 #include <hand.h>
+#include <SettingsHelpers.h>
 
 #include <controlFunctions.h>
 #include <signalemitter.h>
@@ -373,7 +375,12 @@ InputManager::InputManagerImpl::InputManagerImpl(
   parseXML(inputConfigFileName);
 }
 
-InputManager::InputManagerImpl::~InputManagerImpl() {}
+InputManager::InputManagerImpl::~InputManagerImpl() {
+    if (vrpn_server.state() == QProcess::Running) {
+        vrpn_server.terminate();
+        vrpn_server.waitForFinished();
+    }
+}
 
 void InputManager::InputManagerImpl::handleCurrentInput() {
   foreach(const ButtonPair & b, buttonDevices) { b.first->mainloop(); }
@@ -428,6 +435,7 @@ static const char CONFIG_XML_ROOT_NAME[] = "SketchBioDeviceConfig";
 static const char CONFIG_XML_VERSION_ATTRIBUTE[] = "fileVersion";
 static const int CONFIG_FILE_READER_MAJOR_VERSION = 0;
 static const int CONFIG_FILE_READER_MINOR_VERSION = 0;
+static const char CONFIG_FILE_VRPN_CONFIG_NAME[] = "vrpnFile";
 
 static inline void convertToCurrentConfigFile(vtkXMLDataElement *xmlRoot,
                                               int minorVersion) {}
@@ -466,60 +474,29 @@ void InputManager::InputManagerImpl::parseXML(
   if (minorVersion < CONFIG_FILE_READER_MINOR_VERSION) {
     convertToCurrentConfigFile(root, minorVersion);
   }
+  vtkXMLDataElement *vrpnConfigElt = root->FindNestedElementWithName(CONFIG_FILE_VRPN_CONFIG_NAME);
+  if (vrpnConfigElt == NULL) {
+      std::cout << "No vrpn configuration file specified";
+      return;
+  }
+  const char *vrpnConfig = vrpnConfigElt->GetCharacterData();
+  if (!QFile(vrpnConfig).exists()) {
+      std::cout << "VRPN config file: \'" << vrpnConfig << "\' does not exist";
+      return;
+  }
+  QString vrpnExecutable = SettingsHelpers::getSubprocessExecutablePath("vrpn_server");
+  vrpn_server.start(vrpnExecutable,QStringList() << "-f" << vrpnConfig);
+  if (!vrpn_server.waitForStarted()) {
+      std::cout << "VRPN server failed to start." << std::endl
+                << "VRPN executable: " << vrpnExecutable.toStdString() << std::endl
+                << "VRPN file: " << vrpnConfig << std::endl;
+      return;
+  }
   if (!readDevices(root)) return;
   if (!readInputTransform(root)) return;
   if (!readModeSwitchButton(root)) return;
   if (!readModes(root)) return;
   // make vrpn server
-  // initialize devices
-  //  buttonDevices.append(
-  //      ButtonPair(QSharedPointer<vrpn_Button_Remote>(
-  //                     new vrpn_Button_Remote("razer@localhost")),
-  //                 QSharedPointer<ButtonDeviceInfo>(
-  //                     new ButtonDeviceInfo(*this, "razer", 0, 16))));
-  //  buttonDevices[0].first->register_change_handler(
-  //      reinterpret_cast<void *>(buttonDevices[0].second.data()),
-  //      &handleButtonPressWithDeviceInfo);
-  //  analogDevices.append(
-  //      AnalogPair(QSharedPointer<vrpn_Analog_Remote>(
-  //                     new vrpn_Analog_Remote("razer@localhost")),
-  //                 QSharedPointer<AnalogDeviceInfo>(
-  //                     new AnalogDeviceInfo(*this, "razer", 0, 6))));
-  //  analogDevices[0].first->register_change_handler(
-  //      reinterpret_cast<void *>(analogDevices[0].second.data()),
-  //      &handleAnalogChangedWithDeviceInfo);
-  //  trackerDevices.append(QSharedPointer<vrpn_Tracker_Remote>(
-  //      new vrpn_Tracker_Remote("filteredRazer@localhost")));
-  //  trackerInfos.append(QSharedPointer<TrackerInfo>(
-  //      new TrackerInfo(project, 0, SketchBioHandId::LEFT)));
-  //  trackerInfos.append(QSharedPointer<TrackerInfo>(
-  //      new TrackerInfo(project, 1, SketchBioHandId::RIGHT)));
-  //  trackerDevices[0]->register_change_handler(
-  //      reinterpret_cast<void *>(trackerInfos[0].data()), &handleTrackerData);
-  //  trackerDevices[0]->register_change_handler(
-  //      reinterpret_cast<void *>(trackerInfos[1].data()), &handleTrackerData);
-  //  int maxButtons = buttonDevices.last().second->getOffset() +
-  //                   buttonDevices.last().second->getMax();
-  //  int maxAnalogs = analogDevices.last().second->getOffset() +
-  //                   analogDevices.last().second->getMax();
-  // initialize mapping for modes
-  //  modes.append(Mode(maxButtons, maxAnalogs, "Edit Objects",
-  //                    SketchBio::OutlineType::OBJECTS));
-  //  Mode &editObjects = modes.last();
-  //  editObjects.buttonFunctions.data()[5]
-  //      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::LEFT);
-  //  editObjects.buttonFunctions.data()[13]
-  //      .init(&ControlFunctions::grabObjectOrWorld, SketchBioHandId::RIGHT);
-  //  modes.append(Mode(maxButtons, maxAnalogs, "Edit Springs",
-  //                    SketchBio::OutlineType::CONNECTORS));
-  //  Mode &editSprings = modes.last();
-  //  editSprings.buttonFunctions.data()[5]
-  //      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::LEFT);
-  //  editSprings.buttonFunctions.data()[13]
-  //      .init(&ControlFunctions::grabSpringOrWorld, SketchBioHandId::RIGHT);
-
-  //  currentMode = 0;
-  //  modeSwitchButtonNum = 1;
 }
 
 static const char CONFIG_FILE_DEVICE_ELEMENT_NAME[] = "device";
