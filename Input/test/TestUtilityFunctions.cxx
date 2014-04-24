@@ -1,7 +1,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
 
-#include <QCoreApplication>
 #include <QApplication>
 #include <QClipboard>
 
@@ -24,7 +23,7 @@ int testResetViewPoint();
 
 int main(int argc, char *argv[])
 {
-  QCoreApplication app(argc,argv);
+  QApplication app(argc,argv);
   
   int errors = 0;
   errors += testCopyPaste();
