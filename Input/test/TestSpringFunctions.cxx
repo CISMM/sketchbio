@@ -136,10 +136,19 @@ int testSnapSpringToTerminus()
   vtkSmartPointer< vtkRenderer >::New();
   SketchBio::Project proj(renderer,".");
   q_vec_type pos1 = {0,0,0}, pos2 = {0,0,1};
+  q_vec_type nTerm = {1,1,1}, cTerm = {-1,-1,-1};
+  SketchModel *model = TestCoreHelpers::getCubeModel();
+  proj.getModelManager().addModel(model);
+  q_vec_type vector = {0,0,0};
+  q_type orient = Q_ID_QUAT;
   
+  SketchObject * obj1 = proj.getWorldManager().addObject(model, vector, orient);
   
   SpringConnection *spring = SpringConnection::makeSpring(NULL, NULL, pos1, pos2, true, 1.0, 0, true);
   proj.getWorldManager().addConnector(spring);
+  
+  //connects springs to object
+  spring->setObject1(obj1);
   
   SketchBio::Hand &handObj = proj.getHand(SketchBioHandId::RIGHT);
   handObj.computeNearestObjectAndConnector();
@@ -155,21 +164,32 @@ int testSnapSpringToTerminus()
     return 1;
   }
   
-  //button pressed
+  //button pressed, sets operation state
   ControlFunctions::snapSpringToTerminus(&proj, 1, true);
   
   SketchBio::OperationState *snap = proj.getOperationState();
+  //should actually snap spring to n terminus
   snap->doFrameUpdates();
   
   q_vec_type conPos0;
-  spring->getEnd1WorldPosition(conPos0);
+  //should be 1,1,1 I think
+  spring->getObject1ConnectionPosition(conPos0);
   
-  //parameter values here?
+  //check the connector position is the same as the n terminus position
+  if (!q_vec_equals(conPos0,nTerm))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Connector should be at n terminus." << std::endl;
+    return 1;
+  }
+  
+  //second true snaps to n, but it's already at the n terminus so it shouldn't change
   spring->snapToTerminus(true, true);
   
   q_vec_type conPos1;
-  spring->getEnd1WorldPosition(conPos1);
+  spring->getObject1ConnectionPosition(conPos1);
   
+  //make sure it didn't move (still at n terminus)
   if (!q_vec_equals(conPos0,conPos1))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
@@ -190,56 +210,59 @@ int testSnapSpringToTerminus()
   //button pressed, creates operation state
   ControlFunctions::snapSpringToTerminus(&proj, 1, true);
   
-  //toggle terminus end
+  //toggle terminus end to c terminus
   ControlFunctions::setTerminusToSnapSpring(&proj, 1, true);
   
-  //snap to the other terminus
+  //snap to the c terminus
   snap->doFrameUpdates();
   
   handObj.computeNearestObjectAndConnector();
   
   q_vec_type conPos2;
-  spring->getEnd1WorldPosition(conPos2);
+  spring->getObject1ConnectionPosition(conPos2);
   
-  if (q_vec_equals(conPos1,conPos2))
+  //make sure its at the c terminus
+  if (q_vec_equals(conPos2,cTerm))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
-    "  Connector should have moved." << std::endl;
+    "  Connector should have moved to c terminus." << std::endl;
     return 1;
   }
   
   //release toggle
   ControlFunctions::setTerminusToSnapSpring(&proj, 1, false);
   
+  //should snap back to n terminus
   snap->doFrameUpdates();
   
   q_vec_type conPos3;
-  spring->getEnd1WorldPosition(conPos3);
+  spring->getObject1ConnectionPosition(conPos3);
   
-  if (!q_vec_equals(conPos0,conPos3))
+  //check the connector is at the n terminus
+  if (!q_vec_equals(nTerm,conPos3))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
-    "  Connector should have moved back to first position." << std::endl;
+    "  Connector should have moved back to n terminus." << std::endl;
     return 1;
   }
 
-  //button released
+  //button released, clears state
   ControlFunctions::snapSpringToTerminus(&proj, 1, false);
   
   q_vec_type conPosFinal0;
-  spring->getEnd1WorldPosition(conPosFinal0);
+  spring->getObject1ConnectionPosition(conPosFinal0);
   
-  //shouldn't move anything
+  //shouldn't move anything, there's no state
   ControlFunctions::setTerminusToSnapSpring(&proj, 1, true);
   
   q_vec_type conPosFinal1;
-  spring->getEnd1WorldPosition(conPosFinal1);
+  spring->getObject1ConnectionPosition(conPosFinal1);
   
   //should be the same since spring should not have moved
   if (!q_vec_equals(conPosFinal0,conPosFinal1))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
-    "  Connector should have moved back to first position." << std::endl;
+    "  Connector should not have moved." << std::endl;
     return 1;
   }
   

@@ -42,9 +42,14 @@ namespace ControlFunctions
   
 
 	// UTILITY functions:
-  void resetViewPoint(SketchBio::Project*, int, bool);
   void copyObject(SketchBio::Project*, int, bool);
   void pasteObject(SketchBio::Project*, int, bool);
+  void resetViewPoint(SketchBio::Project*, int, bool);
+  void redo(SketchBio::Project*, int, bool);
+  void undo(SketchBio::Project*, int, bool);
+  void toggleCollisionChecks(SketchBio::Project*, int, bool);
+  void toggleSpringsEnabled(SketchBio::Project*, int, bool);
+  void zoom(SketchBio::Project*, int, bool);
 }
 
 #endif // CONTROLFUNCTIONS_H
