@@ -9,6 +9,7 @@
 #include <hand.h>
 #include <controlFunctions.h>
 
+#include <sketchtests.h>
 #include <test/TestCoreHelpers.h>
 
 int testDeleteSpring();
@@ -67,7 +68,7 @@ int testDeleteSpring()
     nearestConnectorDist = handObj.getNearestConnectorDistance();
     
     //make sure its within threshold
-    if (nearestConnectorDist > DISTANCE_THRESHOLD)
+    if (nearestConnectorDist > SPRING_DISTANCE_THRESHOLD)
     {
       std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
       "nearestConnectorDist = " << nearestConnectorDist <<
@@ -90,7 +91,7 @@ int testDeleteSpring()
   
   //now create a spring outside distance threshold, call delete and make sure it stays
   
-  q_vec_type pos21 = {10, 10, 10}, pos22 = {10, 10, 11};
+  q_vec_type pos21 = {40, 40, 40}, pos22 = {40, 40, 41};
   
   SpringConnection *spring = SpringConnection::makeSpring(NULL, NULL, pos21, pos22, true, 1.0, 0, true);
   proj.getWorldManager().addConnector(spring);
@@ -99,14 +100,17 @@ int testDeleteSpring()
   
   nearestConnectorDist = handObj.getNearestConnectorDistance();
   
-  //make sure its within threshold
-  if (nearestConnectorDist < DISTANCE_THRESHOLD)
+  //make sure its outside threshold
+  if (nearestConnectorDist < SPRING_DISTANCE_THRESHOLD)
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "nearestConnectorDist = " << nearestConnectorDist <<
+    "\ndist threshold:" << SPRING_DISTANCE_THRESHOLD <<
     "  Connector is too close to hand." << std::endl;
     return 1;
   }
+  
+  connectors = proj.getWorldManager().getNumberOfConnectors();
   
   ControlFunctions::deleteSpring(&proj, 1, false);
   connectorsAfterDelete = proj.getWorldManager().getNumberOfConnectors();
@@ -115,7 +119,10 @@ int testDeleteSpring()
   if (connectors != connectorsAfterDelete)
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
-    "  Number of connectors changed incorrectly" << std::endl;
+    "  Number of connectors changed incorrectly" <<
+    "\nconnectors before:  " <<connectors<<
+    "\nconnectors after delete:  " <<connectorsAfterDelete<<
+    std::endl;
     return 1;
   }
   
@@ -123,9 +130,119 @@ int testDeleteSpring()
   
 }
 
-//control function is still incomplete
 int testSnapSpringToTerminus()
 {
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
+  q_vec_type pos1 = {0,0,0}, pos2 = {0,0,1};
+  
+  
+  SpringConnection *spring = SpringConnection::makeSpring(NULL, NULL, pos1, pos2, true, 1.0, 0, true);
+  proj.getWorldManager().addConnector(spring);
+  
+  SketchBio::Hand &handObj = proj.getHand(SketchBioHandId::RIGHT);
+  handObj.computeNearestObjectAndConnector();
+  
+  double nearestConnectorDist = handObj.getNearestConnectorDistance();
+  
+  //make sure its within threshold
+  if (nearestConnectorDist > SPRING_DISTANCE_THRESHOLD)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "nearestConnectorDist = " << nearestConnectorDist <<
+    "  Connector is too far from hand." << std::endl;
+    return 1;
+  }
+  
+  //button pressed
+  ControlFunctions::snapSpringToTerminus(&proj, 1, true);
+  
+  SketchBio::OperationState *snap = proj.getOperationState();
+  snap->doFrameUpdates();
+  
+  q_vec_type conPos0;
+  spring->getEnd1WorldPosition(conPos0);
+  
+  //parameter values here?
+  spring->snapToTerminus(true, true);
+  
+  q_vec_type conPos1;
+  spring->getEnd1WorldPosition(conPos1);
+  
+  if (!q_vec_equals(conPos0,conPos1))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Connector should not have moved." << std::endl;
+    return 1;
+  }
+  
+  //clear state with button release
+  ControlFunctions::snapSpringToTerminus(&proj, 1, false);
+  
+  if (handObj.getNearestConnectorDistance() > SPRING_DISTANCE_THRESHOLD)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Connector too far from hand." << std::endl;
+    return 1;
+  }
+  
+  //button pressed, creates operation state
+  ControlFunctions::snapSpringToTerminus(&proj, 1, true);
+  
+  //toggle terminus end
+  ControlFunctions::setTerminusToSnapSpring(&proj, 1, true);
+  
+  //snap to the other terminus
+  snap->doFrameUpdates();
+  
+  handObj.computeNearestObjectAndConnector();
+  
+  q_vec_type conPos2;
+  spring->getEnd1WorldPosition(conPos2);
+  
+  if (q_vec_equals(conPos1,conPos2))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Connector should have moved." << std::endl;
+    return 1;
+  }
+  
+  //release toggle
+  ControlFunctions::setTerminusToSnapSpring(&proj, 1, false);
+  
+  snap->doFrameUpdates();
+  
+  q_vec_type conPos3;
+  spring->getEnd1WorldPosition(conPos3);
+  
+  if (!q_vec_equals(conPos0,conPos3))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Connector should have moved back to first position." << std::endl;
+    return 1;
+  }
+
+  //button released
+  ControlFunctions::snapSpringToTerminus(&proj, 1, false);
+  
+  q_vec_type conPosFinal0;
+  spring->getEnd1WorldPosition(conPosFinal0);
+  
+  //shouldn't move anything
+  ControlFunctions::setTerminusToSnapSpring(&proj, 1, true);
+  
+  q_vec_type conPosFinal1;
+  spring->getEnd1WorldPosition(conPosFinal1);
+  
+  //should be the same since spring should not have moved
+  if (!q_vec_equals(conPosFinal0,conPosFinal1))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Connector should have moved back to first position." << std::endl;
+    return 1;
+  }
+  
   return 0;
 }
 

@@ -40,7 +40,6 @@ int testKeyframeAll()
   
   //adds a few objects
   for (int i = 0; i < 5; i++){
-    //can you add multiple objects using the same model??? ask shawn!!
     proj.getWorldManager().addObject(model, vector, orient);
   }
   

@@ -1,6 +1,8 @@
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
+#include <vtkTransform.h>
 
+#include <transformeditoperationstate.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
 #include <springconnection.h>
@@ -9,18 +11,35 @@
 #include <hand.h>
 #include <controlFunctions.h>
 
+#include <sketchtests.h>
 #include <test/TestCoreHelpers.h>
 
 int testDeleteObject();
 int testReplicateObject();
-int testSetTransforms();
+int testSetTransforms(double,double,double,double,double,double);
 
 int main(int argc, char *argv[])
 {
   int errors = 0;
   errors += testDeleteObject();
   errors += testReplicateObject();
-  errors += testSetTransforms();
+  //one position transform
+  errors += testSetTransforms(11.0,0,0,0,0,0);
+  //one orientation transform
+  errors += testSetTransforms(0,0,0,6.9,0,0);
+  //one position and one orientation transform
+  errors += testSetTransforms(2.5,0,0,3.7,0,0);
+  //two positions
+  errors += testSetTransforms(2.5,6.3,0,0,0,0);
+  //two orientations
+  errors += testSetTransforms(0,0,0,3.7,9.5,0);
+  //two positions and one orientation
+  errors += testSetTransforms(2.5,0,6.4,0,4.3,0);
+  //one position and two orientations
+  errors += testSetTransforms(2.5,0,0,3.7,0,9.2);
+  //all position and orientation transforms;
+  errors += testSetTransforms(3.2,4.5,11.7,5.0,1.1,8.9);
+  
   return errors;
 }
 
@@ -99,15 +118,7 @@ int testDeleteObject()
   return 0;
 }
 
-//so i can test to make sure an object was added, but how do you actually test the replication part?
-//length of replicas in sketchprojects imp gets increased... use this!!!!
-/*
- const QList< StructureReplicator* >&
- Project::ProjectImpl::getCrystalByExamples() const
- {
- return replicas;
- }
- */
+
 int testReplicateObject()
 {
   
@@ -182,7 +193,111 @@ int testReplicateObject()
   return 0;
 }
 
-int testSetTransforms()
+int testSetTransforms(double x, double y, double z, double rX, double rY, double rZ)
 {
+  
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
+  SketchModel *model = TestCoreHelpers::getCubeModel();
+  proj.getModelManager().addModel(model);
+  q_vec_type vector0 = {0,0,0};
+  q_vec_type vector1 = {1,1,1};
+  q_type orient = Q_ID_QUAT;
+  
+  TransformEditOperationState teos(&proj);
+  
+  SketchObject *obj0 = proj.getWorldManager().addObject(model, vector0, orient);
+  SketchObject *obj1 = proj.getWorldManager().addObject(model, vector1, orient);
+  
+  teos.addObject(obj0);
+  teos.addObject(obj1);
+  
+  q_vec_type movePos = {x,y,z};
+  q_vec_type moveOrt = {rX, rY, rZ};
+  
+  teos.setObjectTransform(x, y, z, rX, rY, rZ);
+  
+  //make sure obj0 did not move
+  q_vec_type pos0;
+  obj0->getPosition(pos0);
+  q_vec_type nullVec = Q_NULL_VECTOR;
+  
+  if (!(q_vec_equals(nullVec, pos0)))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object 0 should not have moved." << std::endl;
+    return 1;
+  }
+  
+  //make sure obj1 did move, and to the right place
+  vtkSmartPointer< vtkTransform > transform =
+  vtkSmartPointer< vtkTransform >::New();
+  transform->Identity();
+  transform->PreMultiply();
+  transform->Concatenate(
+  obj1->getLocalTransform());
+  transform->Concatenate(
+  obj0->getInverseLocalTransform());
+  transform->Update();
+  
+  q_vec_type pos1;
+  transform->GetPosition(pos1);
+  q_vec_type ort1;
+  transform->GetOrientation(ort1);
+  
+  teos.setObjectTransform(pos1[0], pos1[1], pos1[2], ort1[0], ort1[1], ort1[2]);
+  
+  q_vec_type pos2;
+  transform->GetPosition(pos2);
+  q_vec_type ort2;
+  transform->GetOrientation(ort2);
+  
+  if(!(q_vec_equals(pos2, pos1) && q_vec_equals(ort2, ort1)))
+  {
+    std::cout << "\nError at " << __FILE__ << ":" << __LINE__ <<
+    "  input values: " <<x<<","<<y<<","<<z<<","<<rX<<","<<rY<<","<<rZ<<
+    "\nShould have moved to: ";
+    q_vec_print(pos1);
+    std::cout << "Moved to: ";
+    q_vec_print(pos2);
+    std::cout << "Should have orientation: ";
+    q_vec_print(ort1);
+    std::cout << "Has orientation: ";
+    q_vec_print(ort2);
+    std::cout << "  Object 1 is in the wrong place." << std::endl;
+    return 1;
+  }
+  
+  q_type ort2BeforeCancel;
+  obj1->getOrientation(ort2BeforeCancel);
+   
+ 
+  //make sure cancelOp doesn't move any of the objects
+  teos.cancelOperation();
+  
+  //make sure obj0 did not move
+  obj0->getPosition(pos0);
+  
+  if (!(q_vec_equals(nullVec, pos0)))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object 0 should not have moved." << std::endl;
+    return 1;
+  }
+  
+  q_vec_type pos2AfterCancel;
+  obj1->getPosition(pos2AfterCancel);
+  q_type ort2AfterCancel;
+  obj1->getOrientation(ort2AfterCancel);
+  
+  if (!(q_vec_equals(pos2, pos2AfterCancel) && q_equals(ort2BeforeCancel, ort2AfterCancel)))
+  {
+    std::cout << "\nError at " << __FILE__ << ":" << __LINE__ <<
+    "  input values: " <<x<<","<<y<<","<<z<<","<<rX<<","<<rY<<","<<rZ<<
+    "\n  Object 1 should not have moved." << std::endl;
+    return 1;
+  }
+  
   return 0;
 }

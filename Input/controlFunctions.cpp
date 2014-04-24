@@ -749,6 +749,7 @@ void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
         // emit newDirectionsString(" ");
     }
 }
+  
 void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
