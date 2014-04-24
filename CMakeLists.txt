@@ -157,6 +157,18 @@ INSTALL(TARGETS SketchBio
     RUNTIME DESTINATION bin
 )
 
+FILE(GLOB deviceFiles ${CMAKE_CURRENT_SOURCE_DIR}/device_config_files/*})
+
+add_custom_target(CopyDeviceConfigFiles ALL COMMENT
+    "Copying device configuration files"
+SOURCES ${deviceFiles})
+
+add_custom_command(TARGET CopyDeviceConfigFiles POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/device_config_files
+    ${CMAKE_CURRENT_BINARY_DIR}/devices)
+
+
 # This must always be last (according to Cory's code in MicroscopeSimulator)
 INCLUDE( CPack )
 

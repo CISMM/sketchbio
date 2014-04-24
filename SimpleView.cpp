@@ -196,7 +196,7 @@ SimpleView::SimpleView(QString projDir, bool load_example)
       collisionModeGroup(new QActionGroup(this)),
       renderer(vtkSmartPointer< vtkRenderer >::New()),
       project(new SketchBio::Project(renderer.GetPointer(), projDir)),
-      inputManager(new SketchBio::InputManager("razer_hydra.xml")),
+      inputManager(new SketchBio::InputManager("devices/razer_hydra.xml")),
       stateHelper(new GUIStateHelper(*inputManager))
 {
     this->ui = new Ui_SimpleView;

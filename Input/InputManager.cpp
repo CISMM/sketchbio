@@ -12,12 +12,15 @@
 
 #include <QString>
 #include <QFile>
+#include <QFileInfo>
+#include <QDir>
 #include <QSharedPointer>
 #include <QProcess>
 
 #include <vtkSmartPointer.h>
 #include <vtkXMLUtilities.h>
 #include <vtkXMLDataElement.h>
+#include <vtkMatrix4x4.h>
 
 #include <sketchioconstants.h>
 #include <transformmanager.h>
@@ -354,6 +357,7 @@ class InputManager::InputManagerImpl : public ButtonHandler,
   typedef QPair<QSharedPointer<vrpn_Analog_Remote>,
                 QSharedPointer<AnalogDeviceInfo> > AnalogPair;
   QProcess vrpn_server;
+  vtkSmartPointer<vtkMatrix4x4> trackersToRoom;
   QVector<ButtonPair> buttonDevices;
   QVector<AnalogPair> analogDevices;
   QVector<QSharedPointer<vrpn_Tracker_Remote> > trackerDevices;
@@ -371,14 +375,22 @@ class InputManager::InputManagerImpl : public ButtonHandler,
 
 InputManager::InputManagerImpl::InputManagerImpl(
     const QString &inputConfigFileName)
-    : currentMode(0), modeSwitchButtonNum(0) {
+    : trackersToRoom(vtkSmartPointer<vtkMatrix4x4>::New()),
+      currentMode(0), modeSwitchButtonNum(0), project(NULL) {
   parseXML(inputConfigFileName);
 }
 
 InputManager::InputManagerImpl::~InputManagerImpl() {
     if (vrpn_server.state() == QProcess::Running) {
-        vrpn_server.terminate();
-        vrpn_server.waitForFinished();
+        vrpn_server.kill();
+        std::cout << "Asking VRPN server to exit" << std::endl;
+        if (vrpn_server.waitForFinished()) {
+            std::cout << "VRPN server exited." << std::endl;
+        } else {
+            std::cout << "VRPN server failed to exit." << std::endl;
+            std::cout << QString(vrpn_server.readAllStandardError()).toStdString() << std::endl;
+            std::cout << QString(vrpn_server.readAllStandardOutput()).toStdString() << std::endl;
+        }
     }
 }
 
@@ -398,6 +410,9 @@ const QString &InputManager::InputManagerImpl::getModeName() {
 
 void InputManager::InputManagerImpl::setProject(Project *proj) {
   project = proj;
+  if (project != NULL) {
+    project->getTransformManager().setTrackerToRoomMatrix(trackersToRoom);
+  }
 }
 
 void InputManager::InputManagerImpl::buttonStateChange(int buttonIndex,
@@ -442,14 +457,17 @@ static inline void convertToCurrentConfigFile(vtkXMLDataElement *xmlRoot,
 
 void InputManager::InputManagerImpl::parseXML(
     const QString &inputConfigFileName) {
+    // Load the input config file for SketchBio
   vtkSmartPointer<vtkXMLDataElement> root =
       vtkSmartPointer<vtkXMLDataElement>::Take(
           vtkXMLUtilities::ReadElementFromFile(
               inputConfigFileName.toStdString().c_str()));
+  // Make sure it is the right kind of file
   if (root->GetName() != QString(CONFIG_XML_ROOT_NAME)) {
     std::cout << "Error reading xml, wrong root element" << std::endl;
     return;
   }
+  // Load the version and make sure we know how to read that version
   if (root->GetAttribute(CONFIG_XML_VERSION_ATTRIBUTE) == NULL) {
     std::cout << "Config xml has no file version" << std::endl;
     return;
@@ -479,19 +497,31 @@ void InputManager::InputManagerImpl::parseXML(
       std::cout << "No vrpn configuration file specified";
       return;
   }
+  // Load vrpn.cfg location and start vrpn server
   const char *vrpnConfig = vrpnConfigElt->GetCharacterData();
-  if (!QFile(vrpnConfig).exists()) {
-      std::cout << "VRPN config file: \'" << vrpnConfig << "\' does not exist";
+  std::string vrpnConfigFileAbsolute;
+  QFileInfo vConfigFileInfo(vrpnConfig);
+  if (vConfigFileInfo.isRelative()) {
+      QFileInfo configFile(inputConfigFileName);
+      configFile.makeAbsolute();
+      vrpnConfigFileAbsolute = configFile.absoluteDir().filePath(vrpnConfig).toStdString();
+  } else {
+      vrpnConfigFileAbsolute = vrpnConfig;
+  }
+  if (!QFile(vrpnConfigFileAbsolute.c_str()).exists()) {
+      std::cout << "VRPN config file: \'" << vrpnConfig << "\' does not exist" << std::endl;
       return;
   }
+  std::cout << "Found vrpn.cfg file at: " << vrpnConfigFileAbsolute << std::endl;
   QString vrpnExecutable = SettingsHelpers::getSubprocessExecutablePath("vrpn_server");
-  vrpn_server.start(vrpnExecutable,QStringList() << "-f" << vrpnConfig);
+  vrpn_server.start(vrpnExecutable,QStringList() << "-f" << vrpnConfigFileAbsolute.c_str());
   if (!vrpn_server.waitForStarted()) {
       std::cout << "VRPN server failed to start." << std::endl
                 << "VRPN executable: " << vrpnExecutable.toStdString() << std::endl
-                << "VRPN file: " << vrpnConfig << std::endl;
+                << "VRPN cfg file: " << vrpnConfigFileAbsolute << std::endl;
       return;
   }
+  // Read the data in the file
   if (!readDevices(root)) return;
   if (!readInputTransform(root)) return;
   if (!readModeSwitchButton(root)) return;
@@ -637,8 +667,29 @@ bool InputManager::InputManagerImpl::readDevices(vtkXMLDataElement *root) {
   return true;
 }
 
+static const char CONFIG_FILE_TRACKER_INPUT_TRANSFORM_ELEMENT[] = "trackerInputTransform";
+static const char CONFIG_FILE_MATRIX_ATTRIBUTE[] = "matrix";
+
 bool InputManager::InputManagerImpl::readInputTransform(
     vtkXMLDataElement *root) {
+    vtkXMLDataElement *tfrm = root->FindNestedElementWithName(CONFIG_FILE_TRACKER_INPUT_TRANSFORM_ELEMENT);
+    if (tfrm == NULL) {
+        std::cout << "No transform matrix to apply to tracker input" << std::endl;
+        return false;
+    }
+    double mat[16];
+    if (tfrm->GetVectorAttribute(CONFIG_FILE_MATRIX_ATTRIBUTE,16,mat) != 16) {
+        std::cout << "Incorrectly formatted matrix" << std::endl;
+        return false;
+    }
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            trackersToRoom->SetElement(i,j,mat[i*4+j]);
+        }
+    }
+    if (project != NULL) {
+        project->getTransformManager().setTrackerToRoomMatrix(trackersToRoom);
+    }
   return true;
 }
 
