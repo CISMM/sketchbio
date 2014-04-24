@@ -9,6 +9,7 @@
 #include <QTemporaryFile>
 
 #include <sketchproject.h>
+#include <SettingsHelpers.h>
 
 #include <projecttoblenderanimation.h>
 
@@ -91,7 +92,7 @@ BlenderAnimationRunner::~BlenderAnimationRunner()
 void BlenderAnimationRunner::start()
 {
     // start the subprocess for blender
-    blender->start(SubprocessUtils::getSubprocessExecutablePath("blender"),
+    blender->start(SettingsHelpers::getSubprocessExecutablePath("blender"),
                    QStringList() << "-noaudio" << "-b" <<
                    "-F" << "PNG" << "-x" << "1" << "-o" <<
                    frameDir->absolutePath() +"/#####.png" <<"-P"
@@ -135,7 +136,7 @@ void BlenderAnimationRunner::firstStageDone(int exitCode)
              << frameDir->absolutePath() + "/%05d.png"
              << "-vcodec" << "huffyuv" << animationFile->fileName();
 //        qDebug() << list;
-        ffmpeg->start(SubprocessUtils::getSubprocessExecutablePath("ffmpeg"),list);
+        ffmpeg->start(SettingsHelpers::getSubprocessExecutablePath("ffmpeg"),list);
         qDebug() << "Starting ffmpeg.";
         emit statusChanged("Converting frames into video.");
     }

@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QDebug>
 
+#include <SettingsHelpers.h>
+
 #include "subprocessutils.h"
 
 PymolOBJMaker::PymolOBJMaker(const QString &pdbID, const QString &dirName,
@@ -103,7 +105,7 @@ void PymolOBJMaker::start()
   QStringList args;
   args << "-c" << pmlFile->fileName() << "-p";
   //    qDebug() << args;
-  pymol->start(SubprocessUtils::getSubprocessExecutablePath("pymol"), args);
+  pymol->start(SettingsHelpers::getSubprocessExecutablePath("pymol"), args);
   // -c  -- console only (no gui)
   // filename - read commands from this file
   // -p  -- also allow reading commands from stdin after the file
@@ -173,7 +175,7 @@ void PymolOBJMaker::pymolFinished(int status)
     // -b        -- no gui, console only
     // -P        -- read from given python file
     connect(blender, SIGNAL(finished(int)), this, SLOT(blenderFinished(int)));
-    blender->start(SubprocessUtils::getSubprocessExecutablePath("blender"),
+    blender->start(SettingsHelpers::getSubprocessExecutablePath("blender"),
                    args);
     if (!blender->waitForStarted(1000)) {
       objFile->remove();

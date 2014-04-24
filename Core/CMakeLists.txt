@@ -50,6 +50,8 @@ colormaptype.h
 groupidgenerator.h
 sketchioconstants.h
 sketchtests.h
+SettingsHelpers.cpp
+SettingsHelpers.h
 ${SketchBioCoreMoc}
 )
 
