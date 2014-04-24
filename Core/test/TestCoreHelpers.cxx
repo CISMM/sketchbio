@@ -8,7 +8,9 @@
 #include <vtkCubeSource.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+#include <vtkArrayCalculator.h>
 #include <vtkMatrix4x4.h>
+#include <vtkGeometryFilter.h>
 
 #include <sketchtests.h>
 #include <sketchioconstants.h>
@@ -29,7 +31,20 @@ SketchModel *getCubeModel()
         vtkSmartPointer< vtkCubeSource >::New();
     cube->SetBounds(-1,1,-1,1,-1,1);
     cube->Update();
-    QString fname = ModelUtilities::createFileFromVTKSource(cube, "cube_test_model");
+    vtkSmartPointer<vtkArrayCalculator> calc =
+        vtkSmartPointer<vtkArrayCalculator>::New();
+    calc->SetInputConnection(cube->GetOutputPort());
+    calc->AddCoordinateScalarVariable("X",0);
+    calc->AddCoordinateScalarVariable("Y",0);
+    calc->AddCoordinateScalarVariable("Z",0);
+    calc->SetFunction("(X + Y + Z)/6 + 0.5");
+    calc->SetResultArrayName("chainPosition");
+    calc->Update();
+    vtkSmartPointer<vtkGeometryFilter> geom =
+        vtkSmartPointer<vtkGeometryFilter>::New();
+    geom->SetInputConnection(calc->GetOutputPort());
+    geom->Update();
+    QString fname = ModelUtilities::createFileFromVTKSource(geom, "cube_test_model");
     SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
                                          DEFAULT_INVERSE_MOMENT);
     model->addConformation(fname, fname);
