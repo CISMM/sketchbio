@@ -10,7 +10,7 @@
 #include <vtkTransform.h>
 #include <vtkArrayCalculator.h>
 #include <vtkMatrix4x4.h>
-#include <vtkGeometryFilter.h>
+#include <vtkAppendPolyData.h>
 
 #include <sketchtests.h>
 #include <sketchioconstants.h>
@@ -31,20 +31,37 @@ SketchModel *getCubeModel()
         vtkSmartPointer< vtkCubeSource >::New();
     cube->SetBounds(-1,1,-1,1,-1,1);
     cube->Update();
+    // Add the chain position array
     vtkSmartPointer<vtkArrayCalculator> calc =
         vtkSmartPointer<vtkArrayCalculator>::New();
     calc->SetInputConnection(cube->GetOutputPort());
     calc->AddCoordinateScalarVariable("X",0);
-    calc->AddCoordinateScalarVariable("Y",0);
-    calc->AddCoordinateScalarVariable("Z",0);
+    calc->AddCoordinateScalarVariable("Y",1);
+    calc->AddCoordinateScalarVariable("Z",2);
     calc->SetFunction("(X + Y + Z)/6 + 0.5");
     calc->SetResultArrayName("chainPosition");
     calc->Update();
-    vtkSmartPointer<vtkGeometryFilter> geom =
-        vtkSmartPointer<vtkGeometryFilter>::New();
-    geom->SetInputConnection(calc->GetOutputPort());
-    geom->Update();
-    QString fname = ModelUtilities::createFileFromVTKSource(geom, "cube_test_model");
+    // make a copy with model num 0 to be the "atoms"
+    vtkSmartPointer<vtkArrayCalculator> atoms =
+            vtkSmartPointer<vtkArrayCalculator>::New();
+    atoms->SetInputConnection(calc->GetOutputPort());
+    atoms->SetFunction("0");
+    atoms->SetResultArrayName("modelNum");
+    atoms->Update();
+    // make a copy with model num 1 to be the "surface"
+    vtkSmartPointer<vtkArrayCalculator> surface =
+            vtkSmartPointer<vtkArrayCalculator>::New();
+    surface->SetInputConnection(calc->GetOutputPort());
+    surface->SetFunction("1");
+    surface->SetResultArrayName("modelNum");
+    surface->Update();
+    // append the copies into one polydata
+    vtkSmartPointer<vtkAppendPolyData> append =
+            vtkSmartPointer<vtkAppendPolyData>::New();
+    append->AddInputConnection(atoms->GetOutputPort());
+    append->AddInputConnection(surface->GetOutputPort());
+    append->Update();
+    QString fname = ModelUtilities::createFileFromVTKSource(append, "cube_test_model");
     SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
                                          DEFAULT_INVERSE_MOMENT);
     model->addConformation(fname, fname);

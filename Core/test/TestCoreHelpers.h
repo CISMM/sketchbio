@@ -14,6 +14,9 @@ namespace TestCoreHelpers
 //#########################################################################
 // Creates a SketchModel that is just a vtkCubeSource... centered on the origin,
 // side length 2
+// The cube is a fake pdb model... it has a modelNum data array and a chain position
+// array that has a N-terminus at (-1,-1,-1) and a C-terminus at (1,1,1).  Used for
+// testing snap to terminus among other things
 SketchModel *getCubeModel();
 //#########################################################################
 // Creates a SketchModel that is just a vtkSphereSource... raduis of 4,
