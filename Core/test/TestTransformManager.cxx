@@ -14,7 +14,7 @@
  */
 int testLeftTrackerPosition() {
     int failures = 0;
-    TransformManager mgr = TransformManager();
+  TransformManager mgr;
     q_vec_type vec;
     mgr.translateWorldRelativeToRoom(0,0,-10);
     mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
@@ -94,7 +94,7 @@ int testLeftTrackerPosition() {
  */
 int testRightTrackerPosition() {
     int failures = 0;
-    TransformManager mgr = TransformManager();
+    TransformManager mgr;
     q_vec_type vec;
     mgr.translateWorldRelativeToRoom(0,0,-10);
     mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
@@ -171,7 +171,7 @@ int testRotateAboutLeftTracker() {
     int failures = 0;
     // I can't figure out how to do it if transform manager is in arbitrary
     // configuration and still get a valid test
-    TransformManager mgr = TransformManager();
+    TransformManager mgr;
 
     q_vec_type a = {2,3,-1}, b = {-3,7,5}, pos = {5,-2,7}, pos2;
     q_type ident = Q_ID_QUAT;
@@ -253,7 +253,7 @@ int testRotateAboutRightTracker() {
     int failures = 0;
     // I can't figure out how to do it if transform manager is in arbitrary
     // configuration and still get a valid test
-    TransformManager mgr = TransformManager();
+    TransformManager mgr;
 
     q_vec_type a = {2,3,-1}, b = {-3,7,5}, pos = {5,-2,7}, pos2;
     q_type ident = Q_ID_QUAT;
@@ -330,7 +330,7 @@ int testRotateAboutRightTracker() {
 
 int testSetTrackerPosition()
 {
-    TransformManager mgr = TransformManager();
+    TransformManager mgr;
     q_vec_type pos = {3, Q_PI, 4.23748293748372};
     TestCoreHelpers::setTrackerWorldPosition(mgr,SketchBioHandId::LEFT,pos);
     q_vec_type result;

@@ -231,6 +231,10 @@ class TransformManager
 
   q_xyz_quat_struct trackerBaseToHand[2];
   q_xyz_quat_struct trackerBaseToHandOld[2];
+  
+  private:
+  TransformManager(const TransformManager& other);
+  TransformManager &operator=(const TransformManager &other);
 };
 
 
