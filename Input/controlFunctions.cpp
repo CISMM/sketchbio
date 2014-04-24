@@ -225,65 +225,6 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
     return;
 }
 
-void copyObject(SketchBio::Project *project, int hand, bool wasPressed)
-{
-    if (wasPressed) {
-        project->setDirections(
-            "Select an object and release the button to copy");
-    } else  // button released
-    {
-        SketchBio::Hand &handObj = project->getHand(
-            (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
-
-        SketchObject *nearestObj = handObj.getNearestObject();
-        double nearestObjDist = handObj.getNearestObjectDistance();
-
-        if (nearestObjDist < DISTANCE_THRESHOLD) {
-            vtkSmartPointer< vtkXMLDataElement > elem =
-                vtkSmartPointer< vtkXMLDataElement >::Take(
-                    ProjectToXML::objectToClipboardXML(nearestObj));
-            std::stringstream ss;
-            vtkXMLUtilities::FlattenElement(elem, ss);
-            QClipboard *clipboard = QApplication::clipboard();
-            clipboard->setText(ss.str().c_str());
-        }
-        project->clearDirections();
-    }
-    return;
-}
-
-void pasteObject(SketchBio::Project *project, int hand, bool wasPressed)
-{
-    if (wasPressed) {
-        project->setDirections("Release the button to paste");
-    } else  // button released
-    {
-        std::stringstream ss;
-        QClipboard *clipboard = QApplication::clipboard();
-        ss.str(clipboard->text().toStdString());
-        vtkSmartPointer< vtkXMLDataElement > elem =
-            vtkSmartPointer< vtkXMLDataElement >::Take(
-                vtkXMLUtilities::ReadElementFromStream(ss));
-        if (elem) {
-            q_vec_type rpos;
-            project->getHand((hand == 0)
-                                 ? SketchBioHandId::LEFT
-                                 : SketchBioHandId::RIGHT).getPosition(rpos);
-            if (ProjectToXML::objectFromClipboardXML(project, elem, rpos) ==
-                ProjectToXML::XML_TO_DATA_FAILURE) {
-                std::cout << "Read xml correctly, but reading object failed."
-                          << std::endl;
-            } else {
-                addUndoState(project);
-            }
-        } else {
-            std::cout << "Failed to read object." << std::endl;
-        }
-        project->clearDirections();
-    }
-    return;
-}
-
 // ===== END GROUP EDITING FUNCTIONS =====
 
 // ===== BEGIN COLOR EDITING FUNCTIONS =====
@@ -858,7 +799,7 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
           std::cout << "Read xml correctly, but reading object failed."
           << std::endl;
         } else {
-          addXMLUndoState(project);
+          addUndoState(project);
         }
       } else {
         std::cout << "Failed to read object." << std::endl;
@@ -878,57 +819,43 @@ void resetViewPoint(SketchBio::Project *project, int hand, bool wasPressed)
   
 void redo(SketchBio::Project *project, int hand, bool wasPressed)
 {
-    if (!wasPressed)  // button released
-    {
-      project->getTransformManager().setRoomEyeOrientation(0, 0);
-    } else
-    {
-      return;
-    }
+  if (wasPressed)  // button pressed
+  {
+    project->applyRedo();
+  }
 }
 
 void undo(SketchBio::Project *project, int hand, bool wasPressed)
   {
-    if (!wasPressed)  // button released
+    if (wasPressed)  // button pressed
     {
-      project->getTransformManager().setRoomEyeOrientation(0, 0);
-    } else
-    {
-      return;
-    }
+      project->applyUndo();
+    } 
   }
   
 void toggleCollisionChecks(SketchBio::Project *project, int hand, bool wasPressed)
   {
-    if (!wasPressed)  // button released
+    if (wasPressed)  // button pressed
     {
-      project->getTransformManager().setRoomEyeOrientation(0, 0);
-    } else
-    {
-      return;
+      project->getWorldManager().setCollisionCheckOn(!project->getWorldManager().isCollisionTestingOn());
     }
   }
   
 void toggleSpringsEnabled(SketchBio::Project *project, int hand, bool wasPressed)
   {
-    if (!wasPressed)  // button released
+    if (wasPressed)  // button released
     {
-      project->getTransformManager().setRoomEyeOrientation(0, 0);
-    } else
-    {
-      return;
-    }
+      project->getWorldManager().setPhysicsSpringsOn(!project->getWorldManager().areSpringsEnabled());
+    } 
   }
   
 void zoom(SketchBio::Project *project, int hand, bool wasPressed)
   {
-    if (!wasPressed)  // button released
+    if (wasPressed)  // button pressed
     {
-      project->getTransformManager().setRoomEyeOrientation(0, 0);
-    } else
-    {
-      return;
-    }
+      //zoom?
+    } 
+    
 }
   
 void addUndoState(SketchBio::Project *project)
