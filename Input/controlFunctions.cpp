@@ -19,6 +19,7 @@
 #include <sketchobject.h>
 #include <sketchproject.h>
 #include <connector.h>
+#include <structurereplicator.h>
 #include <keyframe.h>
 #include <objectgroup.h>
 #include <projecttoxml.h>
@@ -859,25 +860,33 @@ void addUndoState(SketchBio::Project *project)
     project->addUndoState(newXMLState);
 }
 
-// ===== END UTILITY FUNCTIONS =====
-
+// ===== END NON CONTROL FUNCTIONS =====
   
 // ===== BEGIN ANALOG FUNCTIONS =====
+
+// value passed is in the interval [0,1]  
   
-void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
-{
-  if (project->isShowingAnimation())
+class RotateCameraOperationState : public SketchBio::OperationState
   {
-    return;
-  }
-  double x_degrees =0, old_x=0, old_y=0;
-  if (std::abs(value) > .3) {
-		x_degrees = value;
-  }
+  public:
+    RotateCameraOperationState(SketchBio::Project *project)
+    : proj(project), x(0), y(0)
+    {
+    }
+    virtual void doFrameUpdates()
+    {
+      proj->getTransformManager().setRoomEyeOrientation(x,y);
+    }
+    void incrementX(double xAdd) { x = x+xAdd; }
+    void incrementY(double yAdd) { y = y+yAdd; }
+    
+  private:
+    SketchBio::Project *proj; 
+    double x;
+    double y;
+  };
   
-  project->getTransformManager().setRoomEyeOrientation(old_x + x_degrees, old_y);
-  return;
-}
+static const char ROTATE_CAMERA_OPERATION_FUNC_NAME[30] = "rotate_camera";
   
 void rotateCameraPitch(SketchBio::Project *project, int hand, double value)
 {
@@ -885,26 +894,79 @@ void rotateCameraPitch(SketchBio::Project *project, int hand, double value)
   {
     return;
   }
-  double y_degrees =0, old_x=0, old_y=0;
-  if (std::abs(value) > .3) {
-		y_degrees += value;
+  if (project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME) == NULL)
+  {
+    project->setOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME, new RotateCameraOperationState(project));
   }
-  project->getTransformManager().setRoomEyeOrientation(old_x, old_y + y_degrees);
+  
+  value = (value-0.5)*2;
+  
+  if (std::abs(value) > 0.3)
+  {
+    RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
+      project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
+    rotCam->incrementX(value);
+  }
+  return;
+}
+  
+void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
+{
+  if (project->isShowingAnimation())
+  {
+    return;
+  }
+  if (project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME) == NULL)
+  {
+    project->setOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME, new RotateCameraOperationState(project));
+  }
+  
+  value = (value-0.5)*2;
+  
+  if (std::abs(value) > 0.3)
+  {
+    RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
+      project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
+    rotCam->incrementY(value);
+  }
   return;
 }
   
 void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double value)
 {
-  /*
-  ObjectGrabMode::analogsUpdated();
-  if (operationState == REPLICATE_OBJECT_PENDING) {
-    double value = analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)];
-    int nCopies = min(floor(pow(2.0, value / .125)), 64);
-    project->getCrystalByExamples().back()->setNumShown(nCopies);
-  }*/
+
+  SketchBio::Hand &handObj = project->getHand(
+                                              (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+  double hDist = handObj.getNearestObjectDistance();
+  SketchObject *grp = handObj.getNearestObject();
+  
+  if (hDist < DISTANCE_THRESHOLD)
+  {
+    QList <StructureReplicator*> SRs = project->getCrystalByExamples();
+    StructureReplicator* activeSR;
+  
+    bool found = false;
+    for (int i = 0; i < SRs.count(); i++)
+    {
+      activeSR = SRs.at(i);
+      if (activeSR->getReplicaGroup() ==grp)
+      {
+        found = true;
+        break;
+      }
+    }
+    
+    if (found)
+    {
+      int nCopies = min(floor(pow(2.0, value / .125)), 64);
+      activeSR->setNumShown(nCopies);
+    }
+  }
+
   return;
 }
-  
+ 
+//need to map value to [-1,1]
 void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
 {
   if (project->isShowingAnimation())
@@ -913,6 +975,8 @@ void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
   }
   double currentTime = project->getViewTime();
   double finalTime = currentTime;
+  
+  value = (value-0.5)*2;
   int sign = (value >= 0) ? 1 : -1;
   if (Q_ABS(value) > .8)
   {
