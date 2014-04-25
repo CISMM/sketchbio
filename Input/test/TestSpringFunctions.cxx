@@ -8,6 +8,7 @@
 #include <sketchproject.h>
 #include <hand.h>
 #include <controlFunctions.h>
+#include <OperationState.h>
 
 #include <sketchtests.h>
 #include <test/TestCoreHelpers.h>
@@ -167,7 +168,8 @@ int testSnapSpringToTerminus()
   //button pressed, sets operation state
   ControlFunctions::snapSpringToTerminus(&proj, 1, true);
   
-  SketchBio::OperationState *snap = proj.getOperationState();
+  // a bit hacky, but I know what the constant is...
+  SketchBio::OperationState *snap = proj.getOperationState("snap_spring");
   //should actually snap spring to n terminus
   snap->doFrameUpdates();
   

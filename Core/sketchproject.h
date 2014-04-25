@@ -39,14 +39,7 @@ namespace SketchBio
 {
 // forward declare here so it matches with actual definition namespace
 class Hand;
-
-class OperationState
-{
-   public:
-    OperationState() {}
-    virtual ~OperationState() {}
-    virtual void doFrameUpdates() {}
-};
+class OperationState;
 
 class ProjectObserver
 {
@@ -140,8 +133,10 @@ class Project
     // ###################################################################
     // User operation state functions:
     // get and set operation state for user operations with persistent state
-    OperationState* getOperationState();
-    void setOperationState(OperationState* state);
+    OperationState* getOperationState(const QString &func);
+    void setOperationState(const QString &func,OperationState* state);
+    void clearOperationState(const QString &func);
+    void clearAllOperationStates();
     // ###################################################################
     // clears everything that the user has done in the project in preparation
     // for loading in an undo state

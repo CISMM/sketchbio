@@ -5,7 +5,10 @@
 #include <QVector>
 
 class SketchObject;
-#include <sketchproject.h> // for OperationState class
+namespace SketchBio {
+class Project;
+}
+#include "OperationState.h"
 
 class TransformEditOperationState : public QObject, public SketchBio::OperationState {
     Q_OBJECT
@@ -15,6 +18,8 @@ public:
     virtual ~TransformEditOperationState();
     void addObject(SketchObject* obj);
     QVector<SketchObject*>& getObjs();
+
+    static const char SET_TRANSFORMS_OPERATION_FUNCTION[30];
 
 public slots:
     void setObjectTransform(double,double,double,double,double,double);

@@ -421,7 +421,7 @@ void InputManager::InputManagerImpl::buttonStateChange(int buttonIndex,
   if (buttonIndex == modeSwitchButtonNum) {
     if (!wasJustPressed) {
       currentMode = (currentMode + 1) % modes.size();
-      project->setOperationState(NULL);
+      project->clearAllOperationStates();
       project->clearDirections();
       SketchBio::Hand *h;
       h = &project->getHand(SketchBioHandId::LEFT);

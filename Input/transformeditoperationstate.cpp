@@ -8,6 +8,9 @@
 #include <vtkTransform.h>
 
 #include <sketchobject.h>
+#include <sketchproject.h>
+
+const char TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION[30] = "Set Transforms";
 
 TransformEditOperationState::TransformEditOperationState(SketchBio::Project* p)
     : OperationState(), proj(p) {}
@@ -50,6 +53,6 @@ void TransformEditOperationState::setObjectTransform(double x, double y,
 
 void TransformEditOperationState::cancelOperation()
 {
-    proj->setOperationState(NULL);
+    proj->clearOperationState(SET_TRANSFORMS_OPERATION_FUNCTION);
 }
 
