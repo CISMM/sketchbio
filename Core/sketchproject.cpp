@@ -39,6 +39,7 @@
 #include "transformequals.h"
 #include "undostate.h"
 #include "hand.h"
+#include "OperationState.h"
 
 #define NUM_COLORS (6)
 /*
@@ -345,8 +346,10 @@ class Project::ProjectImpl : public WorldObserver
     // ###################################################################
     // User operation state functions:
     // get and set operation state for user operations with persistent state
-    OperationState* getOperationState();
-    void setOperationState(OperationState* state);
+    OperationState* getOperationState(const QString &func);
+    void setOperationState(const QString &func,OperationState* state);
+    void clearOperationState(const QString &func);
+    void clearAllOperationStates();
     // ###################################################################
     // clears everything that the user has done in the project in preparation
     // for loading in an undo state
@@ -440,7 +443,7 @@ class Project::ProjectImpl : public WorldObserver
     double timeInAnimation;  // the animation time starting at 0
     double viewTime;
     // State from user operations that require persistent state
-    OperationState* opState;
+    QHash<QString,OperationState*> opStates;
 
     QList<ProjectObserver*> observers;
 };
@@ -466,7 +469,7 @@ Project::ProjectImpl::ProjectImpl(vtkRenderer* r, const QString& projDir)
       showingShadows(true),
       timeInAnimation(0.0),
       viewTime(0.0),
-      opState(NULL),
+      opStates(),
       observers()
 {
     world.addObserver(this);
@@ -496,6 +499,8 @@ Project::ProjectImpl::ProjectImpl(vtkRenderer* r, const QString& projDir)
 
 Project::ProjectImpl::~ProjectImpl()
 {
+    qDeleteAll(opStates);
+    opStates.clear();
     qDeleteAll(redoStack);
     redoStack.clear();
     qDeleteAll(undoStack);
@@ -570,9 +575,10 @@ void Project::ProjectImpl::updateTrackerPositions()
 void Project::ProjectImpl::timestep(double dt)
 {
     if (!isDoingAnimation) {
-        if (opState != NULL) {
+        foreach (SketchBio::OperationState *opState, opStates.values()) {
             opState->doFrameUpdates();
         }
+
         // handleInput();
         world.stepPhysics(dt);
         q_vec_type point = {0, PLANE_Y, 0}, vector = {0, 1, 0};
@@ -710,15 +716,29 @@ void Project::ProjectImpl::applyRedo()
 }
 //########################################################################
 // User operation state functions
-OperationState* Project::ProjectImpl::getOperationState() { return opState; }
-void Project::ProjectImpl::setOperationState(OperationState* newState)
+OperationState* Project::ProjectImpl::getOperationState(const QString &func)
 {
-    assert(opState == NULL || newState == NULL);
-    if (opState != NULL && newState == NULL) {
-        delete opState;
-    }
-    opState = newState;
+    return opStates.value(func,NULL);
 }
+void Project::ProjectImpl::setOperationState(const QString &func, OperationState *state)
+{
+    assert(!opStates.contains(func));
+    assert(state != NULL);
+    opStates.insert(func,state);
+}
+void Project::ProjectImpl::clearOperationState(const QString &func)
+{
+    if (opStates.contains(func)) {
+        SketchBio::OperationState *state = opStates.take(func);
+        delete state;
+    }
+}
+void Project::ProjectImpl::clearAllOperationStates()
+{
+    qDeleteAll(opStates);
+    opStates.clear();
+}
+
 //########################################################################
 void Project::ProjectImpl::clearProject()
 {
@@ -987,13 +1007,21 @@ void Project::applyUndo() { impl->applyUndo(); }
 void Project::applyRedo() { impl->applyRedo(); }
 //########################################################################
 // User operation state functions
-OperationState* Project::getOperationState()
+OperationState* Project::getOperationState(const QString &func)
 {
-    return impl->getOperationState();
+    return impl->getOperationState(func);
 }
-void Project::setOperationState(OperationState* state)
+void Project::setOperationState(const QString &func, OperationState* state)
 {
-    impl->setOperationState(state);
+    impl->setOperationState(func,state);
+}
+void Project::clearOperationState(const QString &func)
+{
+    impl->clearOperationState(func);
+}
+void Project::clearAllOperationStates()
+{
+    impl->clearAllOperationStates();
 }
 //########################################################################
 void Project::clearProject() { impl->clearProject(); }
@@ -1096,130 +1124,5 @@ void Project::setUpVtkCamera(SketchObject* cam, vtkCamera* vCam)
     vCam->SetViewUp(up);
     vCam->SetClippingRange(20, 5000);
 }
+
 }
-// void SketchProject::setViewpoint(vtkMatrix4x4* worldToRoom, vtkMatrix4x4*
-// roomToEyes)
-//{
-//    transforms->setWorldToRoomMatrix(worldToRoom);
-//    transforms->setRoomToEyeMatrix(roomToEyes);
-//}
-
-// void SketchProject::setCollisionMode(PhysicsMode::Type mode)
-//{
-//    world->setCollisionMode(mode);
-//}
-
-// void SketchProject::setCollisionTestsOn(bool on)
-//{
-//    world->setCollisionCheckOn(on);
-//}
-
-// void SketchProject::setWorldSpringsEnabled(bool enabled)
-//{
-//    world->setPhysicsSpringsOn(enabled);
-//}
-
-// SketchModel* SketchProject::addModel(SketchModel* model)
-//{
-//    model = models->addModel(model);
-//    return model;
-//}
-
-// SketchModel* SketchProject::addModelFromFile(const QString& source, const
-// QString& fileName,
-//                                             double iMass, double iMoment)
-//{
-//    QString newFileName;
-//    if (getFileInProjDir(fileName,newFileName))
-//    {
-//      return models->makeModel(source,newFileName,iMass,iMoment);
-//    } else {
-//      // Can't throw, called from Qt slot
-//      qDebug() << "Failed to copy file to project directory: " << fileName;
-//      return NULL;
-//    }
-//}
-
-// SketchObject* SketchProject::addObject(SketchModel* model, const q_vec_type
-// pos,
-//                                       const q_type orient)
-//{
-//    int myIdx = world->getNumberOfObjects();
-//    SketchObject* object = world->addObject(model,pos,orient);
-//    //object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-//    if (object->numInstances() == 1)
-//    {
-//        object->setColorMapType(COLORS[myIdx%NUM_COLORS]);
-//    }
-//    return object;
-//}
-
-// SketchObject* SketchProject::addObject(const QString& source,const QString&
-// filename)
-//{
-//    SketchModel* model = NULL;
-//    model = models->getModel(source);
-//    if (model == NULL)
-//    {
-//        model = addModelFromFile(source,filename,DEFAULT_INVERSE_MASS,
-//                                 DEFAULT_INVERSE_MOMENT);
-//        if (model == NULL)
-//            return NULL;
-//    }
-
-//    q_vec_type pos = Q_NULL_VECTOR;
-//    q_type orient = Q_ID_QUAT;
-//    pos[Q_Y] = 2 * world->getNumberOfObjects() /
-// transforms->getWorldToRoomScale();
-//    return addObject(model,pos,orient);
-//}
-
-// SketchObject* SketchProject::addObject(SketchObject* object) {
-//    int myIdx = world->getNumberOfObjects();
-//    if (object->numInstances() == 1) {
-//    // object->getActor()->GetProperty()->SetColor(COLORS[myIdx%NUM_COLORS]);
-//        object->setColorMapType(COLORS[myIdx%NUM_COLORS]);
-//    }
-//    world->addObject(object);
-//    // this is for when the object is read in from a file, this method is
-// called
-//    // with the objects instead of addCamera.  So this needs to recognize
-// cameras
-//    QDir projectDir(projectDirName);
-//    if (object->getModel() == models->getCameraModel(projectDir)) {
-//        cameras.insert(object,vtkSmartPointer<vtkCamera>::New());
-//        // cameras are not visible! make sure they are not.
-//        if (object->isVisible()) {
-//            object->setIsVisible(false);
-//        }
-//    }
-//    return object;
-//}
-
-// bool SketchProject::addObjects(const QVector<QString>& filenames)
-//{
-
-//    int i;
-//    for (i = 0; i < filenames.size(); i++) {
-//      // XXX Check for error here and return false if one found.
-//        // notes: no good cross-platform way to check if file exists
-//        // VTK prints out errors but does not throw anything, so we must
-//        // do error checking before calling this
-//        addObject(filenames[i],filenames[i]);
-//    }
-
-//    return true;
-//}
-// Connector* SketchProject::addSpring(SketchObject* o1, SketchObject* o2,
-// double minRest, double maxRest,
-//                                  double stiffness, q_vec_type o1Pos,
-// q_vec_type o2Pos)
-//{
-//    return
-// world->addSpring(o1,o2,o1Pos,o2Pos,false,stiffness,minRest,maxRest);
-//}
-
-// Connector* SketchProject::addConnector(Connector* spring)
-//{
-//    return world->addConnector(spring);
-//}

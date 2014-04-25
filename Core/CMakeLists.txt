@@ -20,6 +20,7 @@ modelinstance.h
 objectgroup.cpp
 objectgroup.h
 objectchangeobserver.h
+OperationState.h
 sketchmodel.cpp # h file used by Moc, no need to include here
 modelutilities.cpp
 modelutilities.h

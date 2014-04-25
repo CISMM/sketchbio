@@ -65,6 +65,19 @@ void SketchObject::setTransformToPositionAndOrientation(vtkTransform *trans,
 }
 
 //#########################################################################
+vtkTransform *SketchObject::computeRelativeTransform(SketchObject *o1,
+                                                     SketchObject *o2) {
+    vtkTransform *trans = vtkTransform::New();
+    trans->Identity();
+    trans->PreMultiply();
+    trans->Concatenate(o1->getInverseLocalTransform());
+    trans->Concatenate(o2->getLocalTransform());
+    trans->Update();
+    return trans;
+}
+
+
+//#########################################################################
 //#########################################################################
 //#########################################################################
 SketchObject::SketchObject()

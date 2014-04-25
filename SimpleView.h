@@ -137,8 +137,6 @@ private:
   // Fields
   Ui_SimpleView *ui;
   QTimer *timer;
-  vrpnServer *server;
-  QThread *serverThread;
   QActionGroup *collisionModeGroup;
   vtkSmartPointer<vtkRenderer> renderer;
   SketchBio::Project *project;

@@ -8,6 +8,7 @@
 #include <sketchproject.h>
 #include <hand.h>
 #include <controlFunctions.h>
+#include <OperationState.h>
 
 #include <sketchtests.h>
 #include <test/TestCoreHelpers.h>
@@ -136,7 +137,7 @@ int testSnapSpringToTerminus()
   vtkSmartPointer< vtkRenderer >::New();
   SketchBio::Project proj(renderer,".");
   q_vec_type pos1 = {0,0,0}, pos2 = {0,0,1};
-  q_vec_type nTerm = {1,1,1}, cTerm = {-1,-1,-1};
+  q_vec_type nTerm = {-1,-1,-1}, cTerm = {1,1,1};
   SketchModel *model = TestCoreHelpers::getCubeModel();
   proj.getModelManager().addModel(model);
   q_vec_type vector = {0,0,0};
@@ -167,7 +168,8 @@ int testSnapSpringToTerminus()
   //button pressed, sets operation state
   ControlFunctions::snapSpringToTerminus(&proj, 1, true);
   
-  SketchBio::OperationState *snap = proj.getOperationState();
+  // a bit hacky, but I know what the constant is...
+  SketchBio::OperationState *snap = proj.getOperationState("snap_spring");
   //should actually snap spring to n terminus
   snap->doFrameUpdates();
   
@@ -222,7 +224,7 @@ int testSnapSpringToTerminus()
   spring->getObject1ConnectionPosition(conPos2);
   
   //make sure its at the c terminus
-  if (q_vec_equals(conPos2,cTerm))
+  if (!q_vec_equals(conPos2,cTerm))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "  Connector should have moved to c terminus." << std::endl;

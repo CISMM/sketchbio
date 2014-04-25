@@ -5,19 +5,21 @@
 #include <QVector>
 
 class SketchObject;
-#include <sketchproject.h>
+namespace SketchBio {
+class Project;
+}
+#include "OperationState.h"
 
 class TransformEditOperationState : public QObject, public SketchBio::OperationState {
-    Q_OBJECT;
+    Q_OBJECT
+    Q_DISABLE_COPY(TransformEditOperationState)
 public:
-    TransformEditOperationState(SketchBio::Project* p) : OperationState(), proj(p) {}
-    virtual ~TransformEditOperationState() {}
-    void addObject(SketchObject* obj) {
-        objs.append(obj);
-    }
-    QVector<SketchObject*>& getObjs() {
-        return objs;
-    }
+    TransformEditOperationState(SketchBio::Project* p);
+    virtual ~TransformEditOperationState();
+    void addObject(SketchObject* obj);
+    QVector<SketchObject*>& getObjs();
+
+    static const char SET_TRANSFORMS_OPERATION_FUNCTION[30];
 
 public slots:
     void setObjectTransform(double,double,double,double,double,double);

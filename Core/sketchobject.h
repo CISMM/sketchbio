@@ -63,6 +63,11 @@ class SketchObject
                                                      const q_vec_type pos,
                                                      const q_type orient);
 
+    // Computes the relative transform from o1 to o2 and returns it as a vtkTransform
+    // That is, the transform will contain the position and orientation of o2 in o1's
+    // local coordinate system
+    static vtkTransform *computeRelativeTransform(SketchObject *o1,SketchObject *o2);
+
    public:
     // constructor
     SketchObject();

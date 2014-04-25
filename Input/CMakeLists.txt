@@ -38,6 +38,7 @@ controlFunctions.cpp
 controlFunctions.h
 savedxmlundostate.cpp
 savedxmlundostate.h
+transformeditoperationstate.cpp
 ${SketchBioInputQtHeaders}
 ${SketchBioInputMoc}
 )

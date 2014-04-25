@@ -1,3 +1,6 @@
+#include <cassert>
+#include <iostream>
+
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
 #include <vtkTransform.h>
@@ -201,9 +204,10 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
   SketchBio::Project proj(renderer,".");
   SketchModel *model = TestCoreHelpers::getCubeModel();
   proj.getModelManager().addModel(model);
-  q_vec_type vector0 = {0,0,0};
+  q_vec_type const vector0 = {5,3,2};
   q_vec_type vector1 = {1,1,1};
   q_type orient = Q_ID_QUAT;
+  q_make(orient,1,0,0,Q_PI/3.0);
   
   TransformEditOperationState teos(&proj);
   
@@ -213,17 +217,13 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
   teos.addObject(obj0);
   teos.addObject(obj1);
   
-  q_vec_type movePos = {x,y,z};
-  q_vec_type moveOrt = {rX, rY, rZ};
-  
   teos.setObjectTransform(x, y, z, rX, rY, rZ);
   
   //make sure obj0 did not move
   q_vec_type pos0;
   obj0->getPosition(pos0);
-  q_vec_type nullVec = Q_NULL_VECTOR;
   
-  if (!(q_vec_equals(nullVec, pos0)))
+  if (!(q_vec_equals(vector0, pos0)))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "  Object 0 should not have moved." << std::endl;
@@ -232,14 +232,8 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
   
   //make sure obj1 did move, and to the right place
   vtkSmartPointer< vtkTransform > transform =
-  vtkSmartPointer< vtkTransform >::New();
-  transform->Identity();
-  transform->PreMultiply();
-  transform->Concatenate(
-  obj1->getLocalTransform());
-  transform->Concatenate(
-  obj0->getInverseLocalTransform());
-  transform->Update();
+          vtkSmartPointer< vtkTransform >::Take(
+              SketchObject::computeRelativeTransform(obj0,obj1));
   
   q_vec_type pos1;
   transform->GetPosition(pos1);
@@ -252,7 +246,7 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
   transform->GetPosition(pos2);
   q_vec_type ort2;
   transform->GetOrientation(ort2);
-  
+
   if(!(q_vec_equals(pos2, pos1) && q_vec_equals(ort2, ort1)))
   {
     std::cout << "\nError at " << __FILE__ << ":" << __LINE__ <<
@@ -269,9 +263,10 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
     return 1;
   }
   
+  q_vec_type pos2BeforeCancel;
+  obj1->getPosition(pos2BeforeCancel);
   q_type ort2BeforeCancel;
   obj1->getOrientation(ort2BeforeCancel);
-   
  
   //make sure cancelOp doesn't move any of the objects
   teos.cancelOperation();
@@ -279,7 +274,7 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
   //make sure obj0 did not move
   obj0->getPosition(pos0);
   
-  if (!(q_vec_equals(nullVec, pos0)))
+  if (!(q_vec_equals(vector0, pos0)))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "  Object 0 should not have moved." << std::endl;
@@ -291,7 +286,7 @@ int testSetTransforms(double x, double y, double z, double rX, double rY, double
   q_type ort2AfterCancel;
   obj1->getOrientation(ort2AfterCancel);
   
-  if (!(q_vec_equals(pos2, pos2AfterCancel) && q_equals(ort2BeforeCancel, ort2AfterCancel)))
+  if (!(q_vec_equals(pos2BeforeCancel, pos2AfterCancel) && q_equals(ort2BeforeCancel, ort2AfterCancel)))
   {
     std::cout << "\nError at " << __FILE__ << ":" << __LINE__ <<
     "  input values: " <<x<<","<<y<<","<<z<<","<<rX<<","<<rY<<","<<rZ<<

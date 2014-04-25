@@ -28,42 +28,12 @@
 #include <hand.h>
 #include <sketchtests.h>
 
+#include <OperationState.h>
+
 #include "TransformInputDialog.h"
 #include "transformeditoperationstate.h"
 
 static const double DEFAULT_SPRING_STIFFNESS = 1.0;
-
-void TransformEditOperationState::setObjectTransform(double x, double y,
-                                                     double z, double rX,
-                                                     double rY, double rZ)
-{
-    assert(objs.size() == 2);
-    vtkSmartPointer< vtkTransform > transform =
-        vtkSmartPointer< vtkTransform >::New();
-    transform->Identity();
-    transform->Concatenate(objs[0]->getLocalTransform());
-    transform->RotateY(rY);
-    transform->RotateX(rX);
-    transform->RotateZ(rZ);
-    transform->Translate(x, y, z);
-    q_vec_type pos;
-    q_type orient;
-    SketchObject::getPositionAndOrientationFromTransform(transform, pos,
-                                                         orient);
-    if (objs[1]->getParent() != NULL) {
-        SketchObject::setParentRelativePositionForAbsolutePosition(
-            objs[1], objs[1]->getParent(), pos, orient);
-    } else {
-        objs[1]->setPosAndOrient(pos, orient);
-    }
-    // clears operation state and calls deleteLater
-    cancelOperation();
-}
-
-void TransformEditOperationState::cancelOperation()
-{
-    proj->setOperationState(NULL);
-}
 
 namespace ControlFunctions
 {
@@ -453,6 +423,7 @@ class SnapModeOperationState : public SketchBio::OperationState
     bool snapToNTerminus;
 };
 
+static const char SNAP_SPRING_OPERATION_FUNC_NAME[30] = "snap_spring";
 void snapSpringToTerminus(SketchBio::Project *project, int hand,
                           bool wasPressed)
 {
@@ -464,8 +435,8 @@ void snapSpringToTerminus(SketchBio::Project *project, int hand,
         Connector *nearestSpring = handObj.getNearestConnector(&atEnd1);
         double nearestSpringDist = handObj.getNearestConnectorDistance();
         if (nearestSpringDist < SPRING_DISTANCE_THRESHOLD &&
-            project->getOperationState() == NULL) {
-            project->setOperationState(
+            project->getOperationState(SNAP_SPRING_OPERATION_FUNC_NAME) == NULL) {
+            project->setOperationState(SNAP_SPRING_OPERATION_FUNC_NAME,
                 new SnapModeOperationState(nearestSpring, atEnd1));
             project->setDirections(
                 "Toggle which terminus the connector is attached to,\n"
@@ -474,9 +445,9 @@ void snapSpringToTerminus(SketchBio::Project *project, int hand,
     } else  // button released
     {
         SnapModeOperationState *snap = dynamic_cast< SnapModeOperationState * >(
-            project->getOperationState());
+            project->getOperationState(SNAP_SPRING_OPERATION_FUNC_NAME));
         if (snap != NULL) {
-            project->setOperationState(NULL);
+            project->clearOperationState(SNAP_SPRING_OPERATION_FUNC_NAME);
             project->clearDirections();
         }
     }
@@ -486,7 +457,8 @@ void snapSpringToTerminus(SketchBio::Project *project, int hand,
 void setTerminusToSnapSpring(SketchBio::Project *project, int, bool wasPressed)
 {
     SnapModeOperationState *snap =
-        dynamic_cast< SnapModeOperationState * >(project->getOperationState());
+        dynamic_cast< SnapModeOperationState * >(project->getOperationState(
+                                                     SNAP_SPRING_OPERATION_FUNC_NAME));
     if (wasPressed) {
         if (snap != NULL) {
             snap->setSnapToNTerminus(false);
@@ -646,9 +618,6 @@ void deleteObject(SketchBio::Project *project, int hand, bool wasPressed)
 void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        if (project->getOperationState() != NULL) {
-            return;
-        }
         SketchBio::Hand &handObj = project->getHand(
             (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
         double hDist = handObj.getNearestObjectDistance();
@@ -680,14 +649,17 @@ void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
 void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (wasPressed) {
-        if (project->getOperationState() == NULL) {
+        if (project->getOperationState(
+                    TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION)
+                == NULL) {
             project->setOperationState(
+                        TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION,
                 new TransformEditOperationState(project));
             project->setDirections(
                 "Select the object to use as the base of the\n"
                 "coordinate system and release the button.");
         } else if (dynamic_cast< TransformEditOperationState * >(
-                       project->getOperationState())) {
+                       project->getOperationState(TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION))) {
             project->setDirections(
                 "Select the object to define the transformation\n"
                 "to and release the button.");
@@ -697,7 +669,7 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
         // TODO add control function
         TransformEditOperationState *state =
             dynamic_cast< TransformEditOperationState * >(
-                project->getOperationState());
+                project->getOperationState(TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION));
         if (state != NULL) {
             const QVector< SketchObject * > &objectsSelected = state->getObjs();
 
@@ -720,14 +692,9 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
                 if (hDist < DISTANCE_THRESHOLD) {
                     state->addObject(obj);
                     vtkSmartPointer< vtkTransform > transform =
-                        vtkSmartPointer< vtkTransform >::New();
-                    transform->Identity();
-                    transform->PreMultiply();
-                    transform->Concatenate(
-                        objectsSelected[1]->getLocalTransform());
-                    transform->Concatenate(
-                        objectsSelected[0]->getInverseLocalTransform());
-                    transform->Update();
+                            vtkSmartPointer< vtkTransform >::Take(
+                                SketchObject::computeRelativeTransform(
+                                    objectsSelected[0],objectsSelected[1]));
                     TransformInputDialog *dialog = new TransformInputDialog(
                         "Set Transformation from First to Second");
                     dialog->setTranslation(transform->GetPosition());
@@ -868,7 +835,11 @@ void zoom(SketchBio::Project *project, int hand, bool wasPressed)
     } 
     
 }
+
+// ===== END UTILITY FUNCTIONS =====
   
+// ===== BEGIN NON CONTROL FUNCTIONS (but still useful) =====
+
 void addUndoState(SketchBio::Project *project)
 {
     UndoState *last = project->getLastUndoState();
@@ -964,4 +935,7 @@ void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
 }
   
 // ===== END ANALOG FUNCTIONS =====
+  
+// ===== END NON CONTROL FUNCTIONS (but still useful) =====
+  
 }

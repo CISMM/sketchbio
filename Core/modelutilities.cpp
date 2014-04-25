@@ -242,9 +242,9 @@ vtkPolyDataAlgorithm *read(const QString &filename)
     return result;
 }
 
-#define MODEL_NUM_ARRAY_NAME "modelNum"
-#define SUFRACE_MODEL_NUM 1
-#define ATOMS_MODEL_NUM 0
+static const char MODEL_NUM_ARRAY_NAME[] = "modelNum";
+static const int SUFRACE_MODEL_NUM = 1;
+static const int ATOMS_MODEL_NUM = 0;
 
 vtkPolyDataAlgorithm *modelSurfaceFrom(vtkPolyDataAlgorithm *rawModel)
 {

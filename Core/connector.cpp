@@ -206,12 +206,17 @@ void Connector::setEnd2WorldPosition(const q_vec_type newPos) {
 static inline void snap(SketchObject* o, double value, q_vec_type dst)
 {
 	if (o != NULL) {
-			vtkPolyData* model_data = o->getModel()->getAtomData(o->getModelConformation())->GetOutput();
+        vtkPolyDataAlgorithm *atomData = o->getModel()->getAtomData(o->getModelConformation());
+        if (atomData != NULL) {
+            vtkPolyData* model_data = atomData->GetOutput();
 			vtkDataArray* chain_positions = model_data->GetPointData()->GetArray("chainPosition");
 			vtkVariant position_val(value);
 			vtkIdType terminus_id = chain_positions->LookupValue(position_val);
-			model_data->GetPoint(terminus_id, dst);
-		}
+            if (terminus_id >= 0) { // if -1 returned, terminus does not exist
+                model_data->GetPoint(terminus_id, dst);
+            }
+        }
+    }
 }
 
 void Connector::snapToTerminus(bool on_object1, bool snap_to_n) {
