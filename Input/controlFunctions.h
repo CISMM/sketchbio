@@ -56,6 +56,13 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
   void toggleCollisionChecks(SketchBio::Project*, int, bool);
   void toggleSpringsEnabled(SketchBio::Project*, int, bool);
   void zoom(SketchBio::Project*, int, bool);
+  
+  // ANALOG functions:
+  void rotateCameraYaw(SketchBio::Project*, int, double);
+  void rotateCameraPitch(SketchBio::Project *, int, double);
+  void setCrystalByExampleCopies(SketchBio::Project *, int, double);
+  void moveAlongTimeline(SketchBio::Project *, int, double);
+  
 }
 
 #endif // CONTROLFUNCTIONS_H

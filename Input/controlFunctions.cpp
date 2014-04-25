@@ -6,6 +6,9 @@
 #include <QApplication>
 #include <QClipboard>
 
+#include <quat.h>
+#include <cmath>
+
 #include <vtkXMLUtilities.h>
 #include <vtkXMLDataElement.h>
 #include <vtkPolyDataAlgorithm.h>
@@ -23,6 +26,7 @@
 #include <transformmanager.h>
 #include <worldmanager.h>
 #include <hand.h>
+#include <sketchtests.h>
 
 #include "TransformInputDialog.h"
 #include "transformeditoperationstate.h"
@@ -853,7 +857,14 @@ void zoom(SketchBio::Project *project, int hand, bool wasPressed)
   {
     if (wasPressed)  // button pressed
     {
-      //zoom?
+      if (project->isShowingAnimation())
+      {
+        return;
+      }
+      TransformManager &transforms = project->getTransformManager();
+      double dist = transforms.getOldWorldDistanceBetweenHands();
+      double delta = transforms.getWorldDistanceBetweenHands() / dist;
+      transforms.scaleWithTrackerFixed(delta,((hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT));
     } 
     
 }
@@ -878,4 +889,79 @@ void addUndoState(SketchBio::Project *project)
 }
 
 // ===== END UTILITY FUNCTIONS =====
+
+  
+// ===== BEGIN ANALOG FUNCTIONS =====
+  
+void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
+{
+  if (project->isShowingAnimation())
+  {
+    return;
+  }
+  double x_degrees =0, old_x=0, old_y=0;
+  if (std::abs(value) > .3) {
+		x_degrees = value;
+  }
+  
+  project->getTransformManager().setRoomEyeOrientation(old_x + x_degrees, old_y);
+  return;
+}
+  
+void rotateCameraPitch(SketchBio::Project *project, int hand, double value)
+{
+  if (project->isShowingAnimation())
+  {
+    return;
+  }
+  double y_degrees =0, old_x=0, old_y=0;
+  if (std::abs(value) > .3) {
+		y_degrees += value;
+  }
+  project->getTransformManager().setRoomEyeOrientation(old_x, old_y + y_degrees);
+  return;
+}
+  
+void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double value)
+{
+  /*
+  ObjectGrabMode::analogsUpdated();
+  if (operationState == REPLICATE_OBJECT_PENDING) {
+    double value = analogStatus[ANALOG_LEFT(TRIGGER_ANALOG_IDX)];
+    int nCopies = min(floor(pow(2.0, value / .125)), 64);
+    project->getCrystalByExamples().back()->setNumShown(nCopies);
+  }*/
+  return;
+}
+  
+void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
+{
+  if (project->isShowingAnimation())
+  {
+    return;
+  }
+  double currentTime = project->getViewTime();
+  double finalTime = currentTime;
+  int sign = (value >= 0) ? 1 : -1;
+  if (Q_ABS(value) > .8)
+  {
+    finalTime = currentTime + 1 * sign;
+  }
+  else if (Q_ABS(value) > .4)
+  {
+    finalTime = currentTime + 0.1 * sign;
+  }
+  else if (Q_ABS(value) > .2)
+  {
+    finalTime = (sign == 1) ? ceil(currentTime) : floor(currentTime) ;
+  }
+  if (finalTime < 0)
+    finalTime = 0;
+  if (finalTime != currentTime)
+  {
+    project->setViewTime(finalTime);
+  }
+}
+  
+// ===== END ANALOG FUNCTIONS =====
 }
