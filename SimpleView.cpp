@@ -191,8 +191,6 @@ class SimpleView::GUIStateHelper : public WorldObserver,
 // Constructor
 SimpleView::SimpleView(QString projDir, bool load_example)
     : timer(new QTimer()),
-      server(new vrpnServer()),
-      serverThread(new QThread(this)),
       collisionModeGroup(new QActionGroup(this)),
       renderer(vtkSmartPointer< vtkRenderer >::New()),
       project(new SketchBio::Project(renderer.GetPointer(), projDir)),
@@ -209,12 +207,6 @@ SimpleView::SimpleView(QString projDir, bool load_example)
 
     stateHelper->setUI(ui);
     stateHelper->setProject(project);
-
-    if (VRPN_USE_INTERNAL_SERVER) {
-        serverThread->start();
-        server->moveToThread(serverThread);
-        QTimer::singleShot(0, server, SLOT(startServer()));
-    }
 
     renderer->InteractiveOff();
     renderer->SetViewport(0, 0, 1, 1);
@@ -263,36 +255,18 @@ SimpleView::~SimpleView()
     delete project;
     delete stateHelper;
     delete collisionModeGroup;
-    if (server != NULL) delete server;
     delete timer;
 }
 
 void SimpleView::closeEvent(QCloseEvent *event)
 {
     timer->stop();
-    if (VRPN_USE_INTERNAL_SERVER) {
-        QObject::connect(server, SIGNAL(destroyed()), serverThread,
-                         SLOT(quit()));
-        QTimer::singleShot(0, server, SLOT(deleteLater()));
-        server = NULL;
-        while (!serverThread->isFinished()) {
-            QApplication::instance()->processEvents(QEventLoop::AllEvents, 20);
-        }
-    }
     event->accept();
 }
 
 void SimpleView::slotExit()
 {
-    if (VRPN_USE_INTERNAL_SERVER) {
-        QObject::connect(server, SIGNAL(destroyed()), serverThread,
-                         SLOT(quit()));
-        QTimer::singleShot(0, server, SLOT(deleteLater()));
-        server = NULL;
-        QObject::connect(serverThread, SIGNAL(finished()), qApp, SLOT(quit()));
-    } else {
-        qApp->exit();
-    }
+    QApplication::instance()->exit();
 }
 
 /*
@@ -478,7 +452,7 @@ void SimpleView::restartVRPNServer()
             " device is reset.");
         qDebug() << "Restarting VRPN server.";
         // signal the server to restart
-        QTimer::singleShot(0, server, SLOT(restartServer()));
+        // TODO - add restart vrpn server to InputManager functions
     }
 }
 
