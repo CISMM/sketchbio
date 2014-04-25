@@ -1,9 +1,12 @@
 #ifndef CONTROLFUNCTIONS_H
 #define CONTROLFUNCTIONS_H
 
+class vtkTransform;
+
 namespace SketchBio {
 class Project;
 }
+class SketchObject;
 
 namespace ControlFunctions
 {
@@ -47,7 +50,6 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
 	// UTILITY functions:
 
   void resetViewPoint(SketchBio::Project*, int, bool);
-  void addUndoState(SketchBio::Project *project);
   void copyObject(SketchBio::Project*, int, bool);
   void pasteObject(SketchBio::Project*, int, bool);
   void resetViewPoint(SketchBio::Project*, int, bool);
@@ -56,6 +58,11 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
   void toggleCollisionChecks(SketchBio::Project*, int, bool);
   void toggleSpringsEnabled(SketchBio::Project*, int, bool);
   void zoom(SketchBio::Project*, int, bool);
+
+
+  // NON CONTROL FUNCTIONS (but still useful)
+  // Adds a save-to-xml undo state to the project for its current state
+  void addUndoState(SketchBio::Project *project);
 }
 
 #endif // CONTROLFUNCTIONS_H
