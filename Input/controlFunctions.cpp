@@ -20,6 +20,7 @@
 #include <sketchproject.h>
 #include <connector.h>
 #include <structurereplicator.h>
+#include <transformequals.h>
 #include <keyframe.h>
 #include <objectgroup.h>
 #include <projecttoxml.h>
@@ -714,6 +715,82 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
                 }
                 project->clearDirections();
             }
+        }
+    }
+}
+
+class LockTransformsOperationState : public SketchBio::OperationState {
+public:
+    LockTransformsOperationState() : OperationState(), lock(NULL) {}
+    virtual ~LockTransformsOperationState() {}
+    void addObject(SketchObject *o) {
+        list.append(o);
+    }
+    QList<SketchObject*> &getList() {
+        return list;
+    }
+    int getHand() {
+        return hand;
+    }
+    QSharedPointer<TransformEquals> &getLock() {
+        return lock;
+    }
+    void setLock(const QSharedPointer<TransformEquals> &l) {
+        lock = l;
+    }
+
+private:
+    QList<SketchObject*> list;
+    QSharedPointer< TransformEquals > lock;
+    int hand;
+};
+
+static const char LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME[] = "Lock Transforms";
+void lockTransforms(SketchBio::Project *proj, int hand, bool wasPressed)
+{
+    LockTransformsOperationState *state = dynamic_cast<LockTransformsOperationState*>(
+                proj->getOperationState(LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME));
+    if (state->getHand() != hand) {
+        proj->clearOperationState(LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME);
+        state = NULL;
+    }
+    if (wasPressed) {
+        if (state == NULL) {
+            proj->setDirections("Move to the first object and release the button to lock transforms");
+        } else {
+            QList<SketchObject*> &list = state->getList();
+            if (list.size() % 2 == 1) {
+                proj->setDirections("Move to the second object in the pair and release to add the pair");
+            } else {
+                proj->setDirections("Move to the first object in the next pair and release\n"
+                                    "or release in empty space to cancel");
+            }
+        }
+    } else {
+        SketchBio::Hand &handObj = proj->getHand(
+                    hand== 0 ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+        if (handObj.getNearestObjectDistance() < DISTANCE_THRESHOLD) {
+            if (state == NULL) {
+                state = new LockTransformsOperationState();
+                proj->setOperationState(LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME,state);
+            }
+            state->addObject(handObj.getNearestObject());
+            QList<SketchObject*> &list = state->getList();
+            if (list.size() % 2 == 0) {
+                int s = list.size();
+                if (state->getLock().isNull()) {
+                    QWeakPointer<TransformEquals> l = proj->addTransformEquals(list[0],list[1]);
+                    state->setLock(l.toStrongRef());
+                } else {
+                    state->getLock()->addPair(list[s-2],list[s-1]);
+                }
+                proj->setDirections("Press to select the first object in the next pair");
+            } else {
+                proj->setDirections("Press to select the second object in this pair");
+            }
+        } else {
+            proj->clearOperationState(LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME);
+            proj->clearDirections();
         }
     }
 }
