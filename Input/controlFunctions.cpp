@@ -871,11 +871,21 @@ class RotateCameraOperationState : public SketchBio::OperationState
     }
     void setdX(double xAdd)
     {
-      dX = xAdd;
+      if (std::abs(xAdd) > 0.3)
+      {
+        dX = xAdd;
+      } else {
+        dX = 0;
+      }
     }
     void setdY(double yAdd)
     { 
-      dY = yAdd;
+      if (std::abs(yAdd) > 0.3)
+      {
+        dY = yAdd;
+      } else {
+        dY = 0;
+      }
     }
     void reset() {x=0; y=0;}
     
@@ -1018,12 +1028,10 @@ void rotateCameraPitch(SketchBio::Project *project, int hand, double value)
   
   value = (value-0.5)*2;
   
-  if (std::abs(value) > 0.3)
-  {
-    RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
-      project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
-    rotCam->setdX(value);
-  }
+  RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
+    project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
+  rotCam->setdX(value);
+  
   return;
 }
   
@@ -1040,12 +1048,9 @@ void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
   
   value = (value-0.5)*2;
   
-  if (std::abs(value) > 0.3)
-  {
-    RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
-      project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
-    rotCam->setdY(value);
-  }
+  RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
+    project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
+  rotCam->setdY(value);
   return;
 }
   
