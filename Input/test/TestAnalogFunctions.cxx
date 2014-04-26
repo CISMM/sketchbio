@@ -26,6 +26,7 @@ int testSetCrystalByExampleCopies();
 int testMoveAlongTimeline();
 
 static const char ROTATE_CAMERA_OPERATION_FUNC_NAME[30] = "rotate_camera";
+static const char TIMELINE_OPERATION_FUNC_NAME[30] = "timeline";
 
 int main(int argc, char *argv[])
 {
@@ -227,6 +228,7 @@ int testMoveAlongTimeline()
   
   //should move in the positive direction
   ControlFunctions::moveAlongTimeline(&proj,1,highVal);
+  proj.getOperationState(TIMELINE_OPERATION_FUNC_NAME)->doFrameUpdates();
   
   double time2 = proj.getViewTime();
   
@@ -241,6 +243,7 @@ int testMoveAlongTimeline()
   
   //should move in negative direction
   ControlFunctions::moveAlongTimeline(&proj, 1, lowVal);
+  proj.getOperationState(TIMELINE_OPERATION_FUNC_NAME)->doFrameUpdates();
   
   double time3 = proj.getViewTime();
   

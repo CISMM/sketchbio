@@ -887,7 +887,7 @@ class RotateCameraOperationState : public SketchBio::OperationState
         dY = 0;
       }
     }
-    void reset() {x=0; y=0;}
+    void reset() {x=0; y=0; dX=0; dY=0;}
     
   private:
     SketchBio::Project *proj;

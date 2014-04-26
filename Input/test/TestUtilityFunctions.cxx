@@ -21,6 +21,7 @@
 
 int testCopyPaste();
 int testResetViewPoint();
+int testUndoRedo();
 int testToggleCollisionChecks();
 int testToggleSpringsEnabled();
 
@@ -314,16 +315,12 @@ int testResetViewPoint()
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "RTE1: " << std::endl;
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        cout<< resetRTE->GetElement(i, j) << " ";
-      }
+    for (int i = 0; i < 16; i++) {
+      cout<< mat0[i] << " ";
     }
     std::cout << "RTE2: " << std::endl;
-    for(int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        cout<< resetRTE2->GetElement(i, j) << " ";
-      }
+    for(int i = 0; i < 16; i++) {
+      cout<< mat2[i] << " ";
     }
     std::cout << "  Room to eye matrix did not reset" << std::endl;
     return 1;
