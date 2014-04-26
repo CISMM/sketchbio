@@ -312,6 +312,7 @@ struct Mode {
     analogFunctions = other.analogFunctions;
     name = other.name;
     defaultOutline = other.defaultOutline;
+    return *this;
   }
 
  public:
@@ -860,13 +861,23 @@ static const char FUNC_NAME_SELECT_CHILD_OF_CURRENT[] = "selectChildOfCurrent";
 static const char FUNC_NAME_DELETE_OBJECT[] = "deleteObject";
 static const char FUNC_NAME_REPLICATE_OBJECT[] = "createCrystalByExample";
 static const char FUNC_NAME_SET_TRANSFORMS[] = "setTransform";
+static const char FUNC_NAME_LOCK_TRANSFORMS[] = "lockTransforms";
 
 //   UTILITY functions:
 static const char FUNC_NAME_RESET_VIEWPOINT[] = "resetCameraAngle";
 static const char FUNC_NAME_COPY_OBJECT[] = "copyObject";
 static const char FUNC_NAME_PASTE_OBJECT[] = "pasteObject";
+static const char FUNC_NAME_UNDO[] = "undo";
+static const char FUNC_NAME_REDO[] = "redo";
+static const char FUNC_NAME_TOGGLE_COLLISION_CHECKS[] = "toggleCollisionChecks";
+static const char FUNC_NAME_TOGGLE_SPRINGS_ENABLED[] = "toggleSpringsEnabled";
+static const char FUNC_NAME_ZOOM_WORLD[] = "zoom";
 
 // ANALOGS
+static const char FUNC_NAME_ROTATE_CAMEA_YAW[] = "rotateCameraYaw";
+static const char FUNC_NAME_ROTATE_CAMEA_PITCH[] = "rotateCameraPitch";
+static const char FUNC_NAME_SET_CRYSTAL_BY_EXAMPLE_NUM_COPIES[] = "setCrystalByExampleCopies";
+static const char FUNC_NAME_MOVE_ALONG_TIMELINE[] = "moveAlongTimeline";
 
 //   TODO
 
@@ -926,6 +937,18 @@ ControlFunctions::ButtonControlFunctionPtr readButtonFunction(
     return &ControlFunctions::copyObject;
   } else if (funcToAssign == FUNC_NAME_PASTE_OBJECT) {
     return &ControlFunctions::pasteObject;
+  } else if (funcToAssign == FUNC_NAME_UNDO) {
+      return &ControlFunctions::undo;
+  } else if (funcToAssign == FUNC_NAME_REDO) {
+      return &ControlFunctions::redo;
+  } else if (funcToAssign == FUNC_NAME_TOGGLE_COLLISION_CHECKS) {
+      return &ControlFunctions::toggleCollisionChecks;
+  } else if (funcToAssign == FUNC_NAME_TOGGLE_SPRINGS_ENABLED) {
+      return &ControlFunctions::toggleSpringsEnabled;
+  } else if (funcToAssign == FUNC_NAME_ZOOM_WORLD) {
+      return &ControlFunctions::zoom;
+  } else if (funcToAssign == FUNC_NAME_LOCK_TRANSFORMS) {
+      return &ControlFunctions::lockTransforms;
   } else {
     return NULL;
   }
@@ -933,7 +956,16 @@ ControlFunctions::ButtonControlFunctionPtr readButtonFunction(
 
 ControlFunctions::AnalogControlFunctionPtr readAnalogFunction(
     const char *funcName) {
-    // TODO
+    QString funcToAssign(funcName);
+    if (funcToAssign == FUNC_NAME_ROTATE_CAMEA_YAW) {
+        return &ControlFunctions::rotateCameraYaw;
+    } else if (funcToAssign == FUNC_NAME_ROTATE_CAMEA_PITCH) {
+        return &ControlFunctions::rotateCameraPitch;
+    } else if (funcToAssign == FUNC_NAME_SET_CRYSTAL_BY_EXAMPLE_NUM_COPIES) {
+        return &ControlFunctions::setCrystalByExampleCopies;
+    } else if (funcToAssign == FUNC_NAME_MOVE_ALONG_TIMELINE) {
+        return &ControlFunctions::moveAlongTimeline;
+    }
   return NULL;
 }
 
