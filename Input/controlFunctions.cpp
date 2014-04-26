@@ -537,10 +537,8 @@ void grabObjectOrWorld(SketchBio::Project *project, int hand, bool wasPressed)
         double nearestObjDist = handObj.getNearestObjectDistance();
 
         if (nearestObjDist > DISTANCE_THRESHOLD) {
-            std::cout << "I have the whole world in my hands" << std::endl;
             handObj.grabWorld();
         } else {
-            std::cout << "I grabbed an object..." << std::endl;
             handObj.grabNearestObject();
         }
     } else  // button released
@@ -926,19 +924,44 @@ void toggleSpringsEnabled(SketchBio::Project *project, int hand, bool wasPressed
       project->getWorldManager().setPhysicsSpringsOn(!project->getWorldManager().areSpringsEnabled());
     } 
   }
+
+class ZoomOperationState : public SketchBio::OperationState {
+public:
+    ZoomOperationState(TransformManager &t, int h) : OperationState(), mgr(t), hand(h) {}
+    ~ZoomOperationState() {}
+    virtual void doFrameUpdates() {
+        double dist = mgr.getOldWorldDistanceBetweenHands();
+        double delta = mgr.getWorldDistanceBetweenHands() /dist;
+        mgr.scaleWithTrackerFixed(delta,((hand==0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT));
+    }
+    int getHand() const {
+        return hand;
+    }
+
+private:
+    TransformManager &mgr;
+    const int hand;
+};
+
+static const char ZOOM_OPERATION_FUNCTION_NAME[] = "ZOO0M";
   
 void zoom(SketchBio::Project *project, int hand, bool wasPressed)
   {
+    ZoomOperationState *zState = dynamic_cast<ZoomOperationState*>(
+                project->getOperationState(ZOOM_OPERATION_FUNCTION_NAME));
     if (wasPressed)  // button pressed
     {
-      if (project->isShowingAnimation())
+      if (project->isShowingAnimation() || zState != NULL)
       {
         return;
       }
-      TransformManager &transforms = project->getTransformManager();
-      double dist = transforms.getOldWorldDistanceBetweenHands();
-      double delta = transforms.getWorldDistanceBetweenHands() / dist;
-      transforms.scaleWithTrackerFixed(delta,((hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT));
+      project->setOperationState(
+                  ZOOM_OPERATION_FUNCTION_NAME,
+                  new ZoomOperationState(project->getTransformManager(),hand));
+    } else {
+        if (zState != NULL && zState->getHand() == hand) {
+            project->clearOperationState(ZOOM_OPERATION_FUNCTION_NAME);
+        }
     } 
     
 }
