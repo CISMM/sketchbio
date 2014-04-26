@@ -857,12 +857,41 @@ void lockTransforms(SketchBio::Project *proj, int hand, bool wasPressed)
     }
     return;
   }
-
+  
+class RotateCameraOperationState : public SketchBio::OperationState
+  {
+  public:
+    RotateCameraOperationState(SketchBio::Project *project)
+    : proj(project), x(0), y(0)
+    {
+    }
+    virtual void doFrameUpdates()
+    {
+      proj->getTransformManager().setRoomEyeOrientation(x,y);
+    }
+    void incrementX(double xAdd) { x = x+xAdd; }
+    void incrementY(double yAdd) { y = y+yAdd; }
+    void reset() {x=0; y=0;}
+    
+  private:
+    SketchBio::Project *proj;
+    double x;
+    double y;
+  };
+  
+static const char ROTATE_CAMERA_OPERATION_FUNC_NAME[30] = "rotate_camera";  
 void resetViewPoint(SketchBio::Project *project, int hand, bool wasPressed)
 {
     if (!wasPressed)  // button released
     {
-        project->getTransformManager().setRoomEyeOrientation(0, 0);
+      if (project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME) == NULL)
+      {
+        project->setOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME, new RotateCameraOperationState(project));
+      } else {
+        RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
+          project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
+        rotCam->reset();
+      }
     }
 }
   
@@ -942,28 +971,6 @@ void addUndoState(SketchBio::Project *project)
 // ===== BEGIN ANALOG FUNCTIONS =====
 
 // value passed is in the interval [0,1]  
-  
-class RotateCameraOperationState : public SketchBio::OperationState
-  {
-  public:
-    RotateCameraOperationState(SketchBio::Project *project)
-    : proj(project), x(0), y(0)
-    {
-    }
-    virtual void doFrameUpdates()
-    {
-      proj->getTransformManager().setRoomEyeOrientation(x,y);
-    }
-    void incrementX(double xAdd) { x = x+xAdd; }
-    void incrementY(double yAdd) { y = y+yAdd; }
-    
-  private:
-    SketchBio::Project *proj; 
-    double x;
-    double y;
-  };
-  
-static const char ROTATE_CAMERA_OPERATION_FUNC_NAME[30] = "rotate_camera";
   
 void rotateCameraPitch(SketchBio::Project *project, int hand, double value)
 {

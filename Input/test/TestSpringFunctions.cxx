@@ -211,6 +211,7 @@ int testSnapSpringToTerminus()
   
   //button pressed, creates operation state
   ControlFunctions::snapSpringToTerminus(&proj, 1, true);
+  snap = proj.getOperationState("snap_spring");
   
   //toggle terminus end to c terminus
   ControlFunctions::setTerminusToSnapSpring(&proj, 1, true);

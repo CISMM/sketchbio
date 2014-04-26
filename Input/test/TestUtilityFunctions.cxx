@@ -1,5 +1,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
+#include <vtkMatrix4x4.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -22,6 +23,8 @@ int testCopyPaste();
 int testResetViewPoint();
 int testToggleCollisionChecks();
 int testToggleSpringsEnabled();
+
+bool compareMatrices(vtkMatrix4x4, vtkMatrix4x4);
 
 int main(int argc, char *argv[])
 {
@@ -201,22 +204,130 @@ int testCopyPaste()
     << std::endl;
     return 1;
   }
-  
-  
   return 0;
 }
 
-//incomplete
+//compares values in two arrays, returns true if theyre the same
+bool compareMatArrays(double *arr0, double *arr1)
+{
+  for (int i = 0; i < 16; i++)
+  {
+    if (Q_ABS(arr0[i]-arr1[i]) > Q_EPSILON)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+static const char ROTATE_CAMERA_OPERATION_FUNC_NAME[30] = "rotate_camera";
+
 int testResetViewPoint()
 {
   
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
   SketchBio::Project proj(renderer,".");
-
-  TransformManager &t = proj.getTransformManager();
   
-  t.getRoomToEyeTransform();
+  const vtkMatrix4x4 *originalRTE = proj.getTransformManager().getRoomToEyeMatrix();
+  
+  double mat[16];
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      mat[i * 4 + j] = originalRTE->GetElement(i, j);
+    }
+  }
+  
+  /*
+   for (int i = 0; i < 16; i++) {
+   cout<< mat[i] << " ";
+   }
+   std::cout << "     " << std::endl;*/
+  
+  //reset the viewpoint so we can get the matrix 
+  ControlFunctions::resetViewPoint(&proj, 1, false);
+  proj.getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME)->doFrameUpdates();
+  const vtkMatrix4x4 *resetRTE = proj.getTransformManager().getRoomToEyeMatrix();
+  
+  double mat0[16];
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      mat0[i * 4 + j] = resetRTE->GetElement(i, j);
+    }
+  }
+  
+  /*
+  for (int i = 0; i < 16; i++) {
+    cout<< mat0[i] << " ";
+  }
+  std::cout << "     " << std::endl;*/
+  
+  double moveAmt = 0.7;
+  
+  //rotate camera
+  ControlFunctions::rotateCameraPitch(&proj, 1, moveAmt);
+  proj.getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME)->doFrameUpdates();
+  
+  const vtkMatrix4x4 *movedRTE = proj.getTransformManager().getRoomToEyeMatrix();
+
+  double mat1[16];
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      mat1[i * 4 + j] = movedRTE->GetElement(i, j);
+    }
+  }
+  
+  /*for (int i = 0; i < 16; i++) {
+    cout<< mat1[i] << " ";
+  }*/
+  
+  if (compareMatArrays(mat0, mat1))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "RTE1: " << std::endl;
+    for (int i = 0; i < 16; i++) {
+        cout<< mat0[i] << " ";
+    }
+    std::cout << "movedRTE: " << std::endl;
+    for(int i = 0; i < 16; i++) {
+        cout<< mat1[i] << " ";
+    }
+    std::cout << "  Room to eye matrix should have changed" << std::endl;
+    return 1;
+  }
+  
+  //reset view
+  ControlFunctions::resetViewPoint(&proj, 1, false);
+  proj.getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME)->doFrameUpdates();
+  const vtkMatrix4x4 *resetRTE2 = proj.getTransformManager().getRoomToEyeMatrix();
+  
+  double mat2[16];
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      mat2[i * 4 + j] = resetRTE2->GetElement(i, j);
+    }
+  }
+  
+  //make sure it went back to original reset
+  if (!compareMatArrays(mat0, mat2))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "RTE1: " << std::endl;
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        cout<< resetRTE->GetElement(i, j) << " ";
+      }
+    }
+    std::cout << "RTE2: " << std::endl;
+    for(int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        cout<< resetRTE2->GetElement(i, j) << " ";
+      }
+    }
+    std::cout << "  Room to eye matrix did not reset" << std::endl;
+    return 1;
+  }
   
   return 0;
 }
