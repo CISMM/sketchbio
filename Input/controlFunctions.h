@@ -45,6 +45,7 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
   void deleteObject(SketchBio::Project*, int, bool);
   void replicateObject(SketchBio::Project*, int, bool);
   void setTransforms(SketchBio::Project*, int, bool);
+  void lockTransforms(SketchBio::Project*, int, bool);
   
 
 	// UTILITY functions:
