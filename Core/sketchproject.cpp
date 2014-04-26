@@ -745,14 +745,18 @@ void Project::ProjectImpl::clearProject()
     if (isDoingAnimation) {
         stopAnimation();
     }
+    hand[SketchBioHandId::LEFT].clearState();
+    hand[SketchBioHandId::LEFT].clearNearestObject();
+    hand[SketchBioHandId::LEFT].clearNearestConnector();
+    hand[SketchBioHandId::RIGHT].clearState();
+    hand[SketchBioHandId::RIGHT].clearNearestObject();
+    hand[SketchBioHandId::RIGHT].clearNearestConnector();
     transformOps.clear();
     cameras.clear();
     qDeleteAll(replicas);
     replicas.clear();
     world.clearObjects();
     world.clearConnectors();
-    hand[SketchBioHandId::LEFT].clearState();
-    hand[SketchBioHandId::RIGHT].clearState();
 }
 //########################################################################
 // Project directory functions
