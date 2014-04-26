@@ -52,7 +52,6 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
   void resetViewPoint(SketchBio::Project*, int, bool);
   void copyObject(SketchBio::Project*, int, bool);
   void pasteObject(SketchBio::Project*, int, bool);
-  void resetViewPoint(SketchBio::Project*, int, bool);
   void redo(SketchBio::Project*, int, bool);
   void undo(SketchBio::Project*, int, bool);
   void toggleCollisionChecks(SketchBio::Project*, int, bool);

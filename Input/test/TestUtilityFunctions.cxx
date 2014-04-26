@@ -20,6 +20,8 @@
 
 int testCopyPaste();
 int testResetViewPoint();
+int testToggleCollisionChecks();
+int testToggleSpringsEnabled();
 
 int main(int argc, char *argv[])
 {
@@ -28,6 +30,8 @@ int main(int argc, char *argv[])
   int errors = 0;
   errors += testCopyPaste();
   errors += testResetViewPoint();
+  errors += testToggleCollisionChecks();
+  errors += testToggleSpringsEnabled();
   return errors;
 }
 
@@ -201,6 +205,8 @@ int testCopyPaste()
   
   return 0;
 }
+
+//incomplete
 int testResetViewPoint()
 {
   
@@ -212,7 +218,71 @@ int testResetViewPoint()
   
   t.getRoomToEyeTransform();
   
-  //TransformEditOperationState::setObjectTransform(<#double#>, <#double#>, <#double#>, <#double#>, <#double#>, <#double#>);
+  return 0;
+}
+
+
+int testToggleCollisionChecks()
+{
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
   
+  bool isOn = proj.getWorldManager().isCollisionTestingOn();
+  
+  //button pressed, should toggle
+  ControlFunctions::toggleCollisionChecks(&proj, 1, true);
+  
+  bool isOn2=proj.getWorldManager().isCollisionTestingOn();
+  
+  if (isOn==isOn2)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Collision checks did not toggle" << std::endl;
+    return 1;
+  }
+  
+  //button pressed, should toggle back
+  ControlFunctions::toggleCollisionChecks(&proj, 1, true);
+  
+  if (isOn!=proj.getWorldManager().isCollisionTestingOn())
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Collision checks did not toggle back" << std::endl;
+    return 1;
+  }
+  
+  return 0;
+}
+
+int testToggleSpringsEnabled()
+{
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
+  
+  bool isOn = proj.getWorldManager().areSpringsEnabled();
+  
+  //button pressed, should toggle
+  ControlFunctions::toggleSpringsEnabled(&proj, 1, true);
+  
+  bool isOn2=proj.getWorldManager().areSpringsEnabled();
+  
+  if (isOn==isOn2)
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Springs enabled did not toggle" << std::endl;
+    return 1;
+  }
+  
+  //button pressed, should toggle back
+  ControlFunctions::toggleSpringsEnabled(&proj, 1, true);
+  
+  if (isOn!=proj.getWorldManager().areSpringsEnabled())
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Spring enabled did not toggle back" << std::endl;
+    return 1;
+  }
   return 0;
 }

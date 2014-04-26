@@ -815,7 +815,7 @@ void toggleCollisionChecks(SketchBio::Project *project, int hand, bool wasPresse
   
 void toggleSpringsEnabled(SketchBio::Project *project, int hand, bool wasPressed)
   {
-    if (wasPressed)  // button released
+    if (wasPressed)  // button pressed
     {
       project->getWorldManager().setPhysicsSpringsOn(!project->getWorldManager().areSpringsEnabled());
     } 
@@ -966,7 +966,6 @@ void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double val
   return;
 }
  
-//need to map value to [-1,1]
 void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
 {
   if (project->isShowingAnimation())
