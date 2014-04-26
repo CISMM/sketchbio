@@ -862,19 +862,29 @@ class RotateCameraOperationState : public SketchBio::OperationState
   {
   public:
     RotateCameraOperationState(SketchBio::Project *project)
-    : proj(project), x(0), y(0)
+    : proj(project), dX(0), dY(0),x(0), y(0)
     {
     }
     virtual void doFrameUpdates()
     {
+      x+=dX;
+      y+=dY;
       proj->getTransformManager().setRoomEyeOrientation(x,y);
     }
-    void incrementX(double xAdd) { x = x+xAdd; }
-    void incrementY(double yAdd) { y = y+yAdd; }
+    void setdX(double xAdd)
+    {
+      dX = xAdd;
+    }
+    void setdY(double yAdd)
+    { 
+      dY = yAdd;
+    }
     void reset() {x=0; y=0;}
     
   private:
     SketchBio::Project *proj;
+    double dX;
+    double dY;
     double x;
     double y;
   };
@@ -989,7 +999,7 @@ void rotateCameraPitch(SketchBio::Project *project, int hand, double value)
   {
     RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
       project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
-    rotCam->incrementX(value);
+    rotCam->setdX(value);
   }
   return;
 }
@@ -1011,7 +1021,7 @@ void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
   {
     RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
       project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
-    rotCam->incrementY(value);
+    rotCam->setdY(value);
   }
   return;
 }
@@ -1050,35 +1060,63 @@ void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double val
   return;
 }
  
+  class TimelineOperationState : public SketchBio::OperationState
+  {
+  public:
+    TimelineOperationState(SketchBio::Project *project)
+    : proj(project), dTime(0), currTime(0)
+    {
+    }
+    virtual void doFrameUpdates()
+    {
+      currTime = max(currTime + dTime,0);
+      proj->setViewTime(currTime);
+    }
+    void setDTime(double timeAdd)
+    {
+      dTime= timeAdd;
+    }
+  private:
+    SketchBio::Project *proj;
+    double dTime;
+    double currTime;
+  };
+  
+  static const char TIMELINE_OPERATION_FUNC_NAME[30] = "timeline";
+  
 void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
 {
   if (project->isShowingAnimation())
   {
     return;
   }
-  double currentTime = project->getViewTime();
-  double finalTime = currentTime;
+  
+  double dTime;
   
   value = (value-0.5)*2;
   int sign = (value >= 0) ? 1 : -1;
   if (Q_ABS(value) > .8)
   {
-    finalTime = currentTime + 1 * sign;
+    dTime = 1 * sign;
   }
   else if (Q_ABS(value) > .4)
   {
-    finalTime = currentTime + 0.1 * sign;
+    dTime = 0.1 * sign;
   }
   else if (Q_ABS(value) > .2)
   {
-    finalTime = (sign == 1) ? ceil(currentTime) : floor(currentTime) ;
+    dTime = 0;
   }
-  if (finalTime < 0)
-    finalTime = 0;
-  if (finalTime != currentTime)
+
+
+  if (project->getOperationState(TIMELINE_OPERATION_FUNC_NAME) == NULL)
   {
-    project->setViewTime(finalTime);
+    project->setOperationState(TIMELINE_OPERATION_FUNC_NAME, new TimelineOperationState(project));
   }
+    
+  TimelineOperationState *timeline = dynamic_cast< TimelineOperationState * >(
+    project->getOperationState(TIMELINE_OPERATION_FUNC_NAME));
+  timeline->setDTime(dTime);
 }
   
 // ===== END ANALOG FUNCTIONS =====
