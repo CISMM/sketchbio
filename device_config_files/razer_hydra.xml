@@ -60,6 +60,89 @@
 		<analog deviceName="razer" analogNumber="1" type="normalize">
 			<interval min="-1" max="1" hand="left" function="rotateCameraPitch" />
 		</analog>
+		<analog deviceName="razer" analogNumber="2" type="threshold">
+			<threshold pressedWhen="greater than" value="0.5" hand="right" function="setTerminusToSnapSpring" />
+		</analog>
+		<analog deviceName="razer" analogNumber="3" type="normalize">
+			<interval min="-1" max="1" hand="right" function="moveAlongTimeline" />
+		</analog>
+		<analog deviceName="razer" analogNumber="4" type="threshold">
+			<threshold pressedWhen="greater than" value="0.25" hand="right" function="selectChildOfCurrent" />
+			<threshold pressedWhen="less than" value="-0.25" hand="right" function="selectParentOfCurrent" />
+		</analog>
+	</mode>
+  <mode name="Animation" defaultSelection="Objects">
+		<button deviceName="razer" buttonNumber="0" hand="left" function="redo" />
+		<button deviceName="razer" buttonNumber="2" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="razer" buttonNumber="3" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="razer" buttonNumber="4" hand="left" function="zoom" />
+		<button deviceName="razer" buttonNumber="5" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="razer" buttonNumber="6" hand="left" function="resetCameraAngle" />
+		<button deviceName="razer" buttonNumber="8" hand="right" function="undo" />
+		<button deviceName="razer" buttonNumber="9" hand="right" function="keyframeAll" />
+		<button deviceName="razer" buttonNumber="10" hand="right" function="toggleKeyframeObject" />
+		<button deviceName="razer" buttonNumber="11" hand="right" function="addCamera" />
+		<button deviceName="razer" buttonNumber="12" hand="right" function="showAnimationPreview" />
+		<button deviceName="razer" buttonNumber="13" hand="right" function="grabObjectOrWorld" />
+		<analog deviceName="razer" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="rotateCameraYaw" />
+		</analog>
+		<analog deviceName="razer" analogNumber="1" type="normalize">
+			<interval min="-1" max="1" hand="left" function="rotateCameraPitch" />
+		</analog>
+		<analog deviceName="razer" analogNumber="3" type="normalize">
+			<interval min="-1" max="1" hand="right" function="moveAlongTimeline" />
+		</analog>
+		<analog deviceName="razer" analogNumber="4" type="threshold">
+			<threshold pressedWhen="greater than" value="0.25" hand="right" function="selectChildOfCurrent" />
+			<threshold pressedWhen="less than" value="-0.25" hand="right" function="selectParentOfCurrent" />
+		</analog>
+	</mode>
+  <mode name="Edit Colors" defaultSelection="Objects">
+		<button deviceName="razer" buttonNumber="0" hand="left" function="redo" />
+		<button deviceName="razer" buttonNumber="2" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="razer" buttonNumber="3" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="razer" buttonNumber="4" hand="left" function="zoom" />
+		<button deviceName="razer" buttonNumber="5" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="razer" buttonNumber="6" hand="left" function="resetCameraAngle" />
+		<button deviceName="razer" buttonNumber="8" hand="right" function="undo" />
+		<button deviceName="razer" buttonNumber="9" hand="right" function="changeObjectColor" />
+		<button deviceName="razer" buttonNumber="10" hand="right" function="changeObjectColorVariable" />
+		<button deviceName="razer" buttonNumber="11" hand="right" function="toggleObjectVisibility" />
+		<button deviceName="razer" buttonNumber="12" hand="right" function="toggleShowInvisibleObjects" />
+		<button deviceName="razer" buttonNumber="13" hand="right" function="grabObjectOrWorld" />
+		<analog deviceName="razer" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="rotateCameraYaw" />
+		</analog>
+		<analog deviceName="razer" analogNumber="1" type="normalize">
+			<interval min="-1" max="1" hand="left" function="rotateCameraPitch" />
+		</analog>
+		<analog deviceName="razer" analogNumber="3" type="normalize">
+			<interval min="-1" max="1" hand="right" function="moveAlongTimeline" />
+		</analog>
+		<analog deviceName="razer" analogNumber="4" type="threshold">
+			<threshold pressedWhen="greater than" value="0.25" hand="right" function="selectChildOfCurrent" />
+			<threshold pressedWhen="less than" value="-0.25" hand="right" function="selectParentOfCurrent" />
+		</analog>
+	</mode>
+  <mode name="Edit Groups" defaultSelection="Objects">
+		<button deviceName="razer" buttonNumber="0" hand="left" function="redo" />
+		<button deviceName="razer" buttonNumber="2" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="razer" buttonNumber="3" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="razer" buttonNumber="4" hand="left" function="zoom" />
+		<button deviceName="razer" buttonNumber="5" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="razer" buttonNumber="6" hand="left" function="resetCameraAngle" />
+		<button deviceName="razer" buttonNumber="8" hand="right" function="undo" />
+		<button deviceName="razer" buttonNumber="9" hand="right" function="toggleGroupMembership" />
+		<button deviceName="razer" buttonNumber="10" hand="right" function="copyObject" />
+		<button deviceName="razer" buttonNumber="12" hand="right" function="pasteObject" />
+		<button deviceName="razer" buttonNumber="13" hand="right" function="grabObjectOrWorld" />
+		<analog deviceName="razer" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="rotateCameraYaw" />
+		</analog>
+		<analog deviceName="razer" analogNumber="1" type="normalize">
+			<interval min="-1" max="1" hand="left" function="rotateCameraPitch" />
+		</analog>
 		<analog deviceName="razer" analogNumber="3" type="normalize">
 			<interval min="-1" max="1" hand="right" function="moveAlongTimeline" />
 		</analog>
