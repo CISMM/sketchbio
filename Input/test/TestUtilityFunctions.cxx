@@ -16,6 +16,7 @@
 #include <hand.h>
 #include <controlFunctions.h>
 
+#include <sketchtests.h>
 #include <test/CompareBeforeAndAfter.h>
 #include <test/TestCoreHelpers.h>
 
@@ -34,6 +35,7 @@ int main(int argc, char *argv[])
   int errors = 0;
   errors += testCopyPaste();
   errors += testResetViewPoint();
+  errors += testUndoRedo();
   errors += testToggleCollisionChecks();
   errors += testToggleSpringsEnabled();
   return errors;
@@ -329,6 +331,84 @@ int testResetViewPoint()
   return 0;
 }
 
+int testUndoRedo()
+{
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
+  
+  //creates undo state
+  ControlFunctions::addUndoState(&proj);
+  
+  
+  SketchModel *model = TestCoreHelpers::getCubeModel();
+  proj.getModelManager().addModel(model);
+  q_vec_type vector0 = Q_NULL_VECTOR;
+  q_type orient = Q_ID_QUAT;
+  
+  SketchObject *obj0 = proj.getWorldManager().addObject(model, vector0, orient);
+  
+  ControlFunctions::addUndoState(&proj);
+  
+  //move object
+  q_vec_type vector1 = {1,1,1};
+  obj0->setPosition(vector1);
+  
+  ControlFunctions::addUndoState(&proj);
+  
+  q_vec_type newObjPos;
+  obj0->getPosition(newObjPos);
+  
+  if (!(q_vec_equals(vector1, newObjPos)))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object 0 didn't move." << std::endl;
+    return 1;
+  }
+  
+  ControlFunctions::undo(&proj, 1, true);
+  
+  //applies updates
+  proj.timestep(0);
+  
+  q_vec_type dest;
+  obj0->getPosition(dest);
+  
+  //make sure object goes back to last state (at origin)
+  if (!(q_vec_equals(vector0, dest)))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "  Object 0 should have moved back to origin." << std::endl;
+    return 1;
+  }
+  
+  //should move object back to newObjPos
+  ControlFunctions::redo(&proj,1,true);
+  proj.timestep(0);
+  
+  q_vec_type dest2;
+  obj0->getPosition(dest2);
+  
+  //make sure object goes back to vector1
+  if (!(q_vec_equals(vector1, dest2)))
+  {
+    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+    "\n  vector0:  ";
+    q_vec_print(vector0);
+    cout << "  vector1:  ";
+    q_vec_print(vector1);
+    cout << "  dest:  ";
+    q_vec_print(dest2);
+    std::cout << "  Object 0 should have moved back to vector1 position." << std::endl;
+    return 1;
+  }
+  
+  //make sure doesn't seg fault 
+  ControlFunctions::redo(&proj,1,true);
+  proj.timestep(0);
+  
+  return 0;
+}
 
 int testToggleCollisionChecks()
 {
