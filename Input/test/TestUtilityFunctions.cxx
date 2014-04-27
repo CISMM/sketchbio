@@ -367,6 +367,7 @@ int testUndoRedo()
   }
   
   ControlFunctions::undo(&proj, 1, true);
+  obj0 = proj.getWorldManager().getObjectIterator().next();
   
   //applies updates
   proj.timestep(0);
@@ -384,6 +385,7 @@ int testUndoRedo()
   
   //should move object back to newObjPos
   ControlFunctions::redo(&proj,1,true);
+  obj0 = proj.getWorldManager().getObjectIterator().next();
   proj.timestep(0);
   
   q_vec_type dest2;
