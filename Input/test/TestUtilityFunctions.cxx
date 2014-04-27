@@ -26,7 +26,7 @@ int testUndoRedo();
 int testToggleCollisionChecks();
 int testToggleSpringsEnabled();
 
-bool compareMatrices(vtkMatrix4x4, vtkMatrix4x4);
+bool compareMatrices(vtkMatrix4x4*, vtkMatrix4x4*);
 
 int main(int argc, char *argv[])
 {

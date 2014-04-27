@@ -23,7 +23,7 @@
 int testGrabObjectOrWorld();
 int testGrabSpringOrWOrld();
 int testSelectRelativeOfCurrent();
-bool compareMatrices(vtkMatrix4x4, vtkMatrix4x4);
+bool compareMatrices(vtkMatrix4x4*, vtkMatrix4x4*);
 
 int main(int argc, char *argv[])
 {
