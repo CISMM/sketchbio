@@ -52,5 +52,9 @@ ${SketchBioCoreMoc}
 )
 
 ADD_LIBRARY(SketchBioCore ${SketchBioCoreSrcs})
+TARGET_LINK_LIBRARIES(SketchBioCore
+${PQP_LIBRARIES}
+${QUATLIB_LIBRARIES}
+)
 
 ADD_SUBDIRECTORY( test )
