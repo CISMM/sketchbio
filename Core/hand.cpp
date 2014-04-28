@@ -45,7 +45,7 @@ static const float OUTLINES_COLOR_VAL = 0.7;
 // system
 
 // the tracker is so small that we need to scale its shadow up to be visible
-#define TRACKER_SHADOW_SCALE 50, 50, 50
+static const double TRACKER_SHADOW_SCALE = 50;
 // the color of the tracker's shadows
 #define TRACKER_SHADOW_COLOR 0.0, 0.0, 0.0
 
@@ -54,35 +54,36 @@ class TrackerObject : public SketchObject
    public:
     TrackerObject()
         : SketchObject(),
+#ifndef DEBUG_TRACKER_ORIENTATIONS
+          sphereSource(vtkSmartPointer< vtkSphereSource >::New()),
+#else
+          cubeSource(vtkSmartPointer< vtkCubeSource >::New()),
+#endif
+          shadowTransform(vtkSmartPointer< vtkTransform >::New()),
           actor(vtkSmartPointer< vtkActor >::New()),
           shadow(vtkSmartPointer< vtkActor >::New()),
-          shadowGeometry(vtkSmartPointer< vtkTransformPolyDataFilter >::New())
+          shadowGeometry(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
+          scale(TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE)
     {
-        double d =
-            TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * SCALE_DOWN_FACTOR * 4;
+        double d = scale * SCALE_DOWN_FACTOR * 4;
         vtkSmartPointer< vtkPolyDataMapper > mapper =
             vtkSmartPointer< vtkPolyDataMapper >::New();
 #ifndef DEBUG_TRACKER_ORIENTATIONS
-        vtkSmartPointer< vtkSphereSource > sphereSource =
-            vtkSmartPointer< vtkSphereSource >::New();
         sphereSource->SetRadius(d);
         sphereSource->Update();
         shadowGeometry->SetInputConnection(sphereSource->GetOutputPort());
         mapper->SetInputConnection(sphereSource->GetOutputPort());
 #else
-        vtkSmartPointer< vtkCubeSource > cubeSource =
-            vtkSmartPointer< vtkCubeSource >::New();
         cubeSource->SetBounds(-d, d, -2 * d, 2 * d, -3 * d, 3 * d);
         cubeSource->Update();
         shadowGeometry->SetInputConnection(cubeSource->GetOutputPort());
         mapper->SetInputConnection(cubeSource->GetOutputPort());
 #endif
-        vtkSmartPointer< vtkTransform > sTrans =
-            vtkSmartPointer< vtkTransform >::New();
-        sTrans->Identity();
-        sTrans->PostMultiply();
-        sTrans->Scale(TRACKER_SHADOW_SCALE);
-        shadowGeometry->SetTransform(sTrans);
+        shadowTransform->Identity();
+        shadowTransform->PostMultiply();
+        shadowTransform->Scale(TRACKER_SHADOW_SCALE,TRACKER_SHADOW_SCALE,
+                               TRACKER_SHADOW_SCALE);
+        shadowGeometry->SetTransform(shadowTransform);
         shadowGeometry->Update();
         mapper->Update();
         actor->SetMapper(mapper);
@@ -176,17 +177,44 @@ class TrackerObject : public SketchObject
 
     void updateShadowPosition(q_vec_type pos)
     {
-        vtkTransform* t =
-            vtkTransform::SafeDownCast(shadowGeometry->GetTransform());
+        vtkTransform* t = shadowTransform.GetPointer();
         t->Identity();
-        t->Scale(TRACKER_SHADOW_SCALE);
+        t->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / scale,
+                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / scale,
+                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / scale);
         t->Translate(pos);
+        t->Update();
+    }
+
+    void setScaleOfTrackerObject(double s) {
+
+        double d = s * SCALE_DOWN_FACTOR * 4;
+#ifndef DEBUG_TRACKER_ORIENTATIONS
+        sphereSource->SetRadius(d);
+        sphereSource->Update();
+#else
+        cubeSource->SetBounds(-d, d, -2 * d, 2 * d, -3 * d, 3 * d);
+        cubeSource->Update();
+#endif
+        shadowTransform->Identity();
+        shadowTransform->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / s,
+                               TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / s,
+                               TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / s);
+        shadowTransform->Update();
+        scale = s;
     }
 
    private:
+#ifndef DEBUG_TRACKER_ORIENTATIONS
+    vtkSmartPointer< vtkSphereSource > sphereSource;
+#else
+    vtkSmartPointer< vtkCubeSource > cubeSource;
+#endif
+    vtkSmartPointer< vtkTransform > shadowTransform;
     vtkSmartPointer< vtkActor > actor;
     vtkSmartPointer< vtkActor > shadow;
     vtkSmartPointer< vtkTransformPolyDataFilter > shadowGeometry;
+    double scale;
 };
 
 // ###########################################################################
@@ -374,6 +402,7 @@ Hand::HandImpl::HandImpl(TransformManager* t, WorldManager* w,
     if (t != NULL) {
         tracker.getShadow()->SetUserTransform(
             transformMgr->getRoomToWorldTransform());
+        tracker.setScaleOfTrackerObject(transformMgr->getTrackerToRoomScale());
     }
     outlineActor->SetMapper(outlineMapper);
     outlineActor->GetProperty()->SetLighting(false);
@@ -391,6 +420,7 @@ void Hand::HandImpl::init(TransformManager* t, WorldManager* w,
     pitchfork.init(worldMgr);
     tracker.getShadow()->SetUserTransform(
         transformMgr->getRoomToWorldTransform());
+    tracker.setScaleOfTrackerObject(transformMgr->getTrackerToRoomScale());
 }
 
 void Hand::HandImpl::updatePositionAndOrientation()

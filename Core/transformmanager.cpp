@@ -115,6 +115,12 @@ void TransformManager::getTrackerTransformInEyeCoords(
   trans->Concatenate(roomToWorld);
 }
 
+double TransformManager::getTrackerToRoomScale() {
+    double scale[3];
+    roomToTrackerBase->GetScale(scale);
+    return 3.0/ (scale[0] + scale[1] + scale[2]);
+}
+
 void TransformManager::getTrackerPosInWorldCoords(q_vec_type dest_vec,
                                                   SketchBioHandId::Type side)
 {

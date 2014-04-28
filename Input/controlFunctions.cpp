@@ -748,7 +748,7 @@ void lockTransforms(SketchBio::Project *proj, int hand, bool wasPressed)
 {
     LockTransformsOperationState *state = dynamic_cast<LockTransformsOperationState*>(
                 proj->getOperationState(LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME));
-    if (state->getHand() != hand) {
+    if (state != NULL && state->getHand() != hand) {
         proj->clearOperationState(LOCK_TRANSFORMS_OPERATION_FUNCTION_NAME);
         state = NULL;
     }

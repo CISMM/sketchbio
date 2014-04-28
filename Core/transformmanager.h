@@ -97,6 +97,11 @@ class TransformManager
   void getTrackerTransformInEyeCoords(vtkTransform *trans,
                                       SketchBioHandId::Type side);
 
+
+  /*
+   * Gets the scale factor from tracker coordinates to room coordinates
+   */
+  double getTrackerToRoomScale();
   /*
    * Gets the position of the tracker in world coordinates
    */
