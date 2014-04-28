@@ -41,21 +41,6 @@
 #include "hand.h"
 #include "OperationState.h"
 
-#define NUM_COLORS (6)
-/*
-static double COLORS[][3] =
-  {  { 1.0, 0.7, 0.7 },
-     { 0.7, 1.0, 0.8 },
-     { 0.7, 0.7, 1.0 },
-     { 1.0, 1.0, 0.7 },
-     { 1.0, 0.7, 1.0 },
-     { 0.7, 1.0, 1.0 } };
-     */
-static ColorMapType::Type COLORS[] = {
-    ColorMapType::SOLID_COLOR_RED,    ColorMapType::SOLID_COLOR_GREEN,
-    ColorMapType::SOLID_COLOR_BLUE,   ColorMapType::SOLID_COLOR_YELLOW,
-    ColorMapType::SOLID_COLOR_PURPLE, ColorMapType::SOLID_COLOR_CYAN, };
-
 //###############################################################
 // Code for rmDir and cpDir taken from mosg's StackOverflow answer
 // to this question:
@@ -274,7 +259,6 @@ namespace SketchBio
 // ProjectImpl internal class
 //########################################################################
 //########################################################################
-static const float OUTLINES_COLOR_VAL = 0.7;
 
 class Project::ProjectImpl : public WorldObserver, public StructureReplicatorObserver
 {

@@ -1119,7 +1119,6 @@ ProjectToXML::XML_Read_Status ProjectToXML::modelNamesFromClipboardXML(
 	  int numConformations;
 	  model->GetScalarAttribute(MODEL_NUM_CONFORMATIONS_ATTR_NAME,
                                 numConformations);
-	  int conformations = 0;
 	  for (int i = 0; i < numConformations; i++) {
 		vtkXMLDataElement* conf = model->FindNestedElementWithNameAndAttribute(
 			MODEL_CONFORMATION_ELEMENT_NAME, MODEL_CONFORMATION_NUMBER_ATTR_NAME,

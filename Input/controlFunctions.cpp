@@ -1131,7 +1131,7 @@ void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
   {
     dTime = 0.1 * sign;
   }
-  else if (Q_ABS(value) > .2)
+  else //if (Q_ABS(value) > .2)
   {
     dTime = 0;
   }

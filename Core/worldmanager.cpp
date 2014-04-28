@@ -220,7 +220,6 @@ void WorldManager::updateGroupStatus(SketchObject *object, double t,
     }
     // if we are at a time between two keyframes
     else {
-        double next = it.peekNext().key();
         lastGroupUpdate = t;
 
         Keyframe f1 = object->getKeyframes()->value(last),
