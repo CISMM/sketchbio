@@ -79,7 +79,6 @@ int testFileRefreshBug(const QDir &projectDir)
             vtkSmartPointer< vtkRenderer >::New();
     QScopedPointer<SketchBio::Project> proj(
                 new SketchBio::Project(renderer,projectDir.absolutePath()));
-    SketchModel *model = NULL;
 
     vtkSmartPointer< vtkSphereSource > sphere1 =
             vtkSmartPointer< vtkSphereSource >::New();

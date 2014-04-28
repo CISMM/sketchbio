@@ -91,8 +91,8 @@ SketchObject::SketchObject()
       localTransformPrecomputed(false),
       localTransformDefiningPosition(false),
       observers(),
-      keyframes(NULL),
       map(ColorMapType::SOLID_COLOR_RED, "modelNum"),
+      keyframes(NULL),
       xsplines(NULL),
       ysplines(NULL),
       zsplines(NULL)

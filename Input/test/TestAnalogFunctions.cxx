@@ -172,7 +172,7 @@ int testSetCrystalByExampleCopies()
   
   int numShownAfter = proj.getCrystalByExamples().at(0)->getNumShown();
   
-  if (!(numShownAfter-numShownBefore)>0)
+  if (!(numShownAfter-numShownBefore>0))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
     "  Number of replications shown did not increase." << std::endl;

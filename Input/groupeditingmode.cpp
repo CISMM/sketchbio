@@ -65,7 +65,7 @@ void GroupEditingMode::analogsUpdated() { ObjectGrabMode::analogsUpdated(); }
 void GroupEditingMode::doUpdatesForFrame()
 {
   ObjectGrabMode::doUpdatesForFrame();
-  bool givenNewDirections = false;
+//  bool givenNewDirections = false;
   //    if (lDist < DISTANCE_THRESHOLD && rDist < DISTANCE_THRESHOLD &&
   //            isButtonDown[BUTTON_RIGHT(ONE_BUTTON_IDX)])
   //    {
