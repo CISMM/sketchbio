@@ -1097,6 +1097,9 @@ void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double val
     }
     virtual void doFrameUpdates()
     {
+        if (Q_ABS(dTime) < Q_EPSILON) {
+            return;
+        }
       currTime = max(currTime + dTime,0);
       proj->setViewTime(currTime);
     }
