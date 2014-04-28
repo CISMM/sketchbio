@@ -74,4 +74,9 @@
 // radius is 5 so that it looks the same as the old display of springs
 #define SPRING_DISPLAY_RADIUS 5.0
 
+// the default values of alpha and radius for a MeasuringTape
+// alpha is 0 so measuring tapes are not exported to Blender
+#define MEASURING_TAPE_ALPHA_VALUE 0.0
+#define MEASURING_TAPE_DISPLAY_RADIUS 5.0
+
 #endif // SKETCHIOCONSTANTS_H
