@@ -122,6 +122,15 @@ StructureReplicator::StructureReplicator(
 
 StructureReplicator::~StructureReplicator() {
     setNumShown(0);
+    if (replicas != NULL) {
+        replicas->removeObserver(this);
+    }
+    if (obj1 != NULL) {
+        obj1->removeObserver(this);
+    }
+    if (obj2 != NULL) {
+        obj2->removeObserver(this);
+    }
 }
 
 
@@ -192,9 +201,10 @@ QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
 void StructureReplicator::objectDeleted(SketchObject *obj)
 {
 	if ((obj == replicas) || (obj == obj1) || (obj == obj2)) {
-		replicas == NULL;
-		obj1 == NULL;
-		obj2 == NULL;
+        replicas = NULL;
+        obj1 = NULL;
+        obj2 = NULL;
+        std::cout << "Replicator invalid, num shown: " << numShown << std::endl;
 		foreach(StructureReplicatorObserver * structRepObserver, structRepObservers)
 		{
 			structRepObserver->structureReplicatorIsInvalid(this);

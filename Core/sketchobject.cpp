@@ -882,8 +882,8 @@ void SketchObject::addObserver(ObjectChangeObserver *obs)
 //#########################################################################
 void SketchObject::removeObserver(ObjectChangeObserver *obs)
 {
-    assert(observers.contains(obs));
     observers.remove(obs);
+    assert(!observers.contains(obs));
 }
 
 //#########################################################################

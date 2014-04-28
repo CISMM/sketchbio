@@ -38,6 +38,8 @@ TransformEquals::TransformEquals(SketchObject *first, SketchObject *second, Grou
 
 TransformEquals::~TransformEquals() {
     for (int i = 0; i < pairsList.size(); i++) {
+        pairsList[i].o1->removeObserver(this);
+        pairsList[i].o2->removeObserver(this);
         setObjectBackToNormal(pairsList[i].o2);
     }
 }
