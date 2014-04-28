@@ -276,7 +276,7 @@ namespace SketchBio
 //########################################################################
 static const float OUTLINES_COLOR_VAL = 0.7;
 
-class Project::ProjectImpl : public WorldObserver
+class Project::ProjectImpl : public WorldObserver, public StructureReplicatorObserver
 {
    public:
     // Constructor/Destructor
@@ -403,6 +403,12 @@ class Project::ProjectImpl : public WorldObserver
     // overrides from WorldObserver to get camera added/removed events
     virtual void objectAdded(SketchObject* o);
     virtual void objectRemoved(SketchObject* o);
+
+	public:
+    // ###################################################################
+    // overrides from StructureReplicator to get StructureReplicator
+	// "need to be removed" events
+    virtual void structureReplicatorIsInvalid(StructureReplicator *);
 
    private:
     // ###################################################################
@@ -862,11 +868,13 @@ StructureReplicator* Project::ProjectImpl::addReplication(SketchObject* o1,
     StructureReplicator* rep = new StructureReplicator(o1, o2, &world);
     replicas.append(rep);
     rep->setNumShown(numCopies);
+	rep->addObserver(this);
     return rep;
 }
 void Project::ProjectImpl::addReplication(StructureReplicator* rep)
 {
     replicas.append(rep);
+	rep->addObserver(this);
 }
 QWeakPointer< TransformEquals > Project::ProjectImpl::addTransformEquals(
     SketchObject* o1, SketchObject* o2)
@@ -908,6 +916,15 @@ void Project::ProjectImpl::objectRemoved(SketchObject* o)
             objectRemoved(child);
         }
     }
+}
+
+//########################################################################
+// Structure Replicator observer functions
+// called whenever a replicator is invalid (i.e. defining elements deleted) and is about to be deleted
+void Project::ProjectImpl::structureReplicatorIsInvalid(StructureReplicator* structRep)
+{
+	replicas.removeOne(structRep);
+	assert(!replicas.contains(structRep));
 }
 
 //########################################################################

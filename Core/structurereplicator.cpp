@@ -126,6 +126,9 @@ StructureReplicator::~StructureReplicator() {
 
 
 void StructureReplicator::setNumShown(int num) {
+	if ((replicas == NULL) || (obj1 == NULL) || (obj2 == NULL)) {
+		return;
+	}
     if (num < 0) {
         num = 0;
     }
@@ -184,6 +187,20 @@ void StructureReplicator::updateTransform() {
 
 QListIterator<SketchObject *> StructureReplicator::getReplicaIterator() const {
     return QListIterator<SketchObject *>(replicaList);
+}
+
+void StructureReplicator::objectDeleted(SketchObject *obj)
+{
+	if ((obj == replicas) || (obj == obj1) || (obj == obj2)) {
+		replicas == NULL;
+		obj1 == NULL;
+		obj2 == NULL;
+		foreach(StructureReplicatorObserver * structRepObserver, structRepObservers)
+		{
+			structRepObserver->structureReplicatorIsInvalid(this);
+		}
+		this->deleteLater();
+	}
 }
 
 void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
@@ -247,6 +264,17 @@ void StructureReplicator::subobjectRemoved(SketchObject *parent, SketchObject *c
             }
         }
     }
+}
+
+void StructureReplicator::addObserver(StructureReplicatorObserver *structRepObserver)
+{
+	structRepObservers.append(structRepObserver);
+}
+
+void StructureReplicator::removeObserver(StructureReplicatorObserver *structRepObserver)
+{
+	structRepObservers.removeOne(structRepObserver);
+	assert(!structRepObservers.contains(structRepObserver));
 }
 
 ObjectGroup *StructureReplicator::getReplicaGroup()

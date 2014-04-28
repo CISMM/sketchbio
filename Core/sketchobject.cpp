@@ -107,7 +107,13 @@ SketchObject::SketchObject()
 }
 
 //#########################################################################
-SketchObject::~SketchObject() {}
+SketchObject::~SketchObject() {
+	// Notify observers that this object is being deleted
+    foreach(ObjectChangeObserver * obs, observers)
+    {
+        obs->objectDeleted(this);
+    }
+}
 
 //#########################################################################
 SketchObject *SketchObject::getParent() { return parent; }

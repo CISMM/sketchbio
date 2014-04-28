@@ -2,6 +2,7 @@
 #define STRUCTUREREPLICATOR_H
 
 #include <QList>
+#include <QObject>
 
 #include <vtkSmartPointer.h>
 class vtkTransform;
@@ -13,12 +14,25 @@ class WorldManager;
 
 #define STRUCTURE_REPLICATOR_MAX_COPIES 100
 
+class StructureReplicator;
+
+class StructureReplicatorObserver
+{
+   public:
+    virtual ~StructureReplicatorObserver() {}
+    // Will be called on the observer when the Stucture Replicator is
+	// no longer valid (i.e. the Structure Replicator needs to be deleted).
+	// The parameter is the Structure Replicator.
+    virtual void structureReplicatorIsInvalid(StructureReplicator *) {}
+};
+
 /*
  * This class replicates the transformation between the given two objects to a number of copies.
  * The number of copies can be changed dynamically.  Each copy will be of class ReplicatedObject.
  */
-class StructureReplicator : public ObjectChangeObserver
+class StructureReplicator : private QObject, public ObjectChangeObserver
 {
+	Q_OBJECT
 public:
     /*
      * Creates a new StructureRenderer with the given two actors as a baseline, adding
@@ -82,6 +96,14 @@ public:
      */
     void updateTransform();
 
+	/*
+     * Checks if a recently deleted object was (i) the replicas group, or
+	 * (ii) either of the base objects. If so, then the pointers to all
+	 * three are NULLed and the StructureReplicator requests deletion by
+	 * the Project.
+     */
+    virtual void objectDeleted(SketchObject *obj);
+
     /*
      * Makes sure the objects that define position are keyframed correctly when
      * the replication chain is keyframed
@@ -97,6 +119,10 @@ public:
      */
     virtual void subobjectRemoved(SketchObject *parent, SketchObject *child);
 
+	void addObserver(StructureReplicatorObserver *);
+
+	void removeObserver(StructureReplicatorObserver *);
+
     /*
      * Gets the group that contains all the replicas
      */
@@ -109,6 +135,7 @@ private:
     QList< SketchObject * > replicaList;
     WorldManager *world;
     vtkSmartPointer<vtkTransform> transform;
+	QList<StructureReplicatorObserver *> structRepObservers;
 };
 
 

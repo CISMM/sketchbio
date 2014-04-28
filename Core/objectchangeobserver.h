@@ -13,6 +13,7 @@ class ObjectChangeObserver
 {
    public:
     virtual ~ObjectChangeObserver() {}
+	virtual void objectDeleted(SketchObject *obj) {}
     virtual void objectPushed(SketchObject *obj) {}
     virtual void objectKeyframed(SketchObject *obj, double time) {}
     virtual void objectMoved(SketchObject *obj) {}

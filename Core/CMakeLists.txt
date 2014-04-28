@@ -3,7 +3,10 @@ INCLUDE_DIRECTORIES(
     "${CMAKE_SOURCE_DIR}/CustomVtkFilters"
 )
 
-QT4_WRAP_CPP(SketchBioCoreMoc sketchmodel.h)
+QT4_WRAP_CPP(SketchBioCoreMoc
+sketchmodel.h
+structurereplicator.h
+)
 SOURCE_GROUP("Generated" FILES ${SketchBioCoreMoc})
 
 SET(SketchBioCoreSrcs
@@ -21,7 +24,8 @@ objectgroup.cpp
 objectgroup.h
 objectchangeobserver.h
 OperationState.h
-sketchmodel.cpp # h file used by Moc, no need to include here
+sketchmodel.cpp
+sketchmodel.h
 modelutilities.cpp
 modelutilities.h
 worldmanager.cpp
