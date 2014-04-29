@@ -1053,12 +1053,30 @@ void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
   rotCam->setdY(value);
   return;
 }
+
+// stores the last value of the analog
+class LastValueState : public SketchBio::OperationState {
+public:
+    LastValueState() {}
+    virtual ~LastValueState() {}
+public:
+    double value;
+};
+
+static const char CRYSTAL_BY_EXAMPLE_NUM_COPIES_STATE[] = "Set Crystal By Example Copies";
   
 void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double value)
 {
 
   SketchBio::Hand &handObj = project->getHand(
                                               (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+  LastValueState *state = dynamic_cast<LastValueState*>(
+              project->getOperationState(CRYSTAL_BY_EXAMPLE_NUM_COPIES_STATE));
+  if (state == NULL) {
+      state = new LastValueState();
+      project->setOperationState(CRYSTAL_BY_EXAMPLE_NUM_COPIES_STATE,state);
+      state->value = value;
+  }
   double hDist = handObj.getNearestObjectDistance();
   SketchObject *grp = handObj.getNearestObject();
   
@@ -1077,14 +1095,22 @@ void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double val
         break;
       }
     }
+
+    // if something changed, set it.  Otherwise they pressed a different analog
+    // leave the current state alone.
+    bool shouldSet = false;
+    if (Q_ABS(state->value - value) > Q_EPSILON) {
+        shouldSet = true;
+    }
     
-    if (found)
+    if (found && shouldSet)
     {
       int nCopies = min(floor(pow(2.0, value / .125)), 64);
       activeSR->setNumShown(nCopies);
+      addUndoState(project);
     }
   }
-
+  state->value = value;
   return;
 }
  

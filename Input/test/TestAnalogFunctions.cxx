@@ -141,7 +141,12 @@ int testSetCrystalByExampleCopies()
   vtkSmartPointer< vtkRenderer > renderer =
   vtkSmartPointer< vtkRenderer >::New();
   SketchBio::Project proj(renderer,".");
-  
+
+  // initialize the state for the function.  State says that
+  // if the last value equals the current value, do nothing,
+  // so initialize last to something other than current.
+  ControlFunctions::setCrystalByExampleCopies(&proj, 1, 0.0);
+
   SketchModel *model = TestCoreHelpers::getCubeModel();
   proj.getModelManager().addModel(model);
   q_vec_type vector0 = Q_NULL_VECTOR, vector1 = {0.5,0.5,0.5};
