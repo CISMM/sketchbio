@@ -189,12 +189,12 @@ class SimpleView::GUIStateHelper : public WorldObserver,
 };
 
 // Constructor
-SimpleView::SimpleView(QString projDir, bool load_example)
+SimpleView::SimpleView(QString projDir, bool load_example, const QString &deviceFile)
     : timer(new QTimer()),
       collisionModeGroup(new QActionGroup(this)),
       renderer(vtkSmartPointer< vtkRenderer >::New()),
       project(new SketchBio::Project(renderer.GetPointer(), projDir)),
-      inputManager(new SketchBio::InputManager("devices/razer_hydra.xml")),
+      inputManager(new SketchBio::InputManager(deviceFile)),
       stateHelper(new GUIStateHelper(*inputManager))
 {
     this->ui = new Ui_SimpleView;

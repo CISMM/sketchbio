@@ -6,7 +6,7 @@
 
 void Usage(const char *n)
 {
-  fprintf(stderr,"Usage: %s [-show_example] [object_to_display]+\n",n);
+    fprintf(stderr,"Usage: %s [-show_example] [-f deviceFile]\n",n);
 }
  
 int main( int argc, char** argv )
@@ -22,11 +22,20 @@ int main( int argc, char** argv )
   // Parse the non-Qt part of the command line.
   // Start with default values.
   bool  do_example = false;
+  const char *deviceFile = "devices/razer_hydra.xml";
   QVector<QString> object_names;
   int i = 0;
   for (i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-show_example")) {
     do_example = true;
+    } else if (!strcmp(argv[i], "-f")) {
+        if (i+1 < argc) {
+            deviceFile = argv[i+1];
+        } else {
+            fprintf(stderr, "No device filename specified with -f\n");
+            Usage(argv[0]);
+            exit(1);
+        }
     } else if (argv[i][0] == '-' || !strcmp(argv[i], "-h")) {
     Usage(argv[0]);
     exit(0);
@@ -42,7 +51,7 @@ int main( int argc, char** argv )
   int retVal = 0;
   if (projDir.length() != 0) {
 
-    SimpleView mySimpleView(projDir,do_example);
+    SimpleView mySimpleView(projDir,do_example,deviceFile);
     mySimpleView.setWindowTitle("SketchBio");
     mySimpleView.show();
  

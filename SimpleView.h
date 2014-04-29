@@ -39,7 +39,7 @@ class SimpleView : public QMainWindow
 public:
  
   // Constructor/Destructor
-  SimpleView(QString projDir, bool load_example = false);
+  SimpleView(QString projDir, bool load_example = false, const QString &deviceFile = "devices/razer_hydra.xml");
   virtual ~SimpleView();
 
   // Simplify an external object based on the root file name.
