@@ -179,16 +179,16 @@ class TrackerObject : public SketchObject
     {
         vtkTransform* t = shadowTransform.GetPointer();
         t->Identity();
-        t->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / scale,
-                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / scale,
-                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / scale);
+        t->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * scale,
+                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * scale,
+                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * scale);
         t->Translate(pos);
         t->Update();
     }
 
     void setScaleOfTrackerObject(double s) {
-
-        double d = s * SCALE_DOWN_FACTOR * 4;
+        std::cout << "Scale: " << s << std::endl;
+        double d = SCALE_DOWN_FACTOR * 4 / s;
 #ifndef DEBUG_TRACKER_ORIENTATIONS
         sphereSource->SetRadius(d);
         sphereSource->Update();
@@ -197,9 +197,9 @@ class TrackerObject : public SketchObject
         cubeSource->Update();
 #endif
         shadowTransform->Identity();
-        shadowTransform->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / s,
-                               TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / s,
-                               TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE / s);
+        shadowTransform->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * s,
+                               TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * s,
+                               TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE * s);
         shadowTransform->Update();
         scale = s;
     }
@@ -304,6 +304,7 @@ class Hand::HandImpl
               vtkRenderer* r);
 
     void updatePositionAndOrientation();
+    void updateScale();
     void getPosition(q_vec_type pos);
     void getOrientation(q_type orient);
     vtkActor* getHandActor();
@@ -436,6 +437,11 @@ void Hand::HandImpl::updatePositionAndOrientation()
     transformMgr->getTrackerTransformInEyeCoords(
         vtkTransform::SafeDownCast(tracker.getActor()->GetUserTransform()),
         side);
+}
+
+void Hand::HandImpl::updateScale()
+{
+    tracker.setScaleOfTrackerObject(transformMgr->getTrackerToRoomScale());
 }
 
 void Hand::HandImpl::getPosition(q_type pos)
@@ -826,6 +832,7 @@ void Hand::updatePositionAndOrientation()
 {
     impl->updatePositionAndOrientation();
 }
+void Hand::updateScale() { impl->updateScale(); }
 void Hand::getPosition(q_vec_type pos) { impl->getPosition(pos); }
 void Hand::getOrientation(q_type orient) { impl->getOrientation(orient); }
 vtkActor* Hand::getHandActor() { return impl->getHandActor(); }

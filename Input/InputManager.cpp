@@ -413,6 +413,9 @@ void InputManager::InputManagerImpl::setProject(Project *proj) {
   project = proj;
   if (project != NULL) {
     project->getTransformManager().setTrackerToRoomMatrix(trackersToRoom);
+    // TODO - hacky, make trackers in room coords
+    project->getHand(SketchBioHandId::LEFT).updateScale();
+    project->getHand(SketchBioHandId::RIGHT).updateScale();
   }
 }
 

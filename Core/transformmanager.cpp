@@ -151,7 +151,9 @@ void TransformManager::getTrackerOrientInWorldCoords(q_type dest,
   q_to_axis_angle(&vect[0], &vect[1], &vect[2], &angle,
                   trackerBaseToHand[side].quat);
   vect[Q_W] = 0;
+  trackerBaseToRoom->TransformVector(vect,vect);
   roomToWorld->TransformVector(vect, vect);
+  q_vec_normalize(vect,vect);
   q_from_axis_angle(dest, vect[0], vect[1], vect[2], angle);
 }
 
@@ -163,7 +165,9 @@ void TransformManager::getOldTrackerOrientInWorldCoords(
   q_to_axis_angle(&vect[0], &vect[1], &vect[2], &angle,
                   trackerBaseToHandOld[side].quat);
   vect[Q_W] = 0;
+  trackerBaseToRoom->TransformVector(vect,vect);
   roomToWorld->TransformVector(vect, vect);
+  q_vec_normalize(vect,vect);
   q_from_axis_angle(dest, vect[0], vect[1], vect[2], angle);
 }
 
