@@ -107,11 +107,14 @@ void TransformManager::getTrackerTransformInEyeCoords(
 {
   trans->Identity();
   trans->PostMultiply();
-  double x, y, z, angle;
-  q_to_axis_angle(&x, &y, &z, &angle, trackerBaseToHand[side].quat);
-  trans->RotateWXYZ(angle * 180 / Q_PI, x, y, z);
-  trans->Translate(trackerBaseToHand[side].xyz);
-  trans->Concatenate(trackerBaseToRoom);
+  double xyz[3], angle;
+  q_vec_type pos;
+  q_to_axis_angle(&xyz[0], &xyz[1], &xyz[2], &angle, trackerBaseToHand[side].quat);
+  trackerBaseToRoom->TransformVector(xyz,xyz);
+  q_vec_normalize(xyz,xyz);
+  trackerBaseToRoom->TransformPoint(trackerBaseToHand[side].xyz,pos);
+  trans->RotateWXYZ(angle * 180 / Q_PI, xyz[0], xyz[1], xyz[2]);
+  trans->Translate(pos);
   trans->Concatenate(roomToWorld);
 }
 

@@ -26,7 +26,6 @@ class Hand
     virtual ~Hand();
 
     void updatePositionAndOrientation();
-    void updateScale();
     void getPosition(q_vec_type pos);
     void getOrientation(q_type orient);
     vtkActor *getHandActor();
