@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SketchBioDeviceConfig fileVersion="0.0">
+  <vrpnFile>hodgepodge.cfg</vrpnFile>
+	<device name="xkeys0">
+		<buttons num="59"/>
+		<analogs num="2"/>
+	</device>
+	<device name="Tracker0">
+		<tracker channel="0" hand="left"/>
+		<tracker channel="0" hand="right"/>
+	</device>
+	<trackerInputTransform matrix="1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1" />
+	<modeSwitchButton deviceName="xkeys0" buttonNumber="1" />
+	<mode name="Edit Objects" defaultSelection="Objects">
+		<button deviceName="xkeys0" buttonNumber="2" hand="left" function="redo" />
+		<button deviceName="xkeys0" buttonNumber="3" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="xkeys0" buttonNumber="4" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="xkeys0" buttonNumber="5" hand="left" function="zoom" />
+		<button deviceName="xkeys0" buttonNumber="6" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="7" hand="left" function="resetCameraAngle" />
+		<button deviceName="xkeys0" buttonNumber="8" hand="left" function="undo" />
+		<button deviceName="xkeys0" buttonNumber="9" hand="left" function="createCrystalByExample" />
+		<button deviceName="xkeys0" buttonNumber="10" hand="left" function="lockTransforms" />
+		<button deviceName="xkeys0" buttonNumber="11" hand="left" function="setTransform" />
+		<button deviceName="xkeys0" buttonNumber="12" hand="left" function="deleteObject" />
+		<button deviceName="xkeys0" buttonNumber="13" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="14" hand="left" function="selectChildOfCurrent" />
+		<button deviceName="xkeys0" buttonNumber="15" hand="left" function="selectParentOfCurrent" />
+		<analog deviceName="xkeys0" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="moveAlongTimeline" />
+		</analog>
+	</mode>
+	<mode name="Edit Springs" defaultSelection="Connectors">
+		<button deviceName="xkeys0" buttonNumber="2" hand="left" function="redo" />
+		<button deviceName="xkeys0" buttonNumber="3" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="xkeys0" buttonNumber="4" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="xkeys0" buttonNumber="5" hand="left" function="zoom" />
+		<button deviceName="xkeys0" buttonNumber="6" hand="left" function="grabConnectorOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="7" hand="left" function="resetCameraAngle" />
+		<button deviceName="xkeys0" buttonNumber="8" hand="left" function="undo" />
+		<button deviceName="xkeys0" buttonNumber="9" hand="left" function="deleteConnector" />
+		<button deviceName="xkeys0" buttonNumber="10" hand="left" function="snapConnectorToTerminus" />
+		<button deviceName="xkeys0" buttonNumber="11" hand="left" function="createSpring" />
+		<button deviceName="xkeys0" buttonNumber="12" hand="left" function="createTransparentConnector" />
+		<button deviceName="xkeys0" buttonNumber="13" hand="left" function="grabConnectorOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="14" hand="left" function="selectChildOfCurrent" />
+		<button deviceName="xkeys0" buttonNumber="15" hand="left" function="selectParentOfCurrent" />
+		<analog deviceName="xkeys0" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="moveAlongTimeline" />
+		</analog>
+	</mode>
+  <mode name="Animation" defaultSelection="Objects">
+		<button deviceName="xkeys0" buttonNumber="2" hand="left" function="redo" />
+		<button deviceName="xkeys0" buttonNumber="3" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="xkeys0" buttonNumber="4" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="xkeys0" buttonNumber="5" hand="left" function="zoom" />
+		<button deviceName="xkeys0" buttonNumber="6" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="7" hand="left" function="resetCameraAngle" />
+		<button deviceName="xkeys0" buttonNumber="8" hand="left" function="undo" />
+		<button deviceName="xkeys0" buttonNumber="9" hand="left" function="keyframeAll" />
+		<button deviceName="xkeys0" buttonNumber="10" hand="left" function="toggleKeyframeObject" />
+		<button deviceName="xkeys0" buttonNumber="11" hand="left" function="addCamera" />
+		<button deviceName="xkeys0" buttonNumber="12" hand="left" function="showAnimationPreview" />
+		<button deviceName="xkeys0" buttonNumber="13" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="14" hand="left" function="selectChildOfCurrent" />
+		<button deviceName="xkeys0" buttonNumber="15" hand="left" function="selectParentOfCurrent" />
+		<analog deviceName="xkeys0" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="moveAlongTimeline" />
+		</analog>
+	</mode>
+  <mode name="Edit Colors" defaultSelection="Objects">
+		<button deviceName="xkeys0" buttonNumber="2" hand="left" function="redo" />
+		<button deviceName="xkeys0" buttonNumber="3" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="xkeys0" buttonNumber="4" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="xkeys0" buttonNumber="5" hand="left" function="zoom" />
+		<button deviceName="xkeys0" buttonNumber="6" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="7" hand="left" function="resetCameraAngle" />
+		<button deviceName="xkeys0" buttonNumber="8" hand="left" function="undo" />
+		<button deviceName="xkeys0" buttonNumber="9" hand="left" function="changeObjectColor" />
+		<button deviceName="xkeys0" buttonNumber="10" hand="left" function="changeObjectColorVariable" />
+		<button deviceName="xkeys0" buttonNumber="11" hand="left" function="toggleObjectVisibility" />
+		<button deviceName="xkeys0" buttonNumber="12" hand="left" function="toggleShowInvisibleObjects" />
+		<button deviceName="xkeys0" buttonNumber="13" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="14" hand="left" function="selectChildOfCurrent" />
+		<button deviceName="xkeys0" buttonNumber="15" hand="left" function="selectParentOfCurrent" />
+		<analog deviceName="xkeys0" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="moveAlongTimeline" />
+		</analog>
+	</mode>
+  <mode name="Edit Groups" defaultSelection="Objects">
+		<button deviceName="xkeys0" buttonNumber="2" hand="left" function="redo" />
+		<button deviceName="xkeys0" buttonNumber="3" hand="left" function="toggleCollisionChecks" />
+		<button deviceName="xkeys0" buttonNumber="4" hand="left" function="toggleSpringsEnabled" />
+		<button deviceName="xkeys0" buttonNumber="5" hand="left" function="zoom" />
+		<button deviceName="xkeys0" buttonNumber="6" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="7" hand="left" function="resetCameraAngle" />
+		<button deviceName="xkeys0" buttonNumber="8" hand="left" function="undo" />
+		<button deviceName="xkeys0" buttonNumber="9" hand="left" function="toggleGroupMembership" />
+		<button deviceName="xkeys0" buttonNumber="10" hand="left" function="copyObject" />
+		<button deviceName="xkeys0" buttonNumber="11" hand="left" function="pasteObject" />
+		<button deviceName="xkeys0" buttonNumber="13" hand="left" function="grabObjectOrWorld" />
+		<button deviceName="xkeys0" buttonNumber="14" hand="left" function="selectChildOfCurrent" />
+		<button deviceName="xkeys0" buttonNumber="15" hand="left" function="selectParentOfCurrent" />
+		<analog deviceName="xkeys0" analogNumber="0" type="normalize">
+			<interval min="-1" max="1" hand="left" function="moveAlongTimeline" />
+		</analog>
+	</mode>
+</SketchBioDeviceConfig>
+
