@@ -297,6 +297,19 @@ SketchBio consolidates state-of-the-art tools and libraries into a seamless work
 
 Figure \ref{fig:actin_vinculin} shows a screenshot of the SketchBio user interface with a group of three actin molecules (left) and the tail region of a vinculin molecule (right).  The small white spheres in the center represent the two tracked hand-held controllers. Status information about the current system state is shown in the lower left.  Animation timepoint in seconds is shown in the lower right.
 
+% paragraph added in response to review (summary review 3rd bullet)
+Molecules in SketchBio are currently represented as rigid surfaces approximating the Connolly Solvent-Excluded Surface of the molecule.
+% These were chosen because they were easy and made sense to a developer new to working with biologists...
+These were chosen because they are quick to simplify to other levels of detail and because our collaborators used surface models in their current work for all four of our driving problems.
+The selection is indicated in SketchBio by showing an outline of the oriented bounding box of the molecule or molecules selected. 
+This easily identifies the selection at a constant computational complexity per molecule and avoids obscuring the surface as much as possible.
+Color of this outline indicates to the user whether they are selecting a group or an object within a group.
+An alternative considered in early prototypes was to show the selected object in wireframe, but this was found to disrupt perception of the orientation of the molecule.
+The indicator that an object has a keyframe at the current time is shown to assist animators.
+This is a set of "gift ribbons" on the oriented bounding box, the segments that connect the midpoints of edges on opposite sides of each face.  % XXX - Russ, if you can come up with a better way of phrasing this I'm all ears.
+This is chosen to minimally obscure the molecule while still indicating that there is a keyframe and not interfering with the selection indicator.
+At the request of our collaborators, molecule surfaces may be either one of a number of solid colors, colored by surface charge or colored by their nearness to the N-terminus or C-terminus of the protein.
+
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\columnwidth]{actinVinculin.png}
