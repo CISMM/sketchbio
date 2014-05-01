@@ -176,21 +176,26 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
         if (nearestObjDist0 < DISTANCE_THRESHOLD &&
             nearestObjDist1 < DISTANCE_THRESHOLD) {
             ObjectGroup *grp = dynamic_cast< ObjectGroup * >(nearestObj0);
+            //if the two objects are the same theres nothing to toggle
             if (nearestObj0 == nearestObj1) {
                 return;
             } else if (nearestObj0 == nearestObj1->getParent()) {
+                //if obj0 is parent of obj1, remove obj1 from the group
                 assert(grp != NULL);
                 grp->removeObject(nearestObj1);
                 world.addObject(nearestObj1);
             } else {
+                //obj0 is not a group, or obj0 is a group and obj1 is a group
                 if (grp == NULL ||
                     (grp != NULL &&
                      dynamic_cast< ObjectGroup * >(nearestObj1) != NULL)) {
+                    //remove obj0 from world, add to new group
                     grp = new ObjectGroup();
                     world.removeObject(nearestObj0);
                     grp->addObject(nearestObj0);
                     world.addObject(grp);
                 }
+                //add obj1 to group
                 world.removeObject(nearestObj1);
                 grp->addObject(nearestObj1);
             }
@@ -461,6 +466,7 @@ void setTerminusToSnapSpring(SketchBio::Project *project, int, bool wasPressed)
     SnapModeOperationState *snap =
         dynamic_cast< SnapModeOperationState * >(project->getOperationState(
                                                      SNAP_SPRING_OPERATION_FUNC_NAME));
+    //user holds down this button to snap the spring to C terminus, releasing changes state back to N
     if (wasPressed) {
         if (snap != NULL) {
             snap->setSnapToNTerminus(false);
@@ -666,7 +672,6 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
         }
     } else  // released
     {
-        // TODO add control function
         TransformEditOperationState *state =
             dynamic_cast< TransformEditOperationState * >(
                 project->getOperationState(TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION));
@@ -699,6 +704,7 @@ void setTransforms(SketchBio::Project *project, int hand, bool wasPressed)
                         "Set Transformation from First to Second");
                     dialog->setTranslation(transform->GetPosition());
                     dialog->setRotation(transform->GetOrientation());
+                    //reads transform from user
                     QObject::connect(
                         dialog,
                         SIGNAL(transformAquired(double, double, double, double,
@@ -1150,6 +1156,7 @@ void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
   
   double dTime;
   
+  //maps value from [0,1] to [-1,1]
   value = (value-0.5)*2;
   int sign = (value >= 0) ? 1 : -1;
   if (Q_ABS(value) > .8)

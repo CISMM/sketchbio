@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   return errors;
 }
 
-//returns true if the two matrices are the same
+//returns true if the two matrices are the same (within Q_EPSILON
 bool compareMatrices(vtkMatrix4x4 *m0, vtkMatrix4x4 *m1)
 {
   double mat0[16];
@@ -99,6 +99,7 @@ int testGrabObjectOrWorld()
   vtkLinearTransform *ltNew = t.getRoomToWorldTransform();
   vtkMatrix4x4 *newMat = ltNew->GetMatrix();
   
+  //grabbing world changes room to world transform
   if (compareMatrices(oldMat, newMat))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
@@ -188,6 +189,7 @@ int testGrabSpringOrWOrld()
   vtkLinearTransform *ltNew = t.getRoomToWorldTransform();
   vtkMatrix4x4 *newMat = ltNew->GetMatrix();
   
+  //make sure room to world transform changes when world is grabbed
   if (compareMatrices(oldMat, newMat))
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
@@ -199,6 +201,7 @@ int testGrabSpringOrWOrld()
   ControlFunctions::grabSpringOrWorld(&proj, 1, false);
   handObj.updateGrabbed();
   
+  //move spring within distance threshold
   q_vec_type nullVec = Q_NULL_VECTOR;
   spring->setEnd1WorldPosition(nullVec);
   q_vec_type end2 = {1,0,0};
@@ -270,6 +273,7 @@ int testSelectRelativeOfCurrent()
   q_vec_type vector ={0,0,0};
   q_type orient = Q_ID_QUAT;
   
+  //make a group (parent) and add a child to the group (child)
   ObjectGroup *parent = new ObjectGroup();
   SketchObject *child = proj.getWorldManager().addObject(model, vector, orient);
   proj.getWorldManager().removeObject(child);
@@ -281,6 +285,7 @@ int testSelectRelativeOfCurrent()
   
   SketchObject *nearestObj = handObj.getNearestObject();
   
+  //make sure parent is nearest object
   if (nearestObj!=parent)
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<

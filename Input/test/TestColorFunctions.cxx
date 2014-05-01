@@ -38,7 +38,7 @@ int testChangeObjectColor()
   SketchObject *obj = proj.getWorldManager().addObject(model, vector, orient);
   proj.updateTrackerPositions();
   
-  //given that we know there are 7 different colors
+  //given that we know there are 7 different colors, check it goes through them all
   ColorMapType::Type t = obj->getColorMapType();
   ControlFunctions::changeObjectColor(&proj, 1, false);
   ColorMapType::Type t2 = obj->getColorMapType();

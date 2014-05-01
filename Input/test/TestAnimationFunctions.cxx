@@ -252,7 +252,7 @@ int testShowAnimationPreview()
   
   if (isShowingAnim==isShowingAnim2){
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
-    "  Showing animation did not toogle" << std::endl;
+    "  Showing animation did not toggle" << std::endl;
     return 1;
   }
   

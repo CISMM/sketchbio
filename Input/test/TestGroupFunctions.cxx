@@ -93,7 +93,7 @@ int testToggleGroupMembership()
   //should remove obj0 and obj1 from world, and create a group with both
   ControlFunctions::toggleGroupMembership(&proj, 1, false);
   
-  
+  //make sure theres only one object in the world after adding to group
   QListIterator< SketchObject * > itr =
   proj.getWorldManager().getObjectIterator();
   if (proj.getWorldManager().getNumberOfObjects() != 1)

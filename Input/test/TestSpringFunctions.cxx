@@ -37,6 +37,7 @@ int testDeleteSpring()
   
   int connectorsToAdd = 5;
   
+  //add a few connectors to the world
   int i = 0;
   while (i < connectorsToAdd)
   {
@@ -47,6 +48,7 @@ int testDeleteSpring()
     
   int connectors = proj.getWorldManager().getNumberOfConnectors();
 
+  //make sure they were all correctly added
   if (connectors != connectorsToAdd)
   {
     std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
