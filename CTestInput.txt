@@ -1,0 +1,14 @@
+SketchBioInput CTest
+
+In the SketchBio source code directory, the Input folder has a test folder. In that folder is a CMakeLists.txt file. This file has a macro make_input_test that is used to add an input test. It takes two parameters, the name of the test and the source file of the tests.
+
+To add a test, add a make_input_test line in the CMakeLists.txt file with the name and source code of the tests. The test added should follow the format of the other test functions, namely that each function has a test, and the main method of the test file runs each test, adding the result to an error variable and returning that variable. A test passing should return 0. 
+
+To run the input tests, first build the project. Then, in the build directory, run the command:
+CTest -R InputTest -V
+
+or, to run a specific test instead of all input tests,
+
+CTest -R InputTestX -V
+
+where X is the name of the test (so for example, InputTestUtilityFunctions)
