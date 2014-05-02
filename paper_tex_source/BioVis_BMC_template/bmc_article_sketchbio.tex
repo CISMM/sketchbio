@@ -435,7 +435,7 @@ Blender is a production level animation and rendering tool.  It has an extremely
 Blender also has a Python scripting interface that provides access to all of its functionality.
 SketchBio uses this scripting interface to create its animations and render them in a high quality rendering engine, but provides a much simpler way to access that interface.
 SketchBio provides a set simple operations that is sufficient to meet the animation needs of our driving problems: moving along the video timeline, set keyframes on objects and view a low resolution animation preview.
-Keyframes save not only position and orientation of the objects but also other changeable aspects such as color and grouping information.
+Keyframes save not only position and orientation of the objects for a certain time but also other changeable aspects such as color and grouping information.
 These values are then interpolated between the keyframes to produce the motion in the animation.
 The effects of this interpolation can be easily seen by the user by moving along the timeline or using the built-in animation preview.
 These values are also exported to Blender with a set of predefined global settings for effects and position of light sources to produce a full-quality rendering.
@@ -538,6 +538,7 @@ Thus only the $1st$ object in the structure needs to be tested against the other
 SketchBio also has connectors that can be added between objects.
 These can act like springs and apply forces to keep objects positioned relative to each other or they can simply indicate that two objects are connected.
 For many proteins there are regions for which the structure is unknown and these regions can be represented with these connectors.
+The ends of the connectors can be quickly snapped to the N-terminus or C-terminus of a protein, removing the difficulty of precise hand placement.
 SketchBio does not attept to simulate full molecular-dynamics forces on the molecules it displays (this would make real-time modeling impossible); instead, only a linear-spring model is applied and an extremely viscous fluid is assumed which removes momentum effects.
 
 When acting as springs, connectors can have non-zero rest length.
@@ -657,7 +658,7 @@ Furthermore, the scripting interfaces enable rapid inclusion of additional featu
 
 
 \section*{Limitations and future work}
-Our collaborators' projects have so far involved hand-placed molecules of density sufficient small to be understood when all of them are visible.
+Our collaborators' projects have so far involved hand-placed molecules of density sufficiently small to be understood when all of them are visible.
 Thus, SketchBio does not yet support automatically-placed molecules to fill the space, nor does it require complex occlusion-handling procedures.
 As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle this large number of background molecules.
 
