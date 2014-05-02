@@ -243,6 +243,17 @@ Because of the difficulties involved in learning and using 3D modeling and rende
 This indirection both slows the discovery process and provides opportunities for miscommunication.
 As toolsmiths, our aim is to provide scientists with a tool that is so rapid to learn and powerful to use that they can create these models and animations themselves.
 
+We aim to produce a general tool that is widely useful.  Many researchers studying cell structure and physiology seek to construct
+and evaluate dynamic models that incorporate random thermal motion as
+well as conformational changes induced through intermolecular interactions.
+Discovering, testing, and communicating hypotheses about these
+interactions requires the development of complex animated 3D structures. Modeling, simulation, and rendering
+of these hypothetical scenarios involves using a number of tools and databases (PDB, Pymol, Blender, NAMD, etc.)
+and then converting files to pass geometry and animations between tools. It also involves
+manual placement and orientation of 3D objects, which is currently done using clunky 2D input devices and by-hand
+detection and avoidance of collisions. As a result, it often takes a team months to produce an acceptable
+model or animation. We aim to produce a tool that reduces this to a single person working for hours or days.
+
 This paper describes that tool, SketchBio.
 
 \subsection*{Driving Problems}
@@ -273,17 +284,6 @@ With accurate localization and tracking for 3D images, these techniques provide 
 Building matching models requires the development of mass-spring-driven semi-automatic layout of proteins.
 This will provide a partial set of constraints for the scientist to construct protein-protein and protein-chromosome complexes that match experimental data.
 With these enhancements, SketchBio will be widely useful to other researchers for the generation of hypothetical protein-complex structures from partial data.
-
-We aim to produce a general tool that is widely useful.  Many researchers studying cell structure and physiology seek to construct
-and evaluate dynamic models that incorporate random thermal motion as
-well as conformational changes induced through intermolecular interactions.
-Discovering, testing, and communicating hypotheses about these
-interactions requires the development of complex animated 3D structures. Modeling, simulation, and rendering
-of these hypothetical scenarios involves using a number of tools and databases (PDB, Pymol, Blender, NAMD, etc.)
-and then converting files to pass geometry and animations between tools. It also involves
-manual placement and orientation of 3D objects, which is currently done using clunky 2D input devices and by-hand
-detection and avoidance of collisions. As a result, it often takes a team months to produce an acceptable
-model or animation. We aim to reduce this to a single person working for hours or days.
 
 \subsection*{Prior Work}
 \paragraph*{Molecular modeling:}
