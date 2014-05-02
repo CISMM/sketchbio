@@ -434,11 +434,12 @@ For scientists creating animations of molecules, SketchBio provides a basic inte
 Blender is a production level animation and rendering tool.  It has an extremely complex user interface with dozens of hotkeys, menus and buttons (see Figure \ref{fig:blender_interface}).
 Blender also has a Python scripting interface that provides access to all of its functionality.
 SketchBio uses this scripting interface to create its animations and render them in a high quality rendering engine, but provides a much simpler way to access that interface.
-SketchBio provides a set simple operations that is sufficient to meet the animation needs of our driving problems: moving along the video timeline and set keyframes on objects.
+SketchBio provides a set simple operations that is sufficient to meet the animation needs of our driving problems: moving along the video timeline, set keyframes on objects and view a low resolution animation preview.
 Keyframes save not only position and orientation of the objects but also other changeable aspects such as color and grouping information.
 These values are then interpolated between the keyframes to produce the motion in the animation.
-These values are also exported to Blender with a set of global settings for effects and position of light sources to produce a full-quality rendering.
-This simpler user interface allows faster creation of animations without requiring a third party to create them.
+The effects of this interpolation can be easily seen by the user by moving along the timeline or using the built-in animation preview.
+These values are also exported to Blender with a set of predefined global settings for effects and position of light sources to produce a full-quality rendering.
+These global settings are not currently exposed to the user of SketchBio because our purpose is to create a simpler interface to enable faster creation of animations without the requirement of learning a complex tool or hiring a third party.
 
 \paragraph*{Grouping:}
 Grouping of molecules into larger units is also supported to make constructing larger order structures easier.
