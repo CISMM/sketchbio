@@ -263,8 +263,7 @@ We are following this approach.
 The first driving problem for this project is collaborator Susan Lord's desire to construct a protofibril model based on geometric constraints among a set of fibrinogen monomers.
 The protein fibrinogen is the main component of blood clots, where it is converted into fibrin and links together with other fibrin molecules to form strands.
 Two of these strands join together to form a protofibril, which form thick fibers that make up a large portion of the blood clot.
-Based on the crystallized structures of fibrin monomers from different species and on only two sets of known interactions \cite{lord2007fibrinogen}, she sought to construct 3D protofibril structures matching those seen in transmission electron microscopy (TEM) studies.
-Her data suggested a structure in which two fibrin strands twist around each other, and wanted to create a model that shows this interaction at the molecular level.
+Based on the crystallized structures of fibrin monomers from different species and on only two sets of known interactions \cite{lord2007fibrinogen}, she sought to construct 3D protofibril structures matching those seen in her data, which suggested a structure in which two fibrin strands twist around each other, and wanted to create a model that shows this interaction at the molecular level.
 Over several months, she and her students worked with resource staff scientist Joe Hsiao to use the powerful UCSF Chimera tool to construct such a model \cite{lordSubmitted}.
 Building this model required repeated iteration of hand-placement of two molecules (using multiple 2D mouse interactions), followed by using replication tools to develop candidate models, which were then evaluated against the data.
 Lord's desired use of SketchBio was to construct this protofibril rapidly and semi-automatically by specifying which location on each fibrin should be in close contact with other molecules and by specifying that the molecules do not overlap.
@@ -272,17 +271,18 @@ This same capability will enable generation of other self-symmetric structures s
 
 Our second driving problem comes from Peter Thompson in Sharon Campbell's lab.
 Peter wants to construct 3D models and animations of the interaction between actin filaments and vinculin.
-He has used SketchBio to reproduce 3D geometry from example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
+Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments in order to connect them to other actin filaments or different proteins.
+Peter has used SketchBio to reproduce 3D geometry from example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
 He is particularly interested in using SketchBio as a thinking tool to determine how mutations in the vinculin can turn the normally-straight actin filaments into helices.
 The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match TEM images.
 
-The third driving problem comes from our collaboration with Kerry Bloom.
+The third driving problem comes from our collaboration with Kerry Bloom, who is trying to make models of the mitotic spindle, a structure that separates chromosomes during cell division.
 As in the Lord case described above, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
 Our program-generated models exhibit more symmetry than the experimental results only because of the difficulty in specifying more complex models that meet the geometric constraints (cohesin loops surrounding four chromatin, no self-intersection or entanglement, etc.).
-Bloom needs SketchBio to support (i) the rapid generation of long coarse-grained interacting polymer chains and their connection to coarse-grained models of symmetric microtubules, (ii) the construction of linked but non-colliding protein-chromosome structures, and (iii) production of simulated fluorescence images from the resulting structures.
+Bloom needs SketchBio to rapidly generate models of microtubules and linked protein-chromosome structures found in mitotic spindles, and he wants to produce of simulated fluorescence  images from the resulting structures to see what they would look like when viewed by a microscope.
 
 Our final driving problem also comes from the Bloom collaboration.
-Many proteins beyond cohesin and condensin contribute to mitosis, and Kerry Bloom is interested in them all.  His lab is able to fluorescently label both these proteins and chromosome locations, and use multi-color or flourescence resonance energy transfer (FRET) techniques to determine relative distances and orientations between pairs of proteins.
+Many proteins beyond cohesin and condensin contribute to mitosis, and Kerry Bloom is interested in them all.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
 With accurate localization and tracking for 3D images, these techniques provide partial information on the 3D layout of proteins and chromosomes in wild-type and mutant mitotic spindles.
 Building matching models requires the development of mass-spring-driven semi-automatic layout of proteins.
 This will provide a partial set of constraints for the scientist to construct protein-protein and protein-chromosome complexes that match experimental data.
@@ -473,14 +473,6 @@ In pose mode physics, only the objects directly manipulated by the user are allo
 Each other object is fixed in place and does not even move due to collision response forces.
 This allows an easier time docking the molecules as the molecule not being held does not get pushed away.
 
-\paragraph*{Pose Mode Physics and Collision Detection:}
-In pose mode, collision tests between objects that the user is not interacting with can be skipped because these objects do not move.
-The only way that those objects could be in collision was if they were already in collision before.
-If the collision response failed to fix the collision then, it will not fix it now, so their tests can be skipped.
-This means that only collisions involving the objects that the user is moving need to be checked.
-This reduces the number of collision tests to $m*n$ where m is the number of objects that the user is currently moving.
-The typical number of objects that the user moves at a time is 1 or a small constant in the case of moving a group, which reduces the number of collision tests needed to $\mathcal{O}(n)$ in this expected case.
-
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\columnwidth]{crystalByExample.png}
@@ -508,14 +500,14 @@ By allowing live updates of the entire structure as the initial two objects are 
 Some of these structures have a known transformation from one molecule to the next.
 Similar to many other programs, SketchBio lets the user input the transformation to use between any two molecules to provide more accurate construction of structures with known transformations.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.9\columnwidth]{crystal_actin.png}
-\caption{Actin filament created with the crystal-by-example function using the transformation matrix from the PDB data from one monomer to the next.}
-\label{fig:crystal_actin}
-\end{figure}
+\paragraph*{Collision Detection in Pose Mode Physics and Crystal-by-example:}
+In pose mode, collision tests between objects that the user is not interacting with can be skipped because these objects do not move.
+The only way that those objects could be in collision was if they were already in collision before.
+If the collision response failed to fix the collision then, it will not fix it now, so their tests can be skipped.
+This means that only collisions involving the objects that the user is moving need to be checked.
+This reduces the number of collision tests to $m*n$ where m is the number of objects that the user is currently moving.
+The typical number of objects that the user moves at a time is 1 or a small constant in the case of moving a group, which reduces the number of collision tests needed to $\mathcal{O}(n)$ in this expected case.
 
-\paragraph*{Crystal-by-example Collision Detection:}
 There are two ways that the user can interact with a crystal-by-example structure: moving the entire structure as a unit, or adjusting the internal transformation to change the shape of the structure.
 In the first case, only collision tests between the structure and the other objects in the scene need to be done, and the above bound applies to the number of tests.
 Because the structure is moved as a unit, its internal geometry does not change so if there were no internal collisions to begin with, there will be none after it was moved. 
@@ -531,6 +523,13 @@ Since the geometries and transformations are the same, if there is a collision b
 Thus testing only this one pair performs the work of n-1 tests where n is the number of objects in the structure.
 This same argument holds for any $i$ and $i+k$, the $1st$ and $(k+1)th$ objects have the same relative positions and the same collisions.
 Thus only the $1st$ object in the structure needs to be tested against the others which allows $\mathcal{O}(n)$ tests to suffice for all internal collisions in a repetitive structure of $n$ elements.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\columnwidth]{crystal_actin.png}
+\caption{Actin filament created with the crystal-by-example function using the transformation matrix from the PDB data from one monomer to the next.}
+\label{fig:crystal_actin}
+\end{figure}
 
 %\begin{figure*}[t!]
 %  \centering
