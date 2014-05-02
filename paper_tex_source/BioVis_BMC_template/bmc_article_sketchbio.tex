@@ -247,7 +247,7 @@ We aim to produce a general tool that is widely useful.  Many researchers studyi
 and evaluate dynamic models that incorporate random thermal motion as
 well as conformational changes induced through intermolecular interactions.
 Discovering, testing, and communicating hypotheses about these
-interactions requires the development of complex animated 3D structures. Modeling, simulation, and rendering
+interactions requires the development of complex animated 3D molecular structures. Modeling, simulation, and rendering
 of these hypothetical scenarios involves using a number of tools and databases (PDB, Pymol, Blender, NAMD, etc.)
 and then converting files to pass geometry and animations between tools. It also involves
 manual placement and orientation of 3D objects, which is currently done using clunky 2D input devices and by-hand
@@ -261,7 +261,10 @@ Fred Brooks points out that the best way to construct a tool that is generally u
 We are following this approach.
 
 The first driving problem for this project is collaborator Susan Lord's desire to construct a protofibril model based on geometric constraints among a set of fibrinogen monomers.
+The protein fibrinogen is the main component of blood clots, where it is converted into fibrin and links together with other fibrin molecules to form strands.
+Two of these strands join together to form a protofibril, which form thick fibers that make up a large portion of the blood clot.
 Based on the crystallized structures of fibrin monomers from different species and on only two sets of known interactions \cite{lord2007fibrinogen}, she sought to construct 3D protofibril structures matching those seen in transmission electron microscopy (TEM) studies.
+Her data suggested a structure in which two fibrin strands twist around each other, and wanted to create a model that shows this interaction at the molecular level.
 Over several months, she and her students worked with resource staff scientist Joe Hsiao to use the powerful UCSF Chimera tool to construct such a model \cite{lordSubmitted}.
 Building this model required repeated iteration of hand-placement of two molecules (using multiple 2D mouse interactions), followed by using replication tools to develop candidate models, which were then evaluated against the data.
 Lord's desired use of SketchBio was to construct this protofibril rapidly and semi-automatically by specifying which location on each fibrin should be in close contact with other molecules and by specifying that the molecules do not overlap.
@@ -290,7 +293,7 @@ With these enhancements, SketchBio will be widely useful to other researchers fo
 There are many excellent molecular modeling applications that have been extended to include some aspects of high-quality rendering and animation.
 UCSF Chimera \cite{pettersen2004ucsf}, Pymol \cite{pymol2013}, GraphiteLifeExplorer\cite{hornus2013easy}, and Visual Molecular Dynamics (VMD) \cite{humphrey1996} are three of the most relevant.
 Other software such as Protein Explorer \cite{martz2002protein} and EZ-Viz \cite{grell2006ez}, an interface for Pymol, attempt to offer easy-to-use interfaces for exploring molecular structures, but are still limited by their conventional 2D input.
-While they may be easy compared to alternatives, they still requiring user to click through tabs and dropdown menus, lacking the natural ease of a 3D tracking system.
+These projects take steps in making interfaces easier and more understandable, but they still require the user to click through tabs and dropdown menus, which we hope to keep to a minimum with our system.
 VMD already includes direct force-feedback-based placement and manipulation of molecules.
 GraphiteLifeExplorer includes the ability to position and twist segments of DNA and interpolate  the sections between them.
 We considered the approach of extending the interaction and rendering capabilities of one of these tools, but this would mean replicating existing rendering pipelines and techniques that are already implemented elsewhere.
@@ -302,7 +305,7 @@ There are also excellent general-purpose rendering programs (such as the commerc
 Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson2013}, Molecular Flipbook \cite{flipbook2013}, and Molecular Maya \cite{molecularmaya}.
 We also considered this approach, but providing full capability would require replicating the many existing capabilities in molecular modeling tools and tracking new features as they are developed.
 We decided to harness the animation and rendering capabilities of Blender using its built-in Python scripting interface.
-The Bioblender package also leverages Blender for molecular modeling and supports collision detection, but it still is not able to provide the fast and easy-to-learn interface that SketchBio does \cite{zini2010bioblender}.
+The Bioblender package also leverages Blender for molecular modeling and supports collision detection \cite{zini2010bioblender}. These programs take important steps to reduce the number of total tools required during the process of making animations, while we aim streamline the process further by making the final package easier and quicker to use for biologists.
 SketchBio's bimanual manipulation sets it apart from these applications because it allows user to move molecules and craft animations much faster and more naturally than tools that use a mouse and keyboard to manipulate objects.
 
 \paragraph*{Interactive Animation:}
@@ -313,6 +316,7 @@ This allows widespread use by non-experts to develop presentation materials for 
 
 \paragraph*{Interactive Rendering:}
 A common bottleneck in interactive modeling and animation applications is the speed of rendering a complex scene.
+Sketchbio requires speedy real-time rendering due to the nature of its input, as objects on the screen must be able to move at the same speed as the user's hand so that the object appears to move naturally as if the user is actually holding it. 
 A key technique in improving the rendering speed of an application is reducing the complexity of the objects that are drawn.
 This is done by replacing objects with imposters which are simpler pieces of geometry that result in the same or a very similar result being rendered.
 Imposters can be difficult to notice, especially if they are far from the camera and the resulting screen area is small.
@@ -322,6 +326,7 @@ The level of simplification of an object can also be dynamically determined acco
 
 \paragraph*{Collision Detection:}
 In order to create a model or animation that is useful, collisions between molecules must be detected and handled or reported to the user.
+This helps users who want to make an animation in which the objects do not collide or intersect each other.
 If there are $n$ molecules in the scene, then each of the $n\choose 2$ unique pairs of molecules must be tested for collisions.
 Between each pair of molecules tested, each single unit in one must be tested against each single unit in the other.
 This means that collision detection has a complexity of $\mathcal{O}(n^2)$ in the number of primitives since there can be $\mathcal{O}(n^2)$ collisions.
