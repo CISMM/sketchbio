@@ -661,9 +661,23 @@ Our collaborators' projects have so far involved hand-placed molecules of densit
 Thus, SketchBio does not yet support automatically-placed molecules to fill the space, nor does it require complex occlusion-handling procedures.
 As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle this large number of background molecules.
 
+% Optimization module... in progress, maybe talk about
+Forming a model to fit experimental data can still be a difficult task.  We are working on a module to optimize the placement of molecules based on a set of constraints.
+
+The crystal-by-example feature could be made explicitly aware of the unit cell and symmetry information in the PDB files and adopt this as the default position.
+Currently this information is only used within UCSF Chimera which exports either a single unit or the full symmetry structure to SketchBio.
+
 SketchBio currently lacks an internal mechanism to do modeling of structures not found in the PDB.
 This can be done using external modeling tools and importing models from .obj files, but collaborators have indicated that the ability to create ellipsoids, whose orientation and per-axis flatness could be controlled, would be a way to rapidly fill in notional structures without having to leave the workflow.
 We expect this to be included in the next month.
+
+SketchBio currently supports only rigid structures for modeling and collision detection.
+For the collaborations we have worked with deformable models were not needed and we felt our time was better spent providing them with features they had requested.
+
+% Answer the *MOST COMMON* question we get about SketchBio
+Molecular dynamics simulation is something SketchBio does not and will never do directly.
+This decision was motivated by the cost of performing the molecular dynamics and the desire to allow real-time user interaction.
+SketchBio may eventually harness an external molecular dynamics simulator, but SketchBio will only be used to specify input configurations for the simulation or easily create videos from its output.
 
 To avoid dependence on a particular hardware vendor, SketchBio is being actively ported to use a pair of Nintendo WiiMote controllers instead of the Razer Hydra controller.
 Its use of the VRPN library supports switching devices by renaming the device and input for each function; a general-purpose mapping layer is being added that reads from a configuration file to enable the user to customize this remapping.
