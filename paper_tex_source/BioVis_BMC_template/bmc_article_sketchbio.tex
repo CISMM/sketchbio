@@ -288,10 +288,22 @@ Building matching models requires the development of mass-spring-driven semi-aut
 This will provide a partial set of constraints for the scientist to construct protein-protein and protein-chromosome complexes that match experimental data.
 With these enhancements, SketchBio will be widely useful to other researchers for the generation of hypothetical protein-complex structures from partial data.
 
+\subsection*{Design Goals}
+The application-specific workflow issues from our several collaborators can be summarized as a set of domain-independent design goals for SketchBio:
+\begin{description}
+  \item[$\bullet$ Easy to learn and to use.] Scientists must be able to rapidly construct models and animations on their own using interfaces that enable them to concentrate their mental efforts on the design challenge rather than decyphering the interface.
+  \item[$\bullet$ Support molecular operations.] It must be easy to load molecules, extract the relevant substructures, describe conformational changes, group molecules, and color according to standard data.
+  \item[$\bullet$ Appropriately constrain layout.] Some molecular structures should not overlap, others (drug vs. protein) overlap as part of their function, others (fibrin, actin) assemble into repeated structures.  In some cases, the distances between individual elements is known but their 3D layout is not.  Supporting all of these cases will enable a biologist to most-rapidly explore the space of possible conformations to produce consistent models.
+  \item[$\bullet$ Support rapidly iterated, in-context design.] Whether working alone or in a group, understanding the interactions between dozens of molecules requires repeated adjustment of proposed locations and motions.  The reasonableness of interactions depends on nearby molecules, which change over time.  We have found that generating consistent models requires trying and optimizing many potential solutions before the final model is found.
+  \item[$\bullet$ Support high-quality rendering.] Once a proposed model has been completed, static and animated images that use the most-effective lighting and surface rendering techniques are critical to conveying the model and its behavior to others.
+  \item[$\bullet$ Aid in matching known structures.] Both the fibrin study and the actin/vinculin study aim to produce models that match features seen in TEM images of molecules.  This requires matching spacing, helicity, and angles with experimentally-determined values.  It also requires the ability to render simulated microscope images in addition to standard surface-based rendering styles.
+\end{description}
+
+
 \subsection*{Prior Work}
 \paragraph*{Molecular modeling:}
 There are many excellent molecular modeling applications that have been extended to include some aspects of high-quality rendering and animation.
-UCSF Chimera \cite{pettersen2004ucsf}, Pymol \cite{pymol2013}, GraphiteLifeExplorer\cite{hornus2013easy}, and Visual Molecular Dynamics (VMD) \cite{humphrey1996} are three of the most relevant.
+UCSF Chimera \cite{pettersen2004ucsf}, Pymol \cite{pymol2013}, Graphite Life Explorer\cite{hornus2013easy}, and Visual Molecular Dynamics (VMD) \cite{humphrey1996} are three of the most relevant.
 Other software such as Protein Explorer \cite{martz2002protein} and EZ-Viz \cite{grell2006ez}, an interface for Pymol, attempt to offer easy-to-use interfaces for exploring molecular structures, but are still limited by their conventional 2D input.
 These projects take steps in making interfaces easier and more understandable, but they still require the user to click through tabs and dropdown menus, which we hope to keep to a minimum with our system.
 VMD already includes direct force-feedback-based placement and manipulation of molecules.
@@ -633,6 +645,11 @@ This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and 
 \label{fig:peter_video}
 \end{figure}
 
+\subsection*{Meeting Design Goals}
+The XXX lets us YYY.
+
+XXX Make a paragraph for each design goal, describing in some detail what features enabled us to meet each.
+
 \subsection*{Success Metrics}
 % some wording borrowed from renewal proposal
 Our primary success metric is the extent to which collaborators are able to use SketchBio themselves to construct models and animations for which they previously required programmers.
@@ -692,9 +709,12 @@ This will enable new SketchBio users to continue to use the tool until the next-
 SketchBio is a new tool that enables scientists to rapidly construct and validate hypothetical macromolecular structures, to animate these structures, and to produce high-quality rendered animations.
 It has been tested and shown to meet its design goals:
 \begin{description}
-  \item[$\bullet$ Easy to learn and use.] Scientists can construct models and animations on their own.
-  \item[$\bullet$ Supports iterative design.] Structures and animations can be rapidly constructed, modified, and tested.
-  \item[$\bullet$ Avoids reimplementation.] State-of-the-art tools and methods are harnessed rather than reimplemented.
+  \item[$\bullet$ Easy to learn and to use.] Scientists were able to rapidly construct models and animations on their own.
+  \item[$\bullet$ Support molecular operations.] By harnessing Pymol and Chimera.
+  \item[$\bullet$ Appropriately constrain layout.] Configurable collision detection, fixed-length springs, and crystal-by-example support all listed cases.
+  \item[$\bullet$ Support rapidly iterated, in-context design.] Real-time 6-degree-of-freedom interaction, live animation preview, and viewpoint control enable embedded design.
+  \item[$\bullet$ Support high-quality rendering.] By harnessing Blender.
+  \item[$\bullet$ Aid in matching known structures.] By harnessing Microscope Simulator for rendering.
 \end{description}
 
 SketchBio includes state-of-the art bimanual interaction, drop shadows to improve depth perception, and other standard modeling and animation behaviors (grouping, spline interpolation, level-of-detail rendering, rapid collision detection, real-time preview).
