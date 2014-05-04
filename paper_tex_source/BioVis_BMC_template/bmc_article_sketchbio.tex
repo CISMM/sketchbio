@@ -599,6 +599,12 @@ Instead of writing a new rendering library, SketchBio uses the Python scripting 
 SketchBio uses the open source Qt and VTK\cite{VTKbook} libraries for its user interface and internal rendering and the open source Proximity Query Package (PQP) for collision detection \cite{PQP}.
 The VRPN library is used to communicate with the Razer Hydra input device \cite{taylor2001vrpn}.
 
+One significant risk encountered when harnessing existing programs is that future versions of the programs will not support required features, or will require modifications to the harness.
+This can make maintainence challenging.
+To address this, each SketchBio release includes a list of specific versions of the wrapped programs which with it is known to be compatible and have selected programs to harness that continue to make old versions available (Chimera still releases installers from 2002 and Blender from 2003). It also includes copies of custom plug-ins and scripts that are not yet part of the harnessed packages' released versions.
+
+Another risk is that the packages used will not be obtainable in the future, or for an operating system of interest. SketchBio has been able to mitigate this risk by selecting open-source programs to harness.
+
 \paragraph*{Usable in-house:} We have in the past built high-performance molecular graphics applications for scientists that used head-tracked stereo, wide-area tracking systems, and force-feedback displays \cite{Arthur,Grant1998,Marshburn2005,Taylor1999,Taylor1997,Taylor1993}.
 The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.
 Therefore, a key goal of SketchBio is to be an application that a scientist can run in their current computers.
