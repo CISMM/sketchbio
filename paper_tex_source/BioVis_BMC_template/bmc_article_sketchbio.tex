@@ -489,6 +489,7 @@ Therefore one simplification that can be made to collision detection is to emplo
 In pose mode physics, only the objects directly manipulated by the user are allowed to move.
 Each other object is fixed in place and does not even move due to collision response forces.
 This allows an easier time docking the molecules as the molecule not being held does not get pushed away.
+This also greatly reduces the time taken to compute collision detection (as described later).
 
 \begin{figure}[h]
 \centering
@@ -650,11 +651,6 @@ This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and 
 \label{fig:peter_video}
 \end{figure}
 
-\subsection*{Meeting Design Goals}
-The XXX lets us YYY.
-
-XXX Make a paragraph for each design goal, describing in some detail what features enabled us to meet each.
-
 \subsection*{Success Metrics}
 % some wording borrowed from renewal proposal
 Our primary success metric is the extent to which collaborators are able to use SketchBio themselves to construct models and animations for which they previously required programmers.
@@ -682,6 +678,21 @@ The first-person design view and available pre-animation were crucial to this pr
 To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation); (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation); and (3) custom operations (crystal by example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.
 Furthermore, the scripting interfaces enable rapid inclusion of additional features from external programs without re-implementation.
 
+\subsection*{Meeting Design Goals}
+The previous section provided evidence that SketchBio met two of the design goals: easy to learn and to use, support rapidly iteration design in context.  It also met the other design goals, as described below.
+
+\paragraph*{Support molecular operations:}
+The video in supplemental materials shows that a user who is familiar with both tools is able to load, select subsets, and attach two molecules six times as fast using SketchBio as using the combination of Chimera and Blender. As part of development, we created a Chimera plug-in that exports the standard molecular labelings (main-chain index, partial charge, etc.) in a VTK data structure, enabling them to be used to color the molecules. Scientist are able to use familiar PDB file and substructure names to load and extract subsets of molecules. The animation and object-grouping features have been used by our collaborators to produce models and animations meeting their needs.
+
+\paragraph*{Appropriately constrain layout:}
+Pose-mode physics, with the option to turn it off, supports both preventing and allowing overlap between molecules, as desired by the scientist. The crystal-by-example feature has been used to produce both protofibrils and actin filaments from their monomers. Fixed-length springs provide the ability to rearrange sets of moluecules while maintaining the specified pairwise separations among them.
+
+\paragraph*{Support high-quality rendering:}
+The image frames in the paper and rendering in the associated online materials demonstrate the full-resolution rendering with intra- and inter-object shadowing required to perceive both complex local shape and 3D relationships between objects.
+
+\paragraph*{Aid in matching known structures:}
+XXX Make a simple model that can be exported to fluorescence simulator and rendered?
+XXX Talk about crystal-by-example?
 
 \section*{Limitations and future work}
 Our collaborators' projects have so far involved hand-placed molecules of density sufficiently small to be understood when all of them are visible.
