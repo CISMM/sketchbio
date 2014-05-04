@@ -721,6 +721,8 @@ To avoid dependence on a particular hardware vendor, SketchBio is being actively
 Its use of the VRPN library supports switching devices by renaming the device and input for each function; a general-purpose mapping layer is being added that reads from a configuration file to enable the user to customize this remapping.
 This will enable new SketchBio users to continue to use the tool until the next-generation Razer Hydra is released.
 
+One consequence of the choice to provide a uniform environment that wraps functions from other programs is that not all features of the wrapped programs are available from within SketchBio. This limitation is mitigated by enabling the user to export Blender files for later offline rendering and to import arbitrary geometry, but then the user has to learn the complexities of the other tools to use these features. If it is the case that most of these features are needed the interface to SketchBio will eventually become as complex as the sum of the tools it wraps. Because our collaborators have been able to develop models and animations without using most of the tools, and because most of the rendering settings are not needed for molecular animations, we do not anticipate this happening in practice.
+
 \section*{Conclusions}
 SketchBio is a new tool that enables scientists to rapidly construct and validate hypothetical macromolecular structures, to animate these structures, and to produce high-quality rendered animations.
 It has been tested and shown to meet its design goals:
