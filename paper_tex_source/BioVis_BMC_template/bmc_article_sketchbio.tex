@@ -235,7 +235,7 @@ The first was to ``Provide easy-to-use learning tools that can still convey comp
 We’re developing SketchBio to help scientists think about 3D molecular structures and interactions, to communicate them to others, and to drive microscope simulations for experiment planning and analysis.
 
 We found ourselves repeatedly using 2D hand-drawings of complex 3D structures and their interactions in discussions with our close collaborators in cell biology, pathology, and chemistry, despite the fact that the 3D crystal structures of the proteins making up these structures were known.
-Hanging David Goodsell's excellent ``Molecular Machinery" poster \cite{Goodsell} showing renderings of many of these molecules and their interactions helped to grow our shared understanding of the structures in the mitotic spindle, but real progress was made when we hired an artist to draw 3D scale models of the structures each week and then develop 3D computer models \cite{taylor2012}.
+Hanging David Goodsell's excellent ``Molecular Machinery" poster \cite{Goodsell} showing renderings of many of these molecules and their interactions helped to grow our shared understanding of the structures in the mitotic spindle ( a structure that separates chromosomes during cell division), but real progress was made when we hired an artist to draw 3D scale models of the structures each week and then develop 3D computer models \cite{taylor2012}.
 
 Our group is not alone.  Discussions among collaborators are often done using 2D whiteboard sketches.  Presentations often consist of pasted images and 2D PowerPoint animations.
 
@@ -274,7 +274,7 @@ Peter wants to construct 3D models and animations of the interaction between act
 Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments in order to connect them to other actin filaments or different proteins.
 Peter has used SketchBio to reproduce 3D geometry from example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
 He is particularly interested in using SketchBio as a thinking tool to determine how mutations in the vinculin can turn the normally-straight actin filaments into helices.
-The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match TEM images.
+The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match TEM (transmission electron microscopy) images.
 
 The third driving problem comes from our collaboration with Kerry Bloom, who is trying to make models of the mitotic spindle, a structure that separates chromosomes during cell division.
 As in the Lord case described above, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
@@ -284,7 +284,7 @@ Bloom needs SketchBio to rapidly generate models of microtubules and linked prot
 Our final driving problem also comes from the Bloom collaboration.
 Many proteins beyond cohesin and condensin contribute to mitosis, and Kerry Bloom is interested in them all.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
 With accurate localization and tracking for 3D images, these techniques provide partial information on the 3D layout of proteins and chromosomes in wild-type and mutant mitotic spindles.
-Building matching models requires the development of mass-spring-driven semi-automatic layout of proteins.
+Building models to match this information requires the development of mass-spring-driven semi-automatic layout of proteins.
 This will provide a partial set of constraints for the scientist to construct protein-protein and protein-chromosome complexes that match experimental data.
 With these enhancements, SketchBio will be widely useful to other researchers for the generation of hypothetical protein-complex structures from partial data.
 
@@ -318,7 +318,7 @@ There are also excellent general-purpose rendering programs (such as the commerc
 Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson2013}, and Molecular Maya \cite{molecularmaya}. The Bioblender package also leverages Blender for molecular modeling and supports collision detection \cite{zini2010bioblender}. These each require the scientist to learn the underlying complex rendering tool plus additional plug-in interfaces, making them less easy to learn and use. None of these tools currently support constrained layout along with rapidly-iterated, in-context design.
 These programs take important steps to reduce the number of total tools required during the process of making animations, while we aim streamline the process further by making the final package easier and quicker to use for biologists.
 
-Molecular Flipbook \cite{flipbook2013} aims at similar goals to SketchBio, providing an easty to use molecule-focused real-time interaction environment coupled to offline rendering using Blender and FFMPEG.  It does not currently support constraints on layout, aid in matching known structures, or bimanual interaction for rapid 6-degree-of-freedom placement.
+Molecular Flipbook \cite{flipbook2013} aims at similar goals to SketchBio, providing an easy to use molecule-focused real-time interaction environment coupled to offline rendering using Blender and FFMPEG.  It does not currently support constraints on layout, aid in matching known structures, or bimanual interaction for rapid 6-degree-of-freedom placement.
 We also considered this approach, but providing full capability would require replicating the many existing capabilities in molecular modeling tools and tracking new features as they are developed.
 
 \paragraph*{Interactive Animation:}
@@ -392,7 +392,7 @@ An alternative considered in early prototypes was to show the selected object in
 The indicator that an object has a keyframe at the current time is shown to assist animators.
 This is a set of "gift ribbons" on the oriented bounding box, the segments that connect the midpoints of edges on opposite sides of each face.  % XXX - Russ, if you can come up with a better way of phrasing this I'm all ears.
 This is chosen to minimally obscure the molecule while still indicating that there is a keyframe and not interfering with the selection indicator.
-At the request of our collaborators, molecule surfaces may be either one of a number of solid colors, colored by surface charge or colored by their nearness to the N-terminus or C-terminus of the protein.
+At the request of our collaborators, molecule surfaces may be either one of a number of solid colors, colored by surface charge or colored by their nearness to the N-terminus or C-terminus of the protein. Chimera calculates and export the datasets needed for the latter two coloring schemes.
 
 \begin{figure}[ht]
 \centering
@@ -465,12 +465,12 @@ These global settings are not currently exposed to the user of SketchBio because
 \paragraph*{Grouping:}
 Grouping of molecules into larger units is also supported to make constructing larger order structures easier.
 This also allows smooth animation of objects that are moving together without the small variations that even the most careful hand-placement will create.
-Copy and paste is also implemented and both single objects and groups can be copied and pasted, even between sessions.
+Copy and paste is also implemented and both single objects and groups can be copied and pasted, even between sessions. Additionally, a group of molecules constituting a structure that a user wants to use multiple times in different projects can be saved and then imported into other projects, eliminating the need to rebuild a large structure every time a new animation is created.
 Molecules can be added to groups or removed from them at keyframes, which allows objects to smoothly bind to groups together or break away in the middle of an animation.
 
 \paragraph*{Importing Molecules:}
 SketchBio generates molecular surfaces using UCSF Chimera.
-This subprocess is controlled via Python scripting and a custom plugin was written for Chimera's Python interface to export additional data from Chimera in the VTK file format.
+This subprocess is controlled via Python scripting and a custom plugin (ExportVTK) was written for Chimera's Python interface to export additional data from Chimera in the VTK file format.
 (This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.)
 This data includes residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.
 SketchBio uses these data sets to color the objects to be like the vinculin tail on the right in Figure \ref{fig:actin_vinculin}.
@@ -511,7 +511,7 @@ Given $T_A$ and $T_B$, the transformation matrices that define the positions of 
 B's position can be rewritten $T_B = T_A*T_{AB}$.  The next repeated molecule, C, has position $T_C = T_B*T_{AB} = T_A*T_{AB}^2$.
 This can be extended to generate arbitrary numbers of molecules in a structure that is determined simply by the first two.
 
-Many biological structures including actin fibers and microtubules form in structures that can be defined this way.
+Many biological structures including actin fibers and microtubules (major components of a cell's cytoskeleton) form in structures that can be defined this way.
 Figure \ref{fig:crystal_actin} shows an actin fiber generated this way in SketchBio.
 By allowing live updates of the entire structure as the initial two objects are manipulated, SketchBio allows the scientist to explore possibilities of these structures in real time.
 Some of these structures have a known transformation from one molecule to the next.
@@ -747,6 +747,8 @@ Spring connectors show unspecified interactions and support semi-automatic struc
 
 SketchBio is being released as open-source software.
 It is built using portable libraries and has been compiled and used on Windows, Mac OS X and Ubuntu Linux.
+Descriptions and videos of SketchBio can be found at http://sketchbio.org.
+SketchBio will be available for download at this location when it is released.
 
 \subsection*{Acknowledgements}
 This work was supported by NIH grant 5-P41-EB002025.
