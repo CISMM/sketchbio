@@ -408,7 +408,7 @@ Bill Buxton and others have described the benefits of two-handed (bimanual) inte
 He and others observed that bimanual manipulation brings ``two types of advantages to human-computer interaction: manual and cognitive. Manual benefits come from increased time-motion efficiency, due to the twice as many degrees of freedom simultaneously available to the user.
 Cognitive benefits arise as a result of reducing the load of mentally composing and visualizing the task at an unnaturally low level imposed by traditional unimanual techniques" \cite{Leganchuk1998manual}.
 
-As seen in Figure \ref{fig:two_hands}, SketchBio brings these important benefits to the construction of macromolecular structures.
+As seen in Figure \ref{fig:two_hands}, SketchBio brings bimanual interaction to the construction of macromolecular structures.
 The entire interface is built around a set of world and root-object manipulation controls in the non-dominant hand and a set of individual-element manipulation controls using the dominant hand.
 
 \begin{figure}[ht]
@@ -675,12 +675,12 @@ With the addition of the shadow plane below the objects to give better depth inf
 In all cases, the desired model was known a-priori; all cases measure time on task and do not count the time spent learning how to use the tool.
 In this case, SketchBio enabled model creation about 6 times as fast for a case of interest to our collaborators.
 
-A direct comparison between SketchBio and an existing production pipeline for a full animation is impractical due to the amount of effort required.
 To measure the effectiveness of SketchBio for the rapid construction of animations, we used it to create an animation of actin and vinculin (see supplemental materials).
 We were able to load the molecules, replicate them, place them, plan camera and motion paths, and start rendering in half an hour.
 The first-person design view and available pre-animation were crucial to this process, enabling design intent to be translated into action and evaluated rapidly enough to enable fluid iteration and planning.
 
-To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation); (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation); and (3) custom operations (crystal by example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.
+To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation) and (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation) to (3) the number of custom operations (crystal by example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.
+We compare this against other tools we have built to support biomedical applications \cite{CISMMapps}. SketchBio has a much better re-use ratio than tools which similarly span different domains (nanoManipulator, Camera Calibration, Chromatin Cutter, Template-Based Matching) and is on par with tools that are basically wrappers for calls to a single library (ImageTracker, Microscope Simulator).  It bests several of our single-domain tools (Video Spot Tracker, Video Optimizer, and WebSlinger).
 Furthermore, the scripting interfaces enable rapid inclusion of additional features from external programs without re-implementation.
 
 \subsection*{Meeting Design Goals}
