@@ -30,6 +30,7 @@ private:
     bool lAtEnd1, rAtEnd1;
     bool leftGrabbedSpring, rightGrabbedSpring;
 	bool snapMode;
+	bool settingRestLength;
 };
 
 #endif // SPRINGEDITINGMODE_H

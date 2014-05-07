@@ -20,7 +20,8 @@ SpringEditingMode::SpringEditingMode(SketchProject* proj, const bool* buttonStat
     rAtEnd1(true),
     leftGrabbedSpring(false),
     rightGrabbedSpring(false),
-	snapMode(false)
+	snapMode(false),
+	settingRestLength(false)
 {
 }
 
@@ -40,8 +41,10 @@ void SpringEditingMode::buttonPressed(int vrpn_ButtonNum)
     }
     else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
     {
-        if (lSpringDist < SPRING_DISTANCE_THRESHOLD)
+        if (lSpringDist < SPRING_DISTANCE_THRESHOLD) {
             leftGrabbedSpring = true;
+			settingRestLength = true;
+		}
         else if (grabbedWorld == WORLD_NOT_GRABBED)
             grabbedWorld = LEFT_GRABBED_WORLD;
     }
@@ -86,6 +89,7 @@ void SpringEditingMode::buttonReleased(int vrpn_ButtonNum)
     }
     else if (vrpn_ButtonNum == BUTTON_LEFT(BUMPER_BUTTON_IDX))
     {
+		settingRestLength = false;
         if (grabbedWorld == LEFT_GRABBED_WORLD)
         {
             grabbedWorld = WORLD_NOT_GRABBED;
@@ -155,10 +159,18 @@ void SpringEditingMode::analogsUpdated()
 {
 	ObjectGrabMode::analogsUpdated();
 	if (snapMode && (rSpringDist < SPRING_DISTANCE_THRESHOLD)) {
-        double value =  analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
+        double value = analogStatus[ ANALOG_RIGHT(TRIGGER_ANALOG_IDX) ];
 		bool snap_to_n = (value < 0.5) ? true : false;
         rSpring->snapToTerminus(rAtEnd1, snap_to_n);
     }
+	if (settingRestLength && (lSpringDist < SPRING_DISTANCE_THRESHOLD)) {
+		double value = analogStatus[ ANALOG_LEFT(TRIGGER_ANALOG_IDX) ];
+		double springLength = lSpring->getLength();
+		if (SpringConnection* s = dynamic_cast<SpringConnection*>(lSpring)) {
+			s->setMinRestLength(value * springLength);
+			s->setMaxRestLength(value * springLength);
+		}
+	}
 }
 
 static inline void processFrameForSide(SketchProject* project,

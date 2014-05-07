@@ -28,6 +28,8 @@ public:
     inline void setStiffness(double newK) { stiffness = newK; }
     inline double getMinRestLength() const { return minRestLength; }
     inline double getMaxRestLength() const { return maxRestLength; }
+	inline void setMinRestLength(double len) {minRestLength = len; }
+	inline void setMaxRestLength(double len) {maxRestLength = len; }
 
     virtual bool addForce();
 
