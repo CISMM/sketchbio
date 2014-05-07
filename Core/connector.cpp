@@ -178,7 +178,7 @@ double Connector::getLength() {
 	q_vec_type point1, point2;
 	getEnd1WorldPosition(point1);
 	getEnd2WorldPosition(point2);
-	return q_vec_distance(point1, point1);
+    return q_vec_distance(point1, point2);
 }
 
 static inline void snap(SketchObject* o, double value, q_vec_type dst)
