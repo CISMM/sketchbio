@@ -343,7 +343,8 @@ This is done by replacing objects with imposters which are simpler pieces of geo
 Imposters can be difficult to notice, especially if they are far from the camera and the resulting screen area is small.
 One type of imposter is a simplified version of the geometry that is textured to look like the more complex version \cite{decoret2003billboard,erikson1998simplification,cohen1998appearance}.
 Another common imposter is a square that has a pre-rendered image of the more complex object as its texture.  As long as the viewpoint stays near the same position the discrepancies between this and the actual geometry will be small \cite{aliaga1996visualization,maciel1995visual}.
-The level of simplification of an object can also be dynamically determined according to the amount of the allotted rendering time that is needed to draw each level of detai.  SketchBio uses Chimera and Blender to simplify geometry and the Visualization ToolKit (VTK) library to adjust rendered level of detail \cite{VTKbook}.
+The level of simplification of an object can also be dynamically determined according to the amount of the allotted rendering time that is needed to draw each level of detail.
+SketchBio uses Chimera and Blender to simplify geometry and the Visualization ToolKit (VTK) library to adjust rendered level of detail \cite{VTKbook}.
 
 \paragraph*{Collision Detection:}
 In order to create a model or animation that is useful, collisions between molecules must be detected and handled or reported to the user.
@@ -460,7 +461,7 @@ For scientists creating animations of molecules, SketchBio provides a basic inte
 Blender is a production level animation and rendering tool.  It has an extremely complex user interface with dozens of hotkeys, menus and buttons (see Figure \ref{fig:blender_interface}).
 Blender also has a Python scripting interface that provides access to all of its functionality.
 SketchBio uses this scripting interface to create its animations and render them in a high quality rendering engine, but provides a much simpler way to access that interface.
-SketchBio provides a set simple operations that is sufficient to meet the animation needs of our driving problems: moving along the video timeline, set keyframes on objects and view a low resolution animation preview.
+SketchBio provides a set simple operations that is sufficient to meet the animation needs of our driving problems: moving along the video timeline, setting keyframes on objects and viewing a low resolution animation preview.
 Keyframes save not only position and orientation of the objects for a certain time but also other changeable aspects such as color and grouping information.
 These values are then interpolated between the keyframes to produce the motion in the animation.
 The effects of this interpolation can be easily seen by the user by moving along the timeline or using the built-in animation preview.
@@ -548,7 +549,7 @@ Because the structure is moved as a unit, its internal geometry does not change 
 In the second case, the internal structure does change and both internal and external collisions must be tested.
 External collisions must test every object in the structure with every external object as above.
 
-The internal case is simpler.  Let $X_i$ be the ith object in the crystal by example structure with $X_1$ and $X_2$ being the two base object in the structure.
+In internal case we can leverage the known relationship between the objects to perform fewer tests.  Let $X_i$ be the ith object in the crystal by example structure with $X_1$ and $X_2$ being the two base object in the structure.
 Let $T_{i,j}$ be the transformation matrix from $X_i$ to $X_j$.
 The definition of the crystal-by-example structure is that $T_{i,i+1}$ is the same for all $i$ and the geometries of all the $X_i$s are the same.
 Since the geometries and transformations are the same, if there is a collision between the $ith$ and $(i+1)th$ objects anywhere in the structure, then there is also a collision between the $1st$ and $2nd$ objects.
