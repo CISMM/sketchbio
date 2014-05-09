@@ -278,13 +278,13 @@ Our second driving problem comes from Peter Thompson in Sharon Campbell's lab.
 Peter wants to construct 3D models and animations of the interaction between actin filaments and vinculin.
 Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments in order to connect them to other actin filaments or different proteins.
 Peter has used SketchBio to reproduce 3D geometry from example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
-He is particularly interested in using SketchBio as a thinking tool to determine how mutations in the vinculin can turn the normally-straight actin filaments into helices.
+He is particularly interested in using SketchBio as a thinking tool to determine how mutations in the vinculin can turn the normally-straight actin filament bundles into helical bundles.
 The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match TEM (transmission electron microscopy) images.
 
 The third driving problem comes from our collaboration with Kerry Bloom, who is trying to make models of the mitotic spindle, a structure that separates chromosomes during cell division.
 As in the Lord case described above, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
 Our program-generated models exhibit more symmetry than the experimental results only because of the difficulty in specifying more complex models that meet the geometric constraints (cohesin loops surrounding four chromatin, no self-intersection or entanglement, etc.).
-Bloom needs SketchBio to rapidly generate models of microtubules and linked protein-chromosome structures found in mitotic spindles, and he wants to produce of simulated fluorescence  images from the resulting structures to see what they would look like when viewed by a microscope.
+Bloom needs SketchBio to rapidly generate models of microtubules and linked protein-chromosome structures found in mitotic spindles, and he wants to produce simulated fluorescence  images from the resulting structures to see what they would look like when viewed by a microscope.
 
 Our final driving problem also comes from the Bloom collaboration.
 Many proteins beyond cohesin and condensin contribute to mitosis, and Kerry Bloom is interested in them all.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
@@ -397,7 +397,7 @@ An alternative considered in early prototypes was to show the selected object in
 The indicator that an object has a keyframe at the current time is shown to assist animators.
 This is a set of "gift ribbons" on the oriented bounding box, the segments that connect the midpoints of edges on opposite sides of each face.  % XXX - Russ, if you can come up with a better way of phrasing this I'm all ears.
 This is chosen to minimally obscure the molecule while still indicating that there is a keyframe and not interfering with the selection indicator.
-At the request of our collaborators, molecule surfaces may be either one of a number of solid colors, colored by surface charge or colored by their nearness to the N-terminus or C-terminus of the protein. Chimera calculates and export the datasets needed for the latter two coloring schemes.
+At the request of our collaborators, molecule surfaces may be either one of a number of solid colors, colored by surface charge or colored by their nearness along the protein backbone to the N-terminus or C-terminus of the protein. Chimera calculates and export the datasets needed for the latter two coloring schemes.
 
 \begin{figure}[ht]
 \centering
@@ -500,9 +500,9 @@ An observation about the motions of objects in SketchBio is: for most of the tim
 The user may even find it annoying if the object they are moving pushes the object they are attempting to dock it with away every time they accidentally collide.
 Therefore one simplification that can be made to collision detection is to employ what we call pose mode physics.
 In pose mode physics, only the objects directly manipulated by the user are allowed to move.
-Each other object is fixed in place and does not even move due to collision response forces.
+Each other object is fixed in place and does not even move when collision response forces are applied.
 The collision response forces on the object they are moving allow the objects to be slid along one another but not collide, and as a compromise between the above techniques if the response force fails to result in a collision free system, the position is not changed.
-This allows an easier time docking the molecules as the molecule not being held does not get pushed away.
+This allows for an easier time docking the molecules as the molecule not being held is not pushed away.
 This also greatly reduces the time taken to compute collision detection (as described later).
 
 \begin{figure}[h]
@@ -515,7 +515,7 @@ This also greatly reduces the time taken to compute collision detection (as desc
 Repeated structures that are formed from a single type of protein are common in biology (actin, microtubules, fibrin, etc.), so the ‘crystal-by-example' feature was added.
 Two of our driving problems involved structures of this type: Susan Lord's model of fibrin assumes this type of structure and the actin fibers for Peter Thompson's models are known to be in this class of structures.
 Our collaborators wanted to construct variants of such structures to study the changes caused by mutant proteins and to understand their native packing for comparison to TEM images.
-A similar problem is addressed in \cite{hornus2013easy} for DNA molecules by leeting users edit placement and twist of selected base pairs and interpolating in between these.
+A similar problem is addressed in \cite{hornus2013easy} for DNA molecules by letting users edit placement and twist of selected base pairs and interpolating in between these.
 Our crystal-by-example extends this by allowing the user to place two base molecules in six degrees of freedom and then repeatedly applys the six-degree-of-freedom offset between these base molecules to generate locations to place additional copies.
 Each replication of the base molecule follows the example set by the first two molecules, with the third molecule's placement relative to the second molecule being the same as that of the second molecule to the first, and so on.
 In this way, a repeated structure is formed by manipulating only one pair of molecules rather than tediously moving each individual piece to its proper place, further speeding up the process of building structures.
@@ -647,11 +647,12 @@ SketchBio has been used by a several scientists and has demonstrated success in 
 \subsection*{Use Case}
 Collaborator Peter Thompson, a biochemisty graduate student, created an animation of vinculin binding to an actin fiber (created with our crystal-by-example feature).
 This video used traslucent connectors to indicate the connection between the head and tail domains of vinculin where there is a region for which there is no crystal structure.
-The animation is based on the model presented in a recent paper.  He was able to create the video with minimal help from a computer scientist and plans to use it in an upcoming talk.
+The animation is based on the model presented in a recent paper he helped write \cite{thievessen2013vinculin}.
+He was able to create the video with minimal help from a computer scientist and plans to use it in an upcoming talk.
 The model in SketchBio is shown in Figure \ref{fig:peter_model} and a frame from the resulting video at approximately the same time is shown in Figure \ref{fig:peter_video}.
 This animation was based on a model from a paper he had read and wished to present.
 
-Peter also created a model based on a second paper using the charge-colored surfaces to gain a better understanding of the proposed model.
+Peter also created a models to compare the importance of electrostatics between two different models for vinculin tail interaction with actin \cite{janssen2006three}\cite{thompson2014identification}.
 
 Timing the creation of an animation in SketchBio against the animation he would do in PowerPoint for a presentation otherwise, Peter has found that it takes about twice as long to create the animation in SketchBio.
 However, he says that the improved quality of the animation is worth the additional time.
