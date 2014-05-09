@@ -58,6 +58,7 @@ class Hand
     // connector or world
     void grabNearestObject();
     void grabNearestConnector();
+    bool hasGrabbedConnector();
     void grabWorld();
     void releaseGrabbed();
 

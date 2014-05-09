@@ -60,9 +60,9 @@
 		<analog deviceName="razer" analogNumber="1" type="normalize">
 			<interval min="-1" max="1" hand="left" function="rotateCameraPitch" />
 		</analog>
-		<analog deviceName="razer" analogNumber="2" type="threshold">
-			<threshold pressedWhen="greater than" value="0.5" hand="right" function="setTerminusToSnapSpring" />
-		</analog>
+        <analog deviceName="razer" analogNumber="2" type="normalize">
+            <interval min="0" max="1" hand="left" function="adjustSpringRestLength" />
+        </analog>
 		<analog deviceName="razer" analogNumber="3" type="normalize">
 			<interval min="-1" max="1" hand="right" function="moveAlongTimeline" />
 		</analog>
@@ -70,7 +70,10 @@
 			<threshold pressedWhen="greater than" value="0.25" hand="right" function="selectChildOfCurrent" />
 			<threshold pressedWhen="less than" value="-0.25" hand="right" function="selectParentOfCurrent" />
 		</analog>
-	</mode>
+        <analog deviceName="razer" analogNumber="5" type="threshold">
+            <threshold pressedWhen="greater than" value="0.5" hand="right" function="setTerminusToSnapSpring" />
+        </analog>
+    </mode>
   <mode name="Animation" defaultSelection="Objects">
 		<button deviceName="razer" buttonNumber="0" hand="left" function="redo" />
 		<button deviceName="razer" buttonNumber="2" hand="left" function="toggleCollisionChecks" />

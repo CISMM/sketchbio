@@ -97,6 +97,8 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
     void setCrystalByExampleCopies(SketchBio::Project *, int, double);
     //move forward or backwards on animation timeline
     void moveAlongTimeline(SketchBio::Project *, int, double);
+    // adjusts the rest length of the spring grabbed
+    void adjustSpringRestLength(SketchBio::Project *, int, double);
 
   // NON CONTROL FUNCTIONS (but still useful)
   // Adds a save-to-xml undo state to the project for its current state

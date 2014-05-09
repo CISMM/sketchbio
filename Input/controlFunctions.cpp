@@ -1192,7 +1192,19 @@ void moveAlongTimeline(SketchBio::Project *project, int hand, double value)
     project->getOperationState(TIMELINE_OPERATION_FUNC_NAME));
   timeline->setDTime(dTime);
 }
-  
+
+void adjustSpringRestLength(SketchBio::Project *project, int hand, double value) {
+    SketchBio::Hand &handObj = project->getHand(hand == 0 ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+    if (handObj.hasGrabbedConnector()) {
+        SpringConnection *spring = dynamic_cast<SpringConnection*>(handObj.getNearestConnector(NULL));
+        if (spring != NULL) {
+            double length = spring->getLength();
+            spring->setMinRestLength(length * value);
+            spring->setMaxRestLength(length * value);
+        }
+    }
+}
+
 // ===== END ANALOG FUNCTIONS =====
   
 // ===== END NON CONTROL FUNCTIONS (but still useful) =====

@@ -902,6 +902,7 @@ static const char FUNC_NAME_ROTATE_CAMEA_YAW[] = "rotateCameraYaw";
 static const char FUNC_NAME_ROTATE_CAMEA_PITCH[] = "rotateCameraPitch";
 static const char FUNC_NAME_SET_CRYSTAL_BY_EXAMPLE_NUM_COPIES[] = "setCrystalByExampleCopies";
 static const char FUNC_NAME_MOVE_ALONG_TIMELINE[] = "moveAlongTimeline";
+static const char FUNC_NAME_ADJUST_SPRING_REST_LENGTH[] = "adjustSpringRestLength";
 
 //   TODO
 
@@ -989,6 +990,8 @@ ControlFunctions::AnalogControlFunctionPtr readAnalogFunction(
         return &ControlFunctions::setCrystalByExampleCopies;
     } else if (funcToAssign == FUNC_NAME_MOVE_ALONG_TIMELINE) {
         return &ControlFunctions::moveAlongTimeline;
+    } else if (funcToAssign == FUNC_NAME_ADJUST_SPRING_REST_LENGTH) {
+        return &ControlFunctions::adjustSpringRestLength;
     }
   return NULL;
 }

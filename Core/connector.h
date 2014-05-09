@@ -60,6 +60,8 @@ public:
     void getEnd2WorldPosition(q_vec_type out) const;
     void setEnd2WorldPosition(const q_vec_type newPos);
 
+    double getLength();
+
 	void snapToTerminus(bool on_object1, bool snap_to_n);
 
     // These may return NULL if the connector has no line & actor

@@ -305,6 +305,7 @@ class Hand::HandImpl
     // connector or world
     void grabNearestObject();
     void grabNearestConnector();
+    bool hasGrabbedConnector();
     void grabWorld();
     void releaseGrabbed();
 
@@ -558,6 +559,10 @@ void Hand::HandImpl::grabNearestConnector()
             nearestConnector->setObject2ConnectionPosition(nullVec);
         }
     }
+}
+
+bool Hand::HandImpl::hasGrabbedConnector() {
+    return CONNECTOR_GRABBED == grabType;
 }
 
 void Hand::HandImpl::grabWorld()
@@ -828,6 +833,7 @@ void Hand::computeNearestObjectAndConnector()
 void Hand::updateGrabbed() { impl->updateGrabbed(); }
 void Hand::grabNearestObject() { impl->grabNearestObject(); }
 void Hand::grabNearestConnector() { impl->grabNearestConnector(); }
+bool Hand::hasGrabbedConnector() { return impl->hasGrabbedConnector(); }
 void Hand::grabWorld() { impl->grabWorld(); }
 void Hand::releaseGrabbed() { impl->releaseGrabbed(); }
 void Hand::selectSubObjectOfCurrent() { impl->selectSubObjectOfCurrent(); }
