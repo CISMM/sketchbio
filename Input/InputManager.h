@@ -26,6 +26,10 @@ public:
     // Sets the project that this input manager's input will affect
     void setProject(SketchBio::Project *proj);
 
+public slots:
+	// Resets the vrpn server
+	void resetDevices();
+
 signals:
     // emitted whenever the mode changes
     void modeChanged();

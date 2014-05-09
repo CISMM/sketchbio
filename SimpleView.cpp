@@ -444,16 +444,13 @@ void SimpleView::openVTKFile()
 
 void SimpleView::restartVRPNServer()
 {
-    if (VRPN_USE_INTERNAL_SERVER) {
-        QMessageBox::information(
-            this, "Restart VRPN Server",
-            "Place the trackers on the correct sides of the base\n"
-            "Then click 'OK'.\nThere will be a delay while the"
-            " device is reset.");
-        qDebug() << "Restarting VRPN server.";
-        // signal the server to restart
-        // TODO - add restart vrpn server to InputManager functions
-    }
+    QMessageBox::information(
+        this, "Restart VRPN Server",
+		"Place the device(s) in their initial locations\n"
+        "Then click 'OK'.\nThere will be a delay while the"
+        " device is reset.");
+    // signal the server to restart
+	QTimer::singleShot(0,inputManager,SLOT(resetDevices()));
 }
 
 void SimpleView::saveProjectAs()

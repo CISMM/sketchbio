@@ -341,6 +341,7 @@ class InputManager::InputManagerImpl : public ButtonHandler,
 
   const QString &getModeName();
   void setProject(SketchBio::Project *proj);
+  void resetDevices();
 
   virtual void buttonStateChange(int buttonIndex, bool wasJustPressed);
   virtual void analogStateChange(int analogIndex, double newValue);
@@ -358,6 +359,7 @@ class InputManager::InputManagerImpl : public ButtonHandler,
   typedef QPair<QSharedPointer<vrpn_Analog_Remote>,
                 QSharedPointer<AnalogDeviceInfo> > AnalogPair;
   QProcess vrpn_server;
+  QStringList server_args;
   vtkSmartPointer<vtkMatrix4x4> trackersToRoom;
   QVector<ButtonPair> buttonDevices;
   QVector<AnalogPair> analogDevices;
@@ -414,6 +416,27 @@ void InputManager::InputManagerImpl::setProject(Project *proj) {
   if (project != NULL) {
     project->getTransformManager().setTrackerToRoomMatrix(trackersToRoom);
   }
+}
+
+void InputManager::InputManagerImpl::resetDevices() {
+	if (vrpn_server.state() == QProcess::Running) {
+		vrpn_server.kill();
+        std::cout << "Asking VRPN server to exit" << std::endl;
+        if (vrpn_server.waitForFinished()) {
+            std::cout << "VRPN server exited." << std::endl;
+        } else {
+            std::cout << "VRPN server failed to exit." << std::endl;
+            std::cout << QString(vrpn_server.readAllStandardError()).toStdString() << std::endl;
+            std::cout << QString(vrpn_server.readAllStandardOutput()).toStdString() << std::endl;
+        }
+	}
+    QString vrpnExecutable = SettingsHelpers::getSubprocessExecutablePath("vrpn_server");
+	vrpn_server.start(vrpnExecutable,server_args);
+	if (!vrpn_server.waitForStarted()) {
+        std::cout << "VRPN server failed to start." << std::endl
+                  << "VRPN executable: " << vrpnExecutable.toStdString() << std::endl
+                  << "VRPN cfg file: " << server_args[1].toStdString().c_str() << std::endl;
+    }
 }
 
 void InputManager::InputManagerImpl::buttonStateChange(int buttonIndex,
@@ -515,7 +538,8 @@ void InputManager::InputManagerImpl::parseXML(
   }
   std::cout << "Found vrpn.cfg file at: " << vrpnConfigFileAbsolute << std::endl;
   QString vrpnExecutable = SettingsHelpers::getSubprocessExecutablePath("vrpn_server");
-  vrpn_server.start(vrpnExecutable,QStringList() << "-f" << vrpnConfigFileAbsolute.c_str());
+  server_args << "-f" << vrpnConfigFileAbsolute.c_str();
+  vrpn_server.start(vrpnExecutable,server_args);
   if (!vrpn_server.waitForStarted()) {
       std::cout << "VRPN server failed to start." << std::endl
                 << "VRPN executable: " << vrpnExecutable.toStdString() << std::endl
@@ -1210,6 +1234,8 @@ const QString &InputManager::getModeName() { return impl->getModeName(); }
 void InputManager::setProject(SketchBio::Project *proj) {
   impl->setProject(proj);
 }
+
+void InputManager::resetDevices() { impl->resetDevices(); }
 
 void InputManager::notifyModeChanged() { emit modeChanged(); }
 
