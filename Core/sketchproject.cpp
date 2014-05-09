@@ -75,7 +75,7 @@ static bool rmDir(const QString &dirPath)
 // doing that turns out to be really annoying and breaks things when copying
 // from a subfolder to a parent folder
 
-static bool listDir(const QString &srcPath, QVector<QString> &files,
+static void listDir(const QString &srcPath, QVector<QString> &files,
                         QVector<QString> &dirs)
 {
     QDir srcDir(srcPath);
