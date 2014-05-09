@@ -1,5 +1,7 @@
 #include <QApplication>
 #include <QFileDialog>
+#include <QFile>
+#include <QDir>
 #include <QDebug>
 
 #include "SimpleView.h"
@@ -18,6 +20,14 @@ int main( int argc, char** argv )
   app.setApplicationName("Sketchbio");
   app.setOrganizationName("UNC Computer Science");
   app.setOrganizationDomain("sketchbio.org");
+
+  // fix current directory for Visual Studio/XCode and other IDES that put executables in
+  // folders based on build type.  This makes the default location of the device config files
+  // correct.
+  QString path = app.applicationDirPath();
+  if (path.endsWith("/Release") || path.endsWith("/Debug") || path.endsWith("RelWithDebInfo")) {
+	  QDir::setCurrent(path.mid(0,path.lastIndexOf("/")));
+  }
 
   // Parse the non-Qt part of the command line.
   // Start with default values.
