@@ -44,7 +44,6 @@
 
 #include <controlFunctions.h>
 #include <InputManager.h>
-#include <vrpnserver.h>
 
 #include <subprocessrunner.h>
 #include <subprocessutils.h>

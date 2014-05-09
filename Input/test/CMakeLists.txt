@@ -24,7 +24,6 @@ macro( make_input_test name source )
     add_test( ${testname} ${testname} )
 endmacro( make_input_test )
 
-make_input_test( GlobalControls TestGlobalControls.cxx )
 make_input_test( ColorFunctions TestColorFunctions.cxx )
 make_input_test( AnimationFunctions TestAnimationFunctions.cxx )
 make_input_test( TransformFunctions TestTransformFunctions.cxx )
