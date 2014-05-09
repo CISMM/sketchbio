@@ -112,6 +112,11 @@ int testToggleGroupMembership()
     return 1;
   }
   
+  // select group with left, instance with right
+  leftHandObj.computeNearestObjectAndConnector();
+  rightHandObj.computeNearestObjectAndConnector();
+  rightHandObj.selectSubObjectOfCurrent();
+
   //toggle, should add obj1 back to world
   ControlFunctions::toggleGroupMembership(&proj, 1, false);
   
