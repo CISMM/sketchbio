@@ -41,60 +41,90 @@
 #include "hand.h"
 #include "OperationState.h"
 
+
 //###############################################################
-// Code for rmDir and cpDir taken from mosg's StackOverflow answer
+// Code for rmDir taken from mosg's StackOverflow answer
 // to this question:
 // http://stackoverflow.com/questions/2536524/copy-directory-using-qt
 
 // This function implementes the shell command 'rm -r'
-static bool rmDir(const QString& dirPath)
+static bool rmDir(const QString &dirPath)
 {
-    QDir dir(dirPath);
-    if (!dir.exists()) return true;
-    foreach(const QFileInfo & info,
-            dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
-    {
-        if (info.isDir()) {
-            if (!rmDir(info.filePath())) return false;
-        } else {
-            if (!dir.remove(info.fileName())) return false;
-        }
+  QDir dir(dirPath);
+  if (!dir.exists())
+    return true;
+  foreach(const QFileInfo &info, dir.entryInfoList(QDir::Dirs | QDir::Files
+                                                   | QDir::NoDotAndDotDot)) {
+    if (info.isDir()) {
+      if (!rmDir(info.filePath()))
+        return false;
+    } else {
+      if (!dir.remove(info.fileName()))
+        return false;
     }
-    QDir parentDir(QFileInfo(dirPath).path());
-    return parentDir.rmdir(QFileInfo(dirPath).fileName());
+  }
+  QDir parentDir(QFileInfo(dirPath).path());
+  return parentDir.rmdir(QFileInfo(dirPath).fileName());
 }
+// end code taken from StackOverflow
+//###############################################################
+// listDir and cpDir heavily modified from same StackOverflow article
+// the original cpDir had issues with infinite recursion if copying a
+// folder to a subfolder of itself and so was almost completely rewritten
+// Another change is that cpDir no longer runs rmDir on the destination...
+// doing that turns out to be really annoying and breaks things when copying
+// from a subfolder to a parent folder
 
-// This function implements the shell command 'cp -r' except that it runs
-// 'rm -r' on the destination folder first
-static bool cpDir(const QString& srcPath, const QString& dstPath)
+static bool listDir(const QString &srcPath, QVector<QString> &files,
+                        QVector<QString> &dirs)
 {
-    rmDir(dstPath);
-    QDir parentDstDir(QFileInfo(dstPath).path());
-    if (!parentDstDir.mkpath(QFileInfo(dstPath).fileName())) return false;
-
     QDir srcDir(srcPath);
-    foreach(
-        const QFileInfo & info,
-        srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
-    {
+    foreach(const QFileInfo &info, srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
         QString srcItemPath = srcDir.absoluteFilePath(info.fileName());
-        QString dstItemPath = dstPath + "/" + info.fileName();
         if (info.isDir()) {
-            if (!cpDir(srcItemPath, dstItemPath)) {
-                return false;
-            }
+            dirs.append(srcItemPath);
+            listDir(srcItemPath,files,dirs);
         } else if (info.isFile()) {
-            if (!QFile::copy(srcItemPath, dstItemPath)) {
-                return false;
-            }
+            files.append(srcItemPath);
         } else {
             qDebug() << "Unhandled item " << info.filePath() << " in cpDir";
         }
     }
-    return true;
 }
-// end code taken from StackOverflow
-//###############################################################
+
+// This function implements the shell command 'cp -r'
+static bool cpDir(const QString& srcPath, const QString &dstPath)
+{
+  QFileInfo src(srcPath);
+  src.makeAbsolute();
+  QVector<QString> files, dirs;
+  listDir(srcPath,files,dirs);
+
+  QDir dstDir(dstPath);
+  QDir parentDstDir(QFileInfo(dstPath).path());
+  if (!dstDir.exists() && !parentDstDir.mkpath(QFileInfo(dstPath).fileName()))
+    return false;
+
+  QString absSrcPath = QFileInfo(srcPath).absoluteFilePath();
+  foreach(const QString &dir, dirs) {
+    QString str = dir.mid(absSrcPath.length()+1);
+    if (!dstDir.mkpath(str)) {
+      return false;
+    }
+  }
+  foreach(const QString &file, files) {
+    QString dstFilePath = dstPath + "/" + file.mid(absSrcPath.length()+1);
+    if (QFile(dstFilePath).exists()) {
+        if (!QFile(dstFilePath).remove()) {
+            return false;
+        }
+    }
+    if (!QFile::copy(file,dstFilePath)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 // helper function to compute position and orientation from vtkCamera
 // on return position and orientation will be in the quatlib types passed in
