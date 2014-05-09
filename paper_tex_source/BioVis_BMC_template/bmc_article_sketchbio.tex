@@ -487,11 +487,21 @@ These include ``pose-mode physics" that enables rapid docking of one protein wit
 Each of these is described, along with how they enable optimization of collision detection.  A third feature, spring-like connectors, is then described.
 
 \paragraph*{Pose Mode Physics:}
+Motion of objects in SketchBio is accomplished by applying forces and torques to the objects to move them similar to the way the user's hand has moved.
+This can result in the object lagging a few frames behind the user's hand but also smooths out motion, especially rotation, that the user may not have realized that they applied.
+
+When collision detection and response was first implemented in SketchBio, we implemented something close to the standard rigid body dynamics where objects push each other apart when colliding.
+But this caused users to have difficulty docking proteins together since the one moved would push the other away from it.
+Next we tried moving the object only if the end state would be collision free.
+This caused objects that the user was moving to be easily stuck and difficult to pull apart since the rotation of the user's hands usually introduced collisions as they were moving the objects apart.
+This technique also prevents sliding objects along the surfaces of other objects which can be useful.
+
 An observation about the motions of objects in SketchBio is: for most of the time working with the program, the only objects that move are those directly being manipulated by the user.
 The user may even find it annoying if the object they are moving pushes the object they are attempting to dock it with away every time they accidentally collide.
 Therefore one simplification that can be made to collision detection is to employ what we call pose mode physics.
 In pose mode physics, only the objects directly manipulated by the user are allowed to move.
 Each other object is fixed in place and does not even move due to collision response forces.
+The collision response forces on the object they are moving allow the objects to be slid along one another but not collide, and as a compromise between the above techniques if the response force fails to result in a collision free system, the position is not changed.
 This allows an easier time docking the molecules as the molecule not being held does not get pushed away.
 This also greatly reduces the time taken to compute collision detection (as described later).
 
@@ -643,7 +653,9 @@ This animation was based on a model from a paper he had read and wished to prese
 
 Peter also created a model based on a second paper using the charge-colored surfaces to gain a better understanding of the proposed model.
 
-He reports that its improved quality over PowerPoint-based animations and ease of use make learning SketchBio worth the effort to a scientist that wants to make more than one animation.
+Timing the creation of an animation in SketchBio against the animation he would do in PowerPoint for a presentation otherwise, Peter has found that it takes about twice as long to create the animation in SketchBio.
+However, he says that the improved quality of the animation is worth the additional time.
+He also likes SketchBio's ability to move the camera about the scene, show a linker region between known regions of vinculin that scales correctly as they move and accurately show the rotation of the vinculin tail domain.
 
 \begin{figure}[h]
 \centering
@@ -714,6 +726,11 @@ Forming a model to fit experimental data can still be a difficult task.  We are 
 
 The crystal-by-example feature could be made explicitly aware of the unit cell and symmetry information in the PDB files and adopt this as the default position.
 Currently this information is only used within UCSF Chimera which exports either a single unit or the full symmetry structure to SketchBio.
+
+The motion of objects could be changed to directly map the user's hand motion instead of moving toward it via force and torque being applied.
+This would allow a better mapping of hand location to object location and possibly a better interface.
+This could be combined with the collision detection type where objects are only allowed to move to a location if the result is collision free.
+The disadvantage of this approach is that the smoothing by the forces and torques no longer occurs meaning that any jitter in the device input is directly mapped to the object's motion.
 
 SketchBio currently lacks an internal mechanism to do modeling of structures not found in the PDB.
 This can be done using external modeling tools and importing models from .obj files, but collaborators have indicated that the ability to create ellipsoids, whose orientation and per-axis flatness could be controlled, would be a way to rapidly fill in notional structures without having to leave the workflow.
