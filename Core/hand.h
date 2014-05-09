@@ -15,6 +15,10 @@ class WorldManager;
 namespace SketchBio
 {
 
+/*
+ * This class encapsulates the representation of the user's hand and operations that
+ * can be performed with the hand.
+ */
 class Hand
 {
    public:
@@ -25,6 +29,7 @@ class Hand
 
     virtual ~Hand();
 
+    // pulls the new position and orientation from the transform manager
     void updatePositionAndOrientation();
     void getPosition(q_vec_type pos);
     void getOrientation(q_type orient);
@@ -41,6 +46,9 @@ class Hand
     // Computes the nearest object and connector and the distances to them
     // Should be called every frame or at least before the getNearestX
     // functions are called
+    // Note: to avoid user confusion, if an operation adds/removes the nearest
+    // object from a group, the nearest object should be cleared with
+    // clearNearestObject
     void computeNearestObjectAndConnector();
     // Updates whatever is grabbed.  This function should be called
     // each frame
