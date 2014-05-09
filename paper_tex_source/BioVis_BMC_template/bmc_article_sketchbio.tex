@@ -278,8 +278,6 @@ Our second driving problem comes from Peter Thompson in Sharon Campbell's lab.
 Peter wants to construct 3D models and animations of the interaction between actin filaments and vinculin.
 Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments in order to connect them to other actin filaments or different proteins.
 Peter has used SketchBio to reproduce 3D geometry from example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
-He is particularly interested in using SketchBio as a thinking tool to determine how mutations in the vinculin can turn the normally-straight actin filament bundles into helical bundles.
-The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match TEM (transmission electron microscopy) images.
 
 The third driving problem comes from our collaboration with Kerry Bloom, who is trying to make models of the mitotic spindle, a structure that separates chromosomes during cell division.
 As in the Lord case described above, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
@@ -659,6 +657,11 @@ Timing the creation of an animation in SketchBio against the animation he would 
 However, he says that the improved quality of the animation is worth the additional time.
 He also likes SketchBio's ability to move the camera about the scene, show a linker region between known regions of vinculin that scales correctly as they move and accurately show the rotation of the vinculin tail domain.
 
+XXX - Russ, this paragraph may need biology explained...
+Peter has also requested other features from SketchBio that were not originally a part of his reason for working with us.
+He is particularly interested in using SketchBio as a thinking tool to determine how mutations in the vinculin can turn the normally-straight actin filament bundles into helical bundles.
+The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match negative stain electron microscopy images.
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\columnwidth]{peter_model.png}
@@ -724,7 +727,7 @@ Thus, SketchBio does not yet support automatically-placed molecules to fill the 
 As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle this large number of background molecules.
 
 % Optimization module... in progress, maybe talk about
-Forming a model to fit experimental data can still be a difficult task.  We are working on a module to optimize the placement of molecules based on a set of constraints.
+Forming a model to fit experimental data can still be a difficult task.  We are working on a module to optimize the placement of molecules based on a set of constraints.  This work is being driven by the new questions that Peter is trying to ask, mentioned in the Results and Discussion section.
 
 The crystal-by-example feature could be made explicitly aware of the unit cell and symmetry information in the PDB files and adopt this as the default position.
 Currently this information is only used within UCSF Chimera which exports either a single unit or the full symmetry structure to SketchBio.
