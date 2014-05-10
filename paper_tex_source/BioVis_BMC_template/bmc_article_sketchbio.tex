@@ -277,7 +277,7 @@ This same capability will enable generation of other self-symmetric structures s
 Our second driving problem comes from Peter Thompson in Sharon Campbell's lab.
 Peter wants to construct 3D models and animations of the interaction between actin filaments and vinculin.
 Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments in order to connect them to other actin filaments or different proteins.
-Peter has used SketchBio to reproduce 3D geometry from example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
+Peter has used SketchBio to reproduce 3D geometry from two example structures found in the literature and to generate animated videos to show his hypothetical interactions to colleagues.
 
 The third driving problem comes from our collaboration with Kerry Bloom, who is trying to make models of the mitotic spindle, a structure that separates chromosomes during cell division.
 As in the Lord case described above, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
@@ -299,7 +299,7 @@ The application-specific workflow issues from our several collaborators can be s
   \item[$\bullet$ Appropriately constrain layout.] Some molecular structures should not overlap, others (drug vs. protein) overlap as part of their function, others (fibrin, actin) assemble into repeated structures.  In some cases, the distances between individual elements is known but their 3D layout is not.  Supporting all of these cases will enable a biologist to most rapidly explore the space of possible conformations to produce consistent models.
   \item[$\bullet$ Support rapidly iterated, in-context design.] Whether working alone or in a group, understanding the interactions between dozens of molecules requires repeated adjustment of proposed locations and motions.  The reasonableness of interactions depends on nearby molecules, which change over time.  We have found that generating consistent models requires trying and optimizing many potential solutions before the final model is found.
   \item[$\bullet$ Support high-quality rendering.] Once a proposed model has been completed, static and animated images that use the most-effective lighting and surface rendering techniques are critical to conveying the model and its behavior to others.
-  \item[$\bullet$ Aid in matching known structures.] Both the fibrin study and the actin/vinculin study aim to produce models that match features seen in TEM images of molecules.  This requires matching spacing, helicity, and angles with experimentally-determined values.  It also requires the ability to render simulated microscope images in addition to standard surface-based rendering styles.
+  \item[$\bullet$ Aid in matching known structures.] Both the fibrin study and the actin/vinculin study aim to produce models that match features seen in electron-microscopy images of molecules.  This requires matching spacing, helicity, and angles with experimentally-determined values.  It also requires the ability to render simulated microscope images in addition to standard surface-based rendering styles.
 \end{description}
 
 
@@ -513,7 +513,7 @@ This also greatly reduces the time taken to compute collision detection (as desc
 \paragraph*{Crystal-by-example:}
 Repeated structures that are formed from a single type of protein are common in biology (actin, microtubules, fibrin, etc.), so the ‘crystal-by-example' feature was added.
 Two of our driving problems involved structures of this type: Susan Lord's model of fibrin assumes this type of structure and the actin fibers for Peter Thompson's models are known to be in this class of structures.
-Our collaborators wanted to construct variants of such structures to study the changes caused by mutant proteins and to understand their native packing for comparison to TEM images.
+Our collaborators wanted to construct variants of such structures to study the changes caused by mutant proteins and to understand their native packing for comparison to electron microscopy images.
 A similar problem is addressed in \cite{hornus2013easy} for DNA molecules by letting users edit placement and twist of selected base pairs and interpolating in between these.
 Our crystal-by-example extends this by allowing the user to place two base molecules in six degrees of freedom and then repeatedly applys the six-degree-of-freedom offset between these base molecules to generate locations to place additional copies.
 Each replication of the base molecule follows the example set by the first two molecules, with the third molecule's placement relative to the second molecule being the same as that of the second molecule to the first, and so on.
