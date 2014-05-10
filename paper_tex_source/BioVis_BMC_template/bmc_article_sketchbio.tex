@@ -335,12 +335,17 @@ SketchBio's bimanual 6-degree-of-freedom manipulation sets it apart from all of 
 \paragraph*{Interactive Rendering:}
 A common bottleneck in interactive modeling and animation applications is the speed of rendering a complex scene.
 Sketchbio requires real-time rendering due to the nature of its input, as objects on the screen must be able to move at the same speed as the user's hand so that the object appears to move naturally as if the user is actually holding it. 
+
 A key technique in improving the rendering speed of an application is reducing the complexity of the objects that are drawn.
 This is done by replacing objects with imposters which are simpler pieces of geometry that result in the same or a very similar result being rendered.
 Imposters can be difficult to notice, especially if they are far from the camera and the resulting screen area is small.
 One type of imposter is a simplified version of the geometry that is textured to look like the more complex version \cite{decoret2003billboard,erikson1998simplification,cohen1998appearance}.
 Another common imposter is a square that has a pre-rendered image of the more complex object as its texture.  As long as the viewpoint stays near the same position the discrepancies between this and the actual geometry will be small \cite{aliaga1996visualization,maciel1995visual}.
+
 The level of simplification of an object can also be dynamically determined according to the amount of the allotted rendering time that is needed to draw each level of detail.
+
+Another approach to enabling interactive rendering of complex design spaces is to precompute an ensemble of possible solutions and then interactively explore the design space by directly manipulating portions of it and morphing between existing solutions \cite{Coffey2013}. The space of potential molecular interactions for dozens of molecules is so large, and the ease of testing and rendering each configuration so small, that it was more efficient for SketchBio to directly model and render.
+
 SketchBio uses Chimera and Blender to simplify geometry and the Visualization ToolKit (VTK) library to adjust rendered level of detail \cite{VTKbook}.
 
 \paragraph*{Collision Detection:}
