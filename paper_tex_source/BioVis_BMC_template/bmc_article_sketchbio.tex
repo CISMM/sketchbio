@@ -358,7 +358,7 @@ SketchBio takes a similar approach, using a novel core component that provides i
 
 \section*{Methods}
 
-SketchBio is a system for understanding subcellular biology through the building of complex 3D macromolecular structures, and animating the structures over time.
+SketchBio is a system for understanding subcellular biology through the building of complex 3D macromolecular structures and animating the structures over time.
 
 The modeling and rendering of these hypothetical structures currently involves using a number of tools and databases and converting files and data to pass between tools.
 
@@ -368,22 +368,19 @@ It adds several novel features that accelerate this workflow for three different
 \subsection*{System Overview}
 
 Figure \ref{fig:actin_vinculin} shows a screenshot of the SketchBio user interface with a group of three actin molecules (left) and the tail region of a vinculin molecule (right).
-The molecules seen here use imposters with simplified surface geometry while developing the animation, but the full resolution models will appear in the final animation.
-The small white spheres in the center represent the two tracked hand-held controllers. Status information about the current system state is shown in the lower left.
-Animation timepoint in seconds is shown in the lower right.
+SketchBio uses imposters with simplified surface geometry while developing the animation, but uses full resolution models for final rendering.
+The small white spheres follow the two tracked hand-held controllers. Status information is shown in the lower left.
+The current animation time point is shown in the lower right.
 
-% paragraph added in response to review (summary review 3rd bullet)
-Molecules in SketchBio are currently represented as rigid surfaces approximating the Connolly Solvent-Excluded Surface of the molecule.
-% These were chosen because they were easy and made sense to a developer new to working with biologists...
-These were chosen because they are quick to simplify to other levels of detail and because our collaborators used surface models in their current work for all four of our driving problems.
-The selection is indicated in SketchBio by showing an outline of the oriented bounding box of the molecule or molecules selected. 
-This easily identifies the selection at a constant computational complexity per molecule and avoids obscuring the surface as much as possible.
-Color of this outline indicates to the user whether they are selecting a group or an object within a group.
-An alternative considered in early prototypes was to show the selected object in wireframe, but this was found to disrupt perception of the orientation of the molecule.
-The indicator that an object has a keyframe at the current time is shown to assist animators.
-This is a set of "gift ribbons" on the oriented bounding box, the segments that connect the midpoints of edges on opposite sides of each face.  % XXX - Russ, if you can come up with a better way of phrasing this I'm all ears.
-This is chosen to minimally obscure the molecule while still indicating that there is a keyframe and not interfering with the selection indicator.
-At the request of our collaborators, molecule surfaces may be either one of a number of solid colors, colored by surface charge or colored by their nearness along the protein backbone to the N-terminus or C-terminus of the protein. Chimera calculates and export the datasets needed for the latter two coloring schemes.
+Molecules in SketchBio are represented as rigid surfaces approximating the Connolly Solvent-Excluded Surface of the molecule.
+These were chosen because our collaborators used surface models in their current work for all four driving problems.  The surfaces may use solid colors, be colored by surface charge, or be colored by their nearness along the protein backbone to the N-terminus or C-terminus of the protein.
+
+Object selection is indicated by drawing the outline of the oriented bounding box of the selected molecule molecules. 
+Color of this outline indicates whether a group or single object is selected.
+(An earlier design showed the selected object in wireframe, but this was found to disrupt perception of the orientation of the molecule.)
+
+A set of ``gift ribbons'' drawn on the oriented bounding box indicates that an object has a keyframe at the current time.
+This was chosen to minimally obscure the molecule and selection indicators.
 
 \begin{figure}[ht]
 \centering
