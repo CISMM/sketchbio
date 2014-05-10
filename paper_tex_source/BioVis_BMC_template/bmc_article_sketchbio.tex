@@ -557,7 +557,7 @@ Thus only the $1st$ object in the structure needs to be tested against the other
 SketchBio also has connectors that can be added between objects.
 These can act like springs and apply forces to keep objects positioned relative to each other or they can simply indicate that two objects are connected.
 Many proteins have regions for which the structure is unknown and these regions can be represented with these connectors.
-Responding to a scientist's request, the a connector end can be snapped to the N-terminus or C-terminus of a protein, removing the difficulty of precise hand placement.
+Responding to a scientist's request, the connector end can be snapped to the N-terminus or C-terminus of a protein, removing the difficulty of precise hand placement.
 
 When acting as springs, connectors can have non-zero rest length.
 When editing a set of proteins some of whose separations are known experimentally (through two-color fluorescence labeleing, FRET, or other techniques as in our final driving problem), this can be used to specify soft constraints on the 3D layout of the proteins, guiding the scientist away from impossible structures. This greatly reduces the conformation space that must be searched to determine molecular arrangements.
@@ -580,7 +580,7 @@ It includes custom code only for the real-time interaction, animation, and model
 
 The architecture of SketchBio is shown in Figure \ref{fig:architecture}.
 SketchBio harnesses external programs when possible (PyMOL, Chimera, Blender) and uses existing libraries for other core functions (VTK, PQP, VRPN).
-It maps from dozens of controls in Chimera and hundreds of controls in Blender down to 4 input options and about 20 animation controls to streamline the tasks needed for creating structures and animations.
+It maps from dozens of controls in Chimera and hundreds of controls in Blender down to 4 input options and about 20 modeling and animation controls to streamline the tasks needed for creating structures and animations.
 
 Exporting data to Blender is done by writing a script to be run on Blender's Python interface to produce the animation.
 When exporting to MicroscopeSimulator, SketchBio writes out a Microscope Simulator XML project file and loads the project into MicroscopeSimulator.
@@ -733,7 +733,7 @@ SketchBio includes state-of-the art bimanual interaction, drop shadows to improv
 SketchBio also includes novel interaction and computational techniques that directly support the construction of macromolecular structures.
 Crystal by example and pose-mode physics both provide improved modeling capabilities and both enable more-rapid collision detection.
 Spring connectors show unspecified interactions and support semi-automatic structure formation.
-These novel capabilities can be added to existing molecular modeling tools and included in future tools, proviing the same acceleration of model building and evaluation.
+These novel capabilities can be added to existing molecular modeling tools and included in future tools, providing the same acceleration of model building and evaluation.
 
 Both crystal-by-example and pose-mode physics enable real-time collision-detection to scale to much larger collections of molecules than are possible using existing techniques that must check for collisions among all objects. The ability to load arbitrary geometry files enables the tool to scale beyond molecule types that can be found in the protein data bank.
 
