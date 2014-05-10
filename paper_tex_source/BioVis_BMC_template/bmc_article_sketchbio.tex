@@ -282,7 +282,7 @@ Peter has used SketchBio to reproduce 3D geometry from two example structures fo
 The third driving problem comes from our collaboration with Kerry Bloom, who is trying to make models of the mitotic spindle, a structure that separates chromosomes during cell division.
 As in the Lord case described above, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
 Our program-generated models exhibit more symmetry than the experimental results only because of the difficulty in specifying more complex models that meet the geometric constraints (cohesin loops surrounding four chromatin, no self-intersection or entanglement, etc.).
-Bloom needs SketchBio to rapidly generate models of microtubules and linked protein-chromosome structures found in mitotic spindles, and he wants to produce simulated fluorescence  images from the resulting structures to see what they would look like when viewed by a microscope.
+Bloom needs SketchBio to rapidly generate models of microtubules and linked protein-chromosome structures found in mitotic spindles.
 
 Our final driving problem also comes from the Bloom collaboration.
 Many proteins beyond cohesin and condensin contribute to mitosis, and Kerry Bloom is interested in them all.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
@@ -299,7 +299,6 @@ The application-specific workflow issues from our several collaborators can be s
   \item[$\bullet$ Appropriately constrain layout.] Some molecular structures should not overlap, others (drug vs. protein) overlap as part of their function, others (fibrin, actin) assemble into repeated structures.  In some cases, the distances between individual elements is known but their 3D layout is not.  Supporting all of these cases will enable a biologist to most rapidly explore the space of possible conformations to produce consistent models.
   \item[$\bullet$ Support rapidly iterated, in-context design.] Whether working alone or in a group, understanding the interactions between dozens of molecules requires repeated adjustment of proposed locations and motions.  The reasonableness of interactions depends on nearby molecules, which change over time.  We have found that generating consistent models requires trying and optimizing many potential solutions before the final model is found.
   \item[$\bullet$ Support high-quality rendering.] Once a proposed model has been completed, static and animated images that use the most-effective lighting and surface rendering techniques are critical to conveying the model and its behavior to others.
-  \item[$\bullet$ Aid in matching known structures.] Both the fibrin study and the actin/vinculin study aim to produce models that match features seen in electron-microscopy images of molecules.  This requires matching spacing, helicity, and angles with experimentally-determined values.  It also requires the ability to render simulated microscope images in addition to standard surface-based rendering styles.
 \end{description}
 
 
@@ -321,7 +320,7 @@ There are also excellent general-purpose rendering programs (such as the commerc
 Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson2013}, and Molecular Maya \cite{molecularmaya}. The Bioblender package also leverages Blender for molecular modeling and supports collision detection \cite{zini2010bioblender}. These each require the scientist to learn the underlying complex rendering tool plus additional plug-in interfaces, making them less easy to learn and use. None of these tools currently support constrained layout along with rapidly-iterated, in-context design.
 These programs take important steps to reduce the number of total tools required during the process of making animations, while we aim streamline the process further by making the final package easier and quicker to use for biologists.
 
-Molecular Flipbook \cite{flipbook2013} aims at similar goals to SketchBio, providing an easy to use molecule-focused real-time interaction environment coupled to offline rendering using Blender and FFMPEG.  It does not currently support constraints on layout, aid in matching known structures, or bimanual interaction for rapid 6-degree-of-freedom placement.
+Molecular Flipbook \cite{flipbook2013} aims at similar goals to SketchBio, providing an easy to use molecule-focused real-time interaction environment coupled to offline rendering using Blender and FFMPEG.  It does not currently support constraints on layout or bimanual interaction for rapid 6-degree-of-freedom placement.
 We also considered this approach, but providing full capability would require replicating the many existing capabilities in molecular modeling tools and tracking new features as they are developed.
 
 \paragraph*{Interactive Animation:}
@@ -331,7 +330,7 @@ SketchBio uses similar two-handed 6-degree-of-freedom input devices (the Razer H
 Another tool aimed at simplifying the creation of molecular animations, PresentaBALL\cite{nickelspresentaball}, uses an interactive web interface to an existing molecular modeling tool \cite{nickelspresentaball}.
 This allows widespread use by non-experts to develop presentation materials for training.  SketchBio provides a custom interface for experts to use as a thinking aid that is tied to a powerful rendering engine to produce animations.
 
-SketchBio's bimanual 6-degree-of-freedom manipulation sets it apart from all of the applications described above because it lets the user move molecules and craft animations much faster and more naturally than tools that use a mouse and keyboard to manipulate objects. Its support of appropriately-constrained layout using several features (configurable collision detection, spring-based layout,  and crystal by example) and its ability to produce both fluorescence-microscopy and 3D graphics output meet needs expressed by our collaborators that are unmet by any published tool.
+SketchBio's bimanual 6-degree-of-freedom manipulation sets it apart from all of the applications described above because it lets the user move molecules and craft animations much faster and more naturally than tools that use a mouse and keyboard to manipulate objects. Its support of appropriately-constrained layout using several features (configurable collision detection, spring-based layout,  and crystal by example) meet needs expressed by our collaborators that are unmet by any published tool.
 
 \paragraph*{Interactive Rendering:}
 A common bottleneck in interactive modeling and animation applications is the speed of rendering a complex scene.
@@ -636,13 +635,6 @@ This works well with the goal of utilizing other existing programs as subprocess
 \section*{Results and Discussion}
 SketchBio has been used by a several scientists and has demonstrated success in meeting its design goals.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.9\columnwidth]{joe_test.png}
-\caption{A view of the model Joe Hsiao created with SketchBio to compare usibility with UCSF Chimera}
-\label{fig:joe_test}
-\end{figure}
-
 \subsection*{Use Case}
 Collaborator Peter Thompson, a biochemisty graduate student, created an animation of vinculin binding to an actin fiber (created with our crystal-by-example feature).
 This video used traslucent connectors to indicate the connection between the head and tail domains of vinculin where there is a region for which there is no crystal structure.
@@ -655,7 +647,7 @@ Peter also created a models to compare the importance of electrostatics between 
 
 Timing the creation of an animation in SketchBio against the animation he would do in PowerPoint for a presentation otherwise, Peter has found that it takes about twice as long to create the animation in SketchBio.
 However, he says that the improved quality of the animation is worth the additional time.
-He also likes SketchBio's ability to move the camera about the scene, show a linker region between known regions of vinculin that scales correctly as they move and accurately show the rotation of the vinculin tail domain.
+He also likes SketchBio's ability to move the camera about the scene, show a linker region between known regions of vinculin that scales correctly as they move and accurately show the rotation of the vinculin tail domain.  XXX Add the rest of Peter's comments and reword.
 
 XXX - Russ, this paragraph may need biology explained...
 Peter has also requested other features from SketchBio that were not originally a part of his reason for working with us.
@@ -678,6 +670,14 @@ This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and 
 \label{fig:peter_video}
 \end{figure}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\columnwidth]{peter_powerpoint_animation.png}
+\caption{A frame from a 2D animation created by Peter Thompson for the same case as figure \ref{fig:peter_video}.
+This video was created in Microsoft Powerpoint using separately-rendered single views of the proteins.}
+\label{fig:peter_powerpoint}
+\end{figure}
+
 \subsection*{Success Metrics}
 % some wording borrowed from renewal proposal
 Our primary success metric is the extent to which collaborators are able to use SketchBio themselves to construct models and animations for which they previously required programmers.
@@ -696,6 +696,13 @@ From this demonstration the lack of depth cues became apparent as Joe spent most
 With the addition of the shadow plane below the objects to give better depth information and other features, Joe constructed the model in 35 minutes after about an hour of training.
 In all cases, the desired model was known a-priori; all cases measure time on task and do not count the time spent learning how to use the tool.
 In this case, SketchBio enabled model creation about 6 times as fast for a case of interest to our collaborators.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\columnwidth]{joe_test.png}
+\caption{A view of the model Joe Hsiao created with SketchBio to compare usibility with UCSF Chimera}
+\label{fig:joe_test}
+\end{figure}
 
 To measure the effectiveness of SketchBio for the rapid construction of animations, we used it to create an animation of actin and vinculin (see supplemental materials).
 We were able to load the molecules, replicate them, place them, plan camera and motion paths, and start rendering in half an hour.
@@ -716,10 +723,6 @@ Pose-mode physics, with the option to turn it off, supports both preventing and 
 
 \paragraph*{Support high-quality rendering:}
 The image frames in the paper and rendering in the associated online materials demonstrate the full-resolution rendering with intra- and inter-object shadowing required to perceive both complex local shape and 3D relationships between objects.
-
-\paragraph*{Aid in matching known structures:}
-XXX Make a simple model that can be exported to fluorescence simulator and rendered?
-XXX Talk about crystal-by-example?
 
 \section*{Limitations and future work}
 Our collaborators' projects have so far involved hand-placed molecules of density sufficiently small to be understood when all of them are visible.
@@ -764,7 +767,6 @@ It has been tested and shown to meet its design goals:
   \item[$\bullet$ Appropriately constrain layout.] Configurable collision detection, fixed-length springs, and crystal-by-example support all listed cases.
   \item[$\bullet$ Support rapidly iterated, in-context design.] Real-time 6-degree-of-freedom interaction, live animation preview, and viewpoint control enable embedded design.
   \item[$\bullet$ Support high-quality rendering.] By harnessing Blender.
-  \item[$\bullet$ Aid in matching known structures.] By harnessing Microscope Simulator for rendering.
 \end{description}
 
 SketchBio includes state-of-the art bimanual interaction, drop shadows to improve depth perception, and other standard modeling and animation behaviors (grouping, spline interpolation, level-of-detail rendering, rapid collision detection, real-time preview).
