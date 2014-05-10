@@ -409,7 +409,7 @@ The entire interface is built around a set of world and root-object manipulation
 SketchBio uses a pair of Razer Hydra controllers to provide two 6-DOF trackers, each of which also has several buttons, a hi-hat controller, and an analog input.
 This enables a very expressive set of verbs (buttons), nouns (selection via 3-DOF positioning), and adjectives (magnitude via analog inputs, viewpoint via hi-hat, and pose via a combined 12-DOF tracking).
 This avoids the need for the system to recognize a large set of ambiguous gestures, as is the case for video-based user input.
-Use of this device allows the interface for moving objects to mirror a task users are already familiar with, namely reaching out, grabbing an object and moving it to a new location.
+Use of this device enables the interface for moving objects to mirror a task users are already familiar with, namely reaching out, grabbing an object and moving it to a new position and orientation.
 
 Using one of the buttons to switch between modes provides a sufficiently-large space of commands that almost all operations can be performed without putting down the controllers.
 The keyboard and mouse are used to name proteins and files on initial loading, and to set precise values as needed for one or two operations.
@@ -422,12 +422,13 @@ The keyboard and mouse are used to name proteins and files on initial loading, a
 \end{figure}
 
 \paragraph*{Shadows:}
-Selection in SketchBio involves moving the tracker to a location within the bounding box of the object, so determining the relative depth between the tracker and the object is an important and often-performed task.
-Initial testing of the application revealed that determining the relative depth between an object and the user's hand or between two objects was the most difficult part of using SketchBio.
+Because selection in SketchBio requires placing the tracker within the bounding box of the object, determining the relative depth between tracker and object is an important and often-performed task.
+Initial testing of the application revealed that determining the relative depth between an object and the tracker or between two objects was the most difficult part of using SketchBio.
 Because widespread adoption would be limited by requiring stereo displays and head tracking, we sought another solution.
+
 Hendrix and Barfield found the most effective techniques for aiding in depth estimation are a textured plane and lines dropped from the center of an object to the textured plane \cite{hendrix1995relationship}.
 To provide additional depth cues, SketchBio displays a ground plane that is always rendered below the viewpoint no matter the direction or position of the viewpoint and projects the shadows of objects onto this plane.
-The trackers also cast shadows onto this plane (which are darker to highlight them).
+The trackers also cast shadows onto this plane (which are darker and larger to highlight them).
 SketchBio assumes a light infinitely far away in the default camera's up direction which gives the same absolute position against the textured surface as the drop-lines while also giving information about how close the boundaries of two objects are to each other.
 The user can also rotate the camera while leaving the light and shadow plane fixed to get a better understanding of the scene through motion parallax [See Figure \ref{fig:shadow_plane}].
 
@@ -440,53 +441,49 @@ The user can also rotate the camera while leaving the light and shadow plane fix
 
 \paragraph*{Animations:}
 For scientists creating animations of molecules, SketchBio provides a basic interface to a much more complex system.
-Blender is a production level animation and rendering tool.  It has an extremely complex user interface with dozens of hotkeys, menus and buttons (see Figure \ref{fig:blender_interface}).
+Blender is a production level animation and rendering tool that has an extremely complex user interface with dozens of hotkeys, menus and buttons (see Figure \ref{fig:blender_interface}).
 Blender also has a Python scripting interface that provides access to all of its functionality.
-SketchBio uses this scripting interface to create its animations and render them in a high quality rendering engine, but provides a much simpler way to access that interface.
+SketchBio uses this scripting interface to create its animations and render them in a high quality rendering engine, but provides a much simpler user interface.
 SketchBio provides a set simple operations that is sufficient to meet the animation needs of our driving problems: moving along the video timeline, setting keyframes on objects and viewing a low resolution animation preview.
-Keyframes save not only position and orientation of the objects for a certain time but also other changeable aspects such as color and grouping information.
-These values are then interpolated between the keyframes to produce the motion in the animation.
+
+Keyframes can modify color and grouping information as well as object position and orientation.
+These values are interpolated between keyframes using splines to produce smooth motion and changes.
 The effects of this interpolation can be easily seen by the user by moving along the timeline or using the built-in animation preview.
-These values are also exported to Blender with a set of predefined global settings for effects and position of light sources to produce a full-quality rendering.
-These global settings are not currently exposed to the user of SketchBio because our purpose is to create a simpler interface to enable faster creation of animations without the requirement of learning a complex tool or hiring a third party.
+The scene is exported to Blender with a set of predefined global settings for effects and position of light sources to produce a full-quality rendering.
 
 \paragraph*{Grouping:}
-Grouping of molecules into larger units is also supported to make constructing larger order structures easier.
-This also allows smooth animation of objects that are moving together without the small variations that even the most careful hand-placement will create.
-Copy and paste is also implemented and both single objects and groups can be copied and pasted, even between sessions. Additionally, a group of molecules constituting a structure that a user wants to use multiple times in different projects can be saved and then imported into other projects, eliminating the need to rebuild a large structure every time a new animation is created.
-Molecules can be added to groups or removed from them at keyframes, which allows objects to smoothly bind to groups together or break away in the middle of an animation.
+Grouping of molecules eases construction of larger order structures and provides smooth animation of objects that should moving together without the small variations that even the most careful hand placement causes.
+Copy and paste is also implemented (both single objects and groups can be copied and pasted) even between sessions. Additionally, a group of molecules constituting a structure that a user wants to use multiple times in different projects can be saved and then imported, eliminating the need to rebuild large structures.
+Molecules can be added to groups or removed from them at keyframes.
 
 \paragraph*{Importing Molecules:}
-SketchBio generates molecular surfaces using UCSF Chimera.
-This subprocess is controlled via Python scripting and a custom plugin (ExportVTK) was written for Chimera's Python interface to export additional data from Chimera in the VTK file format.
-(This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.)
+SketchBio generates molecular surfaces using UCSF Chimera via Python scripting.
+A custom plugin (ExportVTK) was written for Chimera's Python interface to export additional data from Chimera in the VTK file format.
+This plugin was contributed back to the Chimera developers and is now part of the standard source distribution.
 This data includes residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.
-SketchBio uses these data sets to color the objects to be like the vinculin tail on the right in Figure \ref{fig:actin_vinculin}.
+SketchBio can use these data sets to color the objects (see figure \ref{fig:actin_vinculin}).
 
 \subsection*{Novel Capabilities}
 
 To meet the needs of our collaborators, SketchBio supports novel operations beyond those available in the programs and libraries that it harnesses.
-These include ``pose-mode physics" that enables rapid docking of one protein with others and a ``crystal by example" mode that enables rapid formation of polymer molecular chains.
-Each of these is described, along with how they enable optimization of collision detection.  A third feature, spring-like connectors, is then described.
+These include ``pose-mode physics" that enables rapid docking of one protein with others, a ``crystal by example" mode that enables rapid formation of polymer molecular chains, and spring-like connectors to maintain expected distances between molecules.
+Each of these is described, along with how they enable optimization of collision detection.
 
 \paragraph*{Pose Mode Physics:}
-Motion of objects in SketchBio is accomplished by applying forces and torques to the objects to move them similar to the way the user's hand has moved.
-This can result in the object lagging a few frames behind the user's hand but also smooths out motion, especially rotation, that the user may not have realized that they applied.
+Object motion in SketchBio is accomplished by applying forces and torques to pull towards the tracker location and orientation.
+This can result in the object lagging behind but also smoothes motion, especially rotation.
 
-When collision detection and response was first implemented in SketchBio, we implemented something close to the standard rigid body dynamics where objects push each other apart when colliding.
-But this caused users to have difficulty docking proteins together since the one moved would push the other away from it.
-Next we tried moving the object only if the end state would be collision free.
-This caused objects that the user was moving to be easily stuck and difficult to pull apart since the rotation of the user's hands usually introduced collisions as they were moving the objects apart.
-This technique also prevents sliding objects along the surfaces of other objects which can be useful.
+Standard rigid-body dynamics was used as the original collision response in SketchBio. Because the manipulated object pushed other objects around, this caused difficulty in assembling molecular groupings.
 
-An observation about the motions of objects in SketchBio is: for most of the time working with the program, the only objects that move are those directly being manipulated by the user.
-The user may even find it annoying if the object they are moving pushes the object they are attempting to dock it with away every time they accidentally collide.
-Therefore one simplification that can be made to collision detection is to employ what we call pose mode physics.
-In pose mode physics, only the objects directly manipulated by the user are allowed to move.
-Each other object is fixed in place and does not even move when collision response forces are applied.
-The collision response forces on the object they are moving allow the objects to be slid along one another but not collide, and as a compromise between the above techniques if the response force fails to result in a collision free system, the position is not changed.
-This allows for an easier time docking the molecules as the molecule not being held is not pushed away.
+This was solved by introducing ``pose-mode physics'', where the only objects that move are those directly being manipulated.
+other objects do not move when collision response forces are applied.
 This also greatly reduces the time taken to compute collision detection (as described later).
+
+The first implementation of pose-mode physics onle moved the object if its new location after being pulled by the tracker-attracting forces would be collision free.
+This caused objects to become stuck together and difficult to pull apart because tracker rotation usually introduced collisions even as they forces pulled objects apart.
+This also prevented sliding objects along each other, which scientists often wanted to be able to do.
+
+In the final implementation, where collision response forces act on the object being manipulated, objects can be slid along one another but not collide.
 
 \begin{figure}[h]
 \centering
@@ -494,39 +491,36 @@ This also greatly reduces the time taken to compute collision detection (as desc
 \caption{Crystal-by-example illustrating how a helix might be formed.}
 \label{fig:crystal_by_example}
 \end{figure}
+
 \paragraph*{Crystal-by-example:}
-Repeated structures that are formed from a single type of protein are common in biology (actin, microtubules, fibrin, etc.), so the ‘crystal-by-example' feature was added.
-Two of our driving problems involved structures of this type: Susan Lord's model of fibrin assumes this type of structure and the actin fibers for Peter Thompson's models are known to be in this class of structures.
+Repeated structures that formed by replicating a single protein are common in biology (actin, microtubules, fibrin, etc.), so the `‘crystal-by-example'' feature was added to support their construction.
 Our collaborators wanted to construct variants of such structures to study the changes caused by mutant proteins and to understand their native packing for comparison to electron microscopy images.
-A similar problem is addressed in \cite{hornus2013easy} for DNA molecules by letting users edit placement and twist of selected base pairs and interpolating in between these.
-Our crystal-by-example extends this by allowing the user to place two base molecules in six degrees of freedom and then repeatedly applys the six-degree-of-freedom offset between these base molecules to generate locations to place additional copies.
+
+A similar problem is addressed in \cite{hornus2013easy} for DNA molecules by letting users edit placement and twist of selected base pairs and interpolating in between these.  That system forces the resulting structure to follow a specified path.
+Crystal-by-example inverts this to show the structure resulting from a specified packing geometry: the user places two molecules relative to one another in six degrees of freedom and SketchBio repeatedly applies same transformation for other copies to generate chains of molecules.
 Each replication of the base molecule follows the example set by the first two molecules, with the third molecule's placement relative to the second molecule being the same as that of the second molecule to the first, and so on.
-In this way, a repeated structure is formed by manipulating only one pair of molecules rather than tediously moving each individual piece to its proper place, further speeding up the process of building structures.
+In this way, a repeated structure is formed by manipulating only one pair of molecules rather than tediously moving each individual piece to its proper place, speeding up the process of building structures.
 
 This feature uses two copies of a molecule (A and B) to define an entire repeated structure.
 Given $T_A$ and $T_B$, the transformation matrices that define the positions of A and B relative to the world origin, the transformation from A's coordinate system to B's coordinate system, $T_{AB} = T_A^-1*T_B$, can be computed.
 
 B's position can be rewritten $T_B = T_A*T_{AB}$.  The next repeated molecule, C, has position $T_C = T_B*T_{AB} = T_A*T_{AB}^2$.
-This can be extended to generate arbitrary numbers of molecules in a structure that is determined simply by the first two.
+This can be extended to generate a chain including an arbitrary number of molecules.
 
 Many biological structures including actin fibers and microtubules (major components of a cell's cytoskeleton) form in structures that can be defined this way.
 Figure \ref{fig:crystal_actin} shows an actin fiber generated this way in SketchBio.
-By allowing live updates of the entire structure as the initial two objects are manipulated, SketchBio allows the scientist to explore possibilities of these structures in real time.
-Some of these structures have a known transformation from one molecule to the next.
-Similar to many other programs, SketchBio lets the user input the transformation to use between any two molecules to provide more accurate construction of structures with known transformations.
+By providing live updates of the entire structure as the initial two objects are manipulated, SketchBio lets the scientist explore potential structures in real time.
+
+Because some structures have a known transformation from one molecule to the next, SketchBio (like other programs) lets the user input the transformation directly.
 
 \paragraph*{Collision Detection in Pose Mode Physics and Crystal-by-example:}
 In pose mode, collision tests between objects that the user is not interacting with can be skipped because these objects do not move.
-The only way that those objects could be in collision was if they were already in collision before.
-If the collision response failed to fix the collision then, it will not fix it now, so their tests can be skipped.
 This means that only collisions involving the objects that the user is moving need to be checked.
 This reduces the number of collision tests to $m*n$ where m is the number of objects that the user is currently moving.
-The typical number of objects that the user moves at a time is 1 or a small constant in the case of moving a group, which reduces the number of collision tests needed to $\mathcal{O}(n)$ in this expected case.
+The typical number of objects that the user moves at a time is 1 or a small constant (in the case of moving a group), which reduces the number of collision tests needed to $\mathcal{O}(n)$ in this expected case.
 
 There are two ways that the user can interact with a crystal-by-example structure: moving the entire structure as a unit, or adjusting the internal transformation to change the shape of the structure.
 In the first case, only collision tests between the structure and the other objects in the scene need to be done, and the above bound applies to the number of tests.
-Because the structure is moved as a unit, its internal geometry does not change so if there were no internal collisions to begin with, there will be none after it was moved. 
-
 
 In the second case, the internal structure does change and both internal and external collisions must be tested.
 External collisions must test every object in the structure with every external object as above.
@@ -534,7 +528,7 @@ External collisions must test every object in the structure with every external 
 In internal case we can leverage the known relationship between the objects to perform fewer tests.  Let $X_i$ be the ith object in the crystal by example structure with $X_1$ and $X_2$ being the two base object in the structure.
 Let $T_{i,j}$ be the transformation matrix from $X_i$ to $X_j$.
 The definition of the crystal-by-example structure is that $T_{i,i+1}$ is the same for all $i$ and the geometries of all the $X_i$s are the same.
-Since the geometries and transformations are the same, if there is a collision between the $ith$ and $(i+1)th$ objects anywhere in the structure, then there is also a collision between the $1st$ and $2nd$ objects.
+Because the geometries and transformations are the same, if there is a collision between the $ith$ and $(i+1)th$ objects anywhere in the structure, then there is also a collision between the $1st$ and $2nd$ objects.
 Thus testing only this one pair performs the work of n-1 tests where n is the number of objects in the structure.
 This same argument holds for any $i$ and $i+k$, the $1st$ and $(k+1)th$ objects have the same relative positions and the same collisions.
 Thus only the $1st$ object in the structure needs to be tested against the others which allows $\mathcal{O}(n)$ tests to suffice for all internal collisions in a repetitive structure of $n$ elements.
@@ -556,9 +550,8 @@ Thus only the $1st$ object in the structure needs to be tested against the other
 \paragraph*{Connectors:}
 SketchBio also has connectors that can be added between objects.
 These can act like springs and apply forces to keep objects positioned relative to each other or they can simply indicate that two objects are connected.
-For many proteins there are regions for which the structure is unknown and these regions can be represented with these connectors.
-The ends of the connectors can be quickly snapped to the N-terminus or C-terminus of a protein, removing the difficulty of precise hand placement.
-SketchBio does not attept to simulate full molecular-dynamics forces on the molecules it displays (this would make real-time modeling impossible); instead, only a linear-spring model is applied and an extremely viscous fluid is assumed which removes momentum effects.
+Many proteins have regions for which the structure is unknown and these regions can be represented with these connectors.
+Responding to a scientist's request, the a connector end can be snapped to the N-terminus or C-terminus of a protein, removing the difficulty of precise hand placement.
 
 When acting as springs, connectors can have non-zero rest length.
 When editing a set of proteins some of whose separations are known experimentally (through two-color fluorescence labeleing, FRET, or other techniques as in our final driving problem), this can be used to specify soft constraints on the 3D layout of the proteins, guiding the scientist away from impossible structures.
