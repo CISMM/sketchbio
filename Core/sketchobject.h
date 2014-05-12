@@ -275,6 +275,11 @@ class SketchObject
     void notifyForceObservers();
 
    private:  // fields
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    SketchObject(const SketchObject &other);
+    SketchObject &operator=(const SketchObject &other);
+
     SketchObject *parent;
     q_vec_type forceAccum, torqueAccum;
     q_vec_type position, lastPosition;

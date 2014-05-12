@@ -55,6 +55,12 @@ public:
     // when one of the first two objects is moved, update the other or the transform between them
     virtual void objectMoved(SketchObject *obj);
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    TransformEquals(const TransformEquals &other);
+    TransformEquals &operator=(const TransformEquals &other);
+
+    // fields
     QVector<ObjectPair> pairsList;
     vtkSmartPointer<vtkTransform> transform;
     int transformEqualsGroupId;

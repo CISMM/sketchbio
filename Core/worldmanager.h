@@ -468,6 +468,11 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
     void removeObserver(WorldObserver *w);
 
    private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    WorldManager(const WorldManager &other);
+    WorldManager &operator=(const WorldManager &other);
+
     /*******************************************************************
      *
      * This method adds the spring to the given list and performs the

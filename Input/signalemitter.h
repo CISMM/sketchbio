@@ -6,6 +6,7 @@
 class SignalEmitter : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(SignalEmitter);
 public:
     explicit SignalEmitter(QObject *parent = 0) : QObject(parent) {}
 

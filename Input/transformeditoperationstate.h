@@ -15,7 +15,6 @@ class TransformEditOperationState : public QObject, public SketchBio::OperationS
     Q_DISABLE_COPY(TransformEditOperationState)
 public:
     TransformEditOperationState(SketchBio::Project* p);
-    virtual ~TransformEditOperationState();
     void addObject(SketchObject* obj);
     QVector<SketchObject*>& getObjs();
 

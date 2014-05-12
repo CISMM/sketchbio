@@ -129,6 +129,11 @@ public:
     ObjectGroup *getReplicaGroup();
 
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    StructureReplicator(const StructureReplicator &other);
+    StructureReplicator &operator=(const StructureReplicator &other);
+
     int numShown;
     SketchObject *obj1, *obj2;
     ObjectGroup *replicas;

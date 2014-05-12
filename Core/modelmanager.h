@@ -128,6 +128,11 @@ public:
     int getNumberOfModels() const;
 
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    ModelManager(const ModelManager &other);
+    ModelManager &operator=(const ModelManager &other);
+
     // a hash of source to model
     QVector<SketchModel *> models;
     QHash<QString,int> modelSourceToIdx;

@@ -29,6 +29,11 @@ class PhysicsStrategy
       bool doCollisionCheck) = 0;
   virtual void respondToCollision(SketchObject *o1, SketchObject *o2,
                                   PQP_CollideResult *cr, int pqp_flags) = 0;
+  private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+  PhysicsStrategy(const PhysicsStrategy &other);
+  PhysicsStrategy &operator=(const PhysicsStrategy &other);
 };
 
 #endif  // COLLISIONSTRATEGY_H

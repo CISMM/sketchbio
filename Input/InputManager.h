@@ -12,6 +12,7 @@ class Project;
 class InputManager : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(InputManager);
 public:
     // Create a new InputManager from the given XML configuration file
     explicit InputManager(const QString &inputConfigFileName, QObject *parent = 0);

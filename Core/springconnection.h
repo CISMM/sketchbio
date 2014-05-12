@@ -39,6 +39,11 @@ public:
     virtual bool addForce();
 
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    SpringConnection(const SpringConnection &other);
+    SpringConnection &operator=(const SpringConnection &other);
+
     double minRestLength, maxRestLength;
     double stiffness;
 public: // static factories

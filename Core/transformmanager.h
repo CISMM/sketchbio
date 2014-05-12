@@ -238,6 +238,8 @@ class TransformManager
   q_xyz_quat_struct trackerBaseToHandOld[2];
   
   private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
   TransformManager(const TransformManager& other);
   TransformManager &operator=(const TransformManager &other);
 };

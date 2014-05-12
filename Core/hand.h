@@ -78,9 +78,14 @@ class Hand
     void setSelectionType(OutlineType::Type type);
 
    private:
+    // disable copy constructor and assignment operator
+    // these are not implemented and not supported
+    Hand(const Hand &other);
+    Hand &operator=(const Hand &other);
+
     class HandImpl;
     HandImpl *impl;
 };
-};
+}
 
 #endif  // HAND_H

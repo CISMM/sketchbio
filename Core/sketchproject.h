@@ -194,6 +194,11 @@ class Project
     static void setUpVtkCamera(SketchObject* cam, vtkCamera* vCam);
 
    private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    Project(const Project &other);
+    Project &operator=(const Project &other);
+
     class ProjectImpl;
     ProjectImpl* impl;
 };

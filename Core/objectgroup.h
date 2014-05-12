@@ -50,6 +50,11 @@ class ObjectGroup : public SketchObject
     virtual void localTransformUpdated();
 
    private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    ObjectGroup(const ObjectGroup &other);
+    ObjectGroup &operator=(const ObjectGroup &other);
+
     QList< SketchObject * > children;
     vtkSmartPointer< vtkAppendPolyData > orientedBBs;
     vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;

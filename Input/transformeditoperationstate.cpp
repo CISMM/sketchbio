@@ -15,8 +15,6 @@ const char TransformEditOperationState::SET_TRANSFORMS_OPERATION_FUNCTION[30] = 
 TransformEditOperationState::TransformEditOperationState(SketchBio::Project* p)
     : OperationState(), proj(p) {}
 
-TransformEditOperationState::~TransformEditOperationState() {}
-
 void TransformEditOperationState::addObject(SketchObject* obj) {
     objs.append(obj);
 }

@@ -90,6 +90,11 @@ protected:
     q_vec_type object1ConnectionPosition, object2ConnectionPosition;
     double alpha, radius;
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    Connector(const Connector &other);
+    Connector &operator=(const Connector &other);
+
     // class to represent the visibility state of the connector
     class VisiblityData;
     // have to forward declare this here or can't extend VisibilityData

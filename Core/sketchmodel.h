@@ -119,6 +119,11 @@ public slots:
     void setResolutionForConformation(int conformation,
                                       ModelResolution::ResolutionType resolution);
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    SketchModel(const SketchModel &other);
+    SketchModel &operator=(const SketchModel &other);
+
     struct ConformationData;
     // sets the resolution level based on the number of uses of the given
     // conformation

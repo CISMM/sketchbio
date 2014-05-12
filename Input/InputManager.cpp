@@ -354,10 +354,17 @@ class InputManager::InputManagerImpl : public ButtonHandler,
   bool readModes(vtkXMLDataElement *root);
 
  private:
+  // Disable copy constructor and assignment operator
+  // These are not implemented and not supported
+  InputManagerImpl(const InputManagerImpl &other);
+  InputManagerImpl &operator=(const InputManagerImpl &other);
+
+  // typedefs
   typedef QPair<QSharedPointer<vrpn_Button_Remote>,
                 QSharedPointer<ButtonDeviceInfo> > ButtonPair;
   typedef QPair<QSharedPointer<vrpn_Analog_Remote>,
                 QSharedPointer<AnalogDeviceInfo> > AnalogPair;
+  // fields
   QProcess vrpn_server;
   QStringList server_args;
   vtkSmartPointer<vtkMatrix4x4> trackersToRoom;

@@ -40,6 +40,12 @@ protected:
     virtual void updateColorMap();
     virtual void setSolidColor(double color[3]);
 private:
+    // Disable copy constructor and assignment operator these are not implemented
+    // and not supported
+    ModelInstance(const ModelInstance &other);
+    ModelInstance &operator=(const ModelInstance &other);
+
+    // fields
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
     int conformation;
