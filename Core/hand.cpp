@@ -23,6 +23,7 @@
 
 #include <vtkProjectToPlane.h>
 
+#include "objectchangeobserver.h"
 #include "transformmanager.h"
 #include "sketchobject.h"
 #include "springconnection.h"
@@ -274,11 +275,12 @@ class Pitchfork
 // ###########################################################################
 // The HandImpl class - the private implementation of Hand
 
-class Hand::HandImpl
+class Hand::HandImpl : public ObjectChangeObserver
 {
    public:
     HandImpl(TransformManager* t, WorldManager* w, SketchBioHandId::Type s,
              vtkRenderer* r);
+    virtual ~HandImpl();
 
     void init(TransformManager* t, WorldManager* w, SketchBioHandId::Type s,
               vtkRenderer* r);
@@ -323,6 +325,13 @@ class Hand::HandImpl
     bool isShowingSelectionOutline();
     void setShowingSelectionOutline(bool show);
     void setSelectionType(OutlineType::Type type);
+
+    // Make sure to outline correctly when something added/removed from group
+    // overriding these from ObjectChangeObserver
+    virtual void objectDeleted(SketchObject *obj);
+    virtual void parentChanged(SketchObject *obj);
+    virtual void subobjectAdded(SketchObject *parent, SketchObject *child);
+    virtual void subobjectRemoved(SketchObject *parent, SketchObject *child);
 
    private:
     enum GrabType {
@@ -388,6 +397,12 @@ Hand::HandImpl::HandImpl(TransformManager* t, WorldManager* w,
     outlineActor->GetProperty()->SetLighting(false);
     outlineActor->GetProperty()->SetColor(
         OUTLINES_COLOR_VAL, OUTLINES_COLOR_VAL, OUTLINES_COLOR_VAL);
+}
+
+Hand::HandImpl::~HandImpl() {
+    if (nearestObject != NULL) {
+        nearestObject->removeObserver(this);
+    }
 }
 
 void Hand::HandImpl::init(TransformManager* t, WorldManager* w,
@@ -497,6 +512,12 @@ void Hand::HandImpl::computeNearestObjectAndConnector()
                 objectDistance);
         }
         if (obj != nearestObject) {
+            if (nearestObject != NULL) {
+                nearestObject->removeObserver(this);
+            }
+            if (obj != NULL) {
+                obj->addObserver(this);
+            }
             nearestObject = obj;
             if (OutlineType::OBJECTS == outlineType) {
                 outlineObject(nearestObject);
@@ -607,8 +628,10 @@ void Hand::HandImpl::selectSubObjectOfCurrent()
         if (subObjects != NULL) {
             q_vec_type trackerPos;
             getPosition(trackerPos);
+            nearestObject->removeObserver(this);
             nearestObject = WorldManager::getClosestObject(
                 *subObjects, trackerPos, objectDistance);
+            nearestObject->addObserver(this);
             if (OutlineType::OBJECTS == outlineType) {
                 outlineObject(nearestObject);
             }
@@ -622,7 +645,9 @@ void Hand::HandImpl::selectParentObjectOfCurrent()
     if (nearestObject != NULL) {
         SketchObject* parent = nearestObject->getParent();
         if (parent != NULL) {
+            nearestObject->removeObserver(this);
             nearestObject = parent;
+            nearestObject->addObserver(this);
             if (OutlineType::OBJECTS == outlineType) {
                 outlineObject(parent);
             }
@@ -640,6 +665,9 @@ void Hand::HandImpl::clearNearestObject()
 {
     if (grabType == OBJECT_GRABBED) {
         releaseGrabbed();
+    }
+    if (nearestObject != NULL) {
+        nearestObject->removeObserver(this);
     }
     nearestObject = NULL;
     objectDistance = std::numeric_limits< double >::max();
@@ -781,6 +809,34 @@ void Hand::HandImpl::hideOutline()
         isOutlineShown = false;
         renderer->RemoveViewProp(outlineActor);
     }
+}
+
+void Hand::HandImpl::objectDeleted(SketchObject *obj) {
+    assert(obj == nearestObject);
+    // if the selected object was deleted, clear the selection
+    clearNearestObject();
+}
+
+void Hand::HandImpl::parentChanged(SketchObject *obj) {
+    assert(obj == nearestObject);
+    // If the object selected was added to a group, default to selecting
+    // the whole group
+    if (obj->getParent() != NULL) {
+        selectParentObjectOfCurrent();
+    } else {
+        // else it was removed from a group, fix the outline color
+        outlineObject(nearestObject);
+    }
+}
+void Hand::HandImpl::subobjectAdded(SketchObject *parent, SketchObject *child) {
+    assert(parent == nearestObject);
+    // we will only ever be observing the nearest object.  If it changed, re-outline it
+    outlineObject(nearestObject);
+}
+void Hand::HandImpl::subobjectRemoved(SketchObject *parent, SketchObject *child) {
+    assert(parent == nearestObject);
+    // we will only ever be observing the nearest object.  If it changed, re-outline it
+    outlineObject(nearestObject);
 }
 
 // ###########################################################################

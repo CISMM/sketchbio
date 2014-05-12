@@ -219,7 +219,7 @@ void StructureReplicator::objectKeyframed(SketchObject *obj, double time)
 
 void StructureReplicator::subobjectAdded(SketchObject *parent, SketchObject *child)
 {
-    if (parent == replicas)
+    if (parent == replicas && child->getParent() == parent)
     {
         int idx = replicaList.indexOf(child);
         if (idx == -1)
@@ -249,7 +249,7 @@ void StructureReplicator::subobjectAdded(SketchObject *parent, SketchObject *chi
 
 void StructureReplicator::subobjectRemoved(SketchObject *parent, SketchObject *child)
 {
-    if (parent == replicas)
+    if (parent == replicas && child->getParent() == parent)
     {
         if (child == obj1)
         {

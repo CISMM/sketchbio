@@ -95,6 +95,8 @@ void ObjectGroup::addObject(SketchObject *obj)
 void ObjectGroup::removeObject(SketchObject *obj)
 {
   if (!children.contains(obj)) return;
+  // notify first so that obj->parent still points to this object
+  notifyObjectRemoved(obj);
   q_vec_type oPos;
   q_type oOrient;
   // get inital positions/orientations
@@ -111,7 +113,6 @@ void ObjectGroup::removeObject(SketchObject *obj)
   orientedBBs->Update();
   orientedHalfPlaneOutlines->RemoveInputConnection(
       0, obj->getOrientedHalfPlaneOutlines()->GetOutputPort(0));
-  notifyObjectRemoved(obj);
 }
 
 //#########################################################################

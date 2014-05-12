@@ -259,9 +259,10 @@ class SketchObject
     // the transform is updated
     virtual void localTransformUpdated();
     // notifies change observers that the given object has been added as a child
+    // or grandchild, etc
     void notifyObjectAdded(SketchObject *child);
     // notifies change observers that the given object has been removed as a
-    // child
+    // child or grandchild, etc
     void notifyObjectRemoved(SketchObject *child);
     virtual void setSolidColor(double color[3]) {}
     virtual void updateColorMap() {}

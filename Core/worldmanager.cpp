@@ -781,21 +781,25 @@ void WorldManager::setShadowPlane(q_vec_type point, q_vec_type nVector)
 //##################################################################################################
 void WorldManager::subobjectAdded(SketchObject *parent, SketchObject *child)
 {
-    if (child->isVisible() || isShowingInvisible()) {
-        insertActors(child);
+    if (child->getParent() == parent) {
+        if (child->isVisible() || isShowingInvisible()) {
+            insertActors(child);
+        }
+        addObserverRecursive(child,this);
+        foreach(WorldObserver * w, observers) { w->objectAdded(child); }
     }
-    addObserverRecursive(child,this);
-    foreach(WorldObserver * w, observers) { w->objectAdded(child); }
 }
 
 //##################################################################################################
 //##################################################################################################
 void WorldManager::subobjectRemoved(SketchObject *parent, SketchObject *child)
 {
-    removeActors(child);
-    removeShadows(child);
-    removeObserverRecursive(child,this);
-    foreach(WorldObserver * w, observers) { w->objectRemoved(child); }
+    if (child->getParent() == parent) {
+        removeActors(child);
+        removeShadows(child);
+        removeObserverRecursive(child,this);
+        foreach(WorldObserver * w, observers) { w->objectRemoved(child); }
+    }
 }
 
 //##################################################################################################

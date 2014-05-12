@@ -125,6 +125,9 @@ const SketchObject *SketchObject::getParent() const { return parent; }
 void SketchObject::setParent(SketchObject *p)
 {
     parent = p;
+    foreach(ObjectChangeObserver *obs, observers) {
+        obs->parentChanged(this);
+    }
     recalculateLocalTransform();
 }
 
@@ -968,6 +971,9 @@ void SketchObject::notifyObjectAdded(SketchObject *child)
     {
         obs->subobjectAdded(this, child);
     }
+    if (parent != NULL) {
+        parent->notifyObjectAdded(child);
+    }
 }
 //#########################################################################
 void SketchObject::notifyObjectRemoved(SketchObject *child)
@@ -975,6 +981,9 @@ void SketchObject::notifyObjectRemoved(SketchObject *child)
     foreach(ObjectChangeObserver * obs, observers)
     {
         obs->subobjectRemoved(this, child);
+    }
+    if (parent != NULL) {
+        parent->notifyObjectRemoved(child);
     }
 }
 

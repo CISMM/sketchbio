@@ -184,10 +184,6 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
                 assert(grp != NULL);
                 grp->removeObject(nearestObj1);
                 world.addObject(nearestObj1);
-                // force the selection to reset since we removed an object from
-                // the group nearest the hand
-                handObj0.clearNearestObject();
-                handObj1.clearNearestObject();
             } else {
                 //obj0 is not a group, or obj0 is a group and obj1 is a group
                 if (grp == NULL ||
@@ -202,10 +198,6 @@ void toggleGroupMembership(SketchBio::Project *project, int hand,
                 //add obj1 to group
                 world.removeObject(nearestObj1);
                 grp->addObject(nearestObj1);
-                // force the selection to reset since we added the nearest object
-                // to a group
-                handObj0.clearNearestObject();
-                handObj1.clearNearestObject();
             }
             addUndoState(project);
         }
@@ -621,7 +613,6 @@ void deleteObject(SketchBio::Project *project, int hand, bool wasPressed)
         double hDist = handObj.getNearestObjectDistance();
         if (hDist < DISTANCE_THRESHOLD) {  // object is selected
             SketchObject *obj = handObj.getNearestObject();
-            handObj.clearNearestObject();
             project->getWorldManager().deleteObject(obj);
         }
         addUndoState(project);
@@ -650,15 +641,10 @@ void replicateObject(SketchBio::Project *project, int hand, bool wasPressed)
             project->getWorldManager().addObject(nObj);
             int nCopies = 1;
             project->addReplication(obj, nObj, nCopies);
-            // reset the selection since we added the nearest object to a group
-            handObj.clearNearestObject();
-            /*emit newDirectionsString("Pull the trigger to set the number
-            of replicas to add,\nthen release the button.");*/
         }
 
     } else {
         addUndoState(project);
-        // emit newDirectionsString(" ");
     }
 }
   

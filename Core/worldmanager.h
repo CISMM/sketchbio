@@ -343,13 +343,7 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *
      *******************************************************************/
     void setShadowsOff();
-    /*******************************************************************
-     *
-     * Should be called to sync states if an object's visibility status
-     * is externally modified
-     *
-     *******************************************************************/
-    void changedVisibility(SketchObject *obj);
+    public:
     /*******************************************************************
      *
      * Returns true if invisible objects are being shown
@@ -510,6 +504,12 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *
      *******************************************************************/
     void removeShadows(SketchObject *obj);
+    /*******************************************************************
+     *
+     * This method does the work for objectVisibilityChanged
+     *
+     *******************************************************************/
+    void changedVisibility(SketchObject *obj);
 
     typedef QPair< vtkSmartPointer< vtkProjectToPlane >,
                    vtkSmartPointer< vtkActor > > ShadowPair;
