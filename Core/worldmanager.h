@@ -96,6 +96,14 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *******************************************************************/
     SketchObject *addObject(SketchObject *object);
 
+	/*******************************************************************
+     * Adds an ellipsoid with the given paramenters to the world and 
+     * returns it.
+	 *
+     * xlen, ylen, zlen - lengths of x, y, and z axes of the ellipsoid 
+     *******************************************************************/
+	SketchObject *addEllipsoid(double xlen, double ylen, double zlen);
+
     /*******************************************************************
      *
      * Removes the SketchObject identified by the given index from the world.
