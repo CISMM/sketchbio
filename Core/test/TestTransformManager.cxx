@@ -61,29 +61,6 @@ int testLeftTrackerPosition() {
         std::cout << "Tracker position after third translation wrong" << std::endl;
         q_vec_print(vec);
     }
-    q_type ident = Q_ID_QUAT;
-    q_xyz_quat_type tracker;
-    q_copy(tracker.quat,ident);
-    q_vec_set(tracker.xyz,0,1,0);
-    mgr.setHandTransform(&tracker,SketchBioHandId::LEFT);
-    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
-    if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[0]) > Q_EPSILON
-            || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[1]) > Q_EPSILON
-            || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[2]) > Q_EPSILON) {
-        failures++;
-        std::cout << "Tracker position after moving tracker is wrong" << std::endl;
-        q_vec_print(vec);
-    }
-    // test in combination with scaling
-    mgr.scaleWorldRelativeToRoom(2);
-    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::LEFT);
-    if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[0]) > Q_EPSILON
-            || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[1]) > Q_EPSILON
-            || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[2]) > Q_EPSILON) {
-        failures++;
-        std::cout << "Tracker position after moving tracker is wrong" << std::endl;
-        q_vec_print(vec);
-    }
     return failures;
 }
 
@@ -141,29 +118,6 @@ int testRightTrackerPosition() {
         std::cout << "Tracker position after third translation wrong" << std::endl;
         q_vec_print(vec);
     }
-    q_type ident = Q_ID_QUAT;
-    q_xyz_quat_type tracker;
-    q_copy(tracker.quat,ident);
-    q_vec_set(tracker.xyz,0,1,0);
-    mgr.setHandTransform(&tracker,SketchBioHandId::RIGHT);
-    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
-    if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[0]) > Q_EPSILON
-            || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[1]) > Q_EPSILON
-            || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE*tracker.xyz[2]) > Q_EPSILON) {
-        failures++;
-        std::cout << "Tracker position after moving tracker is wrong" << std::endl;
-        q_vec_print(vec);
-    }
-    // test in combination with scaling
-    mgr.scaleWorldRelativeToRoom(2);
-    mgr.getTrackerPosInWorldCoords(vec,SketchBioHandId::RIGHT);
-    if (Q_ABS(vec[0]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[0]) > Q_EPSILON
-            || Q_ABS(vec[1]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[1]) > Q_EPSILON
-            || Q_ABS(vec[2]-1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE/2*tracker.xyz[2]) > Q_EPSILON) {
-        failures++;
-        std::cout << "Tracker position after moving tracker is wrong" << std::endl;
-        q_vec_print(vec);
-    }
     return failures;
 }
 
@@ -186,7 +140,6 @@ int testRotateAboutLeftTracker() {
     // final difference should be the b vector
 
     mgr.translateWorldRelativeToRoom(0,0,0); // world origin = tracker origin
-    mgr.scaleWorldRelativeToRoom(1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE); // world units = tracker units
 
     // set tracker positions
     q_xyz_quat_type xyz1, xyz2;
@@ -268,7 +221,6 @@ int testRotateAboutRightTracker() {
     // final difference should be the b vector
 
     mgr.translateWorldRelativeToRoom(0,0,0); // world origin = tracker origin
-    mgr.scaleWorldRelativeToRoom(1.0/TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE); // world units = tracker units
 
     // set tracker positions
     q_xyz_quat_type xyz1, xyz2;

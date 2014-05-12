@@ -46,7 +46,7 @@ static const float OUTLINES_COLOR_VAL = 0.7;
 // system
 
 // the tracker is so small that we need to scale its shadow up to be visible
-static const double TRACKER_SHADOW_SCALE = 50;
+static const double TRACKER_SHADOW_SCALE = 50 * 0.0625;
 // the color of the tracker's shadows
 #define TRACKER_SHADOW_COLOR 0.0, 0.0, 0.0
 
@@ -179,9 +179,9 @@ class TrackerObject : public SketchObject
     {
         vtkTransform* t = shadowTransform.GetPointer();
         t->Identity();
-        t->Scale(TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
-                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE,
-                 TRACKER_SHADOW_SCALE * TRANSFORM_MANAGER_TRACKER_COORDINATE_SCALE);
+        t->Scale(TRACKER_SHADOW_SCALE,
+                 TRACKER_SHADOW_SCALE,
+                 TRACKER_SHADOW_SCALE);
         t->Translate(pos);
         t->Update();
     }
@@ -211,6 +211,10 @@ class TrackerObject : public SketchObject
 // orientation between the two objects.  When release is called, it sets the
 // second object of the springs back to the tracker.  Since springs add no
 // force if attached to the same object on each end, this removes all forces.
+
+static const double OBJECT_SIDE_LEN = 200;
+static const double TRACKER_SIDE_LEN = 200;
+static const double OBJECT_GRAB_SPRING_CONST = 2;
 
 class Pitchfork
 {

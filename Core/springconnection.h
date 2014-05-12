@@ -5,6 +5,13 @@
 
 #include "connector.h"
 
+
+// the default values of alpha and radius for a SpringConnection
+// alpha is 0 so springs are not exported to Blender
+static const double SPRING_ALPHA_VALUE = 0.0;
+// radius is 5 so that it looks the same as the old display of springs
+static const double SPRING_DISPLAY_RADIUS = 5.0;
+
 /*
  * This class represents a general Spring and contains all the data needed by every spring
  * such as rest length (range) and stiffness.  It also contains a reference to a SketchObject

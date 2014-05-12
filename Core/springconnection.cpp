@@ -5,6 +5,7 @@
 #include "sketchioconstants.h"
 #include "sketchobject.h"
 
+
 SpringConnection::SpringConnection() : stiffness(-1) {}
 
 SpringConnection::SpringConnection(SketchObject *o1, SketchObject *o2,
