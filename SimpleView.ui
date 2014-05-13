@@ -71,6 +71,7 @@
     <addaction name="actionLoad_Project"/>
     <addaction name="actionSave_Copied_Structure"/>
     <addaction name="actionLoad_Structure"/>
+    <addaction name="actionAdd_Ellipsoid"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
@@ -286,6 +287,11 @@
   <action name="actionLoad_Structure">
    <property name="text">
     <string>Load Structure</string>
+   </property>
+  </action>
+  <action name="actionAdd_Ellipsoid">
+   <property name="text">
+    <string>Add Ellipsoid</string>
    </property>
   </action>
  </widget>
@@ -650,6 +656,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionAdd_Ellipsoid</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>createEllipsoid()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -674,5 +696,6 @@
   <slot>exportFlorosim()</slot>
   <slot>saveCopiedObject()</slot>
   <slot>loadObject()</slot>
+  <slot>createEllipsoid()</slot>
  </slots>
 </ui>

@@ -16,6 +16,10 @@
 #include <vtkTextProperty.h>
 #include <vtkTextMapper.h>
 #include <vtkActor2D.h>
+#include <vtkParametricEllipsoid.h>
+#include <vtkParametricFunctionSource.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkTransform.h>
 
 #include <QDebug>
 #include <QInputDialog>
@@ -560,6 +564,51 @@ void SimpleView::loadObject()
     q_vec_type pos;
     project->getHand(SketchBioHandId::LEFT).getPosition(pos);
     ProjectToXML::loadObjectFromSavedXML(project, zipPath, pos);
+}
+
+void SimpleView::createEllipsoid() {
+
+	// Ask the user for the length of the x, y, and z axes of the ellipsoid
+	bool x_ok, y_ok, z_ok;
+	double xlen = 
+		QInputDialog::getDouble(this, tr("Ellipsoid"), tr("x axis length:"), 
+								100, 0, 2147483647, 2, &x_ok);
+	double ylen = 
+		QInputDialog::getDouble(this, tr("Ellipsoid"), tr("y axis length:"), 
+								100, 0, 2147483647, 2, &y_ok);
+	double zlen = 
+		QInputDialog::getDouble(this, tr("Ellipsoid"), tr("z axis length:"), 
+								100, 0, 2147483647, 2, &z_ok);
+	if (x_ok && y_ok && z_ok) {
+		vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
+			vtkSmartPointer< vtkParametricEllipsoid >::New();
+		ellipsoid->SetXRadius(xlen/2);
+		ellipsoid->SetYRadius(ylen/2);
+		ellipsoid->SetZRadius(zlen/2);
+		vtkSmartPointer< vtkParametricFunctionSource > source =
+			vtkSmartPointer< vtkParametricFunctionSource >::New();
+		source->SetParametricFunction(ellipsoid);
+		vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
+			vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+		vtkSmartPointer< vtkTransform > transform =
+			vtkSmartPointer< vtkTransform >::New();
+		transform->Identity();
+		sourceData->SetInputConnection(source->GetOutputPort());
+		sourceData->SetTransform(transform);
+		sourceData->Update();
+		QString xstr = QString::number(xlen);
+		QString ystr = QString::number(ylen);
+		QString zstr = QString::number(zlen);
+		QString name = "ellispoid_" + xstr + ystr + zstr;
+		QString fname = ModelUtilities::createFileFromVTKSource(sourceData, name);
+		SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
+			DEFAULT_INVERSE_MOMENT);
+		model->addConformation(fname, fname);
+		project->getModelManager().addModel(model);
+		q_vec_type pos = Q_NULL_VECTOR;
+		q_type orient = Q_ID_QUAT;
+		project->getWorldManager().addObject(model, pos, orient);
+	}	
 }
 
 void SimpleView::createCameraForViewpoint()

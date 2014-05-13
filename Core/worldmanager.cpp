@@ -17,8 +17,6 @@ using std::endl;
 #include <vtkLineSource.h>
 #include <vtkPolyData.h>
 #include <vtkAppendPolyData.h>
-#include <vtkParametricEllipsoid.h>
-#include <vtkParametricFunctionSource.h>
 
 #include <QDebug>
 
@@ -132,26 +130,6 @@ SketchObject *WorldManager::addObject(SketchObject *object)
     addObserverRecursive(object,this);
     foreach(WorldObserver * w, observers) { w->objectAdded(object); }
     return object;
-}
-
-//##################################################################################################
-//##################################################################################################
-SketchObject *WorldManager::addEllipsoid(double xlen, double ylen, double zlen) {
-	vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
-        vtkSmartPointer< vtkParametricEllipsoid >::New();
-	ellipsoid->SetXRadius(xlen/2);
-	ellipsoid->SetYRadius(ylen/2);
-	ellipsoid->SetZRadius(zlen/2);
-	vtkSmartPointer< vtkParametricFunctionSource > source =
-        vtkSmartPointer< vtkParametricFunctionSource >::New();
-	source->SetParametricFunction(ellipsoid);
-	QString fname = ModelUtilities::createFileFromVTKSource(source, "ellipsoid_model");
-    SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
-                                         DEFAULT_INVERSE_MOMENT);
-    model->addConformation(fname, fname);
-	q_vec_type pos = Q_NULL_VECTOR;
-    q_type orient = Q_ID_QUAT;
-    return addObject(model, pos, orient);
 }
 
 //##################################################################################################

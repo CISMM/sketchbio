@@ -97,6 +97,9 @@ public slots:
   // Load object that was saved with saveCopiedObject()
   void loadObject();
 
+  // Add new ellipsoid to the project
+  void createEllipsoid();
+
   // Collision modes (for testing)
   void oldCollisionMode();
   void poseModeTry1();
