@@ -29,6 +29,7 @@ using std::endl;
 #include "modelinstance.h"
 #include "objectgroup.h"
 #include "springconnection.h"
+#include "measuringtape.h"
 #include "physicsstrategy.h"
 #include "modelutilities.h"
 #include "sketchioconstants.h"
@@ -376,6 +377,10 @@ void WorldManager::removeSpring(Connector *spring)
     connections.removeAt(index);
 
     renderer->RemoveActor(lines.value(spring).second);
+	MeasuringTape *tape = dynamic_cast<MeasuringTape*>(spring);
+    if (spring != NULL) {
+        renderer->RemoveActor(tape->getLengthActor());
+    }
     lines.remove(spring);
 
     delete spring;
@@ -833,6 +838,10 @@ void WorldManager::addConnector(Connector *spring, QList< Connector * > &list)
             renderer->AddActor(spring->getActor());
         }
         lines.insert(spring, ConnectorPair(line, actor));
+		MeasuringTape *tape = dynamic_cast<MeasuringTape*>(spring);
+        if (spring != NULL) {
+            renderer->AddActor(tape->getLengthActor());
+        }
     }
 }
 

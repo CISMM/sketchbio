@@ -25,6 +25,7 @@
 #include <objectgroup.h>
 #include <projecttoxml.h>
 #include <springconnection.h>
+#include <measuringtape.h>
 #include <transformmanager.h>
 #include <worldmanager.h>
 #include <hand.h>
@@ -517,6 +518,28 @@ void createTransparentConnector(SketchBio::Project *project, int hand,
         q_vec_add(pos2, pos1, pos2);
         Connector *conn = new Connector(NULL, NULL, pos1, pos2, 0.3, 10);
         project->getWorldManager().addConnector(conn);
+        addUndoState(project);
+        project->clearDirections();
+    }
+    return;
+}
+
+void createMeasuringTape(SketchBio::Project *project, int hand,
+                                bool wasPressed)
+{
+    if (wasPressed) {
+        project->setDirections(
+            "Release to create a measuring tape "
+            "at the current location.");
+    } else  // button released
+    {
+        q_vec_type pos1, pos2 = {0, 1, 0};
+        project->getHand((hand == 0)
+                             ? SketchBioHandId::LEFT
+                             : SketchBioHandId::RIGHT).getPosition(pos1);
+        q_vec_add(pos2, pos1, pos2);
+        MeasuringTape *tape = new MeasuringTape(NULL, NULL, pos1, pos2);
+        project->getWorldManager().addConnector(tape);
         addUndoState(project);
         project->clearDirections();
     }

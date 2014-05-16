@@ -48,6 +48,8 @@ typedef void (*AnalogControlFunctionPtr)(SketchBio::Project*,int,double);
     void createSpring(SketchBio::Project*, int, bool);
     //creates a transparent connector
     void createTransparentConnector(SketchBio::Project*, int, bool);
+	//creates a measuring tape
+	void createMeasuringTape(SketchBio::Project*, int, bool);
 
   // GRAB functions:
     //grabs nearest object, or if object too far, grabs world

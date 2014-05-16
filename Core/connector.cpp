@@ -44,7 +44,7 @@ public:
     virtual void updateLine(q_vec_type p1, q_vec_type p2);
 private:
     vtkSmartPointer< vtkLineSource > line;
-    vtkSmartPointer<vtkActor> actor;
+    vtkSmartPointer< vtkActor > actor;
 };
 
 Connector::LineVisibilityData::LineVisibilityData(q_vec_type p1, q_vec_type p2, double radius,

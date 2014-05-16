@@ -880,6 +880,8 @@ static const char FUNC_NAME_SET_TERMINUS_TO_SNAP_SPRING[] =
 static const char FUNC_NAME_CREATE_SPRING[] = "createSpring";
 static const char FUNC_NAME_CREATE_TRANSPARENT_CONENCTOR[] =
     "createTransparentConnector";
+static const char FUNC_NAME_CREATE_MEASURING_TAPE[] =
+    "createMeasuringTape";
 
 //   GRAB functions:
 static const char FUNC_NAME_GRAB_OBJECT_OR_WORLD[] = "grabObjectOrWorld";
@@ -949,6 +951,8 @@ ControlFunctions::ButtonControlFunctionPtr readButtonFunction(
     return &ControlFunctions::createSpring;
   } else if (funcToAssign == FUNC_NAME_CREATE_TRANSPARENT_CONENCTOR) {
     return &ControlFunctions::createTransparentConnector;
+  } else if (funcToAssign == FUNC_NAME_CREATE_MEASURING_TAPE) {
+    return &ControlFunctions::createMeasuringTape;
   } else if (funcToAssign == FUNC_NAME_GRAB_OBJECT_OR_WORLD) {
     return &ControlFunctions::grabObjectOrWorld;
   } else if (funcToAssign == FUNC_NAME_GRAB_SPRING_OR_WORLD) {
