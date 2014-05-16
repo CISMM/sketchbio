@@ -14,6 +14,8 @@ transformmanager.cpp
 transformmanager.h
 structurereplicator.cpp
 structurereplicator.h
+measuringtape.cpp
+measuringtape.h
 modelmanager.cpp
 modelmanager.h
 sketchobject.cpp
