@@ -607,7 +607,10 @@ void SimpleView::createEllipsoid() {
 		project->getModelManager().addModel(model);
 		q_vec_type pos = Q_NULL_VECTOR;
 		q_type orient = Q_ID_QUAT;
-		project->getWorldManager().addObject(model, pos, orient);
+		SketchObject* obj = project->getWorldManager().addObject(model, pos, orient);
+		if (obj != NULL) {
+			ControlFunctions::addUndoState(project);
+		}
 	}	
 }
 
