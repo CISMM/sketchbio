@@ -569,22 +569,25 @@ void SimpleView::loadObject()
 void SimpleView::createEllipsoid() {
 
 	// Ask the user for the length of the x, y, and z axes of the ellipsoid
+	double xlen, ylen, zlen;
 	bool x_ok, y_ok, z_ok;
-	double xlen = 
-		QInputDialog::getDouble(this, tr("Ellipsoid"), tr("x axis length:"), 
-								100, 0, 2147483647, 2, &x_ok);
-	double ylen = 
-		QInputDialog::getDouble(this, tr("Ellipsoid"), tr("y axis length:"), 
-								100, 0, 2147483647, 2, &y_ok);
-	double zlen = 
-		QInputDialog::getDouble(this, tr("Ellipsoid"), tr("z axis length:"), 
-								100, 0, 2147483647, 2, &z_ok);
+	xlen = QInputDialog::getDouble(this, tr("Ellipsoid"), tr("x axis length (nm):"), 
+								10, 0, 2147483647, 2, &x_ok);
+	if(x_ok) {
+	  ylen = QInputDialog::getDouble(this, tr("Ellipsoid"), tr("y axis length (nm):"),
+									10, 0, 2147483647, 2, &y_ok);
+	  if(y_ok) {
+	    zlen = QInputDialog::getDouble(this, tr("Ellipsoid"), tr("z axis length (nm):"), 
+									10, 0, 2147483647, 2, &z_ok);
+	  }
+	}
 	if (x_ok && y_ok && z_ok) {
 		vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
 			vtkSmartPointer< vtkParametricEllipsoid >::New();
-		ellipsoid->SetXRadius(xlen/2);
-		ellipsoid->SetYRadius(ylen/2);
-		ellipsoid->SetZRadius(zlen/2);
+		// Set radii, multiplying by 10 to convert to angstroms, divide by 2 for radius
+		ellipsoid->SetXRadius(xlen*5); 
+		ellipsoid->SetYRadius(ylen*5);
+		ellipsoid->SetZRadius(zlen*5);
 		vtkSmartPointer< vtkParametricFunctionSource > source =
 			vtkSmartPointer< vtkParametricFunctionSource >::New();
 		source->SetParametricFunction(ellipsoid);
