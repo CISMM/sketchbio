@@ -11,6 +11,7 @@
 #include <objectgroup.h>
 #include <sketchtests.h>
 #include <springconnection.h>
+#include <measuringtape.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
 #include <hand.h>

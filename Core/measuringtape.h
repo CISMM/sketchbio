@@ -28,6 +28,9 @@ public:
 	vtkTextActor3D* getLengthActor() const { return lengthActor; }
 	
 	void getMidpoint(q_vec_type out);
+
+	void updateLengthDisplay();
+	void updateLine();
 private:
 	vtkSmartPointer< vtkTextActor3D > lengthActor;
 };

@@ -332,6 +332,7 @@ The lists below indicate valid text values for _function_ attributes.
     - setTerminusToSnapSpring
     - createSpring
     - createTransparentConnector
+    - createMeasuringTape
     - keyframeAll
     - toggleKeyframeObject
     - addCamera

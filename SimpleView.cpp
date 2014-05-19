@@ -38,6 +38,7 @@
 #include <sketchmodel.h>
 #include <modelmanager.h>
 #include <sketchobject.h>
+#include <measuringtape.h>
 #include <modelinstance.h>
 #include <worldmanager.h>
 #include <sketchproject.h>
@@ -620,6 +621,15 @@ void SimpleView::createEllipsoid() {
 			ControlFunctions::addUndoState(project);
 		}
 	}	
+}
+
+void SimpleView::createMeasuringTape() {
+	q_vec_type pos1 = {0, 0, 0}, pos2 = {0, 10, 0};
+	MeasuringTape *tape = new MeasuringTape(NULL, NULL, pos1, pos2);
+    Connector* conn = project->getWorldManager().addConnector(tape);
+	if (conn != NULL) {
+		ControlFunctions::addUndoState(project);
+	}
 }
 
 void SimpleView::createCameraForViewpoint()

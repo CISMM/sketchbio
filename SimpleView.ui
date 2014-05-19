@@ -72,6 +72,7 @@
     <addaction name="actionSave_Copied_Structure"/>
     <addaction name="actionLoad_Structure"/>
     <addaction name="actionAdd_Ellipsoid"/>
+    <addaction name="actionMeasuring_Tape"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
@@ -292,6 +293,11 @@
   <action name="actionAdd_Ellipsoid">
    <property name="text">
     <string>Add Ellipsoid</string>
+   </property>
+  </action>
+  <action name="actionMeasuring_Tape">
+   <property name="text">
+    <string>Measuring Tape</string>
    </property>
   </action>
  </widget>
@@ -672,6 +678,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionMeasuring_Tape</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>createMeasuringTape()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -697,5 +719,6 @@
   <slot>saveCopiedObject()</slot>
   <slot>loadObject()</slot>
   <slot>createEllipsoid()</slot>
+  <slot>createMeasuringTape()</slot>
  </slots>
 </ui>

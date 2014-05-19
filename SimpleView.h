@@ -100,6 +100,9 @@ public slots:
   // Add new ellipsoid to the project
   void createEllipsoid();
 
+  // Add a measuring tape
+  void createMeasuringTape();
+
   // Collision modes (for testing)
   void oldCollisionMode();
   void poseModeTry1();

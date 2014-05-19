@@ -80,7 +80,7 @@ public:
     // default does nothing
     virtual bool addForce() { return false; }
     // updates the displayed line (if there is one)
-    void updateLine();
+    virtual void updateLine();
 
 protected:
     // updates the displayed line with the new color map (if there is one)
