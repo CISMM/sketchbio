@@ -1,5 +1,7 @@
 #include "measuringtape.h"
 
+#include <vtkTextProperty.h>
+
 MeasuringTape::MeasuringTape(SketchObject* o1, SketchObject* o2, const q_vec_type o1Pos,
               const q_vec_type o2Pos, bool display)
 	:
@@ -8,6 +10,10 @@ MeasuringTape::MeasuringTape(SketchObject* o1, SketchObject* o2, const q_vec_typ
 				lengthActor(vtkSmartPointer< vtkTextActor3D >::New())
 {
 	updateLengthDisplay();
+	vtkSmartPointer< vtkTextProperty > text = 
+		vtkSmartPointer< vtkTextProperty>::New();
+	text->SetFontSize(24);
+	lengthActor->SetTextProperty(text);
 }
 
 MeasuringTape::~MeasuringTape()
@@ -24,7 +30,9 @@ void MeasuringTape::getMidpoint(q_vec_type out) {
 }
 
 void MeasuringTape::updateLengthDisplay() {
-	QString lengthstr = QString::number(getLength());
+	double length = getLength() / 10; //convert to nm
+	QString lengthstr = QString::number(length);
+	lengthstr.append(" nm");
 	lengthActor->SetInput(lengthstr.toStdString().c_str());
 	q_vec_type midpt;
 	getMidpoint(midpt);
@@ -33,9 +41,5 @@ void MeasuringTape::updateLengthDisplay() {
 
 void MeasuringTape::updateLine() {
 	Connector::updateLine();
-	QString lengthstr = QString::number(getLength());
-	lengthActor->SetInput(lengthstr.toStdString().c_str());
-	q_vec_type midpt;
-	getMidpoint(midpt);
-	lengthActor->SetPosition(midpt);
+	updateLengthDisplay();
 }

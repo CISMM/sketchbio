@@ -624,7 +624,7 @@ void SimpleView::createEllipsoid() {
 }
 
 void SimpleView::createMeasuringTape() {
-	q_vec_type pos1 = {0, 0, 0}, pos2 = {0, 10, 0};
+	q_vec_type pos1 = {-100, 0, 0}, pos2 = {100, 0, 0};
 	MeasuringTape *tape = new MeasuringTape(NULL, NULL, pos1, pos2);
     Connector* conn = project->getWorldManager().addConnector(tape);
 	if (conn != NULL) {

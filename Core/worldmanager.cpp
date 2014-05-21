@@ -378,7 +378,7 @@ void WorldManager::removeSpring(Connector *spring)
 
     renderer->RemoveActor(lines.value(spring).second);
 	MeasuringTape *tape = dynamic_cast<MeasuringTape*>(spring);
-    if (spring != NULL) {
+    if (tape != NULL) {
         renderer->RemoveActor(tape->getLengthActor());
     }
     lines.remove(spring);
@@ -839,7 +839,7 @@ void WorldManager::addConnector(Connector *spring, QList< Connector * > &list)
         }
         lines.insert(spring, ConnectorPair(line, actor));
 		MeasuringTape *tape = dynamic_cast<MeasuringTape*>(spring);
-        if (spring != NULL) {
+        if (tape != NULL) {
             renderer->AddActor(tape->getLengthActor());
         }
     }
