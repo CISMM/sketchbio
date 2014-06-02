@@ -627,9 +627,7 @@ void SimpleView::createMeasuringTape() {
 	q_vec_type pos1 = {-100, 0, 0}, pos2 = {100, 0, 0};
 	MeasuringTape *tape = new MeasuringTape(NULL, NULL, pos1, pos2);
     Connector* conn = project->getWorldManager().addConnector(tape);
-	if (conn != NULL) {
-		ControlFunctions::addUndoState(project);
-	}
+	ControlFunctions::addUndoState(project);
 }
 
 void SimpleView::createCameraForViewpoint()

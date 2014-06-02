@@ -24,6 +24,7 @@ using std::strcmp;
 #include <modelinstance.h>
 #include <objectgroup.h>
 #include <springconnection.h>
+#include <measuringtape.h>
 #include <worldmanager.h>
 #include <structurereplicator.h>
 #include <transformequals.h>
@@ -107,6 +108,8 @@ using std::strcmp;
 #define SPRING_STIFFNESS_ATTRIBUTE_NAME "stiffness"
 #define SPRING_MIN_REST_ATTRIBUTE_NAME "minRestLen"
 #define SPRING_MAX_REST_ATTRIBUTE_NAME "maxRestLen"
+// unique to measuring tapes
+#define MEASURING_TAPE_ATTRIBUTE_NAME "measruingTape"
 
 #define TRANSFORM_OP_LIST_ELEMENT_NAME "transformOpList"
 #define TRANSFORM_OP_ELEMENT_NAME "transformOp"
@@ -646,8 +649,14 @@ vtkXMLDataElement* ProjectToXML::springToXML(
     const Connector* conn,
     const QHash< const SketchObject*, QString >& objectIds)
 {
+  const MeasuringTape* tape =
+	  dynamic_cast< const MeasuringTape* >(conn);
   if (conn->getObject1() == conn->getObject2()) {
-    return NULL;
+    // allows measuring tapes to be saved even when not connected
+	// to any objects, but not springs or transparent connectors
+	if (!(tape != NULL && conn->getObject1() == NULL)) {
+		return NULL;
+	}
   }
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(CONNECTOR_ELEMENT_NAME);
@@ -673,6 +682,9 @@ vtkXMLDataElement* ProjectToXML::springToXML(
     v = spring->getMaxRestLength();
     setPreciseVectorAttribute(child, &v, 1, SPRING_MAX_REST_ATTRIBUTE_NAME);
   }
+  if (tape != NULL) {
+	  child->SetAttribute(MEASURING_TAPE_ATTRIBUTE_NAME, "true");
+  }
   element->AddNestedElement(child);
   // second end, depends on conn type
   if (conn->getObject1() != NULL && conn->getObject2() != NULL) {
@@ -696,7 +708,7 @@ vtkXMLDataElement* ProjectToXML::springToXML(
                               CONNECTOR_CONNECTION_POINT_ATTR_NAME);
     element->AddNestedElement(child);
   } else if ((conn->getObject1() != NULL) ^ (conn->getObject2() != NULL)) {
-    q_vec_type pos2;
+	q_vec_type pos2;
     QString objId;
     if (conn->getObject1() != NULL) {
       conn->getObject1ConnectionPosition(pos1);
@@ -715,6 +727,20 @@ vtkXMLDataElement* ProjectToXML::springToXML(
                               CONNECTOR_CONNECTION_POINT_ATTR_NAME);
     element->AddNestedElement(child);
     child = vtkSmartPointer< vtkXMLDataElement >::New();
+    child->SetName(CONNECTOR_POINT_END_ELEMENT_NAME);
+    setPreciseVectorAttribute(child, pos2, 3,
+                              CONNECTOR_CONNECTION_POINT_ATTR_NAME);
+    element->AddNestedElement(child);
+  } else {
+    q_vec_type pos1, pos2;
+	conn->getEnd1WorldPosition(pos1);
+	conn->getEnd2WorldPosition(pos2);
+	child = vtkSmartPointer< vtkXMLDataElement >::New();
+    child->SetName(CONNECTOR_POINT_END_ELEMENT_NAME);
+    setPreciseVectorAttribute(child, pos1, 3,
+                              CONNECTOR_CONNECTION_POINT_ATTR_NAME);
+    element->AddNestedElement(child);
+	 child = vtkSmartPointer< vtkXMLDataElement >::New();
     child->SetName(CONNECTOR_POINT_END_ELEMENT_NAME);
     setPreciseVectorAttribute(child, pos2, 3,
                               CONNECTOR_CONNECTION_POINT_ATTR_NAME);
@@ -1848,11 +1874,11 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
   }
   const char* c;
   QString obj1Id, obj2Id;
-  int objCount = 0;
-  bool seenWPoint = false, seenProperties = false;
-  bool hasK = false;
+  int objCount = 0, pointCount = 0;
+  bool seenProperties = false;
+  bool hasK = false, isMeasuringTape = false;
   double k, minRLen, maxRLen, alpha, radius;
-  q_vec_type o1Pos, o2Pos, wPos;
+  q_vec_type o1Pos, o2Pos, pt1, pt2;
   ColorMapType::Type cmap = ColorMapType::SOLID_COLOR_GRAY;
   for (int i = 0; i < elem->GetNumberOfNestedElements(); i++) {
     vtkXMLDataElement* child = elem->GetNestedElement(i);
@@ -1888,6 +1914,8 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
         cmap = ColorMapType::colorMapFromString(ch);
       }
       hasK = (child->GetAttribute(SPRING_STIFFNESS_ATTRIBUTE_NAME) != NULL);
+	  isMeasuringTape = 
+		  (child->GetAttribute(MEASURING_TAPE_ATTRIBUTE_NAME) != NULL);
       int err = 0;
       err += child->GetScalarAttribute(CONNECTOR_ALPHA_ATTRIBUTE_NAME, alpha);
       err += child->GetScalarAttribute(CONNECTOR_RADIUS_ATTRIBUTE_NAME, radius);
@@ -1906,11 +1934,11 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
       }
     } else if (name == QString(CONNECTOR_POINT_END_ELEMENT_NAME)) {
       int err = child->GetVectorAttribute(CONNECTOR_CONNECTION_POINT_ATTR_NAME,
-                                          3, wPos);
+                                          3, (pointCount == 0) ? pt1 : pt2);
       if (err != 3) {
         return XML_TO_DATA_FAILURE;
       }
-      seenWPoint = true;
+      pointCount++;
     }
   }
   Connector* conn = NULL;
@@ -1918,15 +1946,29 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
     // if we didn't read a properties element
     return XML_TO_DATA_FAILURE;
   }
-  if ((seenWPoint ? 1 : 0) + objCount != 2) {
+  if (pointCount + objCount != 2) {
     // we have too few or too many endpoints
     return XML_TO_DATA_FAILURE;
-  } else if (seenWPoint) {
+  } else if (pointCount == 1) {
     if (hasK) {
       conn = new SpringConnection(objectIds.value(obj1Id), NULL, minRLen,
-                                  maxRLen, k, o1Pos, wPos, true);
+                                  maxRLen, k, o1Pos, pt1, true);
+    } else if (isMeasuringTape) {
+	  conn = new MeasuringTape(objectIds.value(obj1Id), NULL, o1Pos, pt1);
     } else {
-      conn = new Connector(objectIds.value(obj1Id), NULL, o1Pos, wPos, alpha,
+      conn = new Connector(objectIds.value(obj1Id), NULL, o1Pos, pt1, alpha,
+                           radius);
+    }
+    conn->setColorMapType(cmap);
+    proj->getWorldManager().addConnector(conn);
+  } else if (pointCount == 2) {
+    if (hasK) {
+      conn = new SpringConnection(NULL, NULL, minRLen,
+                                  maxRLen, k, pt1, pt2, true);
+    } else if (isMeasuringTape) {
+	  conn = new MeasuringTape(NULL, NULL, pt1, pt2);
+    } else {
+      conn = new Connector(NULL, NULL, pt1, pt2, alpha,
                            radius);
     }
     conn->setColorMapType(cmap);
@@ -1936,8 +1978,10 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToSpring(
       conn = SpringConnection::makeSpring(objectIds.value(obj1Id),
                                           objectIds.value(obj2Id), o1Pos, o2Pos,
                                           false, k, minRLen, maxRLen, true);
-    } else {
-      conn = new Connector(objectIds.value(obj1Id), objectIds.value(obj2Id),
+    } else if (isMeasuringTape) {
+	  conn = new MeasuringTape(objectIds.value(obj1Id), objectIds.value(obj2Id),
+							   o1Pos, o2Pos);
+	} else { conn = new Connector(objectIds.value(obj1Id), objectIds.value(obj2Id),
                            o1Pos, o2Pos, alpha, radius);
     }
     conn->setColorMapType(cmap);
