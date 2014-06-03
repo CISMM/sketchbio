@@ -537,7 +537,12 @@ void SimpleView::loadProject()
 
 void SimpleView::saveCopiedObject()
 {
-    // ask for directory to save the structure to
+    bool ok;
+	QString name = QInputDialog::getText(this, tr("Save Structure"), tr("Structure Name:"), 
+								QLineEdit::Normal, tr("structure"), &ok);
+	if (!ok) {
+		name = "structure";
+	}
     QString dirPath = QFileDialog::getExistingDirectory(
         this, tr("Select Save Directory (New or Existing)"),
         project->getProjectDir());
@@ -550,7 +555,7 @@ void SimpleView::saveCopiedObject()
     vtkSmartPointer< vtkXMLDataElement > elem =
         vtkSmartPointer< vtkXMLDataElement >::Take(
             vtkXMLUtilities::ReadElementFromStream(ss));
-    ProjectToXML::saveObjectFromClipboardXML(elem, project, dirPath);
+    ProjectToXML::saveObjectFromClipboardXML(elem, project, dirPath, name);
 }
 
 void SimpleView::loadObject()

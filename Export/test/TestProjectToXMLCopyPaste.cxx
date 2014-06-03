@@ -174,7 +174,7 @@ int testSaveAndLoadStructure() {
             vtkSmartPointer< vtkXMLDataElement >::Take(
                 ProjectToXML::objectToClipboardXML(obj)
                 );
-	ProjectToXML::saveObjectFromClipboardXML(copy, proj1.data(), TEST_DIR);
+	ProjectToXML::saveObjectFromClipboardXML(copy, proj1.data(), TEST_DIR, "test");
 	q_vec_type pos;
 	obj->getPosition(pos);
     proj1->getWorldManager().removeObject(obj);

@@ -56,7 +56,7 @@ class ProjectToXML
                                                     vtkXMLDataElement *elem);
 
   static void saveObjectFromClipboardXML(vtkXMLDataElement *elem, SketchBio::Project *proj,
-                                          QString dirPath);
+                                          QString dirPath, QString name);
 
   static void loadObjectFromSavedXML(SketchBio::Project*proj, QString zipPath,
                                      double *newPos);

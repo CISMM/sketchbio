@@ -1150,10 +1150,10 @@ ProjectToXML::XML_Read_Status ProjectToXML::modelNamesFromClipboardXML(
 }
 
 void ProjectToXML::saveObjectFromClipboardXML(vtkXMLDataElement *elem, SketchBio::Project *proj,
-												QString dirPath) {
+												QString dirPath, QString name) {
 	QDir dir(dirPath);
-	dir.mkdir("structure");
-	QDir save_dir(dir.absoluteFilePath("structure"));
+	dir.mkdir(name);
+	QDir save_dir(dir.absoluteFilePath(name));
 	QStringList allFiles;
 	// save XML from clipboard into the directory
     QString file = save_dir.absoluteFilePath(STRUCTURE_XML_FILENAME);
@@ -1197,7 +1197,8 @@ void ProjectToXML::saveObjectFromClipboardXML(vtkXMLDataElement *elem, SketchBio
 	}
 
 	// zip up the XML and VTK files together
-	if(!JlCompress::compressDir(dir.absoluteFilePath("structure.zip"),
+	QString zipname = name.append(".zip");
+	if(!JlCompress::compressDir(dir.absoluteFilePath(zipname),
 									save_dir.absolutePath(),true)) {
 		std::cout << "Failed to zip XML and VTK files" << std::endl;
 	}
