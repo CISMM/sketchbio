@@ -533,7 +533,7 @@ void createMeasuringTape(SketchBio::Project *project, int hand,
             "at the current location.");
     } else  // button released
     {
-        q_vec_type pos1, pos2 = {0, 1, 0};
+        q_vec_type pos1, pos2 = {0, 100, 0};
         project->getHand((hand == 0)
                              ? SketchBioHandId::LEFT
                              : SketchBioHandId::RIGHT).getPosition(pos1);

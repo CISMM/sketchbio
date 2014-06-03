@@ -17,6 +17,7 @@ int testDeleteSpring();
 int testSnapSpringToTerminus();
 int testCreateSpring();
 int testCreateTransparentConnector();
+int testCreateMeasuringTape();
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
   errors += testSnapSpringToTerminus();
   errors += testCreateSpring();
   errors += testCreateTransparentConnector();
+  errors += testCreateMeasuringTape();
   return errors;
 }
 
@@ -288,9 +290,9 @@ int testCreateSpring()
   int i = 0;
   
   //create some springs, make sure the number of connectors goes up by 1 every time
-  while (i< springsToCreate)
+  while (i < springsToCreate)
   {
-    if (i!=numSprings)
+    if (i != numSprings)
     {
       std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
       "  Number of springs did not increase by 1." << std::endl;
@@ -316,9 +318,9 @@ int testCreateTransparentConnector()
   int i = 0;
   
   //create some springs, make sure the number of connectors goes up by 1 every time
-  while (i< connectorsToCreate)
+  while (i < connectorsToCreate)
   {
-    if (i!=numConnectors)
+    if (i != numConnectors)
     {
       std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
       "  Number of connectors did not increase by 1." << std::endl;
@@ -326,6 +328,41 @@ int testCreateTransparentConnector()
     }
     ControlFunctions::createTransparentConnector(&proj, 1, false);
     numConnectors = proj.getWorldManager().getNumberOfConnectors();
+    i++;
+  }
+  
+  return 0;
+}
+
+int testCreateMeasuringTape()
+{
+  vtkSmartPointer< vtkRenderer > renderer =
+  vtkSmartPointer< vtkRenderer >::New();
+  SketchBio::Project proj(renderer,".");
+  
+  int connectorsToCreate = 5;
+  int numConnectors = proj.getWorldManager().getNumberOfConnectors();
+  int numActors = renderer->VisibleActorCount();
+  
+  int i = 0;
+  
+  //create some springs, make sure the number of connectors goes up by 1 every time
+  while (i < connectorsToCreate)
+  {
+    if (i != numConnectors)
+    {
+      std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+      "  Number of connectors did not increase by 1." << std::endl;
+      return 1;
+    }
+	if (2*i != numActors) {
+	  std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+      "  Number of actors did not increase by 2." << std::endl;
+      return 1;
+	}
+    ControlFunctions::createMeasuringTape(&proj,1, false);
+    numConnectors = proj.getWorldManager().getNumberOfConnectors();
+	numActors = renderer->VisibleActorCount();
     i++;
   }
   
