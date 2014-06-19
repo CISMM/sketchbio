@@ -342,7 +342,8 @@ int testCreateMeasuringTape()
   
   int connectorsToCreate = 5;
   int numConnectors = proj.getWorldManager().getNumberOfConnectors();
-  int numActors = renderer->VisibleActorCount();
+  int startingActors = renderer->VisibleActorCount();
+  int numActors = startingActors;
   
   int i = 0;
   
@@ -355,7 +356,7 @@ int testCreateMeasuringTape()
       "  Number of connectors did not increase by 1." << std::endl;
       return 1;
     }
-	if (2*i != numActors) {
+	if (2*i != numActors - startingActors) {
 	  std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
       "  Number of actors did not increase by 2." << std::endl;
       return 1;

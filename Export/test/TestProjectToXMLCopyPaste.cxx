@@ -29,7 +29,7 @@
 #include "SimpleView.h"
 
 #define TEST_DIR "test/test1"
-#define SAVE_DIR "test/test1/structure.zip"
+#define SAVE_DIR "test/test1/test.zip"
 
 int testSavePastedItem();
 int testPastedItemIsTheSame();
@@ -174,11 +174,12 @@ int testSaveAndLoadStructure() {
             vtkSmartPointer< vtkXMLDataElement >::Take(
                 ProjectToXML::objectToClipboardXML(obj)
                 );
+	cout << "Added Object." << endl;
 	ProjectToXML::saveObjectFromClipboardXML(copy, proj1.data(), TEST_DIR, "test");
 	q_vec_type pos;
 	obj->getPosition(pos);
     proj1->getWorldManager().removeObject(obj);
-
+	cout << "Copied object." << endl;
     ProjectToXML::loadObjectFromSavedXML(proj1.data(),SAVE_DIR,pos);
     const QList< SketchObject * > *list = proj1->getWorldManager().getObjects();
     if (list->size() != 1)
