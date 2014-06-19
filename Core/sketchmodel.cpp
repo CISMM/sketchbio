@@ -102,8 +102,13 @@ public:
         surface->Update();
         solidMapper->Update();
         atoms.TakeReference(ModelUtilities::modelAtomsFrom(dataSource));
-        ModelUtilities::makePQP_Model(collisionModel.data(),
+		// Only make the PQP model if it is empty. This way the collision detection
+		// model will always use the full resolution because updateData() is always
+		// called first using the full resolution data by addConformation().
+		if (collisionModel->build_state == 0) {
+			ModelUtilities::makePQP_Model(collisionModel.data(),
                                       surface->GetOutput());
+		}
     }
 };
 
@@ -275,6 +280,9 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     transform->Identity();
     filter->SetTransform(transform);
     filter->Update();
+	// The collision detection model should always use the full resolution.
+	// Currently this happens because updateData() is always called the first time
+	// with the full resolution, and will not make a new PQP Model if it is non-empty
     newConf.updateData(filter);
     // populate the PQP collision detection model
     PQP_Model* collisionModel = newConf.collisionModel.data();
