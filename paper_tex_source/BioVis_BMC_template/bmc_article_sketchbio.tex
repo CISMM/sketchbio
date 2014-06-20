@@ -379,7 +379,7 @@ The small white spheres follow the two tracked hand-held controllers. Status inf
 The current animation time point is shown in the lower right.
 
 Molecules in SketchBio are represented as rigid surfaces approximating the Connolly Solvent-Excluded Surface of the molecule.
-These were chosen because our collaborators used surface models in their current work for all four driving problems.  The surfaces may use solid colors, be colored by surface charge, or be colored by their nearness along the protein backbone to the N-terminus or C-terminus of the protein.
+These were chosen because our collaborators used surface models in their current work for all four driving problems.  The surfaces may use solid colors, be colored by surface charge, or be colored by their nearness along the protein backbone to the N-terminus or C-terminus of the protein.  Chimera is used to calculate and export the datasets for the latter two coloring schemes using PDB data.
 
 Object selection is indicated by drawing the outline of the oriented bounding box of the selected molecule molecules. 
 Color of this outline indicates whether a group or single object is selected.
@@ -517,7 +517,7 @@ Many biological structures including actin fibers and microtubules (major compon
 Figure \ref{fig:crystal_actin} shows an actin fiber generated this way in SketchBio.
 By providing live updates of the entire structure as the initial two objects are manipulated, SketchBio lets the scientist explore potential structures in real time.
 
-Because some structures have a known transformation from one molecule to the next, SketchBio (like other programs) lets the user input the transformation directly.
+The extent to which the user can control fine-grain maniuplations of the molecules depends on the input device in use, because resolution varies by device. Because some structures have a known transformation from one molecule to the next, SketchBio (like other programs) lets the user input the transformation directly.
 
 \paragraph*{Collision Detection in Pose Mode Physics and Crystal-by-example:}
 In pose mode, collision tests between objects that the user is not interacting with can be skipped because these objects do not move.
@@ -696,7 +696,7 @@ The resulting optimization algorithms will enable other scientists to semi-autom
 
 Our collaborators' projects have so far involved hand-placed molecules of density sufficiently small to be understood when all of them are visible.
 Thus, SketchBio does not yet support automatically-placed molecules to fill the space, nor does it require complex occlusion-handling procedures.
-As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle a large number of background molecules.
+As the user base grows, we expect to need to harness importance-based rendering techniques and autofill algorithms to handle a large number of background molecules. These more complex scenes will also require the ability to label important molecules.
 
 The motion of objects could be changed to directly map the user's hand motion instead of moving toward it via force and torque being applied.
 This would provide a direct mapping of hand location to object location and possibly a better interface.
@@ -709,7 +709,7 @@ For the collaborations we have worked with deformable models were not needed and
 % Answer the *MOST COMMON* question we get about SketchBio
 Molecular dynamics simulation is something SketchBio does not do directly.
 This decision was motivated by the cost of performing the molecular dynamics and the requirement to provide real-time user interaction.
-SketchBio may eventually harness an external molecular dynamics simulator, but SketchBio will only be used to specify input configurations for the simulation or easily create videos from its output.
+SketchBio may eventually harness an external molecular dynamics simulator, but SketchBio will only be used to specify input configurations for the simulation or easily create videos from its output. While SketchBio will not support molecular dynamics directly, a molecular docking capability involving two individual molecules could be added.
 
 To avoid dependence on a particular hardware vendor, SketchBio is being actively ported to use a pair of Nintendo WiiMote controllers instead of the Razer Hydra controller.
 Its use of the VRPN library supports switching devices by renaming the device and input for each function; a general-purpose mapping layer has been added that reads from a configuration file to enable the user to customize this remapping.
