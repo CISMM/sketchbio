@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <cassert>
+#include <stdlib.h>
+#include <time.h>
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
@@ -17,8 +19,6 @@
 // StructureReplicator class methods
 //############################################################################################
 //############################################################################################
-
-#define COLOR_MODIFIER  ( 1 / 2.0 )
 
 StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *object2, WorldManager *w) :
     numShown(0),
@@ -148,6 +148,7 @@ void StructureReplicator::setNumShown(int num) {
         } else {
             previous = replicaList.last();
         }
+		srand(time(NULL));
         for (; numShown < num; numShown++) {
             SketchObject *next = (numShown % 2 == 0) ?
                         obj1->getCopy() : obj2->getCopy();
@@ -164,16 +165,18 @@ void StructureReplicator::setNumShown(int num) {
             if (actor.GetPointer() != NULL)
             { // TODO -- really we should be using color maps here...
                 // I haven't got around to changing it yet
-                if (numShown % 2 == 0) {
-                    actor->GetProperty()->SetColor(obj1->getActor()->GetProperty()->GetColor());
-                } else {
-                    double color[3];
-                    obj1->getActor()->GetProperty()->GetColor(color);
-                    color[0] *= COLOR_MODIFIER;
-                    color[1] *= COLOR_MODIFIER;
-                    color[2] *= COLOR_MODIFIER;
-                    actor->GetProperty()->SetColor(color);
-                }
+				int randnum = qrand() % 4;
+				printf("random number: %d", randnum);
+				double luminance = 1 - (double(randnum) * (1.0/6.0));
+				printf("\nrandom luminance: %f", luminance);
+				fflush(stdout);
+				next->setLuminance(luminance);
+               /* double color[3];
+                obj1->getActor()->GetProperty()->GetColor(color);
+				color[0] *= luminance;
+                color[1] *= luminance;
+                color[2] *= luminance;
+                actor->GetProperty()->SetColor(color);  */ 
             }
             previous = next;
         }

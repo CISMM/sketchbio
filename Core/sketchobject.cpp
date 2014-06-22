@@ -92,6 +92,7 @@ SketchObject::SketchObject()
       localTransformDefiningPosition(false),
       observers(),
       map(ColorMapType::SOLID_COLOR_RED, "modelNum"),
+	  luminance(1),
       keyframes(NULL),
       xsplines(NULL),
       ysplines(NULL),
@@ -144,6 +145,14 @@ const QList< SketchObject * > *SketchObject::getSubObjects() const
 SketchModel *SketchObject::getModel() { return NULL; }
 //#########################################################################
 const SketchModel *SketchObject::getModel() const { return NULL; }
+//#########################################################################
+double SketchObject::getLuminance() { return luminance; }
+//#########################################################################
+void SketchObject::setLuminance(double lum)
+{ 
+	luminance = lum;
+	updateColorMap();
+}
 //#########################################################################
 int SketchObject::getModelConformation() const { return -1; }
 //#########################################################################

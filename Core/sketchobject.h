@@ -111,6 +111,9 @@ class SketchObject
     // must return a valid conformation of the model returned by getModel.
     // Otherwise, let
     // this default implementation return -1
+	// gets the luminance for solid colored objects
+	double getLuminance();
+	void setLuminance(double lum);
     virtual int getModelConformation() const;
     // actor - NULL by default since not all objects will have one actor, but
     // must return a valid
@@ -299,6 +302,7 @@ class SketchObject
     bool localTransformPrecomputed, localTransformDefiningPosition;
     QSet< ObjectChangeObserver * > observers;
     ColorMapType::ColorMap map;
+	double luminance;
     // this smart pointer contains the keyframes of the object.  If the pointer
     // it contains is null, then
     // there are no keyframes.  Otherwise, the map it points to is a mapping

@@ -173,7 +173,13 @@ void ModelInstance::updateColorMap()
                     cmap.getColorMap(0,1)
                 );
         double rgb[3];
+		double luminance = getLuminance();
+		printf("\nluminance: %f", luminance);
+		fflush(stdout);
         colorFunc->GetColor(1,rgb);
+		rgb[0] *= luminance;
+		rgb[1] *= luminance;
+		rgb[2] *= luminance;
         actor->GetProperty()->SetColor(rgb);
     }
     else
