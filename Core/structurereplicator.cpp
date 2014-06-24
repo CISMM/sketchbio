@@ -166,10 +166,7 @@ void StructureReplicator::setNumShown(int num) {
             { // TODO -- really we should be using color maps here...
                 // I haven't got around to changing it yet
 				int randnum = qrand() % 4;
-				printf("random number: %d", randnum);
 				double luminance = 1 - (double(randnum) * (1.0/6.0));
-				printf("\nrandom luminance: %f", luminance);
-				fflush(stdout);
 				next->setLuminance(luminance);
                /* double color[3];
                 obj1->getActor()->GetProperty()->GetColor(color);

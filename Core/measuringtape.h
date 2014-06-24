@@ -1,5 +1,5 @@
 #ifndef MEASURINGTAPE_H
-#define MEASURNIGTAPE_H
+#define MEASURINGTAPE_H
 
 #include <quat.h>
 #include "connector.h"

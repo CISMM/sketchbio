@@ -174,8 +174,6 @@ void ModelInstance::updateColorMap()
                 );
         double rgb[3];
 		double luminance = getLuminance();
-		printf("\nluminance: %f", luminance);
-		fflush(stdout);
         colorFunc->GetColor(1,rgb);
 		rgb[0] *= luminance;
 		rgb[1] *= luminance;
