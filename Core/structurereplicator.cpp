@@ -165,15 +165,9 @@ void StructureReplicator::setNumShown(int num) {
             if (actor.GetPointer() != NULL)
             { // TODO -- really we should be using color maps here...
                 // I haven't got around to changing it yet
-				int randnum = qrand() % 4;
+				int randnum = rand() % 4;
 				double luminance = 1 - (double(randnum) * (1.0/6.0));
 				next->setLuminance(luminance);
-               /* double color[3];
-                obj1->getActor()->GetProperty()->GetColor(color);
-				color[0] *= luminance;
-                color[1] *= luminance;
-                color[2] *= luminance;
-                actor->GetProperty()->SetColor(color);  */ 
             }
             previous = next;
         }

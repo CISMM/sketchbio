@@ -112,7 +112,7 @@ class SketchObject
     // Otherwise, let
     // this default implementation return -1
 	// gets the luminance for solid colored objects
-	double getLuminance();
+	double getLuminance() const;
 	void setLuminance(double lum);
     virtual int getModelConformation() const;
     // actor - NULL by default since not all objects will have one actor, but

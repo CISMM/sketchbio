@@ -146,7 +146,7 @@ SketchModel *SketchObject::getModel() { return NULL; }
 //#########################################################################
 const SketchModel *SketchObject::getModel() const { return NULL; }
 //#########################################################################
-double SketchObject::getLuminance() { return luminance; }
+double SketchObject::getLuminance() const { return luminance; }
 //#########################################################################
 void SketchObject::setLuminance(double lum)
 { 

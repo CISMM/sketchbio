@@ -67,6 +67,7 @@ using std::strcmp;
 #define OBJECT_ELEMENT_NAME "object"
 #define OBJECT_MODELID_ATTRIBUTE_NAME "modelid"
 #define OBJECT_COLOR_MAP_ATTRIBUTE_NAME "colorMap"
+#define OBJECT_LUMINANCE_ATTRIBUTE_NAME "luminance"
 #define OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME "arrayToColorBy"
 #define OBJECT_MODEL_CONF_NUM_ATTR_NAME "conformation"
 #define OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME "numInstances"
@@ -482,6 +483,8 @@ vtkXMLDataElement* ProjectToXML::objectToXML(
                         ColorMapType::stringFromColorMap(cmap));
     child->SetAttribute(OBJECT_ARRAY_TO_COLOR_BY_ATTR_NAME,
                         array.toStdString().c_str());
+	double lum = object->getLuminance();
+	setPreciseVectorAttribute(child, &lum, 1, OBJECT_LUMINANCE_ATTRIBUTE_NAME);
   }
   child->SetIntAttribute(OBJECT_MODEL_CONF_NUM_ATTR_NAME,
                          object->getModelConformation());
@@ -1658,6 +1661,7 @@ SketchObject* ProjectToXML::readObject(
     q_vec_type pos;
     q_type orient;
     bool visibility, active;
+	double luminance;
     QString oId(elem->GetAttribute(ID_ATTRIBUTE_NAME));
     int numInstances;
     if (!elem->GetScalarAttribute(OBJECT_NUM_INSTANCES_ATTRIBUTE_NAME,
@@ -1726,6 +1730,10 @@ SketchObject* ProjectToXML::readObject(
         cmap = ColorMapType::colorMapFromString(ch);
         object->setColorMapType(cmap);
       }
+	  if (props->GetAttribute(OBJECT_LUMINANCE_ATTRIBUTE_NAME)) {
+	    props->GetScalarAttribute(OBJECT_LUMINANCE_ATTRIBUTE_NAME, luminance);
+		object->setLuminance(luminance);
+	  }
     } else {
       // group
       QScopedPointer< ObjectGroup > group(new ObjectGroup());
