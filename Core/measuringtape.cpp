@@ -30,8 +30,9 @@ void MeasuringTape::getMidpoint(q_vec_type out) {
 }
 
 void MeasuringTape::updateLengthDisplay() {
-	double length = getLength() / 10; //convert to nm
-	QString lengthstr = QString::number(length);
+	double length = getLength() / 10.0; //convert to nm
+	QString lengthstr = QString::number(length, 'g', 3);
+	/*QString lengthstr = QString::number(length);*/
 	lengthstr.append(" nm");
 	lengthActor->SetInput(lengthstr.toStdString().c_str());
 	q_vec_type midpt;
