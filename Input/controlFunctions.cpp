@@ -1071,7 +1071,7 @@ void rotateCameraYaw(SketchBio::Project *project, int hand, double value)
     project->setOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME, new RotateCameraOperationState(project));
   }
   
-  value = (value-0.5)*2;
+  value = -(value-0.5)*2;
   
   RotateCameraOperationState *rotCam = dynamic_cast< RotateCameraOperationState * >(
     project->getOperationState(ROTATE_CAMERA_OPERATION_FUNC_NAME));
