@@ -92,7 +92,8 @@ public:
         useCount = other.useCount;
         return *this;
     }
-    void updateData(vtkPolyDataAlgorithm* dataSource)
+    void updateData(vtkPolyDataAlgorithm* dataSource,  
+					ModelResolution::ResolutionType resolution)
     {
         data = dataSource;
         vtkSmartPointer< vtkPolyDataAlgorithm > surf =
@@ -102,10 +103,9 @@ public:
         surface->Update();
         solidMapper->Update();
         atoms.TakeReference(ModelUtilities::modelAtomsFrom(dataSource));
-		// Only make the PQP model if it is empty. This way the collision detection
-		// model will always use the full resolution because updateData() is always
-		// called first using the full resolution data by addConformation().
-		if (collisionModel->build_state == 0) {
+		// Only make the PQP model if using the full resolution so that
+		// collision detection always occurs with the highly detailed model.
+		if (resolution == ModelResolution::FULL_RESOLUTION) {
 			ModelUtilities::makePQP_Model(collisionModel.data(),
                                       surface->GetOutput());
 		}
@@ -283,7 +283,7 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
 	// The collision detection model should always use the full resolution.
 	// Currently this happens because updateData() is always called the first time
 	// with the full resolution, and will not make a new PQP Model if it is non-empty
-    newConf.updateData(filter);
+    newConf.updateData(filter, ModelResolution::FULL_RESOLUTION);
     // populate the PQP collision detection model
     PQP_Model* collisionModel = newConf.collisionModel.data();
     // get the orientation of the model
@@ -338,7 +338,7 @@ void SketchModel::setResolutionForConformation(
         vtkSmartPointer< vtkPolyDataAlgorithm > dataSource =
                 vtkSmartPointer< vtkPolyDataAlgorithm >::Take(
                     ModelUtilities::read(conf.filenames.value(resolution)));
-        conf.updateData(dataSource);
+        conf.updateData(dataSource, resolution);
         conf.level = resolution;
     }
 }
