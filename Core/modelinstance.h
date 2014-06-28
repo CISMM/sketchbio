@@ -36,6 +36,8 @@ public:
     virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
     virtual SketchObject *getCopy();
     virtual SketchObject* deepCopy();
+	virtual void showFullResolution();
+	virtual void hideFullResolution();
 protected:
     virtual void updateColorMap();
     virtual void setSolidColor(double color[3]);

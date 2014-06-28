@@ -109,6 +109,9 @@ public:
     // object is deleted that uses the conformation, or when the conformation
     // of an object changes so that it no longer uses the conformation.
     void decrementUses(int conformation);
+	// sets the resolution level based on the number of uses of the given
+    // conformation
+    void setResolutionLevelByUses(int conformation);
 public slots:
     // Sets the geometery file for the given conformation and resolution
     void addSurfaceFileForResolution(int conformation,
@@ -125,9 +128,6 @@ private:
     SketchModel &operator=(const SketchModel &other);
 
     struct ConformationData;
-    // sets the resolution level based on the number of uses of the given
-    // conformation
-    void setResolutionLevelByUses(int conformation);
     // Note: conformations are unique "models" that happen to the the same
     //       real world object in a different state.  Thus they are stored
     //       in the same SketchModel object so that conformation can be changed

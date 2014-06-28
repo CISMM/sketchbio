@@ -146,6 +146,24 @@ SketchModel *SketchObject::getModel() { return NULL; }
 //#########################################################################
 const SketchModel *SketchObject::getModel() const { return NULL; }
 //#########################################################################
+void SketchObject::showFullResolution() 
+{
+	if (numInstances() != 1) {
+		for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
+            itr.next()->showFullResolution();
+        }
+	}
+}
+//#########################################################################
+void SketchObject::hideFullResolution()
+{
+	if (numInstances() != 1) {
+		for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
+            itr.next()->hideFullResolution();
+        }
+	}
+}
+//#########################################################################
 double SketchObject::getLuminance() const { return luminance; }
 //#########################################################################
 void SketchObject::setLuminance(double lum)

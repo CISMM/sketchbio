@@ -93,6 +93,8 @@ class SketchObject
     virtual const SketchModel *getModel() const;
     // gets the color map for this object (only a valid call if the
     // numInstances() == 1)
+	virtual void showFullResolution();
+	virtual void hideFullResolution();
     ColorMapType::Type getColorMapType() const;
     // sets the color map for this object
     void setColorMapType(ColorMapType::Type cmap);
