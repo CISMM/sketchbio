@@ -164,28 +164,14 @@ SketchObject* ModelInstance::deepCopy()
 //#########################################################################
 void ModelInstance::showFullResolution() 
 {
-	if (numInstances() == 1) {
-		model->setResolutionForConformation(getModelConformation(),
+	model->setResolutionForConformation(getModelConformation(),
 										ModelResolution::FULL_RESOLUTION);
-	}
-	else {
-		for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
-            itr.next()->showFullResolution();
-        }
-	}
 }
 
 //#########################################################################
 void ModelInstance::hideFullResolution() 
 {
-	if (numInstances() == 1) {
-		model->setResolutionLevelByUses(getModelConformation());
-	}
-	else {
-		for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
-            itr.next()->hideFullResolution();
-        }
-	}
+	model->setResolutionLevelByUses(getModelConformation());
 }
 
 //#########################################################################

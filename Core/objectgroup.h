@@ -45,6 +45,8 @@ class ObjectGroup : public SketchObject
     virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
     virtual SketchObject *getCopy();
     virtual SketchObject *deepCopy();
+	virtual void showFullResolution();
+	virtual void hideFullResolution();
 
    protected:
     virtual void localTransformUpdated();

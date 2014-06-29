@@ -190,3 +190,19 @@ SketchObject *ObjectGroup::deepCopy()
   }
   return nObj;
 }
+
+//#########################################################################
+void ObjectGroup::showFullResolution()
+{
+	for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
+            itr.next()->showFullResolution();
+    }
+}
+
+//#########################################################################
+void ObjectGroup::hideFullResolution()
+{
+	for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
+            itr.next()->hideFullResolution();
+    }
+}
