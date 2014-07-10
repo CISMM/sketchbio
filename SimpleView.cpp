@@ -20,6 +20,8 @@
 #include <vtkParametricFunctionSource.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkTransform.h>
+#include <vtkArrayCalculator.h>
+#include <vtkAppendPolyData.h>
 
 #include <QDebug>
 #include <QInputDialog>
@@ -572,44 +574,86 @@ void SimpleView::loadObject()
     ProjectToXML::loadObjectFromSavedXML(project, zipPath, pos);
 }
 
-void SimpleView::createEllipsoid() {
-
+void SimpleView::createEllipsoid() 
+{
 	// Ask the user for the length of the x, y, and z axes of the ellipsoid
-	double xlen, ylen, zlen;
+	double xlen, xrad, ylen, yrad, zlen, zrad;
 	bool x_ok, y_ok, z_ok;
 	xlen = QInputDialog::getDouble(this, tr("Ellipsoid"), tr("x axis length (nm):"), 
 								10, 0, 2147483647, 2, &x_ok);
+	// Set radius, multiplying by 10 to convert to angstroms, divide by 2 for radius
+	xrad = xlen*5;
 	if(x_ok) {
 	  ylen = QInputDialog::getDouble(this, tr("Ellipsoid"), tr("y axis length (nm):"),
 									10, 0, 2147483647, 2, &y_ok);
+	  yrad = ylen*5;
 	  if(y_ok) {
 	    zlen = QInputDialog::getDouble(this, tr("Ellipsoid"), tr("z axis length (nm):"), 
 									10, 0, 2147483647, 2, &z_ok);
+		zrad = zlen*5;
 	  }
 	}
 	if (x_ok && y_ok && z_ok) {
 		vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
 			vtkSmartPointer< vtkParametricEllipsoid >::New();
-		// Set radii, multiplying by 10 to convert to angstroms, divide by 2 for radius
-		ellipsoid->SetXRadius(xlen*5); 
-		ellipsoid->SetYRadius(ylen*5);
-		ellipsoid->SetZRadius(zlen*5);
+		ellipsoid->SetXRadius(xrad); 
+		ellipsoid->SetYRadius(yrad);
+		ellipsoid->SetZRadius(zrad);
 		vtkSmartPointer< vtkParametricFunctionSource > source =
 			vtkSmartPointer< vtkParametricFunctionSource >::New();
 		source->SetParametricFunction(ellipsoid);
-		vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
+		source->Update();
+		
+		/*vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
 			vtkSmartPointer< vtkTransformPolyDataFilter >::New();
 		vtkSmartPointer< vtkTransform > transform =
 			vtkSmartPointer< vtkTransform >::New();
 		transform->Identity();
 		sourceData->SetInputConnection(source->GetOutputPort());
 		sourceData->SetTransform(transform);
-		sourceData->Update();
+		sourceData->Update();*/
+
+		 // Add the chain position array
+		vtkSmartPointer<vtkArrayCalculator> calc =
+			vtkSmartPointer<vtkArrayCalculator>::New();
+		calc->SetInputConnection(source->GetOutputPort());
+		calc->AddCoordinateScalarVariable("X",0);
+		calc->AddCoordinateScalarVariable("Y",1);
+		calc->AddCoordinateScalarVariable("Z",2);
+		QString xradius = QString::number(xrad);
+		QString yradius = QString::number(yrad);
+		QString zradius = QString::number(zrad);
+		QString function = "((X/" + xradius + ") + (Y/" + yradius + ") + (Z/" + zradius +
+			"))/6 + 0.5";
+		calc->SetFunction(function.toStdString().c_str());
+		calc->SetResultArrayName("chainPosition");
+		calc->Update();
+		// make a copy with model num 0 to be the "atoms"
+		vtkSmartPointer<vtkArrayCalculator> atoms =
+            vtkSmartPointer<vtkArrayCalculator>::New();
+		atoms->SetInputConnection(calc->GetOutputPort());
+		atoms->SetFunction("0");
+		atoms->SetResultArrayName("modelNum");
+		atoms->Update();
+		// make a copy with model num 1 to be the "surface"
+		vtkSmartPointer<vtkArrayCalculator> surface =
+		        vtkSmartPointer<vtkArrayCalculator>::New();
+		surface->SetInputConnection(calc->GetOutputPort());
+		surface->SetFunction("1");
+		surface->SetResultArrayName("modelNum");
+		surface->Update();
+		// append the copies into one polydata
+		vtkSmartPointer<vtkAppendPolyData> append =
+		        vtkSmartPointer<vtkAppendPolyData>::New();
+		append->AddInputConnection(atoms->GetOutputPort());
+		append->AddInputConnection(surface->GetOutputPort());
+		append->Update();
+
 		QString xstr = QString::number(xlen);
 		QString ystr = QString::number(ylen);
 		QString zstr = QString::number(zlen);
 		QString name = "ellispoid_" + xstr + ystr + zstr;
-		QString fname = ModelUtilities::createFileFromVTKSource(sourceData, name);
+		QString fname = ModelUtilities::createFileFromVTKSource(append, name);
 		SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
 			DEFAULT_INVERSE_MOMENT);
 		model->addConformation(fname, fname);
