@@ -283,7 +283,7 @@ int SketchModel::addConformation(const QString &src, const QString &fullResoluti
     filter->Update();
 	// The collision detection model should always use the full resolution.
 	// Currently this happens because updateData() is always called the first time
-	// with the full resolution, and will not make a new PQP Model if it is non-empty
+	// with the full resolution
     newConf.updateData(filter, ModelResolution::FULL_RESOLUTION);
     // populate the PQP collision detection model
     PQP_Model* collisionModel = newConf.collisionModel.data();

@@ -594,70 +594,41 @@ void SimpleView::createEllipsoid()
 	  }
 	}
 	if (x_ok && y_ok && z_ok) {
-		vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
-			vtkSmartPointer< vtkParametricEllipsoid >::New();
-		ellipsoid->SetXRadius(xrad); 
-		ellipsoid->SetYRadius(yrad);
-		ellipsoid->SetZRadius(zrad);
-		vtkSmartPointer< vtkParametricFunctionSource > source =
-			vtkSmartPointer< vtkParametricFunctionSource >::New();
-		source->SetParametricFunction(ellipsoid);
-		source->Update();
-		
-		/*vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
-			vtkSmartPointer< vtkTransformPolyDataFilter >::New();
-		vtkSmartPointer< vtkTransform > transform =
-			vtkSmartPointer< vtkTransform >::New();
-		transform->Identity();
-		sourceData->SetInputConnection(source->GetOutputPort());
-		sourceData->SetTransform(transform);
-		sourceData->Update();*/
-
-		 // Add the chain position array
-		vtkSmartPointer<vtkArrayCalculator> calc =
-			vtkSmartPointer<vtkArrayCalculator>::New();
-		calc->SetInputConnection(source->GetOutputPort());
-		calc->AddCoordinateScalarVariable("X",0);
-		calc->AddCoordinateScalarVariable("Y",1);
-		calc->AddCoordinateScalarVariable("Z",2);
-		QString xradius = QString::number(xrad);
-		QString yradius = QString::number(yrad);
-		QString zradius = QString::number(zrad);
-		QString function = "((X/" + xradius + ") + (Y/" + yradius + ") + (Z/" + zradius +
-			"))/6 + 0.5";
-		calc->SetFunction(function.toStdString().c_str());
-		calc->SetResultArrayName("chainPosition");
-		calc->Update();
-		// make a copy with model num 0 to be the "atoms"
-		vtkSmartPointer<vtkArrayCalculator> atoms =
-            vtkSmartPointer<vtkArrayCalculator>::New();
-		atoms->SetInputConnection(calc->GetOutputPort());
-		atoms->SetFunction("0");
-		atoms->SetResultArrayName("modelNum");
-		atoms->Update();
-		// make a copy with model num 1 to be the "surface"
-		vtkSmartPointer<vtkArrayCalculator> surface =
-		        vtkSmartPointer<vtkArrayCalculator>::New();
-		surface->SetInputConnection(calc->GetOutputPort());
-		surface->SetFunction("1");
-		surface->SetResultArrayName("modelNum");
-		surface->Update();
-		// append the copies into one polydata
-		vtkSmartPointer<vtkAppendPolyData> append =
-		        vtkSmartPointer<vtkAppendPolyData>::New();
-		append->AddInputConnection(atoms->GetOutputPort());
-		append->AddInputConnection(surface->GetOutputPort());
-		append->Update();
-
 		QString xstr = QString::number(xlen);
 		QString ystr = QString::number(ylen);
 		QString zstr = QString::number(zlen);
 		QString name = "ellispoid_" + xstr + ystr + zstr;
-		QString fname = ModelUtilities::createFileFromVTKSource(append, name);
+		
 		SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
 			DEFAULT_INVERSE_MOMENT);
-		model->addConformation(fname, fname);
-		project->getModelManager().addModel(model);
+		QString model_file = QDir::current().absoluteFilePath(name + ".vtk");
+		if (project->getModelManager().hasModel(model_file)) {
+			model = project->getModelManager().getModel(model_file);
+	    }
+		else {
+			vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
+				vtkSmartPointer< vtkParametricEllipsoid >::New();
+			ellipsoid->SetXRadius(xrad); 
+			ellipsoid->SetYRadius(yrad);
+			ellipsoid->SetZRadius(zrad);
+			vtkSmartPointer< vtkParametricFunctionSource > source =
+				vtkSmartPointer< vtkParametricFunctionSource >::New();
+			source->SetParametricFunction(ellipsoid);
+			source->Update();
+
+			vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
+			vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+			vtkSmartPointer< vtkTransform > transform =
+			vtkSmartPointer< vtkTransform >::New();
+			transform->Identity();
+			sourceData->SetInputConnection(source->GetOutputPort());
+			sourceData->SetTransform(transform);
+			sourceData->Update();
+
+			QString fname = ModelUtilities::createFileFromVTKSource(sourceData, name);
+			model->addConformation(fname, fname);
+			project->getModelManager().addModel(model);
+		}
 		q_vec_type pos = Q_NULL_VECTOR;
 		q_type orient = Q_ID_QUAT;
 		SketchObject* obj = project->getWorldManager().addObject(model, pos, orient);
