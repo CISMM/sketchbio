@@ -164,6 +164,7 @@ void StructureReplicator::setNumShown(int num) {
             next->setLocalTransformPrecomputed(true);
             next->setPropagateForceToParent(true);
             vtkSmartPointer<vtkActor> actor = next->getActor();
+
             if (actor.GetPointer() != NULL) {
 				int randnum = rand();
 				double luminance = ((double(randnum)) / (double(RAND_MAX)));

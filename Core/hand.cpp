@@ -540,22 +540,37 @@ void Hand::HandImpl::computeNearestObjectAndConnector()
 void Hand::HandImpl::updateGrabbed()
 {
     assert(transformMgr != NULL);
-    if (grabType == WORLD_GRABBED) {
-        q_vec_type beforePos, afterPos;
+	if (grabType == WORLD_GRABBED || grabType == OBJECT_GRABBED) {
+		 q_vec_type beforePos, afterPos;
         q_type beforeOrient, afterOrient;
         transformMgr->getTrackerPosInWorldCoords(afterPos, side);
         transformMgr->getOldTrackerPosInWorldCoords(beforePos, side);
         transformMgr->getTrackerOrientInWorldCoords(afterOrient, side);
         transformMgr->getOldTrackerOrientInWorldCoords(beforeOrient, side);
-        // translate
+        // compute translation
         q_vec_type delta;
         q_vec_subtract(delta, afterPos, beforePos);
-        transformMgr->translateWorldRelativeToRoom(delta);
-        // rotate
-        q_type inv, rotation;
-        q_invert(inv, beforeOrient);
-        q_mult(rotation, afterOrient, inv);
-        transformMgr->rotateWorldRelativeToRoomAboutTracker(rotation, side);
+		// compute rotation
+		q_type inv, rotation;
+		q_invert(inv, beforeOrient);
+		q_mult(rotation, afterOrient, inv);
+		
+		if (grabType == WORLD_GRABBED) {
+			// translate
+			transformMgr->translateWorldRelativeToRoom(delta);
+			// rotate
+			transformMgr->rotateWorldRelativeToRoomAboutTracker(rotation, side);
+		} else { // object is grabbed
+			q_vec_type objPosBefore, objPosAfter;
+			q_type objOrientBefore, objOrientAfter;
+			nearestObject->getPosition(objPosBefore);
+			nearestObject->getOrientation(objOrientBefore);
+			//translate
+			q_vec_add(objPosAfter, objPosBefore, delta);
+			//rotate
+			q_mult(objOrientAfter, rotation, objOrientBefore);
+			nearestObject->setPosAndOrient(objPosAfter, objOrientAfter);
+		}
     } else if (grabType == CONNECTOR_GRABBED) {
         outlineConnector(nearestConnector,isClosestToEnd1);
     }
@@ -566,7 +581,7 @@ void Hand::HandImpl::grabNearestObject()
     assert(transformMgr != NULL);
     if (grabType == NOTHING_GRABBED && nearestObject != NULL) {
         grabType = OBJECT_GRABBED;
-        pitchfork.impale(nearestObject);
+        /*pitchfork.impale(nearestObject);*/
     }
 }
 
@@ -606,7 +621,7 @@ void Hand::HandImpl::releaseGrabbed()
         case NOTHING_GRABBED:
             break;
         case OBJECT_GRABBED:
-            pitchfork.release();
+            /*pitchfork.release();*/
             break;
         case CONNECTOR_GRABBED:
             if (isClosestToEnd1) {
