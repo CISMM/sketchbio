@@ -47,6 +47,8 @@ class ObjectGroup : public SketchObject
     virtual SketchObject *deepCopy();
 	virtual void showFullResolution();
 	virtual void hideFullResolution();
+	virtual void setMinLuminance(double minLum);
+	virtual void setMaxLuminance(double maxLum);
 
    protected:
     virtual void localTransformUpdated();

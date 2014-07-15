@@ -92,7 +92,6 @@ SketchObject::SketchObject()
       localTransformDefiningPosition(false),
       observers(),
       map(ColorMapType::SOLID_COLOR_RED, "modelNum"),
-	  luminance(1),
       keyframes(NULL),
       xsplines(NULL),
       ysplines(NULL),
@@ -150,13 +149,13 @@ void SketchObject::showFullResolution() {}
 //#########################################################################
 void SketchObject::hideFullResolution() {}
 //#########################################################################
-double SketchObject::getLuminance() const { return luminance; }
+double SketchObject::getLuminance() const { return 1; }
 //#########################################################################
-void SketchObject::setLuminance(double lum)
-{ 
-	luminance = lum;
-	updateColorMap();
-}
+void SketchObject::setLuminance(double lum) {}
+//#########################################################################
+void SketchObject::setMinLuminance(double minLum) {}
+//#########################################################################
+void SketchObject::setMaxLuminance(double maxLum) {}
 //#########################################################################
 int SketchObject::getModelConformation() const { return -1; }
 //#########################################################################

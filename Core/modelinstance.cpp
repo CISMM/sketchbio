@@ -28,6 +28,9 @@
 //#########################################################################
 ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     SketchObject(),
+	luminance(1.0),
+	minLuminance(0.5),
+	maxLuminance(1.0),
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
     conformation(confNum),
@@ -175,6 +178,33 @@ void ModelInstance::hideFullResolution()
 }
 
 //#########################################################################
+double ModelInstance::getLuminance() const 
+{ 
+	return luminance; 
+}
+
+//#########################################################################
+void ModelInstance::setLuminance(double lum) 
+{
+	luminance = lum;
+	updateColorMap();
+}
+
+//#########################################################################
+void ModelInstance::setMinLuminance(double minLum) 
+{
+	minLuminance = minLum;
+	updateColorMap();
+}
+
+//#########################################################################
+void ModelInstance::setMaxLuminance(double maxLum) 
+{
+	maxLuminance = maxLum;
+	updateColorMap();
+}
+
+//#########################################################################
 void ModelInstance::updateColorMap()
 {
     const ColorMapType::ColorMap& cmap = getColorMap();
@@ -186,11 +216,12 @@ void ModelInstance::updateColorMap()
                     cmap.getColorMap(0,1)
                 );
         double rgb[3];
-		double luminance = getLuminance();
+		double displayLum = ((maxLuminance - minLuminance) * luminance) + 
+							minLuminance; 
         colorFunc->GetColor(1,rgb);
-		rgb[0] *= luminance;
-		rgb[1] *= luminance;
-		rgb[2] *= luminance;
+		rgb[0] *= displayLum;
+		rgb[1] *= displayLum;
+		rgb[2] *= displayLum;
         actor->GetProperty()->SetColor(rgb);
     }
     else

@@ -68,6 +68,8 @@ WorldManager::WorldManager(vtkRenderer *r)
       orientedHalfPlaneOutlines(vtkSmartPointer< vtkAppendPolyData >::New()),
       halfPlanesActor(vtkSmartPointer< vtkActor >::New()),
       maxGroupNum(0),
+	  minLuminance(0.5),
+	  maxLuminance(1.0),
       doPhysicsSprings(true),
       doCollisionCheck(true),
       showInvisible(true),
@@ -113,6 +115,8 @@ SketchObject *WorldManager::addObject(SketchModel *model, const q_vec_type pos,
                                       const q_type orient)
 {
     SketchObject *newObject = new ModelInstance(model);
+	newObject->setMinLuminance(minLuminance);
+	newObject->setMaxLuminance(maxLuminance);
     newObject->setPosAndOrient(pos, orient);
     return addObject(newObject);
 }
@@ -824,6 +828,26 @@ void WorldManager::addObserver(WorldObserver *w) {
 //##################################################################################################
 //##################################################################################################
 void WorldManager::removeObserver(WorldObserver *w) { observers.removeOne(w); }
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setMinLuminance(double minLum)
+{
+	minLuminance = minLum;
+	QListIterator< SketchObject* > it = getObjectIterator();
+	while (it.hasNext()) {
+		it.next()->setMinLuminance(minLum);
+	}
+}
+
+void WorldManager::setMaxLuminance(double maxLum)
+{
+	maxLuminance = maxLum;
+	QListIterator< SketchObject* > it = getObjectIterator();
+	while (it.hasNext()) {
+		it.next()->setMaxLuminance(maxLum);
+	}
+}
 
 //##################################################################################################
 //##################################################################################################

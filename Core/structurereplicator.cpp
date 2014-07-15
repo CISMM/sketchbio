@@ -29,6 +29,9 @@ StructureReplicator::StructureReplicator(SketchObject *object1, SketchObject *ob
     world(w),
     transform(vtkSmartPointer< vtkTransform >::New())
 {
+	// seed random number generator to generate luminance levels
+	srand(time(NULL));
+
     assert(obj1 != NULL);
     assert(obj2 != NULL);
     // too complicated to figure out how this should work for now, far easier to just make
@@ -148,7 +151,6 @@ void StructureReplicator::setNumShown(int num) {
         } else {
             previous = replicaList.last();
         }
-		srand(time(NULL));
         for (; numShown < num; numShown++) {
             SketchObject *next = (numShown % 2 == 0) ?
                         obj1->getCopy() : obj2->getCopy();
@@ -162,11 +164,9 @@ void StructureReplicator::setNumShown(int num) {
             next->setLocalTransformPrecomputed(true);
             next->setPropagateForceToParent(true);
             vtkSmartPointer<vtkActor> actor = next->getActor();
-            if (actor.GetPointer() != NULL)
-            { // TODO -- really we should be using color maps here...
-                // I haven't got around to changing it yet
-				int randnum = rand() % 4;
-				double luminance = 1 - (double(randnum) * (1.0/6.0));
+            if (actor.GetPointer() != NULL) {
+				int randnum = rand();
+				double luminance = ((double(randnum)) / (double(RAND_MAX)));
 				next->setLuminance(luminance);
             }
             previous = next;

@@ -206,3 +206,19 @@ void ObjectGroup::hideFullResolution()
             itr.next()->hideFullResolution();
     }
 }
+
+//#########################################################################
+void ObjectGroup::setMinLuminance(double minLum)
+{
+	for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
+            itr.next()->setMinLuminance(minLum);
+    }
+}
+
+//#########################################################################
+void ObjectGroup::setMaxLuminance(double maxLum)
+{
+	for (QListIterator< SketchObject * > itr(*getSubObjects()); itr.hasNext();) {
+            itr.next()->setMaxLuminance(maxLum);
+    }
+}

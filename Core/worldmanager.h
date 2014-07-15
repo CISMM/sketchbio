@@ -467,6 +467,16 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *******************************************************************/
     void removeObserver(WorldObserver *w);
 
+	/*******************************************************************
+     *
+     * Manage luminance settings for objects
+     *
+     *******************************************************************/
+	double getMinLuminance() const { return minLuminance; }
+	double getMaxLuminance() const { return maxLuminance; }
+	void setMinLuminance(double minLum);
+	void setMaxLuminance(double maxLum);
+
    private:
     // Disable copy constructor and assignment operator these are not implemented
     // and not supported
@@ -531,6 +541,7 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
     vtkSmartPointer< vtkAppendPolyData > orientedHalfPlaneOutlines;
     vtkSmartPointer< vtkActor > halfPlanesActor;
 
+	double minLuminance, maxLuminance;
     int maxGroupNum;
     bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;
     PhysicsMode::Type collisionResponseMode;

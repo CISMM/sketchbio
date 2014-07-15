@@ -91,10 +91,11 @@ class SketchObject
     // numInstances returns 1
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-    // gets the color map for this object (only a valid call if the
-    // numInstances() == 1)
+	// sets the object to display in full resolution or a simplified resolution
 	virtual void showFullResolution();
 	virtual void hideFullResolution();
+    // gets the color map for this object (only a valid call if the
+    // numInstances() == 1)
     ColorMapType::Type getColorMapType() const;
     // sets the color map for this object
     void setColorMapType(ColorMapType::Type cmap);
@@ -108,14 +109,16 @@ class SketchObject
     // and
     // a corresponding set method
     const ColorMapType::ColorMap &getColorMap() const;
+	// gets the luminance for solid colored objects
+	virtual double getLuminance() const;
+	virtual void setLuminance(double lum);
+	virtual void setMinLuminance(double minLum);
+	virtual void setMaxLuminance(double maxLum);
     // the conformation of the model used by this object.  If numInstances
     // returns 1, this
     // must return a valid conformation of the model returned by getModel.
     // Otherwise, let
     // this default implementation return -1
-	// gets the luminance for solid colored objects
-	double getLuminance() const;
-	void setLuminance(double lum);
     virtual int getModelConformation() const;
     // actor - NULL by default since not all objects will have one actor, but
     // must return a valid
@@ -304,7 +307,6 @@ class SketchObject
     bool localTransformPrecomputed, localTransformDefiningPosition;
     QSet< ObjectChangeObserver * > observers;
     ColorMapType::ColorMap map;
-	double luminance;
     // this smart pointer contains the keyframes of the object.  If the pointer
     // it contains is null, then
     // there are no keyframes.  Otherwise, the map it points to is a mapping

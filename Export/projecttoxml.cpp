@@ -45,6 +45,9 @@ using std::strcmp;
   (QString::number(SAVE_MAJOR_VERSION) + "." + \
    QString::number(SAVE_MINOR_VERSION))
 
+#define MIN_LUMINANCE_ATTRIBUTE_NAME "minLuminance"
+#define MAX_LUMINANCE_ATTRIBUTE_NAME "maxLuminance"
+
 #define MODEL_MANAGER_ELEMENT_NAME "models"
 
 #define MODEL_ELEMENT_NAME "model"
@@ -136,6 +139,10 @@ vtkXMLDataElement* ProjectToXML::projectToXML(const SketchBio::Project* project)
   element->SetName(ROOT_ELEMENT_NAME);
   element->SetAttribute(VERSION_ATTRIBUTE_NAME,
                         SAVE_VERSION_NUM.toStdString().c_str());
+  double minLum = project->getWorldManager().getMinLuminance();
+  setPreciseVectorAttribute(element, &minLum, 1, MIN_LUMINANCE_ATTRIBUTE_NAME);
+  double maxLum = project->getWorldManager().getMaxLuminance();
+  setPreciseVectorAttribute(element, &maxLum, 1, MAX_LUMINANCE_ATTRIBUTE_NAME);
 
   QHash< const SketchModel*, QString > modelIds;
   QHash< const SketchObject*, QString > objectIds;
@@ -1067,6 +1074,14 @@ ProjectToXML::XML_Read_Status ProjectToXML::xmlToProject(
         XML_TO_DATA_FAILURE) {
       return XML_TO_DATA_FAILURE;
     }
+
+	double minLum, maxLum;
+	if (elem->GetAttribute(MIN_LUMINANCE_ATTRIBUTE_NAME)) {
+	    elem->GetScalarAttribute(MIN_LUMINANCE_ATTRIBUTE_NAME, minLum);
+		elem->GetScalarAttribute(MAX_LUMINANCE_ATTRIBUTE_NAME, maxLum);
+		proj->getWorldManager().setMinLuminance(minLum);
+		proj->getWorldManager().setMaxLuminance(maxLum);
+	}
   } else {
     return XML_TO_DATA_FAILURE;
   }

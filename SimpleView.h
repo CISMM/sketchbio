@@ -113,6 +113,9 @@ public slots:
   void setWorldSpringsEnabled(bool enabled);
   void setCollisionTestsOn(bool on);
 
+  // Luminance settings
+  void setLuminanceBounds();
+
   // Load a project
   void loadProject();
 

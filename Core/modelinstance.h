@@ -38,8 +38,13 @@ public:
     virtual SketchObject* deepCopy();
 	virtual void showFullResolution();
 	virtual void hideFullResolution();
+
+	virtual double getLuminance() const;
+	virtual void setLuminance(double lum);
+	virtual void setMinLuminance(double minLum);
+	virtual void setMaxLuminance(double maxLum);
+	virtual void updateColorMap();
 protected:
-    virtual void updateColorMap();
     virtual void setSolidColor(double color[3]);
 private:
     // Disable copy constructor and assignment operator these are not implemented
@@ -48,6 +53,7 @@ private:
     ModelInstance &operator=(const ModelInstance &other);
 
     // fields
+	double luminance, minLuminance, maxLuminance;
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
     int conformation;

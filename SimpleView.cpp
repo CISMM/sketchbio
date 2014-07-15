@@ -322,6 +322,19 @@ void SimpleView::setCollisionTestsOn(bool on)
     project->getWorldManager().setCollisionCheckOn(on);
 }
 
+void SimpleView::setLuminanceBounds()
+{
+	bool ok;
+	double currentMinLum, newMinLum;
+	currentMinLum = project->getWorldManager().getMinLuminance();
+	newMinLum = QInputDialog::getDouble(this, tr("Minimum Luminance"), 
+								tr("Enter minimum luminance between 0 and 1:"), 
+								currentMinLum, 0, 1, 2, &ok);
+	if (ok) {
+		project->getWorldManager().setMinLuminance(newMinLum);
+	}
+}
+
 void SimpleView::goToViewTime()
 {
     bool ok = true;

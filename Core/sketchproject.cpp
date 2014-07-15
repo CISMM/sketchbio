@@ -687,6 +687,7 @@ void Project::ProjectImpl::setViewTime(double time)
     viewTime = time;
     if (!isDoingAnimation) world.setAnimationTime(time);
 }
+
 //########################################################################
 // Undo and redo functions
 UndoState* Project::ProjectImpl::getLastUndoState()

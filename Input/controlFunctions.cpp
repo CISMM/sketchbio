@@ -1092,9 +1092,9 @@ static const char CRYSTAL_BY_EXAMPLE_NUM_COPIES_STATE[] = "Set Crystal By Exampl
   
 void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double value)
 {
-
   SketchBio::Hand &handObj = project->getHand(
                                               (hand == 0) ? SketchBioHandId::LEFT : SketchBioHandId::RIGHT);
+
   LastValueState *state = dynamic_cast<LastValueState*>(
               project->getOperationState(CRYSTAL_BY_EXAMPLE_NUM_COPIES_STATE));
   if (state == NULL) {
@@ -1114,7 +1114,7 @@ void setCrystalByExampleCopies(SketchBio::Project *project, int hand, double val
     for (int i = 0; i < SRs.count(); i++)
     {
       activeSR = SRs.at(i);
-      if (activeSR->getReplicaGroup() ==grp)
+      if (activeSR->getReplicaGroup() == grp)
       {
         found = true;
         break;

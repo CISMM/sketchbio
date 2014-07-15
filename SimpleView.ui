@@ -98,6 +98,8 @@
     <addaction name="actionSet_Camera_to_Viewpoint"/>
     <addaction name="separator"/>
     <addaction name="actionReset_Device"/>
+    <addaction name="separator"/>
+    <addaction name="actionSet_Luminance"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
@@ -298,6 +300,11 @@
   <action name="actionMeasuring_Tape">
    <property name="text">
     <string>Measuring Tape</string>
+   </property>
+  </action>
+  <action name="actionSet_Luminance">
+   <property name="text">
+    <string>Set Luminance</string>
    </property>
   </action>
  </widget>
@@ -694,6 +701,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSet_Luminance</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>setLuminanceBounds()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -720,5 +743,6 @@
   <slot>loadObject()</slot>
   <slot>createEllipsoid()</slot>
   <slot>createMeasuringTape()</slot>
+  <slot>setLuminanceBounds()</slot>
  </slots>
 </ui>
