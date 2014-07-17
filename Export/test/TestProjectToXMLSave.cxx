@@ -143,6 +143,7 @@ int testSave4()
     {
         MakeTestProject::setColorMapForObject(itr.next());
     }
+	proj1->getWorldManager().setMinLuminance(0.7);
 
     return saveLoadAndTest(proj1.data(),4);
 }

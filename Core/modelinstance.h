@@ -39,7 +39,11 @@ public:
 	virtual void showFullResolution();
 	virtual void hideFullResolution();
 
+	// the luminance relative to min and max luminance (where 0 will result in 
+	// displaying the minimum luminance and 1 will result in the max)
 	virtual double getLuminance() const;
+	// actual luminance level that gets displayed
+	virtual double getDisplayLuminance() const;
 	virtual void setLuminance(double lum);
 	virtual void setMinLuminance(double minLum);
 	virtual void setMaxLuminance(double maxLum);

@@ -111,6 +111,7 @@ class SketchObject
     const ColorMapType::ColorMap &getColorMap() const;
 	// gets the luminance for solid colored objects
 	virtual double getLuminance() const;
+	virtual double getDisplayLuminance() const;
 	virtual void setLuminance(double lum);
 	virtual void setMinLuminance(double minLum);
 	virtual void setMaxLuminance(double maxLum);

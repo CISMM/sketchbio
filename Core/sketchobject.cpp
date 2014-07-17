@@ -151,6 +151,8 @@ void SketchObject::hideFullResolution() {}
 //#########################################################################
 double SketchObject::getLuminance() const { return 1; }
 //#########################################################################
+double SketchObject::getDisplayLuminance() const { return 1; }
+//#########################################################################
 void SketchObject::setLuminance(double lum) {}
 //#########################################################################
 void SketchObject::setMinLuminance(double minLum) {}
@@ -645,6 +647,10 @@ void SketchObject::setPositionByAnimationTime(double t)
                 q_vec_scale(tmpC2, ratio, color2);
                 q_vec_scale(tmpC1, 1.0 - ratio, color1);
                 q_vec_add(netColor, tmpC1, tmpC2);
+				double displayLuminance = getDisplayLuminance();
+				netColor[0] *= displayLuminance;
+				netColor[1] *= displayLuminance;
+				netColor[2] *= displayLuminance;
                 setSolidColor(netColor);
             } else {
                 setColorMapType(f1.getColorMapType());

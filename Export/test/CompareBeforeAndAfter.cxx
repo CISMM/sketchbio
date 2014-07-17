@@ -29,6 +29,18 @@ void compareNumbers(SketchBio::Project* proj1, SketchBio::Project* proj2, int& r
     // make sure both have camera models created (easier than making sure neither has it)
     proj1->getCameraModel();
     proj2->getCameraModel();
+	if (proj1->getWorldManager().getMinLuminance()
+			!= proj2->getWorldManager().getMinLuminance())
+	{
+		retVal++;
+		PRINT_ERROR("Minimum luminance is different.");
+	}
+	if (proj1->getWorldManager().getMaxLuminance()
+			!= proj2->getWorldManager().getMaxLuminance())
+	{
+		retVal++;
+		PRINT_ERROR("Maximum luminance is different.");
+	}
     if (proj2->getModelManager().getNumberOfModels()
             != proj1->getModelManager().getNumberOfModels())
     {
@@ -212,6 +224,11 @@ void compareObjects(const SketchObject* o1, const SketchObject* o2,
         if (printDiffs) PRINT_ERROR("Visibility state of objects is different.");
         return;
     }
+	if (o1->getLuminance() != o2->getLuminance()) {
+		numDifferences++;
+		if (printDiffs) PRINT_ERROR("Luminance of objects is different.");
+		return;
+	}
     if (o1->isActive() != o2->isActive())
     {
         numDifferences++;

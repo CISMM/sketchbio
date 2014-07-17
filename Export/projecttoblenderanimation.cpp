@@ -5,6 +5,7 @@
 
 #include <QFile>
 #include <QScopedPointer>
+#include <QDebug>
 
 #include <vtkSmartPointer.h>
 #include <vtkThreshold.h>
@@ -241,6 +242,11 @@ static inline void writeCreateObject(
         const char* useVertexColorString = (isSolidColor) ? "False" : "True";
         double color[3];
         cmap->GetColor(1.0,color);
+		//apply luminance variation
+		double displayLum = obj->getDisplayLuminance(); 
+		color[0] *= displayLum;
+		color[1] *= displayLum;
+		color[2] *= displayLum;
         sprintf(buf.data(),"obj = createInstance(modelObjects[%u],%s,"
                 "(float(%f),float(%f),float(%f)),(float(%f),float(%f),float(%f),"
                 "float(%f)),%s,%s,startColor=(%f,%f,%f),useVertexColors=%s)\n",
@@ -362,6 +368,10 @@ bool ProjectToBlenderAnimation::writeKeyframes(
                     const char* useVertexColorString = (isSolidColor) ? "False" : "True";
                     double color[3];
                     cmap->GetColor(1.0,color);
+					double displayLuminance = obj->getDisplayLuminance();
+					color[0] *= displayLuminance;
+					color[1] *= displayLuminance;
+					color[2] *= displayLuminance;
                     sprintf(buf.data(),"keyframeColor(myObjects[%d],color=(%g,%g,%g),useVertexColors=%s)\n",
                             idx,color[0],color[1],color[2],useVertexColorString);
                     file.write(buf.data());

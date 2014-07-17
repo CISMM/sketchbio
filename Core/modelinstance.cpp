@@ -184,6 +184,12 @@ double ModelInstance::getLuminance() const
 }
 
 //#########################################################################
+double ModelInstance::getDisplayLuminance() const 
+{ 
+	return ((maxLuminance - minLuminance) * luminance) + minLuminance; 
+}
+
+//#########################################################################
 void ModelInstance::setLuminance(double lum) 
 {
 	luminance = lum;
@@ -216,8 +222,7 @@ void ModelInstance::updateColorMap()
                     cmap.getColorMap(0,1)
                 );
         double rgb[3];
-		double displayLum = ((maxLuminance - minLuminance) * luminance) + 
-							minLuminance; 
+		double displayLum = getDisplayLuminance(); 
         colorFunc->GetColor(1,rgb);
 		rgb[0] *= displayLum;
 		rgb[1] *= displayLum;
