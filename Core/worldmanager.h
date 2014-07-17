@@ -292,7 +292,12 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *
      *******************************************************************/
     void setCollisionMode(PhysicsMode::Type mode);
-
+	/*******************************************************************
+     *
+     * Gets the collision response mode
+     *
+     *******************************************************************/
+    PhysicsMode::Type getCollisionMode();
     /*******************************************************************
      *
      * Steps the phyiscs system by timestep dt, applying collision

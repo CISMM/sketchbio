@@ -560,7 +560,9 @@ void Hand::HandImpl::updateGrabbed()
 			transformMgr->translateWorldRelativeToRoom(delta);
 			// rotate
 			transformMgr->rotateWorldRelativeToRoomAboutTracker(rotation, side);
-		} else { // object is grabbed
+		} else if (worldMgr->getCollisionMode() == PhysicsMode::POSE_MODE_TRY_ONE) {
+			// object is grabbed and using pose mode physics
+			// in Pose Mode 1, we use direct mapping instead of force-based motion
 			q_vec_type objPosBefore, objPosAfter;
 			q_type objOrientBefore, objOrientAfter;
 			nearestObject->getPosition(objPosBefore);
@@ -581,7 +583,10 @@ void Hand::HandImpl::grabNearestObject()
     assert(transformMgr != NULL);
     if (grabType == NOTHING_GRABBED && nearestObject != NULL) {
         grabType = OBJECT_GRABBED;
-        /*pitchfork.impale(nearestObject);*/
+		// if not in pose mode physics, use force-based motion
+		if (worldMgr->getCollisionMode() != PhysicsMode::POSE_MODE_TRY_ONE) {
+			pitchfork.impale(nearestObject);
+		}
     }
 }
 
@@ -621,7 +626,7 @@ void Hand::HandImpl::releaseGrabbed()
         case NOTHING_GRABBED:
             break;
         case OBJECT_GRABBED:
-            /*pitchfork.release();*/
+            pitchfork.release();
             break;
         case CONNECTOR_GRABBED:
             if (isClosestToEnd1) {

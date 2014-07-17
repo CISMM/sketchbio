@@ -127,31 +127,35 @@ int testGrabObjectOrWorld()
     return 1;
   }
   
+  //set collision mode to one in which force-based motion is used
+  proj.getWorldManager().setCollisionMode(PhysicsMode::ORIGINAL_COLLISION_RESPONSE);
+
   //grab object
   ControlFunctions::grabObjectOrWorld(&proj, 1, true);
-  
+
   //make sure spring is connected to the object
   QList< Connector * > springs = *proj.getWorldManager().getUISprings();
-  
+
   int numberFound = 0;
   foreach (Connector *c, springs) {
-    std::cout << "Testing...";
-    if (c->getObject2() == obj) {
-      ++numberFound;
-      std::cout << "Found object" << std::endl;
-    } else {
-      std::cout << std::endl;
-    }
+	  std::cout << "Testing...";
+	  if (c->getObject2() == obj) {
+		  ++numberFound;
+		  std::cout << "Found object" << std::endl;
+	  } else {
+		  std::cout << std::endl;
+	  }
   }
   if (numberFound != 3) {
-    std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
-    "  Object wasn't connected to the right hand springs." << std::endl;
-    return 1;
+	  std::cout << "Error at " << __FILE__ << ":" << __LINE__ <<
+		  "  Object wasn't connected to the right hand springs." << std::endl;
+	  return 1;
   }
-  
+ 
   //release object
   ControlFunctions::grabObjectOrWorld(&proj, 1, false);
-  
+  proj.getWorldManager().setCollisionMode(PhysicsMode::POSE_MODE_TRY_ONE);
+
   return 0;
 }
 int testGrabSpringOrWOrld()
