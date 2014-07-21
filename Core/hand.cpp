@@ -541,7 +541,7 @@ void Hand::HandImpl::updateGrabbed()
 {
     assert(transformMgr != NULL);
 	if (grabType == WORLD_GRABBED || grabType == OBJECT_GRABBED) {
-		 q_vec_type beforePos, afterPos;
+		q_vec_type beforePos, afterPos;
         q_type beforeOrient, afterOrient;
         transformMgr->getTrackerPosInWorldCoords(afterPos, side);
         transformMgr->getOldTrackerPosInWorldCoords(beforePos, side);
@@ -571,7 +571,14 @@ void Hand::HandImpl::updateGrabbed()
 			q_vec_add(objPosAfter, objPosBefore, delta);
 			//rotate
 			q_mult(objOrientAfter, rotation, objOrientBefore);
-			nearestObject->setPosAndOrient(objPosAfter, objOrientAfter);
+			nearestObject->setLastLocation();
+			SketchObject* parent = nearestObject->getParent();
+			if (parent == NULL) {
+				nearestObject->setPosAndOrient(objPosAfter, objOrientAfter);
+			} else {
+				nearestObject->setParentRelativePositionForAbsolutePosition(
+					nearestObject, parent, objPosBefore, objPosAfter);
+			}
 		}
     } else if (grabType == CONNECTOR_GRABBED) {
         outlineConnector(nearestConnector,isClosestToEnd1);
@@ -583,10 +590,8 @@ void Hand::HandImpl::grabNearestObject()
     assert(transformMgr != NULL);
     if (grabType == NOTHING_GRABBED && nearestObject != NULL) {
         grabType = OBJECT_GRABBED;
-		// if not in pose mode physics, use force-based motion
-		if (worldMgr->getCollisionMode() != PhysicsMode::POSE_MODE_TRY_ONE) {
-			pitchfork.impale(nearestObject);
-		}
+		pitchfork.impale(nearestObject);
+		nearestObject->setGrabbed(true);
     }
 }
 
@@ -627,6 +632,7 @@ void Hand::HandImpl::releaseGrabbed()
             break;
         case OBJECT_GRABBED:
             pitchfork.release();
+			nearestObject->setGrabbed(false);
             break;
         case CONNECTOR_GRABBED:
             if (isClosestToEnd1) {

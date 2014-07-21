@@ -61,7 +61,10 @@ public:
 private:
     void poseModeForSprings(QList< Connector* >& springs, QList<SketchObject* >& objs,
                                double dt, bool doCollisionCheck);
+	void poseModeGrabMotion(QList< Connector* >& springs, QList<SketchObject* >& objs,
+                               double dt, bool doCollisionCheck);
     QSet<int> affectedGroups;
+
 };
 
 /*
@@ -738,13 +741,12 @@ void PoseModePhysicsStrategy::performPhysicsStepAndCollisionDetection(
         QList< Connector* >& physicsSprings, bool doPhysicsSprings,
         QList< SketchObject* >& objects, double dt, bool doCollisionCheck)
 {
-        // spring forces for user interacton
-        poseModeForSprings(uiSprings,objects,dt,doCollisionCheck);
-
-        // spring forces for physics springs interaction
-        if (doPhysicsSprings) {
-            poseModeForSprings(physicsSprings,objects,dt,doCollisionCheck);
-        }
+    // apply motion from user interacton 
+	poseModeGrabMotion(uiSprings,objects,dt,doCollisionCheck);
+    // spring forces for physics springs interaction
+    if (doPhysicsSprings) {
+		poseModeForSprings(physicsSprings,objects,dt,doCollisionCheck);
+    }
 }
 
 //######################################################################################
@@ -771,6 +773,28 @@ void PoseModePhysicsStrategy::poseModeForSprings(QList< Connector* >& springs,
             PhysicsUtilities::setLastLocation(objs,affectedObjectGroups);
             PhysicsUtilities::applyEulerToListAndGroups(
                         objs,affectedObjectGroups,dt,true);
+            if (doCollisionCheck)
+                applyPoseModeCollisionResponse(objs,affectedGroups,
+                                               affectedObjectGroups,dt,this);
+            affectedGroups.clear();
+        }
+    }
+}
+//######################################################################################
+void PoseModePhysicsStrategy::poseModeGrabMotion(QList< Connector* >& springs,
+                                                 QList< SketchObject* >& objs,
+                                                 double dt,
+                                                 bool doCollisionCheck) 
+{
+	QSet< SketchObject* > affectedObjectGroups;
+    if (!springs.empty()) {
+        if (PhysicsUtilities::springForcesFromList(
+                    springs,affectedGroups,affectedObjectGroups))
+        {   
+			// In pose mode, the object has already been moved by Hand::updateGrabbed(),
+			// so spring forces are not applied, just used to identify the grabbed object
+			// and apply the collision response 
+			PhysicsUtilities::clearForces(objs, affectedObjectGroups);
             if (doCollisionCheck)
                 applyPoseModeCollisionResponse(objs,affectedGroups,
                                                affectedObjectGroups,dt,this);

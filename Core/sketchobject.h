@@ -243,6 +243,9 @@ class SketchObject
     // set/get active status (only has meaning on cameras)
     void setActive(bool isActive);
     bool isActive() const;
+	// set/get grabbed status
+	void setGrabbed(bool isGrabbed);
+	bool isGrabbed() const;
     // set/get the 'propagate-force-to-parent' status
     void setPropagateForceToParent(bool propagate);
     bool isPropagatingForceToParent();
@@ -294,7 +297,7 @@ class SketchObject
     q_vec_type position, lastPosition;
     q_type orientation, lastOrientation;
     // visibility for animations:
-    bool visible, active, propagateForce;
+    bool visible, active, grabbed, propagateForce;
     // this list is the collision groups. If it is empty, then the object has no
     // collision group and
     // getPrimaryCollisionGroup will return OBJECT_HAS_NO_GROUP.  Else, the

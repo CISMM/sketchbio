@@ -424,7 +424,9 @@ void WorldManager::stepPhysics(double dt)
     for (QListIterator< SketchObject * > it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
         obj->clearForces();
-        obj->setLastLocation();
+		if (collisionResponseMode != PhysicsMode::POSE_MODE_TRY_ONE || (!obj->isGrabbed())) {
+			obj->setLastLocation();
+		}
     }
     strategies[collisionResponseMode]->performPhysicsStepAndCollisionDetection(
         uiSprings, connections, doPhysicsSprings, objects, dt,

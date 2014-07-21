@@ -86,6 +86,7 @@ SketchObject::SketchObject()
       parent(NULL),
       visible(true),
       active(false),
+	  grabbed(false),
       propagateForce(false),
       collisionGroups(),
       localTransformPrecomputed(false),
@@ -972,6 +973,12 @@ void SketchObject::setActive(bool isActive) { active = isActive; }
 
 //#########################################################################
 bool SketchObject::isActive() const { return active; }
+
+//#########################################################################
+void SketchObject::setGrabbed(bool isGrabbed) { grabbed = isGrabbed; }
+
+//#########################################################################
+bool SketchObject::isGrabbed() const { return grabbed; }
 
 //#########################################################################
 void SketchObject::setPropagateForceToParent(bool propagate)
