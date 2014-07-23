@@ -128,7 +128,7 @@ private:
     SketchModel &operator=(const SketchModel &other);
 
     struct ConformationData;
-    // Note: conformations are unique "models" that happen to the the same
+    // Note: conformations are unique "models" that happen to be the same
     //       real world object in a different state.  Thus they are stored
     //       in the same SketchModel object so that conformation can be changed
     //       without looking up a new model.

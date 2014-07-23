@@ -322,6 +322,15 @@ void SimpleView::setCollisionTestsOn(bool on)
     project->getWorldManager().setCollisionCheckOn(on);
 }
 
+void SimpleView::setFullResForGrabbed(bool on)
+{
+	project->getWorldManager().setFullResOptionForGrabbed(on);
+}
+void SimpleView::setFullResForNearby(bool on)
+{
+	project->getWorldManager().setFullResOptionForNearby(on);
+}
+
 void SimpleView::setLuminanceBounds()
 {
 	bool ok;

@@ -113,6 +113,10 @@ public slots:
   void setWorldSpringsEnabled(bool enabled);
   void setCollisionTestsOn(bool on);
 
+  // Full res display settings
+  void setFullResForGrabbed(bool on);
+  void setFullResForNearby(bool on);
+
   // Luminance settings
   void setLuminanceBounds();
 

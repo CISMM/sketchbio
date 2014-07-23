@@ -592,6 +592,14 @@ void Hand::HandImpl::grabNearestObject()
         grabType = OBJECT_GRABBED;
 		pitchfork.impale(nearestObject);
 		nearestObject->setGrabbed(true);
+		if (nearestObject->numInstances() == 1 && 
+			worldMgr->GrabbedObjectsShouldUseFullRes()) 
+		{
+			nearestObject->showFullResolution();
+		}
+		if (worldMgr->NearbyObjectsShouldUseFullRes()) {
+			worldMgr->setNearbyObjectsToFullRes(nearestObject, *worldMgr->getObjects());
+		}
     }
 }
 
@@ -633,6 +641,8 @@ void Hand::HandImpl::releaseGrabbed()
         case OBJECT_GRABBED:
             pitchfork.release();
 			nearestObject->setGrabbed(false);
+			nearestObject->hideFullResolution();
+			worldMgr->setNearbyObjectsToPreviousResolution();
             break;
         case CONNECTOR_GRABBED:
             if (isClosestToEnd1) {

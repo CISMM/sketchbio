@@ -36,6 +36,8 @@ public:
     virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
     virtual SketchObject *getCopy();
     virtual SketchObject* deepCopy();
+
+	virtual ModelResolution::ResolutionType getResolutionLevel();
 	virtual void showFullResolution();
 	virtual void hideFullResolution();
 
@@ -61,6 +63,7 @@ private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
     int conformation;
+	ModelResolution::ResolutionType resolution;
     vtkSmartPointer< vtkTransformPolyDataFilter > orientedBB;
     vtkSmartPointer< vtkTransformPolyDataFilter > orientedHalfPlaneOutlines;
 };

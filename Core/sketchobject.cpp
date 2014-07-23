@@ -11,6 +11,7 @@
 #include "keyframe.h"
 #include "sketchtests.h"
 #include "objectchangeobserver.h"
+#include "sketchmodel.h"
 
 //#########################################################################
 void SketchObject::setParentRelativePositionForAbsolutePosition(
@@ -145,6 +146,11 @@ const QList< SketchObject * > *SketchObject::getSubObjects() const
 SketchModel *SketchObject::getModel() { return NULL; }
 //#########################################################################
 const SketchModel *SketchObject::getModel() const { return NULL; }
+//#########################################################################
+ModelResolution::ResolutionType SketchObject::getResolutionLevel() 
+{ 
+	return ModelResolution::FULL_RESOLUTION; 
+}
 //#########################################################################
 void SketchObject::showFullResolution() {}
 //#########################################################################

@@ -105,7 +105,7 @@ public:
         atoms.TakeReference(ModelUtilities::modelAtomsFrom(dataSource));
 		// Only make the PQP model if using the full resolution so that
 		// collision detection always occurs with the highly detailed model.
-		if (resolution == ModelResolution::FULL_RESOLUTION ||
+		if (resolution == ModelResolution::FULL_RESOLUTION &&
 				collisionModel->build_state == 0) {
 			ModelUtilities::makePQP_Model(collisionModel.data(),
                                       surface->GetOutput());

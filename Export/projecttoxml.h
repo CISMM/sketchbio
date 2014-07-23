@@ -83,12 +83,14 @@ class ProjectToXML
   static vtkXMLDataElement *objectListToXML(
       const QList< SketchObject * > *objectList,
       const QHash< const SketchModel *, QString > &modelIds,
-      QHash< const SketchObject *, QString > &objectIds);
+      QHash< const SketchObject *, QString > &objectIds,
+	  bool saveKeyframes = true);
 
   static vtkXMLDataElement *objectToXML(
       const SketchObject *object,
       const QHash< const SketchModel *, QString > &modelIds,
-      QHash< const SketchObject *, QString > &objectIds);
+      QHash< const SketchObject *, QString > &objectIds,
+	  bool saveKeyframes = true);
 
   static vtkXMLDataElement *replicatorListToXML(
       const QList< StructureReplicator * > &replicaList,

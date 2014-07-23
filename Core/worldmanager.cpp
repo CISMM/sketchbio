@@ -72,6 +72,8 @@ WorldManager::WorldManager(vtkRenderer *r)
 	  maxLuminance(1.0),
       doPhysicsSprings(true),
       doCollisionCheck(true),
+	  fullResForGrabbedObjects(false),
+	  fullResForNearbyObjects(false),
       showInvisible(true),
       showShadows(true),
       collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
@@ -424,6 +426,8 @@ void WorldManager::stepPhysics(double dt)
     for (QListIterator< SketchObject * > it(objects); it.hasNext();) {
         SketchObject *obj = it.next();
         obj->clearForces();
+		// Don't set last location if it is grabbed in pose mode, because is has already been
+		// moved and last location set in Hand::updateGrabbed()
 		if (collisionResponseMode != PhysicsMode::POSE_MODE_TRY_ONE || (!obj->isGrabbed())) {
 			obj->setLastLocation();
 		}
@@ -837,6 +841,58 @@ void WorldManager::addObserver(WorldObserver *w) {
 //##################################################################################################
 //##################################################################################################
 void WorldManager::removeObserver(WorldObserver *w) { observers.removeOne(w); }
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setNearbyObjectsToFullRes(SketchObject* baseObj,
+											   const QList< SketchObject* >& objs)
+{
+	QListIterator< SketchObject* > it(objs);
+	double bb[6], dist;
+	baseObj->getBoundingBox(bb);
+	q_vec_type pos;
+	while (it.hasNext()) {
+		SketchObject* obj = it.next();
+		if (obj->numInstances() == 1) {
+			obj->getPosition(pos);
+			baseObj->getWorldSpacePointInModelCoordinates(pos, pos);
+			dist = distOutsideAABB(pos, bb);
+			if (dist < 90.0) {
+				/*printf("\nCLOSE ENOUGH FOR FULL RES");
+				fflush(stdout);*/
+				obj->showFullResolution();
+			}
+			else {
+				/*printf("\nDISTANCE ABOVE THRESHOLD: %f", dist);
+				fflush(stdout);*/
+				/*obj->hideFullResolution();*/
+			}
+		}
+		else {
+			setNearbyObjectsToFullRes(baseObj, *obj->getSubObjects());
+		}
+	}
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setNearbyObjectsToPreviousResolution()
+{
+	QListIterator< SketchObject* > it = getObjectIterator();
+	while (it.hasNext()) {
+		it.next()->hideFullResolution();
+	}
+}
+
+//##################################################################################################
+//##################################################################################################
+void WorldManager::setFullResOptionForGrabbed(bool on) { fullResForGrabbedObjects = on; }
+void WorldManager::setFullResOptionForNearby(bool on) { fullResForNearbyObjects = on; }
+
+//##################################################################################################
+//##################################################################################################
+bool WorldManager::GrabbedObjectsShouldUseFullRes() { return fullResForGrabbedObjects; }
+bool WorldManager::NearbyObjectsShouldUseFullRes() { return fullResForNearbyObjects; }
 
 //##################################################################################################
 //##################################################################################################

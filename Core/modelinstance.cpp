@@ -165,16 +165,28 @@ SketchObject* ModelInstance::deepCopy()
 }
 
 //#########################################################################
+ModelResolution::ResolutionType ModelInstance::getResolutionLevel() 
+{ 
+	return resolution; 
+}
+
+//#########################################################################
 void ModelInstance::showFullResolution() 
 {
+	/*printf("\nShowing full res model");
+	fflush(stdout);*/
 	model->setResolutionForConformation(getModelConformation(),
-										ModelResolution::FULL_RESOLUTION);
+		ModelResolution::FULL_RESOLUTION);
 }
 
 //#########################################################################
 void ModelInstance::hideFullResolution() 
 {
-	model->setResolutionLevelByUses(getModelConformation());
+	if (model->getResolutionLevel(getModelConformation()) ==
+			ModelResolution::FULL_RESOLUTION)
+	{
+		model->setResolutionLevelByUses(getModelConformation());
+	}
 }
 
 //#########################################################################

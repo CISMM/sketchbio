@@ -472,6 +472,30 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
      *******************************************************************/
     void removeObserver(WorldObserver *w);
 
+
+
+	/*******************************************************************
+     *
+     * Shows full resolution of objects near the given grabbed object,
+	 * then returns them to previous resolution after release
+     *
+     *******************************************************************/
+	void setNearbyObjectsToFullRes(SketchObject* baseObj, 
+								   const QList< SketchObject* >& objs);
+	
+	void setNearbyObjectsToPreviousResolution();
+
+	/*******************************************************************
+     *
+     * Get and set preferences for displaying grabbed and nearby objects
+	 * in full resolution.
+     *
+     *******************************************************************/
+	void setFullResOptionForGrabbed(bool on);
+	void setFullResOptionForNearby(bool on);
+	bool GrabbedObjectsShouldUseFullRes();
+	bool NearbyObjectsShouldUseFullRes();
+
 	/*******************************************************************
      *
      * Manage luminance settings for objects
@@ -548,7 +572,8 @@ class WorldManager : public GroupIdGenerator, public ObjectChangeObserver
 
 	double minLuminance, maxLuminance;
     int maxGroupNum;
-    bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows;
+    bool doPhysicsSprings, doCollisionCheck, showInvisible, showShadows,
+			fullResForGrabbedObjects, fullResForNearbyObjects;
     PhysicsMode::Type collisionResponseMode;
 
     double lastGroupUpdate;

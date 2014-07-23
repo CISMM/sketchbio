@@ -185,7 +185,7 @@ vtkXMLDataElement* ProjectToXML::objectToClipboardXML(
   child->SetName(OBJECTLIST_ELEMENT_NAME);
   vtkSmartPointer< vtkXMLDataElement > objectXML =
       vtkSmartPointer< vtkXMLDataElement >::Take(
-          objectToXML(object, modelIds, objectIds/*, "#00"*/));
+          objectToXML(object, modelIds, objectIds, false));
   child->AddNestedElement(objectXML);
   element->AddNestedElement(child);
   return element;
@@ -436,7 +436,8 @@ vtkXMLDataElement* ProjectToXML::objectListToXML(
 vtkXMLDataElement* ProjectToXML::objectListToXML(
     const QList< SketchObject* >* objectList,
     const QHash< const SketchModel*, QString >& modelIds,
-    QHash< const SketchObject*, QString >& objectIds)
+    QHash< const SketchObject*, QString >& objectIds,
+	bool saveKeyframes)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(OBJECTLIST_ELEMENT_NAME);
@@ -444,7 +445,7 @@ vtkXMLDataElement* ProjectToXML::objectListToXML(
     const SketchObject* obj = it.next();
     vtkSmartPointer< vtkXMLDataElement > child =
         vtkSmartPointer< vtkXMLDataElement >::Take(
-            objectToXML(obj, modelIds, objectIds));
+            objectToXML(obj, modelIds, objectIds, saveKeyframes));
     element->AddNestedElement(child);
   }
   return element;
@@ -453,7 +454,8 @@ vtkXMLDataElement* ProjectToXML::objectListToXML(
 vtkXMLDataElement* ProjectToXML::objectToXML(
     const SketchObject* object,
     const QHash< const SketchModel*, QString >& modelIds,
-    QHash< const SketchObject*, QString >& objectIds)
+    QHash< const SketchObject*, QString >& objectIds,
+	bool saveKeyframes)
 {
   vtkXMLDataElement* element = vtkXMLDataElement::New();
   element->SetName(OBJECT_ELEMENT_NAME);
@@ -515,7 +517,7 @@ vtkXMLDataElement* ProjectToXML::objectToXML(
   setPreciseVectorAttribute(child, orient, 4, ROTATION_ATTRIBUTE_NAME);
   element->AddNestedElement(child);
 
-  if (object->getNumKeyframes() > 0) {
+  if (saveKeyframes && object->getNumKeyframes() > 0) {
     // object has keyframes, save them
     child = vtkSmartPointer< vtkXMLDataElement >::New();
     child->SetName(OBJECT_KEYFRAME_LIST_ELEMENT_NAME);
@@ -590,7 +592,7 @@ vtkXMLDataElement* ProjectToXML::objectToXML(
     vtkSmartPointer< vtkXMLDataElement > list =
         vtkSmartPointer< vtkXMLDataElement >::Take(
             ProjectToXML::objectListToXML(object->getSubObjects(), modelIds,
-                                          objectIds));
+                                          objectIds, saveKeyframes));
     element->AddNestedElement(list);
   }
 

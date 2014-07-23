@@ -104,11 +104,21 @@
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="menuView_in_Full_Resolution">
+     <property name="title">
+      <string>View in Full Resolution</string>
+     </property>
+     <addaction name="actionGrabbed_Objects"/>
+     <addaction name="actionNearby_Objects"/>
+    </widget>
     <addaction name="actionSet_View_Time"/>
+    <addaction name="separator"/>
     <addaction name="actionSet_Luminance"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_Camera_for_Viewpoint"/>
     <addaction name="actionSet_Camera_to_Viewpoint"/>
+    <addaction name="separator"/>
+    <addaction name="menuView_in_Full_Resolution"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuInsert"/>
@@ -316,6 +326,22 @@
   <action name="actionSet_Luminance">
    <property name="text">
     <string>Set Luminance</string>
+   </property>
+  </action>
+  <action name="actionGrabbed_Objects">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grabbed Objects</string>
+   </property>
+  </action>
+  <action name="actionNearby_Objects">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Nearby Objects</string>
    </property>
   </action>
  </widget>
@@ -728,6 +754,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionGrabbed_Objects</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>SimpleView</receiver>
+   <slot>setFullResForGrabbed(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNearby_Objects</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>SimpleView</receiver>
+   <slot>setFullResForNearby(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -755,5 +813,7 @@
   <slot>createEllipsoid()</slot>
   <slot>createMeasuringTape()</slot>
   <slot>setLuminanceBounds()</slot>
+  <slot>setFullResForGrabbed(bool)</slot>
+  <slot>setFullResForNearby(bool)</slot>
  </slots>
 </ui>
