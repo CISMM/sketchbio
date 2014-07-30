@@ -147,11 +147,6 @@ SketchModel *SketchObject::getModel() { return NULL; }
 //#########################################################################
 const SketchModel *SketchObject::getModel() const { return NULL; }
 //#########################################################################
-ModelResolution::ResolutionType SketchObject::getResolutionLevel() 
-{ 
-	return ModelResolution::FULL_RESOLUTION; 
-}
-//#########################################################################
 void SketchObject::showFullResolution() {}
 //#########################################################################
 void SketchObject::hideFullResolution() {}

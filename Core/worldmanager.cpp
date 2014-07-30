@@ -73,7 +73,7 @@ WorldManager::WorldManager(vtkRenderer *r)
       doPhysicsSprings(true),
       doCollisionCheck(true),
 	  fullResForGrabbedObjects(false),
-	  fullResForNearbyObjects(false),
+	  fullResForNearbyObjects(true),
       showInvisible(true),
       showShadows(true),
       collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
@@ -858,14 +858,14 @@ void WorldManager::setNearbyObjectsToFullRes(SketchObject* baseObj,
 			baseObj->getWorldSpacePointInModelCoordinates(pos, pos);
 			dist = distOutsideAABB(pos, bb);
 			if (dist < 90.0) {
-				/*printf("\nCLOSE ENOUGH FOR FULL RES");
-				fflush(stdout);*/
+				printf("\nCLOSE ENOUGH FOR FULL RES");
+				fflush(stdout);
 				obj->showFullResolution();
 			}
 			else {
-				/*printf("\nDISTANCE ABOVE THRESHOLD: %f", dist);
-				fflush(stdout);*/
-				/*obj->hideFullResolution();*/
+				printf("\nDISTANCE ABOVE THRESHOLD: %f", dist);
+				fflush(stdout);
+				obj->hideFullResolution();
 			}
 		}
 		else {

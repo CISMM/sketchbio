@@ -34,6 +34,7 @@ ModelInstance::ModelInstance(SketchModel *m, int confNum) :
     actor(vtkSmartPointer<vtkActor>::New()),
     model(m),
     conformation(confNum),
+	displayingFullRes(false),
     orientedBB(vtkSmartPointer< vtkTransformPolyDataFilter >::New()),
     orientedHalfPlaneOutlines(vtkSmartPointer< vtkTransformPolyDataFilter >::New())
 {
@@ -165,27 +166,23 @@ SketchObject* ModelInstance::deepCopy()
 }
 
 //#########################################################################
-ModelResolution::ResolutionType ModelInstance::getResolutionLevel() 
-{ 
-	return resolution; 
-}
-
-//#########################################################################
 void ModelInstance::showFullResolution() 
 {
-	/*printf("\nShowing full res model");
-	fflush(stdout);*/
-	model->setResolutionForConformation(getModelConformation(),
-		ModelResolution::FULL_RESOLUTION);
+	if (!displayingFullRes) {
+		printf("\nshowing full resolution");
+		fflush(stdout);
+		displayingFullRes = true;
+		actor->SetMapper(model->getFullResSolidSurfaceMapper(conformation));
+	}
 }
 
 //#########################################################################
 void ModelInstance::hideFullResolution() 
 {
-	if (model->getResolutionLevel(getModelConformation()) ==
-			ModelResolution::FULL_RESOLUTION)
-	{
-		model->setResolutionLevelByUses(getModelConformation());
+	if (displayingFullRes) {
+		printf("\nhiding full resolution");
+		displayingFullRes = false;
+		actor->SetMapper(model->getSolidSurfaceMapper(conformation));
 	}
 }
 
@@ -228,7 +225,12 @@ void ModelInstance::updateColorMap()
     const ColorMapType::ColorMap& cmap = getColorMap();
     if (cmap.isSolidColor())
     {
-        actor->SetMapper(model->getSolidSurfaceMapper(conformation));
+		if (!displayingFullRes) {
+			actor->SetMapper(model->getSolidSurfaceMapper(conformation));
+		} 
+		else {
+			actor->SetMapper(model->getFullResSolidSurfaceMapper(conformation));	
+		}
         vtkSmartPointer< vtkColorTransferFunction > colorFunc =
                 vtkSmartPointer< vtkColorTransferFunction >::Take(
                     cmap.getColorMap(0,1)

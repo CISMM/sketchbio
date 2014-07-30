@@ -37,7 +37,6 @@ public:
     virtual SketchObject *getCopy();
     virtual SketchObject* deepCopy();
 
-	virtual ModelResolution::ResolutionType getResolutionLevel();
 	virtual void showFullResolution();
 	virtual void hideFullResolution();
 
@@ -63,7 +62,9 @@ private:
     vtkSmartPointer<vtkActor> actor;
     SketchModel *model;
     int conformation;
-	ModelResolution::ResolutionType resolution;
+	// true if overriding default resolution for the conformation to show full
+	// resolution instead (because it is grabbed or near a grabbed object)
+	bool displayingFullRes;
     vtkSmartPointer< vtkTransformPolyDataFilter > orientedBB;
     vtkSmartPointer< vtkTransformPolyDataFilter > orientedHalfPlaneOutlines;
 };

@@ -92,8 +92,6 @@ class SketchObject
     // numInstances returns 1
     virtual SketchModel *getModel();
     virtual const SketchModel *getModel() const;
-	// gets the resolution the object is being displayed at
-	virtual ModelResolution::ResolutionType getResolutionLevel();
 	// sets the object to display in full resolution or a simplified resolution
 	virtual void showFullResolution();
 	virtual void hideFullResolution();

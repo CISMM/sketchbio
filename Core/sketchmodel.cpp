@@ -35,10 +35,12 @@ public:
     // changed instead of setting a new filter.  This allows getSurface() to
     // always return the same filter
     vtkSmartPointer< vtkPolyDataAlgorithm > surface;
+	vtkSmartPointer< vtkPolyDataAlgorithm > fullResSurface;
     // The atoms data for the conformation
     vtkSmartPointer< vtkPolyDataAlgorithm > atoms;
     // The mapper for solid-colored objects with this model and conformation
     vtkSmartPointer< vtkPolyDataMapper > solidMapper;
+	vtkSmartPointer< vtkPolyDataMapper > fullResSolidMapper;
     QHash< ColorMapType::ColorMap, vtkSmartPointer< vtkMapper > > mappers;
     // The collision model for the conformation
     QSharedPointer< PQP_Model > collisionModel;
@@ -61,8 +63,11 @@ public:
         trans->Update();
         id->SetTransform(trans);
         surface = id;
+		fullResSurface = id;
         solidMapper.TakeReference(vtkPolyDataMapper::New());
         solidMapper->SetInputConnection(surface->GetOutputPort());
+		fullResSolidMapper.TakeReference(vtkPolyDataMapper::New());
+		fullResSolidMapper->SetInputConnection(fullResSurface->GetOutputPort());
     }
 
     ConformationData(const ConformationData& other) :
@@ -72,6 +77,7 @@ public:
         surface(other.surface),
         atoms(other.atoms),
         solidMapper(other.solidMapper),
+		fullResSolidMapper(other.fullResSolidMapper),
         collisionModel(other.collisionModel),
         filenames(other.filenames),
         useCount(other.useCount)
@@ -87,6 +93,7 @@ public:
         surface = other.surface;
         atoms = other.atoms;
         solidMapper = other.solidMapper;
+		fullResSolidMapper = other.fullResSolidMapper;
         collisionModel = other.collisionModel;
         filenames = other.filenames;
         useCount = other.useCount;
@@ -103,12 +110,18 @@ public:
         surface->Update();
         solidMapper->Update();
         atoms.TakeReference(ModelUtilities::modelAtomsFrom(dataSource));
-		// Only make the PQP model if using the full resolution so that
-		// collision detection always occurs with the highly detailed model.
-		if (resolution == ModelResolution::FULL_RESOLUTION &&
-				collisionModel->build_state == 0) {
-			ModelUtilities::makePQP_Model(collisionModel.data(),
-                                      surface->GetOutput());
+		
+		if (resolution == ModelResolution::FULL_RESOLUTION) {
+			fullResSurface->SetInputConnection(surf->GetOutputPort());
+			fullResSurface->Update();
+			fullResSolidMapper->SetInputConnection(fullResSurface->GetOutputPort());
+			fullResSolidMapper->Update();
+			// Only make the PQP model if using the full resolution so that
+			// collision detection always occurs with the highly detailed model.
+			if (collisionModel->build_state == 0 ) {
+				ModelUtilities::makePQP_Model(collisionModel.data(),
+											  surface->GetOutput());
+			}
 		}
     }
 };
@@ -149,6 +162,11 @@ vtkPolyDataAlgorithm *SketchModel::getVTKSurface(int conformationNum)
 vtkMapper* SketchModel::getSolidSurfaceMapper(int conformationNum)
 {
     return conformations[conformationNum].solidMapper;
+}
+
+vtkMapper* SketchModel::getFullResSolidSurfaceMapper(int conformationNum)
+{
+	return conformations[conformationNum].fullResSolidMapper;
 }
 
 vtkMapper* SketchModel::getColoredSurfaceMapper(int conformationNum,

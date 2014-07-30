@@ -66,6 +66,7 @@ public:
     // of the new pipeline
     vtkPolyDataAlgorithm *getVTKSurface(int conformationNum);
     vtkMapper* getSolidSurfaceMapper(int conformationNum);
+	vtkMapper* getFullResSolidSurfaceMapper(int conformationNum);
     vtkMapper* getColoredSurfaceMapper(int conformationNum,
                                        const ColorMapType::ColorMap& cmap);
     // gets the atom data for the model and conformation (if available).
