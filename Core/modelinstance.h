@@ -32,6 +32,7 @@ public:
     virtual bool collide(SketchObject *other, PhysicsStrategy *physics,
                          int pqp_flags);
     virtual void getBoundingBox(double bb[]);
+	virtual void getBBVertices(q_vec_type vertices[]);
     virtual vtkPolyDataAlgorithm *getOrientedBoundingBoxes();
     virtual vtkAlgorithm *getOrientedHalfPlaneOutlines();
     virtual SketchObject *getCopy();

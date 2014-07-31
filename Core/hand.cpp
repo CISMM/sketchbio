@@ -169,6 +169,12 @@ class TrackerObject : public SketchObject
             bb[i] = 0.0;
         }
     }
+	virtual void getBBVertices(q_vec_type vertices[])
+	{
+		for (int i = 0; i < 8; ++i) {
+            q_vec_set(vertices[0], 0.0, 0.0, 0.0);
+        }
+	}
     virtual vtkPolyDataAlgorithm* getOrientedBoundingBoxes() { return NULL; }
     virtual vtkAlgorithm* getOrientedHalfPlaneOutlines() { return NULL; }
     virtual void setOrientedHalfPlaneData(double) {}
@@ -579,6 +585,12 @@ void Hand::HandImpl::updateGrabbed()
 				nearestObject->setParentRelativePositionForAbsolutePosition(
 					nearestObject, parent, objPosBefore, objPosAfter);
 			}
+
+			// update resolution of nearby objects 
+			if (worldMgr->NearbyObjectsShouldUseFullRes()) {
+				worldMgr->setNearbyObjectsToFullRes(nearestObject, 
+													*worldMgr->getObjects());
+			}
 		}
     } else if (grabType == CONNECTOR_GRABBED) {
         outlineConnector(nearestConnector,isClosestToEnd1);
@@ -643,6 +655,8 @@ void Hand::HandImpl::releaseGrabbed()
 			nearestObject->setGrabbed(false);
 			nearestObject->hideFullResolution();
 			worldMgr->setNearbyObjectsToPreviousResolution();
+			printf("\n");
+			fflush(stdout);
             break;
         case CONNECTOR_GRABBED:
             if (isClosestToEnd1) {

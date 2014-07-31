@@ -23,7 +23,6 @@ int testAddConformations();
 int main(int argc, char *argv[])
 {
     int errors = 0;
-
     // setup
     QDir dir = QDir::current();
     // change the working dir to the dir where the test executable is

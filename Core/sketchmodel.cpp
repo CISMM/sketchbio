@@ -57,13 +57,16 @@ public:
     {
         vtkSmartPointer< vtkTransformPolyDataFilter > id =
                 vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+		vtkSmartPointer< vtkTransformPolyDataFilter > id2 =
+                vtkSmartPointer< vtkTransformPolyDataFilter >::New();
         vtkSmartPointer< vtkTransform > trans =
                 vtkSmartPointer< vtkTransform >::New();
         trans->Identity();
         trans->Update();
         id->SetTransform(trans);
+		id2->SetTransform(trans);
         surface = id;
-		fullResSurface = id;
+		fullResSurface = id2;
         solidMapper.TakeReference(vtkPolyDataMapper::New());
         solidMapper->SetInputConnection(surface->GetOutputPort());
 		fullResSolidMapper.TakeReference(vtkPolyDataMapper::New());
@@ -75,6 +78,7 @@ public:
         level(other.level),
         data(other.data),
         surface(other.surface),
+		fullResSurface(other.fullResSurface),
         atoms(other.atoms),
         solidMapper(other.solidMapper),
 		fullResSolidMapper(other.fullResSolidMapper),
@@ -91,6 +95,7 @@ public:
         level = other.level;
         data = other.data;
         surface = other.surface;
+		fullResSurface = other.fullResSurface;
         atoms = other.atoms;
         solidMapper = other.solidMapper;
 		fullResSolidMapper = other.fullResSolidMapper;
@@ -114,8 +119,8 @@ public:
 		if (resolution == ModelResolution::FULL_RESOLUTION) {
 			fullResSurface->SetInputConnection(surf->GetOutputPort());
 			fullResSurface->Update();
-			fullResSolidMapper->SetInputConnection(fullResSurface->GetOutputPort());
 			fullResSolidMapper->Update();
+
 			// Only make the PQP model if using the full resolution so that
 			// collision detection always occurs with the highly detailed model.
 			if (collisionModel->build_state == 0 ) {

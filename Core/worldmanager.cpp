@@ -73,7 +73,7 @@ WorldManager::WorldManager(vtkRenderer *r)
       doPhysicsSprings(true),
       doCollisionCheck(true),
 	  fullResForGrabbedObjects(false),
-	  fullResForNearbyObjects(true),
+	  fullResForNearbyObjects(false),
       showInvisible(true),
       showShadows(true),
       collisionResponseMode(PhysicsMode::POSE_MODE_TRY_ONE)
@@ -848,28 +848,51 @@ void WorldManager::setNearbyObjectsToFullRes(SketchObject* baseObj,
 											   const QList< SketchObject* >& objs)
 {
 	QListIterator< SketchObject* > it(objs);
-	double bb[6], dist;
-	baseObj->getBoundingBox(bb);
-	q_vec_type pos;
+	double bbBase[6], bbObj[6], minDistance, dist;
+	q_vec_type baseVertices[8], objVertices[8], basePos, objPos;
+	baseObj->getBoundingBox(bbBase);
+	baseObj->getBBVertices(baseVertices);
 	while (it.hasNext()) {
 		SketchObject* obj = it.next();
-		if (obj->numInstances() == 1) {
-			obj->getPosition(pos);
-			baseObj->getWorldSpacePointInModelCoordinates(pos, pos);
-			dist = distOutsideAABB(pos, bb);
-			if (dist < 90.0) {
-				printf("\nCLOSE ENOUGH FOR FULL RES");
-				fflush(stdout);
-				obj->showFullResolution();
+		if (obj != baseObj) {
+			if (obj->numInstances() == 1) {
+				obj->getBoundingBox(bbObj);
+				obj->getBBVertices(objVertices);
+				obj->getPosition(objPos);
+				baseObj->getWorldSpacePointInModelCoordinates(objPos, objPos);
+				minDistance = distOutsideAABB(objPos, bbBase);
+
+				baseObj->getPosition(basePos);
+				obj->getWorldSpacePointInModelCoordinates(basePos, basePos);
+				dist = distOutsideAABB(basePos, bbObj);
+				if (dist < minDistance) {
+						minDistance = dist;
+				}
+
+				for (int i = 0; i < 8; i++) {
+					baseObj->getWorldSpacePointInModelCoordinates(objVertices[i], objVertices[i]);
+					dist = distOutsideAABB(objVertices[i], bbBase);
+					if (dist < minDistance) { minDistance = dist; }
+					obj->getWorldSpacePointInModelCoordinates(baseVertices[i], baseVertices[i]);
+					dist = distOutsideAABB(baseVertices[i], bbObj);
+					if (dist < minDistance) { minDistance = dist; }
+				}
+
+				if (minDistance < 60.0) {
+					obj->showFullResolution();
+					// if the grabbed object is a group, it's subobjects won't be in full res,
+					// so set any subobjects to full res that might collide with nearby objects
+					if (GrabbedObjectsShouldUseFullRes() && baseObj->numInstances() != 1) {
+						setNearbyObjectsToFullRes(obj, *baseObj->getSubObjects());
+					}
+				}
+				else {
+					obj->hideFullResolution();
+				}
 			}
 			else {
-				printf("\nDISTANCE ABOVE THRESHOLD: %f", dist);
-				fflush(stdout);
-				obj->hideFullResolution();
+				setNearbyObjectsToFullRes(baseObj, *obj->getSubObjects());
 			}
-		}
-		else {
-			setNearbyObjectsToFullRes(baseObj, *obj->getSubObjects());
 		}
 	}
 }

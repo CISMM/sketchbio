@@ -151,6 +151,21 @@ void ObjectGroup::getBoundingBox(double bb[])
 }
 
 //#########################################################################
+void ObjectGroup::getBBVertices(q_vec_type vertices[])
+{
+    double bb[6];
+	getBoundingBox(bb);
+	q_vec_set(vertices[0], bb[0], bb[2], bb[4]);
+	q_vec_set(vertices[1], bb[0], bb[3], bb[4]);
+	q_vec_set(vertices[2], bb[0], bb[2], bb[5]);
+	q_vec_set(vertices[3], bb[0], bb[3], bb[5]);
+	q_vec_set(vertices[4], bb[1], bb[2], bb[4]);
+	q_vec_set(vertices[5], bb[1], bb[3], bb[4]);
+	q_vec_set(vertices[6], bb[1], bb[2], bb[5]);
+	q_vec_set(vertices[7], bb[1], bb[3], bb[5]);
+}
+
+//#########################################################################
 vtkPolyDataAlgorithm *ObjectGroup::getOrientedBoundingBoxes()
 {
   return orientedBBs;
