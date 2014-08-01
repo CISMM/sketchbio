@@ -174,7 +174,7 @@ This both slows the discovery process and provides opportunities for miscommunic
 Working with multiple collaborators, we developed a set of design goals for a tool that would enable them to directly construct models and animations.
 
 \parttitle{Results}  We present SketchBio, a tool that incorporates state-of-the-art bimanual interaction and drop shadows to enable rapid construction of molecular structures and animations.
-It includes three novel features: crystal by example, pose-mode physics, and spring-based layout that accelerate operations common in the formation of molecular models.
+It includes three novel features: crystal-by-example, pose-mode physics, and spring-based layout that accelerate operations common in the formation of molecular models.
 We present design decisions and their consequences, including cases where iterative design was required to produce effective approaches.
 
 \parttitle{Conclusions} The design decisions, novel features, and inclusion of state-of-the-art techniques enabled SketchBio to meet all of its design goals. These features and decisions can be incorporated into existing and new tools to improve their effectiveness.
@@ -239,34 +239,32 @@ We present design decisions and their consequences, including cases where iterat
 %%
 \section*{Background}
 
-In his introduction to the ``Cellular and Molecular Data" session at BioVis 2013, Tom Ferrin identified two open challenges for molecular biology software.
-The first was to ``Provide easy-to-use learning tools that can still convey complex structures" and the second was to ``Develop easy-to-use interfaces that permit facile control of models".
-We’re developing SketchBio to help scientists think about 3D molecular structures and interactions and to communicate them to others.
+SketchBio is a new tool to help scientists think about 3D molecular structures and interactions and to communicate them to others.
 
 We found ourselves repeatedly using 2D hand-drawings of complex 3D structures and their interactions in discussions with our close collaborators in cell biology, pathology, and chemistry, despite the fact that the 3D crystal structures of the proteins making up these structures were known.
-Hanging David Goodsell's excellent ``Molecular Machinery" poster \cite{Goodsell} showing renderings of many of these molecules and their interactions helped to grow our shared understanding of the structures in the mitotic spindle ( a structure that separates chromosomes during cell division), but real progress was made when we hired an artist to draw 3D scale models of the structures each week and then develop 3D computer models \cite{taylor2012}.
+Goodsell's ``Molecular Machinery" poster \cite{Goodsell} helped improve our shared understanding of the individual proteins, but overall structure comprehension was advanced when a hired artist produced 3D scale models and computer models of the structures \cite{taylor2012}.
 
-Our group is not alone.  Discussions among collaborators are often done using 2D whiteboard sketches.  Presentations often consist of pasted images and 2D Powerpoint animations.
+Our group is not alone.  Discussions among collaborators are often done using 2D whiteboard sketches.  Presentations often consist of pasted images and 2D PowerPoint animations.
 
-Because of the difficulties involved in learning and using 3D modeling and rendering software, many scientists hire professional computer programmers and/or animators to work with them to create models and animations rather than use these programs themselves.
+Due to the difficulties involved in learning and using 3D modeling and rendering software, many scientists hire professional computer programmers and/or animators to work with them to create models and animations rather than use these programs themselves.
 This indirection both slows the discovery process and provides opportunities for miscommunication.
-As toolsmiths, our aim is to provide scientists with a tool that is so rapid to learn and powerful to use that they can create these models and animations themselves.
+As toolsmiths, we aim to provide scientists with a tool that is so rapid to learn and powerful to use that they can create these models and animations themselves.
 
-We aim to produce a general tool that is widely useful.  Many researchers studying cell structure and physiology seek to construct and evaluate dynamic models that incorporate random thermal motion as well as conformational changes induced through intermolecular interactions.
-Discovering, testing, and communicating hypotheses about these interactions requires the development of complex animated 3D molecular structures. Modeling, simulation, and rendering of these hypothetical scenarios involves using a number of tools and databases (PDB, Pymol, Blender, NAMD, etc.) and then converting files to pass geometry and animations between tools. It also involves manual placement and orientation of 3D objects, which is currently done using clunky 2D input devices and by-hand detection and avoidance of collisions. As a result, it often takes a team months to produce an acceptable model or animation.
+This tool should be general and widely useful.  Many researchers studying cell structure and physiology seek to construct and evaluate dynamic models that incorporate random thermal motion as well as conformational changes induced through intermolecular interactions.
+Discovering, testing, and communicating hypotheses about these interactions requires the development of complex animated 3D molecular structures. Modeling, simulation, and rendering these hypothetical scenarios involves using a number of tools and databases (PDB, PyMol, Blender, NAMD, etc.) and then converting files to pass geometry and animations between tools. It also involves manual placement and orientation of 3D objects, which is currently done using 2D input devices and by-eye detection and avoidance of collisions. As a result, it often takes a team months to produce an acceptable model or animation.
 We aim to produce a tool that reduces this to a single person working for hours or days.
 
 This paper describes that tool, SketchBio.
 
-\subsection*{Driving Problems}
-Fred Brooks points out that the best way to construct a tool that is generally usable is to focus on several very different specific problems and build a tool that solves them \cite{Brooks}.
+\subsection*{Driving problems}
+Fred Brooks posits that the best way to construct a tool that is generally usable is to focus on several very different specific problems and build a tool that solves them \cite{Brooks}.
 We followed this approach.
 
 The first driving problem for this project is collaborator Susan Lord's desire to construct a protofibril model based on geometric constraints among a set of individual fibrinogen molecules.
 The protein fibrinogen is the main component of blood clots, where it is converted into fibrin and links together with other fibrin molecules to form strands.
 Two of these strands join together to form a protofibril, which form thick fibers that make up a large portion of the blood clot.
 Based on the crystallized structures of fibrin monomers from different species and on only two sets of known interactions \cite{lord2007fibrinogen}, Lord sought to construct 3D protofibril structures matching those seen in her data, which suggested a structure in which two fibrin strands twist around each other, and wanted to create a model that shows this interaction at the molecular level.
-Over several months, she and her students worked with resource staff scientist Joe Hsiao to use the powerful UCSF Chimera tool to construct such a model \cite{lordSubmitted}.
+Over several months, she and her students worked with UNC staff scientist Joe Hsiao to use the powerful UCSF Chimera tool to construct such a model \cite{lordSubmitted}.
 Building this model required repeated iteration of hand-placement of two molecules (using multiple 2D mouse interactions), followed by using replication tools to develop candidate models, which were then evaluated against the data.
 Lord's desired use of SketchBio was to construct this protofibril rapidly and semi-automatically by specifying which location on each fibrin should be in close contact with other molecules and by specifying that the molecules do not overlap.
 This same capability will enable generation of other self-symmetric structures such as actin filaments and microtubules.
@@ -276,41 +274,42 @@ Peter wants to construct 3D models and animations of the interaction between act
 Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments, connecting them to other actin filaments or different proteins.
 
 The third driving problem comes from Kerry Bloom, who is constructing models of the mitotic spindle, a structure that separates chromosomes during cell division.
-As in the Lord case, each step of model generation has required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
+As in Lord's case, each step of model generation required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
 
 Our final driving problem also comes from the Bloom collaboration.
-Many proteins beyond cohesin and condensin contribute to mitosis, and Kerry Bloom is interested in them all.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
+Many proteins beyond cohesin and condensin contribute to mitosis.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
 With accurate localization and tracking for 3D images, these techniques provide partial information on the 3D layout of proteins and chromosomes in wild-type and mutant mitotic spindles.
 Building models to match this information requires the development of semi-automatic layout of proteins.
 This will provide a partial set of constraints for the scientist to construct protein-protein and protein-chromosome complexes that match experimental data.
 With these enhancements, SketchBio will be widely useful to other researchers for the generation of hypothetical protein-complex structures from partial data.
 
-\subsection*{Design Goals}
+\subsection*{Design goals}
 The application-specific needs from our several collaborators can be summarized as a set of domain-independent design goals for SketchBio:
 \begin{description}
   \item[$\bullet$ Easy to learn and to use.] Scientists must be able to rapidly construct models and animations on their own using interfaces that enable them to concentrate their mental efforts on the design challenge rather than decyphering the interface.
   \item[$\bullet$ Support molecular operations.] It must be easy to load molecules, extract the relevant substructures, describe conformational changes, group molecules, and color according to standard data.
   \item[$\bullet$ Appropriately constrain layout.] Some molecular structures should not overlap, others (drug vs. protein) overlap as part of their function, others (fibrin, actin) assemble into repeated structures.  In some cases, the distances between individual elements is known but their 3D layout is not.  Supporting all of these cases will enable a biologist to most rapidly explore the space of possible conformations to produce consistent models.
-  \item[$\bullet$ Support rapidly iterated, in-context design.] Whether working alone or in a group, understanding the interactions between dozens of molecules requires repeated adjustment of proposed locations and motions.  The reasonableness of interactions depends on nearby molecules, which change over time.  We have found that generating consistent models requires trying and optimizing many potential solutions before the final model is found.
+  \item[$\bullet$ Support rapidly iterated, in-context design.] Understanding the interactions between dozens of molecules requires repeated adjustment of proposed locations and motions.  The reasonableness of interactions depends on nearby molecules, which change over time.  We have found that generating consistent models requires trying and optimizing many potential solutions before the final model is found.
   \item[$\bullet$ Support high-quality rendering.] Once a proposed model has been completed, static and animated images that use the most-effective lighting and surface rendering techniques are critical to conveying the model and its behavior to others.
 \end{description}
 
 
-\subsection*{Prior Work}
+\subsection*{Prior work}
 \paragraph*{Molecular modeling:}
 There are many excellent molecular modeling applications that have been extended to include some aspects of high-quality rendering and animation.
-UCSF Chimera \cite{pettersen2004ucsf}, Pymol \cite{pymol2013}, Graphite Life Explorer\cite{hornus2013easy}, and Visual Molecular Dynamics (VMD) \cite{humphrey1996} are the most relevant.
-Other software such as Protein Explorer \cite{martz2002protein} and EZ-Viz \cite{grell2006ez} (an interface for Pymol) attempt to offer easy-to-use interfaces for exploring molecular structures.
+UCSF Chimera \cite{pettersen2004ucsf}, PyMol \cite{pymol2013}, Graphite Life Explorer\cite{hornus2013easy}, and Visual Molecular Dynamics (VMD) \cite{humphrey1996} are the most relevant.
+Other software such as Protein Explorer \cite{martz2002protein} and EZ-Viz \cite{grell2006ez} (an interface for PyMol) attempt to offer easy-to-use interfaces for exploring molecular structures.
 
 VMD includes direct force-feedback-based placement and manipulation of molecules in the context of driving molecular dynamics.  SketchBio provides bimanual control of much larger sets of molecules by reducing the physics to only what is necessary to avoid improper collisions and provide appropriate spacing, enabling large-scale geometric modeling and animation.
+
 GraphiteLifeExplorer includes the ability to position and twist segments of DNA and interpolate the sections between them (its DNA modeling tools go beyond what is available in SketchBio), but does not yet perform collision detection between molecules, the ability to support animation, or the ability to maintain specified distances between objects needed by our collaborators.
 
 We considered the approach of extending the interaction and rendering capabilities of one of these tools, but this would require re-implementing existing rendering techniques and continual updating as new rendering advances are made.
-We instead decided to harness the power of the existing tools through their built-in scripting languages (SketchBio has used both Pymol and Chimera to load, surface, select, and label molecules by partial charge and other inputs).
+We instead decided to harness the power of the existing tools through their built-in scripting languages (SketchBio has used both PyMol and Chimera to load, surface, select, and label molecules by partial charge and other inputs).
 
 \paragraph*{Rendering:}
 There are also excellent general-purpose rendering programs (such as the commercial Maya and open-source Blender applications) and microscope-simulation rendering tools (such as UNC's Microscope Simulator \cite{quammen2008}).
-Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson2013}, and Molecular Maya \cite{molecularmaya}. The Bioblender package also leverages Blender for molecular modeling and supports collision detection \cite{zini2010bioblender}. These each require the scientist to learn the underlying complex rendering tool plus additional plug-in interfaces, making them less easy to learn and use. None of these tools currently support constrained layout along with rapidly-iterated, in-context design.
+Several groups are building molecule-specific loaders that plug into these programs, such as Autofill/Autopack/Autocell \cite{Johnson2013}, and Molecular Maya \cite{molecularmaya}. The BioBlender package also leverages Blender for molecular modeling and supports collision detection \cite{zini2010bioblender}. These each require the scientist to learn the underlying complex rendering tool plus additional plug-in interfaces, making them less easy to learn and use. None of these tools currently support constrained layout along with rapidly-iterated, in-context design.
 
 Molecular Flipbook \cite{flipbook2013} aims at similar goals to SketchBio, providing an easy to use molecule-focused real-time interaction environment coupled to offline rendering using Blender and FFMPEG.  It does not currently support constraints on layout or bimanual interaction for rapid 6-degree-of-freedom placement.
 We also considered this approach, but providing full capability would require re-implementing many existing capabilities already available in molecular modeling tools and tracking new features as they are developed.
@@ -319,21 +318,21 @@ We also considered this approach, but providing full capability would require re
 The Molecular Control Tool-kit \cite{sabirmolecular} is also aimed at molecular modeling, providing gesture- and speech-based user interface primitives to control motions of molecules with a Kinect or Leap Motion device \cite{sabirmolecular}; it provides an API that can be used to connect their controls to existing molecular modeling applications.  These do not by themselves meet the needs of our collaborators, but could be used within SketchBio as a separate front-end interaction interface.
 SketchBio uses similar two-handed 6-degree-of-freedom input devices (the Razer Hydra or two WiiMote controllers), adding collision detection and several custom capabilities, and tying the resulting system into existing powerful molecular modeling and rendering tools to produce a complete system for thinking, modeling, and rendering.
 
-Another tool aimed at simplifying the creation of molecular animations, PresentaBALL\cite{nickelspresentaball}, uses an interactive web interface to an existing molecular modeling tool \cite{nickelspresentaball}.
-This allows widespread use by non-experts to develop presentation materials for training.  SketchBio provides a custom interface for experts to use as a thinking aid that is tied to a powerful rendering engine to produce animations.
+Another tool aimed at simplifying the creation of molecular animations, PresentaBALL\cite{nickelspresentaball}, uses an interactive web interface to an existing molecular modeling tool.
+This enables widespread use by non-experts to develop presentation materials for training.  SketchBio provides a custom interface for experts to use as a thinking aid that is tied to a powerful rendering engine to produce animations.
 
-SketchBio's bimanual 6-degree-of-freedom manipulation sets it apart from all of the applications described above because it lets the user move molecules and craft animations more rapidly and with less mental effort than tools that use a mouse and keyboard to manipulate objects. Its support of appropriately-constrained layout using several features (configurable collision detection, spring-based layout,  and crystal by example) meet needs expressed by our collaborators that are unmet by any published tool.
+SketchBio's bimanual 6-degree-of-freedom manipulation sets it apart from all of the applications described above because it lets the user move molecules and craft animations more rapidly and with less mental effort than tools that use a mouse and keyboard to manipulate objects. Its support of appropriately-constrained layout using several features (configurable collision detection, spring-based layout,  and crystal-by-example) meet needs expressed by our collaborators that are unmet by any published tool.
 
 \paragraph*{Interactive Rendering:}
 A common bottleneck in interactive modeling and animation applications is the speed of rendering a complex scene.
-Sketchbio requires real-time rendering due to the nature of its input -- objects on the screen must be move with the user's hand as if the user were actually holding them. 
+Sketchbio requires real-time rendering due to the nature of its input -- objects on the screen must move with the user's hand as if the user were actually holding them. 
 
 One approach to improving rendering speed is to reduce the complexity of the objects that are drawn.
 This is done by replacing objects with imposters which have simpler geometry.
 One type of imposter is a simplified version of the geometry that is textured to look like the more complex version \cite{decoret2003billboard,erikson1998simplification,cohen1998appearance}.
-Another common imposter is a square that has a pre-rendered image of the more complex object as its texture.  As long as the viewpoint stays near the same position, discrepancies between the imposter and the actual geometry are be small \cite{aliaga1996visualization,maciel1995visual}.
+Another common imposter is a square that has a pre-rendered image of the more complex object as its texture.  As long as the viewpoint stays near the same position, discrepancies between the imposter and the actual geometry remain small \cite{aliaga1996visualization,maciel1995visual}.
 
-The level of simplification of an object can also be dynamically determined according to the amount of the allotted rendering time that is needed to draw each level of detail.
+The level of simplification of an object can also be dynamically determined according to the amount of rendering time required to draw each level of detail.
 
 Another approach to enabling interactive rendering of complex design spaces is to precompute an ensemble of possible solutions and then interactively explore the design space by directly manipulating portions of it and morphing between existing solutions \cite{Coffey2013}. The space of potential molecular interactions for dozens of molecules is so large, and the ease of testing and rendering each configuration so small, that it was more efficient for SketchBio to directly model and render.
 
@@ -362,7 +361,7 @@ SketchBio takes a similar approach, using a novel core component that provides i
 
 \section*{Methods}
 
-SketchBio is a system for understanding subcellular biology through the building of complex 3D macromolecular structures and animating the structures over time.
+SketchBio is a system for understanding subcellular biology by building complex 3D macromolecular structures and animating the structures over time.
 
 The modeling and rendering of these hypothetical structures currently involves using a number of tools and databases and converting files and data to pass between tools.
 
@@ -371,14 +370,14 @@ It brings best-practice interaction and display techniques to bear on molecular 
 It adds three novel features that accelerate this workflow: crystal-by-example, pose-mode physics, and spring-based connectors.
 Its design decisions (a direct-manip-ulation, real-time interface; harnessing tools rather than re-implementing techniques; and making a system usable in the scientists' labs) led to a system that met all of the design goals.
 
-\subsection*{System Overview}
+\subsection*{System overview}
 
 Figure \ref{fig:actin_vinculin} shows a screenshot of the SketchBio user interface with a group of three actin molecules (left) and the tail region of a vinculin molecule (right).
 SketchBio uses imposters with simplified surface geometry while developing the animation, but uses full resolution models for final rendering.
 The small white spheres follow the two tracked hand-held controllers. Status information is shown in the lower left.
 The current animation time point is shown in the lower right.
 
-Molecules in SketchBio are represented as rigid surfaces approximating the Connolly Solvent-Excluded Surface of the molecule.
+Molecules in SketchBio are represented as rigid surfaces approximating the Connolly solvent-excluded surface of the molecule.
 These were chosen because our collaborators used surface models in their current work for all four driving problems.  The surfaces may use solid colors, be colored by surface charge, or be colored by their nearness along the protein backbone to the N-terminus or C-terminus of the protein.  Chimera is used to calculate and export the datasets for the latter two coloring schemes using PDB data.
 
 Object selection is indicated by drawing the outline of the oriented bounding box of the selected molecule molecules. 
@@ -395,7 +394,7 @@ This was chosen to minimally obscure the molecule and selection indicators.
 \label{fig:actin_vinculin}
 \end{figure}
 
-\subsection*{State-of-the-art Capabilities}
+\subsection*{State-of-the-art capabilities}
 
 \paragraph*{Bimanual Interaction:}
 Bill Buxton and others have described the benefits of two-handed (bimanual) interaction.
@@ -418,7 +417,7 @@ This avoids the need for the system to recognize a large set of ambiguous gestur
 Use of this device enables the interface for moving objects to mirror a task users are already familiar with, namely reaching out, grabbing an object and moving it to a new position and orientation.
 
 Using one of the buttons to switch between modes provides a sufficiently-large space of commands that almost all operations can be performed without putting down the controllers.
-The keyboard and mouse are used to name proteins and files on initial loading, and to set precise values as needed for one or two operations.
+Keyboard and mouse are used to name proteins and files on initial loading, and to set precise values as needed for one or two operations.
 
 \begin{figure}[h]
 \centering
@@ -432,7 +431,7 @@ Because selection in SketchBio requires placing the tracker within the bounding 
 Initial testing of the application revealed that determining the relative depth between an object and the tracker or between two objects was the most difficult part of using SketchBio.
 Because widespread adoption would be limited by requiring stereo displays and head tracking, we sought another solution.
 
-Hendrix and Barfield found the most effective techniques for aiding in depth estimation are a textured plane and lines dropped from the center of an object to the textured plane \cite{hendrix1995relationship}.
+Hendrix and Barfield found the most effective techniques for aiding in depth estimation to be a textured plane and lines dropped from the center of an object to the textured plane \cite{hendrix1995relationship}.
 To provide additional depth cues, SketchBio displays a ground plane that is always rendered below the viewpoint no matter the direction or position of the viewpoint and projects the shadows of objects onto this plane.
 The trackers also cast shadows onto this plane (which are darker and larger to highlight them).
 SketchBio assumes a light infinitely far away in the default camera's up direction which gives the same absolute position against the textured surface as the drop-lines while also giving information about how close the boundaries of two objects are to each other.
@@ -469,13 +468,13 @@ This plugin was contributed back to the Chimera developers and is now part of th
 This data includes residue and chain identifier that map to a specific location on the surface and electrostatic potential on the surface.
 SketchBio can use these data sets to color the objects (see figure \ref{fig:actin_vinculin}).
 
-\subsection*{Novel Capabilities}
+\subsection*{Novel capabilities}
 
 To meet the needs of our collaborators, SketchBio supports novel operations beyond those available in the programs and libraries that it harnesses.
-These include ``pose-mode physics" that enables rapid docking of one protein with others, a ``crystal by example" mode that enables rapid formation of polymer molecular chains, and spring-like connectors to maintain expected distances between molecules.
+These include ``pose-mode physics" that enables rapid docking of one protein with others, a ``crystal-by-example" mode that enables rapid formation of polymer molecular chains, and spring-like connectors to maintain expected distances between molecules.
 Each of these is described, along with how they enable optimization of collision detection.
 
-\paragraph*{Pose Mode Physics:}
+\paragraph*{Pose-mode physics:}
 Object motion in SketchBio is accomplished by applying forces and torques to pull towards the tracker location and orientation.
 This can result in the object lagging behind but also smoothes motion, especially rotation.
 
@@ -499,7 +498,7 @@ In the final implementation, where collision response forces act on the object b
 \end{figure}
 
 \paragraph*{Crystal-by-example:}
-Repeated structures that formed by replicating a single protein are common in biology (actin, microtubules, fibrin, etc.), so the `‘crystal-by-example'' feature was added to support their construction.
+Repeated structures formed by replicating a single protein are common in biology (actin, microtubules, fibrin, etc.), so the `‘crystal-by-example'' feature was added to support their construction.
 Our collaborators wanted to construct variants of such structures to study the changes caused by mutant proteins and to understand their native packing for comparison to electron microscopy images.
 
 A similar problem is addressed in \cite{hornus2013easy} for DNA molecules by letting users edit placement and twist of selected base pairs and interpolating in between these.  That system forces the resulting structure to follow a specified path.
@@ -517,9 +516,9 @@ Many biological structures including actin fibers and microtubules (major compon
 Figure \ref{fig:crystal_actin} shows an actin fiber generated this way in SketchBio.
 By providing live updates of the entire structure as the initial two objects are manipulated, SketchBio lets the scientist explore potential structures in real time.
 
-The extent to which the user can control fine-grain maniuplations of the molecules depends on the input device in use, because resolution varies by device. Because some structures have a known transformation from one molecule to the next, SketchBio (like other programs) lets the user input the transformation directly.
+The extent to which the user can control fine-grain manipulations of the molecules depends on the input device, because resolution varies by device. Because some structures have a known transformation from one molecule to the next, SketchBio (like other programs) lets the user input the transformation directly.
 
-\paragraph*{Collision Detection in Pose Mode Physics and Crystal-by-example:}
+\paragraph*{Collision Detection in pose-mode physics and crystal-by-example:}
 In pose mode, collision tests between objects that the user is not interacting with can be skipped because these objects do not move.
 This means that only collisions involving the objects that the user is moving need to be checked.
 This reduces the number of collision tests to $m*n$ where m is the number of objects that the user is currently moving.
@@ -531,11 +530,11 @@ In the first case, only collision tests between the structure and the other obje
 In the second case, the internal structure does change and both internal and external collisions must be tested.
 External collisions must test every object in the structure with every external object as above.
 
-In internal case we can leverage the known relationship between the objects to perform fewer tests.  Let $X_i$ be the ith object in the crystal by example structure with $X_1$ and $X_2$ being the two base object in the structure.
+For the internal case we can leverage the known relationship between the objects to perform fewer tests.  Let $X_i$ be the $i$th object in the crystal-by-example structure with $X_1$ and $X_2$ being the two base object in the structure.
 Let $T_{i,j}$ be the transformation matrix from $X_i$ to $X_j$.
 The definition of the crystal-by-example structure is that $T_{i,i+1}$ is the same for all $i$ and the geometries of all the $X_i$s are the same.
 Because the geometries and transformations are the same, if there is a collision between the $ith$ and $(i+1)th$ objects anywhere in the structure, then there is also a collision between the $1st$ and $2nd$ objects.
-Thus testing only this one pair performs the work of n-1 tests where n is the number of objects in the structure.
+Thus testing only this one pair performs the work of $n-1$ tests where $n$ is the number of objects in the structure.
 This same argument holds for any $i$ and $i+k$, the $1st$ and $(k+1)th$ objects have the same relative positions and the same collisions.
 Thus only the $1st$ object in the structure needs to be tested against the others which allows $\mathcal{O}(n)$ tests to suffice for all internal collisions in a repetitive structure of $n$ elements.
 
@@ -579,35 +578,35 @@ It includes custom code only for the real-time interaction, animation, and model
 \subsection*{Architecture}
 
 The architecture of SketchBio is shown in Figure \ref{fig:architecture}.
-SketchBio harnesses external programs when possible (PyMOL, Chimera, Blender) and uses existing libraries for other core functions (VTK, PQP, VRPN).
+SketchBio harnesses external programs when possible (PyMol, Chimera, Blender) and uses existing libraries for other core functions (VTK, PQP, VRPN).
 It maps from dozens of controls in Chimera and hundreds of controls in Blender down to 4 input options and about 20 modeling and animation controls to streamline the tasks needed for creating structures and animations.
 
-Exporting data to Blender is done by writing a script to be run on Blender's Python interface to produce the animation.
+Exporting data to Blender is done through a script run on Blender's Python interface to produce the animation.
 When exporting to MicroscopeSimulator, SketchBio writes out a Microscope Simulator XML project file and loads the project into MicroscopeSimulator.
 
 Objects can be loaded into SketchBio as .obj files from any program that writes this format or directly through the GUI (via harnessing UCSF Chimera from the PDB or a local .pdb file).
 Because VTK is used in SketchBio, any file format that VTK can read could be imported with relatively minor changes.
 
-\subsection*{Design Decisions}
+\subsection*{Design decisions}
 We list here some design decisions that helped SketchBio achieve its goals.
 
 \paragraph*{Bimanual, 6-DOF interface:} SketchBio's two-handed interface differs from that of most existing modeling and rendering tools. This has the deficit of taking the user's hands away from the keyboard, which requires them to put down the interaction devices to enter text and specific numerical data. Our collaborators report that this small negative is greatly outweighed by the ability to rapidly perform the more-common and more-challenging tasks of specifying positions, viewpoints, and animations in full 6 degrees of freedom. The ability to move both the world/viewpoint and an animated molecule enables rapid planning of scenes and the ability to simultaneously manipulate both of the molecules that are coming together in an interaction are two examples of what is enabled.
 
 The workflow tends to stratify: initial loading of the kinds of molecules to be used in an animation happens first (with keyboard and mouse). Then positions, viewpoints, and animation are described using the buttons and controls on the two hand-held controllers. Finally, saving the file and rendering are again performed with the keyboard and mouse. The use of rich input devices enables the bulk of the action to take place from within the 3D environment, accelerating the most-challenging parts of model and animation development.
 
-\paragraph*{Harness, don't re-implement:} The design of SketchBio avoids reimplementing existing features where possible, instead using Python scripting to control subprocesses to perform these operations.
+\paragraph*{Harness, do not re-implement:} The design of SketchBio avoids reimplementing existing features where possible, instead using Python scripting to control subprocesses to perform these operations.
 When reading in PDB files, instead of writing a PDB file reader, SketchBio calls UCSF Chimera as a subprocess to read in the protein and create a displayable surface from it.
 Instead of writing a new rendering library, SketchBio uses the Python scripting interface of Blender to create a Blender project that will produce the desired animation.
 SketchBio uses the open source Qt and VTK\cite{VTKbook} libraries for its user interface and internal rendering and the open source Proximity Query Package (PQP) for collision detection \cite{PQP}.
-The VRPN library is used to communicate with the Razer Hydra input device \cite{taylor2001vrpn}.
+The VRPN library \cite{taylor2001vrpn} is used to communicate with input devices.
 
 One significant risk encountered when harnessing existing programs is that future versions of the programs will not support required features, or will require modifications to the harness.
 This can make maintainence challenging.
-To address this, each SketchBio release includes a list of specific versions of the wrapped programs which with it is known to be compatible and have selected programs to harness that continue to make old versions available (Chimera still releases installers from 2002 and Blender from 2003). It also includes copies of custom plug-ins and scripts that are not yet part of the harnessed packages' released versions.
+To address this, each SketchBio release includes a list of specific versions of the wrapped programs with which it is known to be compatible and we have selected programs that continue to make old versions available (Chimera still releases installers from 2002 and Blender from 2003). It also includes copies of custom plug-ins and scripts that are not yet part of the harnessed packages' released versions.
 
 Another risk is that the packages used will not be obtainable in the future, or for an operating system of interest. SketchBio has been able to mitigate this risk by selecting open-source programs to harness.
 
-To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation) and (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation) to (3) the number of custom operations (crystal by example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.
+To measure the re-use of functionality, we compare (1) the number of state-of-the-art operations harnessed from existing tools: Chimera (connecting to the protein data bank, parsing PDB file, selecting subunits, generating surfaces, generating data sets on the surfaces, simplifying surfaces), Blender (surface rendering, directional illumination, transparency, ambient occlusion, parallel rendering, frame storage), and Microscope Simulator (point-spread-function 3D blurring, TIFF stack generation) and (2) the number of internally-used existing libraries: VRPN (reading from general peripheral devices), PQP (multi-object collision detection), VTK (geometric operations, real-time rendering, level-of-detail rendering, object positioning, spline interpolation) to (3) the number of custom operations (crystal-by-example, pose-mode physics, drop shadows, bimanual interaction modes, spring connectors, grouping and animation).  We find that most of the operations are supported by existing tools.
 We compare this against other tools we have built to support biomedical applications \cite{CISMMapps}. SketchBio has a much better re-use ratio than tools which similarly span different domains (nanoManipulator, Camera Calibration, Chromatin Cutter, Template-Based Matching) and is on par with tools that are basically wrappers for calls to a single library (ImageTracker, Microscope Simulator).  It bests several of our single-domain tools (Video Spot Tracker, Video Optimizer, and WebSlinger).
 Furthermore, the scripting interfaces enable rapid inclusion of additional features from external programs without re-implementation.
 
@@ -615,7 +614,7 @@ Furthermore, the scripting interfaces enable rapid inclusion of additional featu
 The scientists who were willing to travel to our laboratories to use them received great benefit, but we wanted SketchBio to be more broadly available.
 To maximize its impact, SketchBio is designed to run on a laptop or desktop system such as a scientist would have at home or in their laboratory and to use inexpensive commercial input devices.
 
-\section*{Results and Discussion}
+\section*{Results and discussion}
 SketchBio has been used by a several scientists and has demonstrated success in meeting its design goals.
 
 \paragraph*{Easy to learn and use:}
@@ -650,17 +649,17 @@ This video was created in SketchBio as seen in Figure \ref{fig:peter_model} and 
 \centering
 \includegraphics[width=0.9\columnwidth]{peter_powerpoint_animation.png}
 \caption{A frame from a 2D animation created by Peter Thompson for the same case as figure \ref{fig:peter_video}.
-This video was created in Microsoft Powerpoint using separately-rendered single views of the proteins.}
+This video was created in Microsoft PowerPoint using separately-rendered single views of the proteins.}
 \label{fig:peter_powerpoint}
 \end{figure}
 
-Peter produced both a SketchBio animation and a Microsoft Powerpoint animation of molecules (using images of molecules pre-rendered from a single viewpoint), as shown in figure \ref{fig:peter_powerpoint}, to test their relative speed and effectiveness.
-The Powerpoint animation took 50 minutes of concentrated effort to produce, while the SketchBio animation took 100. He reports that the Powerpoint animation failed to accurately show rotation of the vinculin tail domain, to show the linker region that scales as the domains move apart, to show a change in actin movement rate, and to accurately portray relative size and orientation of the molecules.  He reports that the increase in correct presentation of the science was was well worth the increased time.
+Peter produced both a SketchBio animation and a Microsoft PowerPoint animation of molecules (using images of molecules pre-rendered from a single viewpoint), as shown in figure \ref{fig:peter_powerpoint}, to test their relative speed and effectiveness.
+The PowerPoint animation took 50 minutes of concentrated effort to produce, while the SketchBio animation took 100. He reports that the PowerPoint animation failed to accurately show rotation of the vinculin tail domain, to show the linker region that scales as the domains move apart, to show a change in actin movement rate, and to accurately portray relative size and orientation of the molecules.  He reports that the increase in correct presentation of the science was was well worth the increased time.
 
 \paragraph*{Support rapidly-iterated, in-context design:}
 To measure the speed of complex model construction, we repeated a task using SketchBio that had been done beforehand.
-Constructing the protofibril models for Susan Lord took resource computer scientist Joe Hsiao 3-3.5 hours by hand-editing transformations within Chimera (a task challenging to teach to biologists).
-Using an early prototype of SketchBio, he constructed the protofibril seen in Figure \ref{fig:joe_test} in 1.5 hours (a task we'd expect a collaborator to do just as rapidly).
+Constructing the protofibril models for Susan Lord took UNC computer scientist Joe Hsiao 3-3.5 hours by hand-editing transformations within Chimera (a task challenging for biologists to learn).
+Using an early prototype of SketchBio, he constructed the protofibril seen in Figure \ref{fig:joe_test} in 1.5 hours (a task we would expect a collaborator to do just as rapidly).
 The lack of depth cues became apparent as Joe spent most of the time trying to figure out the relative depth between the tracker and the molecules, prompting us to add the shadow plane.
 With this addition and other features, Joe reconstructed the model in 35 minutes.
 In all cases, the desired model was known a-priori; all cases measure time on task and do not count the time spent learning how to use the tool.
@@ -708,7 +707,7 @@ For the collaborations we have worked with deformable models were not needed and
 
 % Answer the *MOST COMMON* question we get about SketchBio
 Molecular dynamics simulation is something SketchBio does not do directly.
-This decision was motivated by the cost of performing the molecular dynamics and the requirement to provide real-time user interaction.
+This decision was motivated by the time cost of performing the molecular dynamics and the requirement to provide real-time user interaction.
 SketchBio may eventually harness an external molecular dynamics simulator, but SketchBio will only be used to specify input configurations for the simulation or easily create videos from its output. While SketchBio will not support molecular dynamics directly, a molecular docking capability involving two individual molecules could be added.
 
 To avoid dependence on a particular hardware vendor, SketchBio is being actively ported to use a pair of Nintendo WiiMote controllers instead of the Razer Hydra controller.
@@ -721,8 +720,8 @@ One consequence of the choice to provide a uniform environment that wraps functi
 SketchBio is a new tool that enables scientists to rapidly construct and validate hypothetical macromolecular structures, to animate these structures, and to produce high-quality rendered animations.
 It has been tested and shown to meet its design goals:
 \begin{description}
-  \item[$\bullet$ Easy to learn and to use.] Scientists were able to rapidly construct models and animations on their own.
-  \item[$\bullet$ Support molecular operations.] By harnessing Pymol and Chimera.
+  \item[$\bullet$ Easy to learn and to use.] Scientists rapidly constructed models and animations on their own.
+  \item[$\bullet$ Support molecular operations.] By harnessing PyMol and Chimera.
   \item[$\bullet$ Appropriately constrain layout.] Configurable collision detection, fixed-length springs, and crystal-by-example support all listed cases.
   \item[$\bullet$ Support rapidly iterated, in-context design.] Real-time 6-degree-of-freedom interaction, live animation preview, and viewpoint control enable embedded design.
   \item[$\bullet$ Support high-quality rendering.] By harnessing Blender.
@@ -731,18 +730,17 @@ It has been tested and shown to meet its design goals:
 SketchBio includes state-of-the art bimanual interaction, drop shadows to improve depth perception, and other standard modeling and animation behaviors (grouping, spline interpolation, level-of-detail rendering, rapid collision detection, real-time preview).
 
 SketchBio also includes novel interaction and computational techniques that directly support the construction of macromolecular structures.
-Crystal by example and pose-mode physics both provide improved modeling capabilities and both enable more-rapid collision detection.
+Crystal-by-example and pose-mode physics both provide improved modeling capabilities and both enable more-rapid collision detection.
 Spring connectors show unspecified interactions and support semi-automatic structure formation.
-These novel capabilities can be added to existing molecular modeling tools and included in future tools, providing the same acceleration of model building and evaluation.
+These capabilities can be added to existing and new molecular modeling tools to provide the same acceleration of model building and evaluation.
 
-Both crystal-by-example and pose-mode physics enable real-time collision-detection to scale to much larger collections of molecules than are possible using existing techniques that must check for collisions among all objects. The ability to load arbitrary geometry files enables the tool to scale beyond molecule types that can be found in the protein data bank.
+Both crystal-by-example and pose-mode physics enable real-time collision detection to scale to much larger collections of molecules than are possible using existing techniques that must check for collisions among all objects. The ability to load arbitrary geometry files enables the tool to scale beyond molecule types that can be found in the protein data bank.
 
 The design decisions (a direct-manipulation, real-time interface; harnessing tools rather than re-imple-menting techniques; and making a system usable in the scientists' labs) led to a system that met all of the design goals and is being used in our collaborators' own labs.
-The relative benefits of these decisions outweighed there potential pitfalls, making them likely choices for other designers.
+The relative benefits of these decisions outweighed their potential pitfalls, making them likely choices for other designers.
 
 SketchBio is built using portable libraries and has been compiled and used on Windows, Mac OS X, and Ubuntu Linux.
-Descriptions and videos of SketchBio can be found at http://sketchbio.org.
-SketchBio is being released as open-source software and will be available for download at this location.
+The source code for SketchBio, along with descriptions and videos can be found at http://sketchbio.org.
 
 \subsection*{Acknowledgements}
 This work was supported by NIH 5-P41-EB002025.
@@ -750,13 +748,13 @@ This work was supported by NIH 5-P41-EB002025.
 Molecular graphics and analyses were performed with the UCSF Chimera package.
 Chimera is developed by the Resource for Biocomputing, Visualization, and Informatics at the University of California, San Francisco (supported by NIGMS P41-GM103311).
 
-3D rendering was performed using Blender (blender.org).
+Blender (blender.org) is used to perform 3D rendering.
 Blender is an open source project supported by the Blender Foundation and the online community.
 
-Early versions of SketchBio used PyMOL (pymol.org) to import data from the PDB.
-PyMOL is an open source project maintained and distributed by Schrödinger.
+Early versions of SketchBio used PyMol (pymol.org) to import data from the PDB.
+PyMol is an open source project maintained and distributed by Schrödinger.
 
-We thank Ping-Lin ("Joe") Hsiao for evaluating the effectiveness of SketchBio on the construction of protofibrils. We also thank our collaborators Susan Lord, Sharon Campbell, and Kerry Bloom and the rest of the UNC CISMM group.
+We thank Ping-Lin (``Joe") Hsiao for evaluating the effectiveness of SketchBio on the construction of protofibrils. We also thank our collaborators Susan Lord, Sharon Campbell, and Kerry Bloom and the rest of the UNC CISMM group.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%                                          %%
