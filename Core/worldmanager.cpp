@@ -849,15 +849,13 @@ void WorldManager::setNearbyObjectsToFullRes(SketchObject* baseObj,
 {
 	QListIterator< SketchObject* > it(objs);
 	double bbBase[6], bbObj[6], minDistance, dist;
-	q_vec_type baseVertices[8], objVertices[8], basePos, objPos;
+	q_vec_type basePos, objPos;
 	baseObj->getBoundingBox(bbBase);
-	baseObj->getBBVertices(baseVertices);
 	while (it.hasNext()) {
 		SketchObject* obj = it.next();
 		if (obj != baseObj) {
 			if (obj->numInstances() == 1) {
 				obj->getBoundingBox(bbObj);
-				obj->getBBVertices(objVertices);
 				obj->getPosition(objPos);
 				baseObj->getWorldSpacePointInModelCoordinates(objPos, objPos);
 				minDistance = distOutsideAABB(objPos, bbBase);
@@ -867,15 +865,6 @@ void WorldManager::setNearbyObjectsToFullRes(SketchObject* baseObj,
 				dist = distOutsideAABB(basePos, bbObj);
 				if (dist < minDistance) {
 						minDistance = dist;
-				}
-
-				for (int i = 0; i < 8; i++) {
-					baseObj->getWorldSpacePointInModelCoordinates(objVertices[i], objVertices[i]);
-					dist = distOutsideAABB(objVertices[i], bbBase);
-					if (dist < minDistance) { minDistance = dist; }
-					obj->getWorldSpacePointInModelCoordinates(baseVertices[i], baseVertices[i]);
-					dist = distOutsideAABB(baseVertices[i], bbObj);
-					if (dist < minDistance) { minDistance = dist; }
 				}
 
 				if (minDistance < 60.0) {

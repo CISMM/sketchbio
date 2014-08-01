@@ -179,8 +179,6 @@ class SketchObject
     // box of the untransformed object (so sort-of oriented bounding box)
     // TODO - fix getBoundingBox of ObjectGroup to work this way, it doesn't
     virtual void getBoundingBox(double bb[6]) = 0;
-	// positions of the vertices of the bounding box
-	virtual void getBBVertices(q_vec_type vertices[8]) = 0;
     // this returns the box(es) that contain the lowest-level objects in
     // whatever heirarchy
     // group should do an AppendPolyData to combine these
