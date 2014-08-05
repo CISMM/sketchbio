@@ -99,6 +99,7 @@
     </property>
     <addaction name="actionAdd_Ellipsoid"/>
     <addaction name="actionMeasuring_Tape"/>
+    <addaction name="actionInsertHelix"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -342,6 +343,11 @@
    </property>
    <property name="text">
     <string>Nearby Objects</string>
+   </property>
+  </action>
+  <action name="actionInsertHelix">
+   <property name="text">
+    <string>Helix</string>
    </property>
   </action>
  </widget>
@@ -786,6 +792,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionInsertHelix</sender>
+   <signal>triggered()</signal>
+   <receiver>SimpleView</receiver>
+   <slot>createHelix()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>353</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openOBJFile()</slot>
@@ -815,5 +837,6 @@
   <slot>setLuminanceBounds()</slot>
   <slot>setFullResForGrabbed(bool)</slot>
   <slot>setFullResForNearby(bool)</slot>
+  <slot>createHelix()</slot>
  </slots>
 </ui>

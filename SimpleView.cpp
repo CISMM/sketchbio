@@ -6,6 +6,9 @@
 #include <limits>
 #include <sstream>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
@@ -22,6 +25,7 @@
 #include <vtkTransform.h>
 #include <vtkArrayCalculator.h>
 #include <vtkAppendPolyData.h>
+#include <vtkPolyLine.h>
 
 #include <QDebug>
 #include <QInputDialog>
@@ -63,6 +67,7 @@
 #define TIMESTEP (16 / 1000.0)
 // some XML names from projecttoxml.cpp
 #define MODEL_ELEMENT_NAME "model"
+
 
 static const char * const NO_DIRECTIONS = " ";
 
@@ -626,8 +631,7 @@ void SimpleView::createEllipsoid()
 		QString model_file = QDir::current().absoluteFilePath(name + ".vtk");
 		if (project->getModelManager().hasModel(model_file)) {
 			model = project->getModelManager().getModel(model_file);
-	    }
-		else {
+	    } else {
 			vtkSmartPointer< vtkParametricEllipsoid > ellipsoid =
 				vtkSmartPointer< vtkParametricEllipsoid >::New();
 			ellipsoid->SetXRadius(xrad); 
@@ -639,9 +643,9 @@ void SimpleView::createEllipsoid()
 			source->Update();
 
 			vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
-			vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+				vtkSmartPointer< vtkTransformPolyDataFilter >::New();
 			vtkSmartPointer< vtkTransform > transform =
-			vtkSmartPointer< vtkTransform >::New();
+				vtkSmartPointer< vtkTransform >::New();
 			transform->Identity();
 			sourceData->SetInputConnection(source->GetOutputPort());
 			sourceData->SetTransform(transform);
@@ -660,11 +664,92 @@ void SimpleView::createEllipsoid()
 	}	
 }
 
-void SimpleView::createMeasuringTape() {
+void SimpleView::createMeasuringTape() 
+{
 	q_vec_type pos1 = {-100, 0, 0}, pos2 = {100, 0, 0};
 	MeasuringTape *tape = new MeasuringTape(NULL, NULL, pos1, pos2);
     project->getWorldManager().addConnector(tape);
 	ControlFunctions::addUndoState(project);
+}
+
+void SimpleView::createHelix() 
+{
+	double radius, turns, length, pitch; // pitch is the length of one turn (parallel to axis)
+	bool rad_ok, turns_ok, pitch_ok;
+
+	// get parameters from the user
+	radius = QInputDialog::getDouble(this, tr("Radius"), tr("Helix radius (nm):"), 
+								100, 0, 2147483647, 2, &rad_ok);
+	if (rad_ok) {
+		turns = QInputDialog::getInt(this, tr("Turns"), tr("Number of turns in helix:"), 
+									3, 0, 2147483647, 1, &turns_ok);
+		if (turns_ok) {	
+			pitch = QInputDialog::getDouble(this, tr("Pitch"), tr("Turn length (nm):"), 
+								30, 0, 2147483647, 2, &pitch_ok);
+		}
+	}
+	if (rad_ok && turns_ok && pitch_ok) {
+		pitch = 10 * pitch; // convert from nm to angstroms
+		length = pitch * turns;
+		QString radstr = QString::number(radius);
+		QString turnstr = QString::number(turns);
+		QString pitchstr = QString::number(pitch);
+		QString name = "helix_" + radstr + "_" + turnstr + "_" + pitchstr;
+
+		SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
+			DEFAULT_INVERSE_MOMENT);
+		QString model_file = QDir::current().absoluteFilePath(name + ".vtk");
+		if (project->getModelManager().hasModel(model_file)) {
+			model = project->getModelManager().getModel(model_file);
+	    } else {
+			double x, y, z;
+			int numPts = int(ceil(pitch)) * turns;
+
+			vtkSmartPointer< vtkPoints > points =
+					vtkSmartPointer< vtkPoints >::New();
+			for (int i = 0; i < numPts; i++) {
+				x = i * length / numPts;
+				y = radius * sin(i * turns * 2 * M_PI / numPts);
+				z = radius * cos(i * turns * 2 * M_PI / numPts);
+				points->InsertPoint(i,x,y,z);
+			}
+
+			vtkSmartPointer< vtkPolyData > data =
+					vtkSmartPointer< vtkPolyData >::New();
+			data->SetPoints(points);
+
+			vtkSmartPointer< vtkPolyLine > polyLine =
+					vtkSmartPointer< vtkPolyLine >::New();
+			polyLine->GetPointIds()->SetNumberOfIds(numPts);
+			for (int i = 0; i < numPts; i++) {
+				polyLine->GetPointIds()->SetId(i,i);
+			}
+			data->Allocate(1,1);
+			data->InsertNextCell(polyLine->GetCellType(), polyLine->GetPointIds());
+
+			vtkSmartPointer< vtkTransformPolyDataFilter > sourceData =
+					vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+			vtkSmartPointer< vtkTransform > transform =
+					vtkSmartPointer< vtkTransform >::New();
+				transform->Identity();
+				sourceData->SetInputData(data);
+				sourceData->SetTransform(transform);
+				sourceData->Update();
+		
+		
+			QString fname = ModelUtilities::createFileFromVTKSource(sourceData, name);
+			model->addConformation(fname, fname);
+			project->getModelManager().addModel(model);
+		}
+		q_vec_type pos = {-(length/2), 0.0, 0.0};
+		q_type orient = Q_ID_QUAT;
+		SketchObject* obj = project->getWorldManager().addObject(model, pos, orient);
+		if (obj != NULL) {
+			obj->setIsVisible(false);
+			obj->setColorMapType(ColorMapType::SOLID_COLOR_GRAY);
+			ControlFunctions::addUndoState(project);
+		}
+	}
 }
 
 void SimpleView::createCameraForViewpoint()

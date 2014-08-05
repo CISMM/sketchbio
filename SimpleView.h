@@ -103,6 +103,9 @@ public slots:
   // Add a measuring tape
   void createMeasuringTape();
 
+  // Add a helical guide to the project
+  void createHelix();
+
   // Collision modes (for testing)
   void oldCollisionMode();
   void poseModeTry1();
