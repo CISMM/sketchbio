@@ -674,8 +674,9 @@ void SimpleView::createMeasuringTape()
 
 void SimpleView::createHelix() 
 {
-	double radius, turns, length, pitch; // pitch is the length of one turn (parallel to axis)
-	bool rad_ok, turns_ok, pitch_ok;
+	QString handedness;
+	double radius, turns, length, pitch, right_handed; // pitch is the length of one turn (parallel to axis)
+	bool rad_ok, turns_ok, pitch_ok, handed_ok;
 
 	// get parameters from the user
 	radius = QInputDialog::getDouble(this, tr("Radius"), tr("Helix radius (nm):"), 
@@ -686,15 +687,24 @@ void SimpleView::createHelix()
 		if (turns_ok) {	
 			pitch = QInputDialog::getDouble(this, tr("Pitch"), tr("Turn length (nm):"), 
 								30, 0, 2147483647, 2, &pitch_ok);
+			if (pitch_ok) {
+				QStringList items;
+				items << tr("Right-handed") << tr("Left-handed");
+				handedness = QInputDialog::getItem(this, tr("Handedness"),
+										tr("Handedness of helix"), items, 0, false, 
+										&handed_ok);
+				right_handed = (handedness == "Right-handed");
+			}
 		}
 	}
-	if (rad_ok && turns_ok && pitch_ok) {
+	if (rad_ok && turns_ok && pitch_ok && handed_ok) {
 		pitch = 10 * pitch; // convert from nm to angstroms
 		length = pitch * turns;
 		QString radstr = QString::number(radius);
 		QString turnstr = QString::number(turns);
 		QString pitchstr = QString::number(pitch);
 		QString name = "helix_" + radstr + "_" + turnstr + "_" + pitchstr;
+		name.append((right_handed) ? "right" : "left");
 
 		SketchModel *model = new SketchModel(DEFAULT_INVERSE_MASS,
 			DEFAULT_INVERSE_MOMENT);
@@ -711,6 +721,9 @@ void SimpleView::createHelix()
 				x = i * length / numPts;
 				y = radius * sin(i * turns * 2 * M_PI / numPts);
 				z = radius * cos(i * turns * 2 * M_PI / numPts);
+				if (right_handed) {
+					z = -z;
+				}
 				points->InsertPoint(i,x,y,z);
 			}
 
