@@ -242,9 +242,7 @@ We present design decisions and their consequences, including cases where iterat
 SketchBio is a new tool to help scientists think about 3D molecular structures and interactions and to communicate them to others.
 
 We found ourselves repeatedly using 2D hand-drawings of complex 3D structures and their interactions in discussions with our close collaborators in cell biology, pathology, and chemistry, despite the fact that the 3D crystal structures of the proteins making up these structures were known.
-Goodsell's ``Molecular Machinery" poster \cite{Goodsell} helped improve our shared understanding of the individual proteins, but overall structure comprehension was advanced when a hired artist produced 3D scale models and computer models of the structures \cite{taylor2012}.
-
-Our group is not alone.  Discussions among collaborators are often done using 2D whiteboard sketches.  Presentations often consist of pasted images and 2D PowerPoint animations.
+Overall structure comprehension was advanced when a hired artist produced 3D scale models and computer models of the structures \cite{taylor2012}.  Our group is not alone.  Discussions among collaborators are often done using 2D whiteboard sketches.  Presentations often consist of pasted images and 2D PowerPoint animations.
 
 Due to the difficulties involved in learning and using 3D modeling and rendering software, many scientists hire professional computer programmers and/or animators to work with them to create models and animations rather than use these programs themselves.
 This indirection both slows the discovery process and provides opportunities for miscommunication.
@@ -260,24 +258,23 @@ This paper describes that tool, SketchBio.
 Fred Brooks posits that the best way to construct a tool that is generally usable is to focus on several very different specific problems and build a tool that solves them \cite{Brooks}.
 We followed this approach.
 
-The first driving problem for this project is collaborator Susan Lord's desire to construct a protofibril model based on geometric constraints among a set of individual fibrinogen molecules.
+The first driving problem for this project is to construct a protofibril model based on geometric constraints among a set of individual fibrinogen molecules.
 The protein fibrinogen is the main component of blood clots, where it is converted into fibrin and links together with other fibrin molecules to form strands.
 Two of these strands join together to form a protofibril, which form thick fibers that make up a large portion of the blood clot.
-Based on the crystallized structures of fibrin monomers from different species and on only two sets of known interactions \cite{lord2007fibrinogen}, Lord sought to construct 3D protofibril structures matching those seen in her data, which suggested a structure in which two fibrin strands twist around each other, and wanted to create a model that shows this interaction at the molecular level.
-Over several months, she and her students worked with UNC staff scientist Joe Hsiao to use the powerful UCSF Chimera tool to construct such a model \cite{lordSubmitted}.
+Based on the crystallized structures of fibrin monomers from different species and on only two sets of known interactions \cite{lord2007fibrinogen}, one collaborator sought to construct 3D protofibril structures matching those seen in her data, which suggested a structure in which two fibrin strands twist around each other, and wanted to create a model that shows this interaction at the molecular level.
+Over several months, this collaborator and her students worked with a computer scientist to use the powerful UCSF Chimera tool to construct such a model \cite{lordSubmitted}.
 Building this model required repeated iteration of hand-placement of two molecules (using multiple 2D mouse interactions), followed by using replication tools to develop candidate models, which were then evaluated against the data.
-Lord's desired use of SketchBio was to construct this protofibril rapidly and semi-automatically by specifying which location on each fibrin should be in close contact with other molecules and by specifying that the molecules do not overlap.
+The desired use of SketchBio was to construct this protofibril rapidly and semi-automatically by specifying which location on each fibrin should be in close contact with other molecules and by specifying that the molecules do not overlap.
 This same capability will enable generation of other self-symmetric structures such as actin filaments and microtubules.
 
-Our second driving problem comes from Peter Thompson in Sharon Campbell's lab.
-Peter wants to construct 3D models and animations of the interaction between actin filaments and vinculin.
+The second driving problem was to construct 3D models and animations of the interaction between actin filaments and vinculin.
 Actin filaments are one of the three main components of a cell's cytoskeleton, and the protein vinculin binds to actin filaments, connecting them to other actin filaments or different proteins.
 
-The third driving problem comes from Kerry Bloom, who is constructing models of the mitotic spindle, a structure that separates chromosomes during cell division.
-As in Lord's case, each step of model generation required support from an artist, animator, and/or programmer to convert Bloom's concepts and those of his students into geometry for rendering and simulation.
+The third driving problem was to construct models of the mitotic spindle, a structure that separates chromosomes during cell division.
+As in the fibrin case, each step of model generation required support from an artist, animator, and/or programmer to convert our collaborator's concepts into geometry for rendering and simulation.
 
-Our final driving problem also comes from the Bloom collaboration.
-Many proteins beyond cohesin and condensin contribute to mitosis.  His lab is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
+The final driving problem involves cell division (mitosis).
+Many proteins beyond cohesin and condensin contribute to mitosis.  Our collaborator is able to fluorescently label both these proteins and chromosome locations and determine relative distances and orientations between pairs of proteins.
 With accurate localization and tracking for 3D images, these techniques provide partial information on the 3D layout of proteins and chromosomes in wild-type and mutant mitotic spindles.
 Building models to match this information requires the development of semi-automatic layout of proteins.
 This will provide a partial set of constraints for the scientist to construct protein-protein and protein-chromosome complexes that match experimental data.
@@ -632,7 +629,7 @@ The model in SketchBio is shown in Figure \ref{fig:peter_model} and a frame from
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\columnwidth]{peter_model.png}
-\caption{A scene from a video created by Peter Thompson in SketchBio.
+\caption{A scene from a video created by Peter Thompson from Sharon Campbell's laboratory at UNC  in SketchBio.
 Approximately the same timestep is shown rendered at its full resolution in Figure \ref{fig:peter_video}}
 \label{fig:peter_model}
 \end{figure}
@@ -668,7 +665,7 @@ In this case, SketchBio enabled model creation in about one-fifth of the time fo
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\columnwidth]{joe_test.png}
-\caption{A view of the model Joe Hsiao created with SketchBio to compare usibility with UCSF Chimera}
+\caption{A view of the model that Joe Hsiao, UNC staff scientist, created with SketchBio for Susan Lord to compare usibility with UCSF Chimera}
 \label{fig:joe_test}
 \end{figure}
 
@@ -754,7 +751,7 @@ Blender is an open source project supported by the Blender Foundation and the on
 Early versions of SketchBio used PyMol (pymol.org) to import data from the PDB.
 PyMol is an open source project maintained and distributed by Schrödinger.
 
-We thank Ping-Lin (``Joe") Hsiao for evaluating the effectiveness of SketchBio on the construction of protofibrils. We also thank our collaborators Susan Lord, Sharon Campbell, and Kerry Bloom and the rest of the UNC CISMM group.
+We thank Ping-Lin (``Joe") Hsiao for evaluating the effectiveness of SketchBio on the construction of protofibrils. We also thank our collaborators Susan Lord, Sharon Campbell, and Kerry Bloom, and the rest of the UNC CISMM group.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%                                          %%
