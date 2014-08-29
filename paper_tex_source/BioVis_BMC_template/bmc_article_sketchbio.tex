@@ -618,9 +618,9 @@ SketchBio has been used by a several scientists and has demonstrated success in 
 To measure the ability of scientists to learn and use the system, we showed SketchBio to a visiting graduate student from NIH.  She is interested in using the system to study the proteins involved in cell focal adhesions.
 After a 30-minute training session where she saw us using the system, she was able to use SketchBio to load, replicate, and place the molecules into relevant configurations.
 
-After similar initial training, and with access to the manual, biochemistry graduate student Peter Thomson used the system to generate both static and animated multi-protein models.
+After similar initial training, and with access to the manual, a biochemistry graduate student used the system to generate both static and animated multi-protein models.
 
-Peter created a model to compare the importance of electrostatics between two different models for vinculin tail interaction with actin \cite{janssen2006three}\cite{thompson2014identification}.
+He created a model to compare the importance of electrostatics between two different models for vinculin tail interaction with actin \cite{janssen2006three}\cite{thompson2014identification}.
 
 He also created an animation of vinculin binding to an actin fiber for use in a talk, based on the model presented in \cite{thievessen2013vinculin}.
 This video used crystal-by-example to generate the actin and used traslucent connectors to indicate the connection between the head and tail domains of vinculin -- a region for which there is no crystal structure.
@@ -650,15 +650,15 @@ This video was created in Microsoft PowerPoint using separately-rendered single 
 \label{fig:peter_powerpoint}
 \end{figure}
 
-Peter produced both a SketchBio animation and a Microsoft PowerPoint animation of molecules (using images of molecules pre-rendered from a single viewpoint), as shown in figure \ref{fig:peter_powerpoint}, to test their relative speed and effectiveness.
+Finally, he produced both a SketchBio animation and a Microsoft PowerPoint animation of molecules (using images of molecules pre-rendered from a single viewpoint), as shown in figure \ref{fig:peter_powerpoint}, to test their relative speed and effectiveness.
 The PowerPoint animation took 50 minutes of concentrated effort to produce, while the SketchBio animation took 100. He reports that the PowerPoint animation failed to accurately show rotation of the vinculin tail domain, to show the linker region that scales as the domains move apart, to show a change in actin movement rate, and to accurately portray relative size and orientation of the molecules.  He reports that the increase in correct presentation of the science was was well worth the increased time.
 
 \paragraph*{Support rapidly-iterated, in-context design:}
 To measure the speed of complex model construction, we repeated a task using SketchBio that had been done beforehand.
-Constructing the protofibril models for Susan Lord took UNC computer scientist Joe Hsiao 3-3.5 hours by hand-editing transformations within Chimera (a task challenging for biologists to learn).
+Constructing the protofibril models for our first driving problem took a computer scientist 3-3.5 hours by hand-editing transformations within Chimera (a task challenging for biologists to learn).
 Using an early prototype of SketchBio, he constructed the protofibril seen in Figure \ref{fig:joe_test} in 1.5 hours (a task we would expect a collaborator to do just as rapidly).
-The lack of depth cues became apparent as Joe spent most of the time trying to figure out the relative depth between the tracker and the molecules, prompting us to add the shadow plane.
-With this addition and other features, Joe reconstructed the model in 35 minutes.
+The lack of depth cues became apparent as he spent most of the time trying to figure out the relative depth between the tracker and the molecules, prompting us to add the shadow plane.
+With this addition and other features, he reconstructed the model in 35 minutes.
 In all cases, the desired model was known a-priori; all cases measure time on task and do not count the time spent learning how to use the tool.
 In this case, SketchBio enabled model creation in about one-fifth of the time for a case of interest to our collaborators.
 
@@ -685,7 +685,7 @@ Pose-mode physics, with the option to turn it off, supports both preventing and 
 The image frames in the paper and video in the associated online materials demonstrate full-resolution rendering with intra- and inter-object shadowing displaying both complex local shape and 3D relationships between objects.
 
 \section*{Limitations and future work}
-After successfully using SketchBio for his initial needs, Peter has requested new features.
+After successfully using SketchBio for his initial needs, one user requested new features.
 He is particularly interested in using SketchBio as a thinking tool to determine how mutations in vinculin turn normally-straight actin filament bundles into helices.
 Forming a model to fit experimental data can is challenging.  We are working on a module to optimize the placement of molecules based on a set of constraints.
 The resulting optimization algorithms will enable other scientists to semi-automatically construct multi-protein structures that match negative stain electron microscopy images.
